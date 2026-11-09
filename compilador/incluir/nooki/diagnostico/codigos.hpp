@@ -32,6 +32,7 @@ inline constexpr std::string_view FUNCION_NO_DECLARADA = "NOK3002";
 inline constexpr std::string_view TIPO_DESCONOCIDO = "NOK3003";
 inline constexpr std::string_view CAMPO_DESCONOCIDO = "NOK3004";
 inline constexpr std::string_view CAMPO_FALTANTE = "NOK3005";
+inline constexpr std::string_view MIEMBRO_DESCONOCIDO = "NOK3006";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";

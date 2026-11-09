@@ -110,6 +110,18 @@ public:
             }
             salida_ << firma(funcion) << ";\n";
         }
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            for (const sintactico::Funcion& metodo : definicion.metodos) {
+                salida_ << firma_metodo(definicion, metodo) << ";\n";
+            }
+        }
+
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            for (const sintactico::Funcion& metodo : definicion.metodos) {
+                salida_ << '\n';
+                emitir_metodo(definicion, metodo);
+            }
+        }
 
         for (const sintactico::Funcion& funcion : programa.funciones) {
             salida_ << '\n';
@@ -124,10 +136,17 @@ public:
 private:
     // --- Registro ----------------------------------------------------------
     void registrar(const sintactico::Programa& programa) {
+        // Primera pasada: nombres, para que un tipo pueda referirse a otro declarado después.
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
-            auto& campos = campos_[std::string(definicion.nombre)];
+            campos_[std::string(definicion.nombre)];
+            for (const sintactico::Funcion& metodo : definicion.metodos) {
+                metodos_[std::string(definicion.nombre)][std::string(metodo.nombre)] = &metodo;
+            }
+        }
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             for (const sintactico::Campo& campo : definicion.campos) {
-                campos[std::string(campo.nombre)] = tipo_c(campo.tipo);
+                campos_[std::string(definicion.nombre)][std::string(campo.nombre)] =
+                    tipo_declarado_c(campo.tipo);
             }
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
@@ -217,6 +236,50 @@ private:
 
         salida += ')';
         return salida;
+    }
+
+    /// Firma de C de un método: el objeto va primero, como puntero.
+    std::string firma_metodo(const sintactico::DefinicionTipo& definicion,
+                             const sintactico::Funcion& metodo) const {
+        const std::string estructura = tipo_estructura(definicion.nombre);
+        std::string salida = "static ";
+        salida += tipo_declarado_c(metodo.tipo_retorno);
+        salida += ' ';
+        salida += estructura + "_" + std::string(metodo.nombre);
+        salida += '(';
+        salida += estructura + "* este";
+
+        for (const sintactico::Parametro& parametro : metodo.parametros) {
+            salida += ", ";
+            salida += tipo_declarado_c(parametro.tipo);
+            salida += ' ';
+            salida += parametro.nombre;
+        }
+
+        salida += ')';
+        return salida;
+    }
+
+    void emitir_metodo(const sintactico::DefinicionTipo& definicion,
+                       const sintactico::Funcion& metodo) {
+        salida_ << firma_metodo(definicion, metodo) << " {\n";
+
+        const std::string anterior = estructura_actual_c_;
+        estructura_actual_c_ = tipo_estructura(definicion.nombre);
+
+        abrir_ambito();
+        ++nivel_;
+        for (const sintactico::Parametro& parametro : metodo.parametros) {
+            declarar(parametro.nombre, tipo_declarado_c(parametro.tipo));
+        }
+        for (const sintactico::Sentencia& sentencia : metodo.cuerpo) {
+            emitir_sentencia(sentencia, false);
+        }
+        --nivel_;
+        cerrar_ambito();
+
+        estructura_actual_c_ = anterior;
+        salida_ << "}\n";
     }
 
     void emitir_funcion(const sintactico::Funcion& funcion) {
@@ -423,16 +486,48 @@ private:
                 if (objeto.rfind(PREFIJO, 0) != 0) {
                     return "long long";
                 }
-                const auto tipo = campos_.find(objeto.substr(PREFIJO.size()));
-                if (tipo == campos_.end()) {
-                    return "long long";
+                const std::string nombre_estructura = objeto.substr(PREFIJO.size());
+
+                const auto tipo = campos_.find(nombre_estructura);
+                if (tipo != campos_.end()) {
+                    const auto campo = tipo->second.find(expresion.anotacion);
+                    if (campo != tipo->second.end()) {
+                        return campo->second;
+                    }
                 }
-                const auto campo = tipo->second.find(expresion.anotacion);
-                return campo == tipo->second.end() ? "long long" : campo->second;
+
+                const auto metodos = metodos_.find(nombre_estructura);
+                if (metodos != metodos_.end()) {
+                    const auto metodo = metodos->second.find(expresion.anotacion);
+                    if (metodo != metodos->second.end()) {
+                        return tipo_declarado_c(metodo->second->tipo_retorno);
+                    }
+                }
+                return "long long";
             }
+            case TipoExpresion::Este:
+                return estructura_actual_c_.empty() ? "long long" : estructura_actual_c_;
             case TipoExpresion::Llamada: {
-                if (expresion.izquierda &&
-                    expresion.izquierda->tipo == TipoExpresion::Identificador) {
+                if (!expresion.izquierda) {
+                    return "void";
+                }
+                if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
+                    const sintactico::Expresion& acceso = *expresion.izquierda;
+                    const std::string tipo_objeto =
+                        acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
+                    constexpr std::string_view PREFIJO = "nooki_";
+                    if (tipo_objeto.rfind(PREFIJO, 0) == 0) {
+                        const auto metodos = metodos_.find(tipo_objeto.substr(PREFIJO.size()));
+                        if (metodos != metodos_.end()) {
+                            const auto metodo = metodos->second.find(acceso.anotacion);
+                            if (metodo != metodos->second.end()) {
+                                return tipo_declarado_c(metodo->second->tipo_retorno);
+                            }
+                        }
+                    }
+                    return "void";
+                }
+                if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
                     const auto encontrada =
                         retornos_.find(std::string(expresion.izquierda->lexema));
                     if (encontrada != retornos_.end()) {
@@ -473,6 +568,8 @@ private:
                 return std::string(nodo.lexema);
             case TipoExpresion::Construccion:
                 return construccion(nodo);
+            case TipoExpresion::Este:
+                return "(*este)";
             case TipoExpresion::Miembro:
                 return miembro(nodo);
             case TipoExpresion::Unaria:
@@ -511,6 +608,9 @@ private:
         if (!nodo.izquierda) {
             no_soportado("un acceso a miembro sin objeto");
             return "0";
+        }
+        if (nodo.izquierda->tipo == sintactico::TipoExpresion::Este) {
+            return "este->" + nodo.anotacion;
         }
         return expresion(*nodo.izquierda) + "." + nodo.anotacion;
     }
@@ -574,8 +674,16 @@ private:
     }
 
     std::string llamada(const sintactico::Expresion& nodo) {
-        if (!nodo.izquierda ||
-            nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
+        if (!nodo.izquierda) {
+            no_soportado("una llamada sin destino");
+            return "0";
+        }
+
+        if (nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro) {
+            return llamada_metodo(nodo);
+        }
+
+        if (nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
             no_soportado("una llamada a algo que no es un nombre");
             return "0";
         }
@@ -616,6 +724,36 @@ private:
         return salida;
     }
 
+    /// `p.metodo(a, b)` → `nooki_punto_metodo(&p, a, b)`.
+    std::string llamada_metodo(const sintactico::Expresion& nodo) {
+        const sintactico::Expresion& acceso = *nodo.izquierda;
+        if (!acceso.izquierda) {
+            no_soportado("una llamada a un método sin objeto");
+            return "0";
+        }
+
+        const std::string tipo_objeto = tipo_de(*acceso.izquierda);
+        constexpr std::string_view PREFIJO = "nooki_";
+        if (tipo_objeto.rfind(PREFIJO, 0) != 0) {
+            no_soportado("una llamada a un método sobre algo que no es una estructura");
+            return "0";
+        }
+
+        std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(&" +
+                             expresion(*acceso.izquierda);
+
+        for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+            if (!argumento) {
+                continue;
+            }
+            salida += ", ";
+            salida += expresion(*argumento);
+        }
+
+        salida += ')';
+        return salida;
+    }
+
     static std::string descripcion_expresion(sintactico::TipoExpresion tipo) {
         switch (tipo) {
             case sintactico::TipoExpresion::Caracter:
@@ -640,7 +778,9 @@ private:
     std::ostringstream salida_;
     std::map<std::string, std::map<std::string, std::string>> campos_;
     std::map<std::string, std::string> retornos_;
+    std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::vector<std::map<std::string, std::string>> ambitos_;
+    std::string estructura_actual_c_;
     int nivel_ = 0;
     bool soportado_ = true;
     std::string motivo_;

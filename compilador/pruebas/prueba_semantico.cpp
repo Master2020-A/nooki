@@ -119,6 +119,11 @@ constexpr Caso VALIDOS[] = {
      "funcion principal() -> entero {\n    variable a = persona { nombre: \"Ana\", edad: 30 }\n"
      "    retornar a.edad\n}",
      ""},
+    {"estructura punto {\n    publico x: entero\n\n"
+     "    publico funcion doble() -> entero {\n        retornar este.x + este.x\n    }\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 2 }\n"
+     "    retornar p.doble()\n}",
+     ""},
 };
 
 // Programas que deben producir exactamente el código indicado.
@@ -160,6 +165,22 @@ constexpr Caso INVALIDOS[] = {
     {"estructura punto {\n    publico x: entero\n}\n"
      "funcion principal() -> entero {\n    variable p = punto { x: \"a\" }\n    retornar 0\n}",
      "NOK4001"},
+
+    // --- Métodos -----------------------------------------------------------
+    {"estructura punto {\n    publico x: entero\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 1 }\n"
+     "    retornar p.desconocido()\n}",
+     "NOK3006"},
+    {"estructura punto {\n    publico x: entero\n\n"
+     "    publico funcion suma(otro: punto) -> entero {\n        retornar este.x\n    }\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 1 }\n"
+     "    variable q = punto { x: 2 }\n    retornar p.suma()\n}",
+     "NOK4003"},
+    {"estructura punto {\n    publico x: entero\n\n"
+     "    publico funcion suma(otro: punto) -> entero {\n        retornar este.x\n    }\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 1 }\n"
+     "    retornar p.suma(5)\n}",
+     "NOK4002"},
 };
 
 }  // namespace

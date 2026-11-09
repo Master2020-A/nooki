@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 18 — Métodos y `este` (2026-11-09)
+
+- **Métodos dentro de tipos**: `publico funcion suma(otro: punto) -> entero { ... }`, con parámetros
+  y retorno como cualquier función.
+- **`este`** para acceder a los campos propios: `este.x`, `este.x = ...`.
+- **Llamadas a métodos**: `p.suma(q)` se traduce a `nooki_punto_suma(&p, q)`, el mismo modelo que
+  necesitará la herencia con tablas virtuales.
+- **Verificación de métodos**: miembro inexistente (`NOK3006`), aridad (`NOK4003`) y tipo de
+  argumento (`NOK4002`), incluidos los parámetros cuyo tipo es otra estructura.
+- Programa de conformidad `0009-metodos`, compilado y ejecutado.
+- El parser acepta `este` como inicio de sentencia (`este.x = ...`).
+
 ### Sprint 17 — Estructuras y clases con campos (2026-11-09)
 
 - **Declaraciones de tipo**: `estructura punto { publico x: entero }` y `clase persona { ... }`,

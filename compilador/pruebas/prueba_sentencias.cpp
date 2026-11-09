@@ -105,6 +105,13 @@ constexpr Caso CASOS[] = {
      "(programa (funcion f -> vacio (variable p (construir punto (x 1) (y 2)))))"},
     {"funcion f() {\n    variable p = punto { x: 1 }\n    p.x = 2\n}",
      "(programa (funcion f -> vacio (variable p (construir punto (x 1))) (= (. p x) 2)))"},
+
+    // --- Métodos -----------------------------------------------------------
+    {"estructura punto {\n    publico funcion f() -> entero {\n        retornar este.x\n    }\n}",
+     "(programa (estructura punto (funcion f -> entero (retornar (. este x)))))"},
+    {"funcion f() {\n    variable p = punto { x: 1 }\n    p.mover(5)\n}",
+     "(programa (funcion f -> vacio (variable p (construir punto (x 1))) (llamada (. p mover) "
+     "5)))"},
 };
 
 constexpr std::string_view INVALIDOS[] = {

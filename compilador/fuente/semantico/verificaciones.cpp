@@ -32,6 +32,14 @@ public:
         for (const Funcion& funcion : programa_.funciones) {
             revisar_funcion(funcion);
         }
+        for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
+            const std::string_view anterior = estructura_actual_;
+            estructura_actual_ = definicion.nombre;
+            for (const Funcion& metodo : definicion.metodos) {
+                revisar_funcion(metodo);
+            }
+            estructura_actual_ = anterior;
+        }
         return errores_;
     }
 
@@ -63,21 +71,32 @@ private:
     }
 
     // --- Ámbitos -----------------------------------------------------------
+    struct Ambito {
+        std::map<std::string, Tipo> tipos;
+        std::map<std::string, std::string_view> estructuras;
+    };
+
     void abrir_ambito() { ambitos_.emplace_back(); }
     void cerrar_ambito() {
         if (!ambitos_.empty()) {
             ambitos_.pop_back();
         }
     }
-    void declarar(std::string_view nombre_variable, Tipo tipo) {
-        if (!ambitos_.empty()) {
-            ambitos_.back()[std::string(nombre_variable)] = tipo;
+    void declarar(std::string_view nombre_variable, Tipo tipo,
+                  std::string_view estructura = {}) {
+        if (ambitos_.empty()) {
+            return;
+        }
+        Ambito& ambito = ambitos_.back();
+        ambito.tipos[std::string(nombre_variable)] = tipo;
+        if (!estructura.empty()) {
+            ambito.estructuras[std::string(nombre_variable)] = estructura;
         }
     }
     Tipo buscar(std::string_view nombre_variable, diagnostico::Span span) {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            const auto encontrada = it->find(std::string(nombre_variable));
-            if (encontrada != it->end()) {
+            const auto encontrada = it->tipos.find(std::string(nombre_variable));
+            if (encontrada != it->tipos.end()) {
                 return encontrada->second;
             }
         }
@@ -86,18 +105,73 @@ private:
             .ayuda("declare la variable antes de usarla");
         return Tipo::Desconocido;
     }
+    std::string_view buscar_estructura(std::string_view nombre_variable) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            const auto encontrada = it->estructuras.find(std::string(nombre_variable));
+            if (encontrada != it->estructuras.end()) {
+                return encontrada->second;
+            }
+        }
+        return {};
+    }
+
+    const sintactico::DefinicionTipo* tipo_por_nombre(std::string_view nombre) const {
+        const auto encontrada = tipos_.find(nombre);
+        return encontrada == tipos_.end() ? nullptr : encontrada->second;
+    }
+
+    /// Nombre del tipo de estructura de una expresión, si lo tiene.
+    std::string_view estructura_de(const Expresion& expresion) const {
+        switch (expresion.tipo) {
+            case TipoExpresion::Identificador:
+                return buscar_estructura(expresion.lexema);
+            case TipoExpresion::Este:
+                return estructura_actual_;
+            case TipoExpresion::Miembro: {
+                if (!expresion.izquierda) {
+                    return {};
+                }
+                const sintactico::DefinicionTipo* definicion =
+                    tipo_por_nombre(estructura_de(*expresion.izquierda));
+                if (definicion == nullptr) {
+                    return {};
+                }
+                for (const sintactico::Campo& campo : definicion->campos) {
+                    if (campo.nombre == expresion.anotacion) {
+                        return tipo_por_nombre(campo.tipo) != nullptr ? campo.tipo
+                                                                     : std::string_view{};
+                    }
+                }
+                return {};
+            }
+            default:
+                return {};
+        }
+    }
+
+    const Funcion* metodo_de(const sintactico::DefinicionTipo& definicion,
+                             std::string_view nombre_metodo) const {
+        for (const Funcion& metodo : definicion.metodos) {
+            if (metodo.nombre == nombre_metodo) {
+                return &metodo;
+            }
+        }
+        return nullptr;
+    }
 
     // --- Funciones ---------------------------------------------------------
     void revisar_funcion(const Funcion& funcion) {
         abrir_ambito();
         for (const sintactico::Parametro& parametro : funcion.parametros) {
             const Tipo tipo = desde_nombre(parametro.tipo);
-            if (tipo == Tipo::Desconocido) {
+            const sintactico::DefinicionTipo* estructura = tipo_por_nombre(parametro.tipo);
+            if (tipo == Tipo::Desconocido && estructura == nullptr) {
                 error(diagnostico::codigos::TIPO_INCOMPATIBLE, parametro.span)
                     .parametro("esperado", "un tipo conocido")
                     .parametro("encontrado", std::string(parametro.tipo));
             }
-            declarar(parametro.nombre, tipo);
+            declarar(parametro.nombre, tipo,
+                     estructura != nullptr ? parametro.tipo : std::string_view{});
         }
 
         for (const Sentencia& sentencia : funcion.cuerpo) {
@@ -129,13 +203,19 @@ private:
                     return;
                 }
                 const Tipo real = tipo_de(*sentencia.expresion);
+                const bool es_construccion =
+                    sentencia.expresion->tipo == TipoExpresion::Construccion;
                 if (sentencia.tipo_declarado.empty()) {
-                    declarar(sentencia.nombre, real);
+                    declarar(sentencia.nombre, real,
+                             es_construccion ? sentencia.expresion->anotacion : std::string_view{});
                     return;
                 }
                 const Tipo declarado = desde_nombre(sentencia.tipo_declarado);
                 exigir(declarado, real, sentencia.expresion->span);
-                declarar(sentencia.nombre, declarado);
+                declarar(sentencia.nombre, declarado,
+                         tipo_por_nombre(sentencia.tipo_declarado) != nullptr
+                             ? sentencia.tipo_declarado
+                             : std::string_view{});
                 return;
             }
 
@@ -251,6 +331,10 @@ private:
                 return tipo_llamada(expresion);
             case TipoExpresion::Construccion:
                 return tipo_construccion(expresion);
+            case TipoExpresion::Miembro:
+                return tipo_miembro(expresion);
+            case TipoExpresion::Este:
+                return Tipo::Desconocido;
             default:
                 // Caracteres, flotantes, índices y conversiones: el generador los
                 // rechaza con NOK6003 cuando llegue el momento.
@@ -313,8 +397,15 @@ private:
     }
 
     Tipo tipo_llamada(const Expresion& expresion) {
-        if (!expresion.izquierda ||
-            expresion.izquierda->tipo != TipoExpresion::Identificador) {
+        if (!expresion.izquierda) {
+            return Tipo::Desconocido;
+        }
+
+        if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
+            return tipo_llamada_metodo(expresion);
+        }
+
+        if (expresion.izquierda->tipo != TipoExpresion::Identificador) {
             return Tipo::Desconocido;
         }
 
@@ -347,33 +438,106 @@ private:
             return Tipo::Desconocido;
         }
 
-        const Funcion& funcion = *encontrada->second;
+        return comprobar_argumentos(*encontrada->second, expresion,
+                                    std::string(encontrada->second->nombre));
+    }
 
-        if (expresion.lista.size() != funcion.parametros.size()) {
-            error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
-                .parametro("funcion", std::string(funcion.nombre))
+    Tipo tipo_llamada_metodo(const Expresion& expresion) {
+        const Expresion& acceso = *expresion.izquierda;
+
+        if (acceso.izquierda) {
+            tipo_de(*acceso.izquierda);
+        }
+
+        const sintactico::DefinicionTipo* definicion = tipo_por_nombre(
+            acceso.izquierda ? estructura_de(*acceso.izquierda) : std::string_view{});
+        if (definicion == nullptr) {
+            return Tipo::Desconocido;
+        }
+
+        const Funcion* metodo = metodo_de(*definicion, acceso.anotacion);
+        if (metodo == nullptr) {
+            error(diagnostico::codigos::MIEMBRO_DESCONOCIDO, acceso.span)
+                .parametro("tipo", std::string(definicion->nombre))
+                .parametro("nombre", acceso.anotacion);
+            return Tipo::Desconocido;
+        }
+
+        return comprobar_argumentos(
+            *metodo, expresion,
+            std::string(definicion->nombre) + "." + std::string(metodo->nombre));
+    }
+
+    Tipo comprobar_argumentos(const Funcion& funcion, const Expresion& llamada,
+                              const std::string& nombre_visible) {
+        if (llamada.lista.size() != funcion.parametros.size()) {
+            error(diagnostico::codigos::ARIDAD_INCORRECTA, llamada.span)
+                .parametro("funcion", nombre_visible)
                 .parametro("esperados", std::to_string(funcion.parametros.size()))
-                .parametro("dados", std::to_string(expresion.lista.size()));
+                .parametro("dados", std::to_string(llamada.lista.size()));
             return desde_nombre(funcion.tipo_retorno);
         }
 
-        for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
-            if (!expresion.lista[i]) {
+        for (std::size_t i = 0; i < llamada.lista.size(); ++i) {
+            if (!llamada.lista[i]) {
                 continue;
             }
-            const Tipo real = tipo_de(*expresion.lista[i]);
+
+            // Un parámetro cuyo tipo es una estructura se compara por nombre de tipo.
+            if (tipo_por_nombre(funcion.parametros[i].tipo) != nullptr) {
+                const std::string_view real = estructura_de(*llamada.lista[i]);
+                if (real != funcion.parametros[i].tipo) {
+                    error(diagnostico::codigos::ARGUMENTO_INCOMPATIBLE, llamada.lista[i]->span)
+                        .parametro("parametro", std::string(funcion.parametros[i].nombre))
+                        .parametro("funcion", nombre_visible)
+                        .parametro("esperado", std::string(funcion.parametros[i].tipo))
+                        .parametro("encontrado", real.empty() ? std::string("otro tipo")
+                                                              : std::string(real));
+                }
+                continue;
+            }
+
+            const Tipo real = tipo_de(*llamada.lista[i]);
             const Tipo esperado = desde_nombre(funcion.parametros[i].tipo);
             if (compatible(esperado, real)) {
                 continue;
             }
-            error(diagnostico::codigos::ARGUMENTO_INCOMPATIBLE, expresion.lista[i]->span)
+            error(diagnostico::codigos::ARGUMENTO_INCOMPATIBLE, llamada.lista[i]->span)
                 .parametro("parametro", std::string(funcion.parametros[i].nombre))
-                .parametro("funcion", std::string(funcion.nombre))
+                .parametro("funcion", nombre_visible)
                 .parametro("esperado", nombre(esperado))
                 .parametro("encontrado", nombre(real));
         }
 
         return desde_nombre(funcion.tipo_retorno);
+    }
+
+    Tipo tipo_miembro(const Expresion& expresion) {
+        if (!expresion.izquierda) {
+            return Tipo::Desconocido;
+        }
+
+        const sintactico::DefinicionTipo* definicion =
+            tipo_por_nombre(estructura_de(*expresion.izquierda));
+        if (definicion == nullptr) {
+            tipo_de(*expresion.izquierda);
+            return Tipo::Desconocido;
+        }
+
+        for (const sintactico::Campo& campo : definicion->campos) {
+            if (campo.nombre == expresion.anotacion) {
+                return desde_nombre(campo.tipo);
+            }
+        }
+        if (const Funcion* metodo = metodo_de(*definicion, expresion.anotacion);
+            metodo != nullptr) {
+            return desde_nombre(metodo->tipo_retorno);
+        }
+
+        error(diagnostico::codigos::MIEMBRO_DESCONOCIDO, expresion.span)
+            .parametro("tipo", std::string(definicion->nombre))
+            .parametro("nombre", expresion.anotacion);
+        return Tipo::Desconocido;
     }
 
     Tipo tipo_construccion(const Expresion& expresion) {
@@ -386,8 +550,7 @@ private:
 
         const sintactico::DefinicionTipo& definicion = *encontrado->second;
 
-        for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
-            const std::string_view nombre_campo =
+        for (std::size_t i = 0; i < expresion.lista.size(); ++i) {            const std::string_view nombre_campo =
                 i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "";
             const sintactico::Campo* campo = nullptr;
             for (const sintactico::Campo& declarado : definicion.campos) {
@@ -432,7 +595,8 @@ private:
     diagnostico::Emisor& emisor_;
     std::map<std::string_view, const Funcion*> funciones_;
     std::map<std::string_view, const sintactico::DefinicionTipo*> tipos_;
-    std::vector<std::map<std::string, Tipo>> ambitos_;
+    std::string_view estructura_actual_;
+    std::vector<Ambito> ambitos_;
     int errores_ = 0;
 };
 

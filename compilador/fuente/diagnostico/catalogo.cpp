@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 29> MENSAJES{{
+constexpr std::array<EntradaMensaje, 30> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -83,6 +83,9 @@ constexpr std::array<EntradaMensaje, 29> MENSAJES{{
 
     {codigos::CAMPO_FALTANTE, "a «{tipo}» le falta el campo «{campo}»",
      "“{tipo}” is missing the field “{campo}”"},
+
+    {codigos::MIEMBRO_DESCONOCIDO, "«{tipo}» no tiene ningún miembro «{nombre}»",
+     "“{tipo}” has no member named “{nombre}”"},
 
     {codigos::TIPO_INCOMPATIBLE,
      "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",

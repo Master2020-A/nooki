@@ -31,6 +31,7 @@ enum class TipoExpresion : unsigned char {
     Como,
     Asignacion,
     Construccion,
+    Este,
 };
 
 struct Expresion;
@@ -129,6 +130,7 @@ struct DefinicionTipo {
     std::string_view nombre;
     bool es_clase = false;
     std::vector<Campo> campos;
+    std::vector<Funcion> metodos;
     diagnostico::Span span;
 };
 

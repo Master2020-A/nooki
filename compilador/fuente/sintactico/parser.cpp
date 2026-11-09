@@ -208,6 +208,12 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
             avanzar();
         }
 
+        // Un método se analiza con el mismo código que una función.
+        if (actual().es(TipoToken::PalabraClave) && actual().lexema == "funcion") {
+            definicion.metodos.push_back(analizar_funcion());
+            continue;
+        }
+
         if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
             campo.nombre = nombre.lexema;
             avanzar();
@@ -461,7 +467,8 @@ Sentencia Parser::analizar_sentencia() {
             }
             return sentencia;
         }
-        if (palabra != "verdadero" && palabra != "falso" && palabra != "nulo") {
+        if (palabra != "verdadero" && palabra != "falso" && palabra != "nulo" &&
+            palabra != "este") {
             auto& diagnostico = emisor_.error(diagnostico::codigos::NO_SOPORTADO, actual().span);
             diagnostico.parametro("construccion", std::string(palabra))
                 .ayuda("esta construcción todavía no se analiza");
@@ -759,6 +766,14 @@ ExpresionPtr Parser::prefijo() {
         }
         if (token.lexema == "nulo") {
             return literal(TipoExpresion::Nulo);
+        }
+        if (token.lexema == "este") {
+            const diagnostico::Span span = token.span;
+            avanzar();
+            auto nodo = std::make_unique<Expresion>();
+            nodo->tipo = TipoExpresion::Este;
+            nodo->span = span;
+            return nodo;
         }
     }
 

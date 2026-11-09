@@ -160,7 +160,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S15** | Funciones con parámetros y verificaciones | ✅ Parámetros tipados, llamadas con argumentos, recursión, inferencia del tipo de retorno y **primera verificación semántica** (`NOK3002`). *El parser de tipos genéricos se pospone a S16, junto con OOP* |
 | **S16** | Verificación de tipos básica | ✅ Nombres declarados, aridad, tipos de argumentos, operadores, condiciones booleanas y retornos compatibles; 22 casos. *El parser de OOP pasa a S17* |
 | **S17** | Estructuras y clases con campos | ✅ `estructura`/`clase`, campos con visibilidad, construcción `punto { x: 1 }`, acceso y asignación, verificación de campos. *El emparejamiento de patrones pasa a S18* |
-| **S18** | Recuperación de errores multi-diagnóstico | Sync sets; al menos 3 errores por archivo; sugerencias "¿quisiste decir…?"; 80 casos inválidos |
+| **S18** | Métodos y `este` | ✅ Métodos en tipos, `este` para campos propios, llamadas `p.metodo(args)` traducidas a funciones con el objeto como puntero, y verificación de miembro/aridad/tipos. *La recuperación de errores multi-diagnóstico pasa a S19* |
 | **S19** | **Cierre v0.2: parser completo** | El 100 % de los ejemplos de los planes parsea; golden AST; fuzz 24 h; comando `nooki ast` usable |
 
 ---

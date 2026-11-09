@@ -102,6 +102,9 @@ std::string imprimir(const Expresion& expresion) {
             salida += ')';
             return salida;
         }
+
+        case TipoExpresion::Este:
+            return "este";
     }
     return "?";
 }
@@ -232,6 +235,10 @@ std::string imprimir(const DefinicionTipo& definicion) {
         salida += ' ';
         salida += campo.tipo;
         salida += ')';
+    }
+    for (const Funcion& metodo : definicion.metodos) {
+        salida += ' ';
+        salida += imprimir(metodo);
     }
     salida += ')';
     return salida;

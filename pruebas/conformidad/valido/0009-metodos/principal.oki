@@ -1,0 +1,23 @@
+// Métodos con `este`: campos propios, parámetros del mismo tipo y retorno.
+estructura punto {
+    publico x: entero
+    publico y: entero
+
+    publico funcion suma(otro: punto) -> entero {
+        retornar este.x + este.y + otro.x + otro.y
+    }
+
+    publico funcion mover(dx: entero) -> vacio {
+        este.x = este.x + dx
+    }
+}
+
+funcion principal() -> entero {
+    variable a = punto { x: 1, y: 2 }
+    variable b = punto { x: 10, y: 20 }
+    imprimir(a.suma(b))
+
+    a.mover(5)
+    imprimir(a.x)
+    retornar 0
+}
