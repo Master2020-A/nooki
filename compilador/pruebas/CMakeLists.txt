@@ -32,6 +32,11 @@ target_link_libraries(prueba_sentencias PRIVATE nooki_nucleo)
 nooki_aplicar_opciones(prueba_sentencias)
 add_test(NAME sentencias COMMAND prueba_sentencias)
 
+add_executable(prueba_semantico prueba_semantico.cpp)
+target_link_libraries(prueba_semantico PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_semantico)
+add_test(NAME semantico COMMAND prueba_semantico)
+
 # Arnés de conformidad: ejecuta los programas .oki de pruebas/conformidad.
 add_executable(nooki_conformidad arnes_conformidad.cpp)
 target_link_libraries(nooki_conformidad PRIVATE nooki_nucleo)

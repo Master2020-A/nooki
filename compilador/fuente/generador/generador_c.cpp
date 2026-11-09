@@ -6,13 +6,14 @@
 #include <string_view>
 #include <vector>
 
+#include "nooki/semantico/tipos.hpp"
+
 namespace nooki::generador {
 namespace {
 
-/// Tipo mínimo que el generador necesita conocer. No es el sistema de tipos del
-/// lenguaje (eso llega en S20): es lo justo para elegir la función de impresión y
-/// el tipo de C de cada variable.
-enum class TipoValor : unsigned char { Desconocido, Entero, Texto, Booleano };
+/// El generador usa el mismo tipo que el verificador: una sola definición de
+/// «qué es un entero» para todo el compilador.
+using TipoValor = nooki::semantico::Tipo;
 
 const char* tipo_c(TipoValor tipo) {
     switch (tipo) {
@@ -20,6 +21,8 @@ const char* tipo_c(TipoValor tipo) {
             return "const char*";
         case TipoValor::Booleano:
             return "int";
+        case TipoValor::Vacio:
+            return "void";
         case TipoValor::Desconocido:
         case TipoValor::Entero:
             return "long long";
@@ -84,13 +87,9 @@ std::string nombre_c(std::string_view nombre) {
 }
 
 TipoValor tipo_declarado(std::string_view tipo) {
-    if (tipo == "texto") {
-        return TipoValor::Texto;
-    }
-    if (tipo == "booleano") {
-        return TipoValor::Booleano;
-    }
-    return TipoValor::Entero;
+    const TipoValor conocido = nooki::semantico::desde_nombre(tipo);
+    // Un tipo desconocido no debería llegar aquí: el verificador ya lo rechazó.
+    return conocido == TipoValor::Desconocido ? TipoValor::Entero : conocido;
 }
 
 const char* PRELUDIO =

@@ -158,7 +158,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S13** | Sentencias y control de flujo | ✅ `variable`/`constante`, `si`/`sinosi`/`sino`, `mientras`, `para` con `paso`, `hacer`, `bucle`, `romper`, `continuar`, bloques; impresor de programas y `nooki ast`; 33 casos. *El Pratt de expresiones se adelantó al S12* |
 | **S14** | Backend C: variables y control de flujo | ✅ Variables y constantes con tipo, `si`/`sino`, `mientras`, `para` sobre rangos, `hacer`, `bucle`, `romper`, `continuar`, aritmética, comparaciones y `imprimir` de enteros. FizzBuzz, Fibonacci y tabla de multiplicar **compilados y ejecutados**. *El parser de sentencias se adelantó al S13* |
 | **S15** | Funciones con parámetros y verificaciones | ✅ Parámetros tipados, llamadas con argumentos, recursión, inferencia del tipo de retorno y **primera verificación semántica** (`NOK3002`). *El parser de tipos genéricos se pospone a S16, junto con OOP* |
-| **S16** | Parser de OOP | `clase/hereda/implementa/interfaz/rasgo/estructura/enumeracion`, visibilidad, `constructor/destructor/propiedad`; 150 tests |
+| **S16** | Verificación de tipos básica | ✅ Nombres declarados, aridad, tipos de argumentos, operadores, condiciones booleanas y retornos compatibles; 22 casos. *El parser de OOP pasa a S17* |
 | **S17** | Parser de patrones y `coincide` | Literales, tupla, struct, enum, *guards*, `\|`, `_`, bindings; 100 tests |
 | **S18** | Recuperación de errores multi-diagnóstico | Sync sets; al menos 3 errores por archivo; sugerencias "¿quisiste decir…?"; 80 casos inválidos |
 | **S19** | **Cierre v0.2: parser completo** | El 100 % de los ejemplos de los planes parsea; golden AST; fuzz 24 h; comando `nooki ast` usable |

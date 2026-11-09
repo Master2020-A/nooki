@@ -5,11 +5,17 @@
 
 namespace nooki::semantico {
 
-/// Comprueba que toda llamada apunte a una función declarada o al preludio.
+/// Verificación semántica de la v0.1.
 ///
-/// Es la primera verificación semántica del compilador: sin ella, un error de
-/// tecleo acababa en un mensaje del compilador de C en inglés.
+/// Comprueba, en este orden:
+///   - que toda llamada apunte a una función declarada o al preludio (NOK3002);
+///   - que los identificadores usados estén declarados (NOK3001);
+///   - que las llamadas tengan la aridad y los tipos correctos (NOK4002, NOK4003);
+///   - que los operadores reciban los tipos que esperan (NOK4001);
+///   - que las condiciones sean booleanas (NOK4005);
+///   - que el tipo devuelto coincida con el declarado (NOK4004).
+///
 /// Devuelve el número de errores encontrados.
-int verificar_llamadas(const sintactico::Programa& programa, diagnostico::Emisor& emisor);
+int verificar(const sintactico::Programa& programa, diagnostico::Emisor& emisor);
 
 }  // namespace nooki::semantico

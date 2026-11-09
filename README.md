@@ -50,7 +50,8 @@ Sprint 12 ✅  Parser de expresiones con precedencia (Pratt) · 197 casos
 Sprint 13 ✅  Sentencias y control de flujo · `nooki ast`
 Sprint 14 ✅  El backend compila variables y control de flujo · FizzBuzz y Fibonacci ejecutándose
 Sprint 15 ✅  Funciones con parámetros · factorial recursivo y primera verificación semántica
-Sprint 16 ⬜  Parser de tipos y clases
+Sprint 16 ✅  Verificación de tipos · errores en español antes de llegar a C
+Sprint 17 ⬜  Clases, estructuras y emparejamiento de patrones
 ```
 
 **Ya compila y ejecuta:**

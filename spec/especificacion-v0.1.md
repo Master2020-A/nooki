@@ -250,6 +250,7 @@ coincide (valor) {
 
 - `si` es también **expresión**, siempre con bloques: el valor de la rama es el valor de su bloque.
   `variable estado = si (activo) { "activo" } sino { "inactivo" }`
+- **La condición de `si`, `mientras` y `hacer` debe ser de tipo `booleano`.** Un entero no vale como condición: `si (1)` es error `NOK4005`. Es la diferencia entre un lenguaje en el que `si (x = 1)` compila y uno en el que no.
 - `romper` y `continuar` afectan al bucle más interno.
 - Un bloque `{ ... }` como última expresión de una función produce su valor de retorno.
 
@@ -296,6 +297,8 @@ coincide (valor) {
 | `como` | Conversión explícita truncante |
 
 > `es` está **reservada** para la comprobación de tipo en tiempo de ejecución, que no forma parte de la v0.1: el despacho se hace con `coincide` sobre variantes y con `@virtual`.
+
+> **v0.1:** las comparaciones (`==`, `!=`, `<`, `>`, `<=`, `>=`) solo se admiten entre valores de tipo `entero`. Comparar textos exige el tipo `texto` completo (longitud y contenido), que llega con la librería estándar.
 
 ### 7.3 Cierres
 

@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 16 — Verificación de tipos (2026-11-09)
+
+- **Verificador semántico** con ámbitos: nombres declarados, aridad de llamadas, tipos de
+  argumentos, tipos de operadores, condiciones y retornos.
+- **Cinco diagnósticos nuevos**, todos en español y con span:
+  `NOK4001` tipo incompatible · `NOK4002` argumento incompatible · `NOK4003` aridad incorrecta ·
+  `NOK4004` retorno incompatible · `NOK4005` condición no booleana.
+- **`si`, `mientras` y `hacer` exigen condición booleana**: `si (1)` ya no compila. Es la defensa
+  contra `si (x = 1)`, el error clásico de C.
+- **Un solo `Tipo` para todo el compilador** (`semantico/tipos.hpp`): el generador deja de tener su
+  propia noción de tipo y usa la misma.
+- 22 casos de verificación (10 válidos, 12 inválidos) que comparan el código exacto esperado.
+- El hueco que motivó el sprint queda cerrado: `factorial("texto")` ya no llega al compilador de C.
+
 ### Sprint 15 — Funciones con parámetros y primera verificación semántica (2026-11-09)
 
 - **Funciones con parámetros**: `funcion factorial(n: entero) -> entero`, con cualquier número de

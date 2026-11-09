@@ -32,6 +32,10 @@ inline constexpr std::string_view FUNCION_NO_DECLARADA = "NOK3002";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";
+inline constexpr std::string_view ARGUMENTO_INCOMPATIBLE = "NOK4002";
+inline constexpr std::string_view ARIDAD_INCORRECTA = "NOK4003";
+inline constexpr std::string_view RETORNO_INCOMPATIBLE = "NOK4004";
+inline constexpr std::string_view CONDICION_NO_BOOLEANA = "NOK4005";
 
 // --- Propiedad y préstamos (NOK5xxx) ---------------------------------------
 inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";

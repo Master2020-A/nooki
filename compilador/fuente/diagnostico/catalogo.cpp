@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 22> MENSAJES{{
+constexpr std::array<EntradaMensaje, 26> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -78,6 +78,20 @@ constexpr std::array<EntradaMensaje, 22> MENSAJES{{
     {codigos::TIPO_INCOMPATIBLE,
      "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",
      "expected a value of type “{esperado}” but found “{encontrado}”"},
+
+    {codigos::ARGUMENTO_INCOMPATIBLE,
+     "el argumento «{parametro}» de «{funcion}» espera «{esperado}» y se pasa «{encontrado}»",
+     "argument “{parametro}” of “{funcion}” expects “{esperado}” but got “{encontrado}”"},
+
+    {codigos::ARIDAD_INCORRECTA,
+     "«{funcion}» espera {esperados} argumento(s) y se han pasado {dados}",
+     "“{funcion}” expects {esperados} argument(s) but {dados} were given"},
+
+    {codigos::RETORNO_INCOMPATIBLE, "«{funcion}» debe devolver «{esperado}» y se devuelve «{encontrado}»",
+     "“{funcion}” must return “{esperado}” but “{encontrado}” is returned"},
+
+    {codigos::CONDICION_NO_BOOLEANA, "la condición debe ser de tipo «booleano» y es «{tipo}»",
+     "the condition must be “booleano” but is “{tipo}”"},
 
     {codigos::USO_TRAS_MOVER, "no se puede usar «{nombre}»: el valor se movió antes",
      "cannot use “{nombre}”: the value was moved before"},

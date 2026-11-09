@@ -90,8 +90,8 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         return Resultado{1, {}, {}};
     }
 
-    // Primera verificación semántica: toda llamada debe apuntar a algo que exista.
-    if (semantico::verificar_llamadas(programa, emisor) > 0) {
+    // Verificación semántica: nombres, aridad, tipos, condiciones y retornos.
+    if (semantico::verificar(programa, emisor) > 0) {
         return Resultado{1, {}, {}};
     }
 
