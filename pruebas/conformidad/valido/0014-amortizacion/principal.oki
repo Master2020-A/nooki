@@ -1,0 +1,43 @@
+// Ejemplo real: amortización de un préstamo a interés simple, en céntimos.
+//
+// No es la fórmula bancaria exacta (esa usa interés compuesto sobre el saldo),
+// pero ejercita todo el lenguaje actual: estructuras con métodos, `este`,
+// parámetros, bucles, comparaciones y cajas.
+estructura prestamo {
+    publico capital: entero
+    publico tasa_mil: entero
+    publico meses: entero
+
+    publico funcion cuota() -> entero {
+        variable amortizacion = este.capital / este.meses
+        variable intereses = (este.capital * este.tasa_mil) / 1000
+        retornar amortizacion + intereses
+    }
+
+    publico funcion total() -> entero {
+        retornar este.cuota() * este.meses
+    }
+}
+
+funcion intereses_de(saldo: &Caja<entero>, tasa_mil: entero) -> entero {
+    retornar (*saldo * tasa_mil) / 1000
+}
+
+funcion principal() -> entero {
+    variable p = prestamo { capital: 1200000, tasa_mil: 10, meses: 12 }
+    variable saldo = Caja.nuevo(p.capital)
+
+    imprimir(p.cuota())
+    imprimir(p.total())
+
+    variable mes = 1
+    mientras (mes <= 3) {
+        variable intereses = intereses_de(&saldo, p.tasa_mil)
+        variable amortizado = p.cuota() - intereses
+        *saldo = *saldo - amortizado
+        imprimir(*saldo)
+        mes = mes + 1
+    }
+
+    retornar 0
+}

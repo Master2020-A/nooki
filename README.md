@@ -8,6 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
+| **Versión** | 0.2.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -56,7 +57,8 @@ Sprint 18 ✅  Métodos y `este` · objetos con comportamiento
 Sprint 19 ✅  Enumeraciones y `coincide` · emparejamiento de patrones
 Sprint 20 ✅  `Caja<T>`: propiedad única, movimiento y liberación determinista
 Sprint 21 ✅  Préstamos inmutables: prestar no mueve
-Sprint 22 ⬜  Préstamos mutables y exclusividad
+Sprint 22 ✅  Préstamos mutables y exclusividad · **v0.2.0**
+Sprint 23 ⬜  `texto` con operaciones (concatenar, comparar)
 ```
 
 **Ya compila y ejecuta:**
@@ -72,6 +74,9 @@ funcion principal() -> entero {
     retornar 0
 }
 ```
+
+Un ejemplo completo (estructura, método, caja y préstamo mutable) está en
+[`pruebas/conformidad/valido/0014-amortizacion`](pruebas/conformidad/valido/0014-amortizacion/principal.oki).
 
 El binario `nooki` ya existe y responde (`--version`, `ayuda`), pero **todavía no compila `.oki`**:
 eso llega en el Sprint 6.

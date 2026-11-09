@@ -1,0 +1,16 @@
+// Préstamos mutables: escribir a través del préstamo sin mover la caja.
+funcion sumar_a(p: &mutable Caja<entero>, cuanto: entero) -> vacio {
+    *p = *p + cuanto
+}
+
+funcion leer(p: &Caja<entero>) -> entero {
+    retornar *p
+}
+
+funcion principal() -> entero {
+    variable c = Caja.nuevo(40)
+
+    sumar_a(&mutable c, 2)
+    imprimir(leer(&c))
+    retornar 0
+}

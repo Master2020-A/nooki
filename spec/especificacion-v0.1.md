@@ -1,8 +1,8 @@
-# Especificación del lenguaje NOOKI v0.1
+# Especificación del lenguaje NOOKI v0.2
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Borrador normativo — Sprint 2 |
+| **Estado** | Borrador normativo — v0.1 ampliada en la v0.2 (§18) |
 | **Fecha** | 2026-11-09 |
 | **Extensión de archivo** | `.oki` |
 | **Gramática** | [`gramatica.ebnf`](gramatica.ebnf) (normativa) |
@@ -627,7 +627,6 @@ Un compilador puede declararse **"Nooki 0.1"** solo si:
 ---
 
 ## 17. Restricciones conocidas de la v0.1 (declaradas, no olvidadas)
-
 1. Sin `async`/`await` (ADR-005).
 2. Sin doble referencia (`&&T`).
 3. Sin etiquetas de bucle (`romper` solo al bucle más interno).
@@ -637,3 +636,97 @@ Un compilador puede declararse **"Nooki 0.1"** solo si:
 7. Sin clases de C++ en FFI (solo `extern "C"`).
 8. Sin macros de usuario (llegan en v0.7).
 9. Sin `no_std` (llega en v0.5).
+
+
+---
+
+## 18. Ampliación de la v0.2 — NORMATIVO
+
+Todo lo anterior sigue vigente. Esta sección añade lo que el compilador implementa desde el Sprint 17.
+
+### 18.1 Estructuras, clases y métodos
+
+```aura
+estructura punto {
+    publico x: entero
+    publico y: entero
+
+    publico funcion suma(otro: punto) -> entero {
+        retornar este.x + este.y + otro.x + otro.y
+    }
+}
+```
+
+- `estructura` y `clase` comparten representación **por valor** en la v0.1/v0.2 (ADR-015). La semántica de referencia de `clase` llega con el modelo de memoria.
+- Los campos se declaran `nombre: tipo`; la visibilidad por defecto es `privado`.
+- Dentro de un método, `este` designa el objeto actual. Los métodos se traducen a funciones con el objeto como primer parámetro.
+- Construcción con campos nombrados: `punto { x: 1, y: 2 }`. Todos los campos son obligatorios.
+
+### 18.2 Enumeraciones y `coincide`
+
+```aura
+enumeracion color { rojo, verde, azul }
+
+coincide (c) {
+    caso color.rojo => imprimir("rojo")
+    caso 1           => imprimir("uno")
+    caso _           => imprimir("otro")
+}
+```
+
+- Los patrones admiten literales enteros y booleanos, variantes de enumeración y el comodín `_`.
+- **El comodín es obligatorio**; sin él, el `coincide` es error `NOK4006`.
+- El valor examinado se evalúa **una sola vez**.
+
+### 18.3 `Caja<T>`: propiedad y movimiento
+
+```aura
+variable c = Caja.nuevo(41)
+*c = *c + 1
+variable d = c      // movimiento: «c» deja de ser válida
+imprimir(*d)        // 42
+```
+
+- `Caja<T>` es un valor en el montículo con **un único dueño** (ADR-016).
+- Asignar una caja **transfiere** la propiedad. Usar el origen después de moverlo es error `NOK5001`.
+- El dueño **libera** al salir del ámbito y antes de cada `retornar`.
+- En la v0.2 solo existe `Caja<entero>`; los genéricos llegan con el sistema de tipos completo.
+
+### 18.4 Préstamos
+
+```aura
+funcion sumar_a(p: &mutable Caja<entero>, cuanto: entero) -> vacio {
+    *p = *p + cuanto
+}
+
+funcion leer(p: &Caja<entero>) -> entero {
+    retornar *p
+}
+```
+
+- `&caja` presta **sin mover**: la variable sigue siendo válida y se libera donde siempre.
+- **El préstamo vive durante la expresión que lo crea.** Guardarlo en una variable es error `NOK5002` (ADR-017).
+- `&mutable` permite escribir a través del préstamo; a través de un préstamo `&` es error `NOK4009`.
+- **Exclusividad**: en una misma llamada no se puede pasar `&mutable` y otro préstamo de la misma variable (`NOK5003`).
+- Solo se presta una variable que sea una `Caja` (`NOK4008`).
+
+### 18.5 Códigos nuevos
+
+| Código | Significado |
+|---|---|
+| `NOK3003` | Tipo inexistente |
+| `NOK3004` | Campo inexistente en una construcción |
+| `NOK3005` | Campo que falta en una construcción |
+| `NOK3006` | Miembro inexistente |
+| `NOK3007` | Variante inexistente |
+| `NOK4002` | Argumento con tipo incorrecto |
+| `NOK4003` | Aridad incorrecta |
+| `NOK4004` | Retorno incompatible |
+| `NOK4005` | Condición no booleana |
+| `NOK4006` | `coincide` sin comodín |
+| `NOK4007` | Desreferencia inválida |
+| `NOK4008` | Préstamo de algo que no es una `Caja` |
+| `NOK4009` | Escritura a través de un préstamo inmutable |
+| `NOK5001` | Uso después de mover |
+| `NOK5002` | Préstamo guardado en una variable |
+| `NOK5003` | Préstamo mutable y compartido en la misma llamada |

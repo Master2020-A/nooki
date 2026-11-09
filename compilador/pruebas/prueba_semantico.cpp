@@ -140,6 +140,11 @@ constexpr Caso VALIDOS[] = {
      "funcion principal() -> entero {\n    variable c = Caja.nuevo(1)\n"
      "    variable d = Caja.nuevo(2)\n    retornar suma(&c, &d)\n}",
      ""},
+    {"funcion sumar_a(p: &mutable Caja<entero>, cuanto: entero) -> vacio {\n"
+     "    *p = *p + cuanto\n}\n"
+     "funcion principal() -> entero {\n    variable c = Caja.nuevo(1)\n"
+     "    sumar_a(&mutable c, 2)\n    retornar 0\n}",
+     ""},
 };
 
 // Programas que deben producir exactamente el código indicado.
@@ -222,6 +227,16 @@ constexpr Caso INVALIDOS[] = {
     {"funcion principal() -> entero {\n    variable c = Caja.nuevo(1)\n    variable r = &c\n"
      "    retornar 0\n}",
      "NOK5002"},
+
+    // --- Préstamos mutables -------------------------------------------------
+    {"funcion f(a: &mutable Caja<entero>, b: &Caja<entero>) -> vacio {\n}\n"
+     "funcion principal() -> entero {\n    variable c = Caja.nuevo(1)\n"
+     "    f(&mutable c, &c)\n    retornar 0\n}",
+     "NOK5003"},
+    {"funcion escribir(p: &Caja<entero>) -> vacio {\n    *p = 5\n}\n"
+     "funcion principal() -> entero {\n    variable c = Caja.nuevo(1)\n"
+     "    escribir(&c)\n    retornar 0\n}",
+     "NOK4009"},
 };
 
 }  // namespace

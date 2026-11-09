@@ -82,18 +82,27 @@ private:
         std::map<std::string, std::string_view> estructuras;
         std::set<std::string> cajas;
         std::set<std::string> movidas;
-        std::set<std::string> prestamos;
+        std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
 
-    void registrar_prestamo(std::string_view nombre) {
+    void registrar_prestamo(std::string_view nombre, bool mutable_) {
         if (!ambitos_.empty()) {
-            ambitos_.back().prestamos.insert(std::string(nombre));
+            ambitos_.back().prestamos[std::string(nombre)] = mutable_;
         }
     }
     bool es_prestamo_declarado(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->prestamos.count(std::string(nombre)) != 0) {
                 return true;
+            }
+        }
+        return false;
+    }
+    bool es_prestamo_mutable(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            const auto encontrado = it->prestamos.find(std::string(nombre));
+            if (encontrado != it->prestamos.end()) {
+                return encontrado->second;
             }
         }
         return false;
@@ -264,7 +273,7 @@ private:
             declarar(parametro.nombre, tipo,
                      estructura != nullptr ? parametro.tipo : std::string_view{});
             if (es_prestamo(parametro.tipo)) {
-                registrar_prestamo(parametro.nombre);
+                registrar_prestamo(parametro.nombre, parametro.tipo.rfind("&mutable", 0) == 0);
             }
         }
 
@@ -583,6 +592,15 @@ private:
     }
 
     Tipo tipo_asignacion(const Expresion& expresion) {
+        if (expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Unaria &&
+            expresion.izquierda->lexema == "*" && expresion.izquierda->izquierda &&
+            expresion.izquierda->izquierda->tipo == TipoExpresion::Identificador) {
+            const std::string_view nombre = expresion.izquierda->izquierda->lexema;
+            if (es_prestamo_declarado(nombre) && !es_prestamo_mutable(nombre)) {
+                error(diagnostico::codigos::ESCRITURA_EN_PRESTAMO_INMUTABLE, expresion.span);
+            }
+        }
+
         const Tipo destino =
             expresion.izquierda ? tipo_de(*expresion.izquierda) : Tipo::Desconocido;
         const Tipo valor = expresion.derecha ? tipo_de(*expresion.derecha) : Tipo::Desconocido;
@@ -594,10 +612,45 @@ private:
         return destino;
     }
 
+    /// Dentro de una misma llamada no puede haber un préstamo mutable y otro cualquiera
+    /// de la misma variable.
+    void comprobar_exclusividad(const Expresion& llamada) {
+        std::map<std::string_view, int> mutables;
+        std::map<std::string_view, int> compartidos;
+
+        for (const sintactico::ExpresionPtr& argumento : llamada.lista) {
+            if (!argumento || argumento->tipo != TipoExpresion::Unaria) {
+                continue;
+            }
+            const bool es_mutable = argumento->lexema == "&mutable";
+            if (!es_mutable && argumento->lexema != "&") {
+                continue;
+            }
+            if (!argumento->izquierda ||
+                argumento->izquierda->tipo != TipoExpresion::Identificador) {
+                continue;
+            }
+            const std::string_view nombre = argumento->izquierda->lexema;
+            if (es_mutable) {
+                ++mutables[nombre];
+            } else {
+                ++compartidos[nombre];
+            }
+        }
+
+        for (const auto& [nombre, cuenta] : mutables) {
+            if (cuenta > 1 || compartidos[nombre] > 0) {
+                error(diagnostico::codigos::PRESTAMO_EXCLUSIVO, llamada.span)
+                    .parametro("nombre", std::string(nombre));
+            }
+        }
+    }
+
     Tipo tipo_llamada(const Expresion& expresion) {
         if (!expresion.izquierda) {
             return Tipo::Desconocido;
         }
+        comprobar_exclusividad(expresion);
 
         if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
             return tipo_llamada_metodo(expresion);

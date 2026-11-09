@@ -3,7 +3,25 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.2.0] — 2026-11-09
+
+**Primera versión con memoria determinista.** El compilador ya escribe programas con
+estructuras, objetos con métodos, enumeraciones, emparejamiento de patrones, cajas con dueño
+único y préstamos que no mueven. Compila a binario nativo en Windows, Linux y macOS con
+GCC/Clang/MSVC como cadenas de compilación.
+
+### Sprint 22 — Préstamos mutables y exclusividad (2026-11-09)
+
+- **`&mutable caja`** y parámetros `&mutable Caja<entero>`: escribir a través del préstamo sin
+  mover la caja.
+- **Escritura a través de un préstamo inmutable** → `NOK4009`, con la alternativa en el mensaje.
+- **Exclusividad comprobada**: en una misma llamada no puede haber `&mutable x` junto a otro
+  préstamo de `x` (`NOK5003`). Es la regla de préstamos de Rust verificada donde hoy puede
+  violarse.
+- **Versión 0.2.0** y **especificación v0.2** con la sección 18, que documenta todo lo añadido
+  desde el Sprint 17 y la tabla completa de códigos de diagnóstico.
+- Ejemplo real de conformidad (`0014-amortizacion`): un préstamo con estructura, método, caja y
+  préstamo mutable, compilado y ejecutado.
 
 ### Sprint 21 — Préstamos inmutables (2026-11-09)
 
