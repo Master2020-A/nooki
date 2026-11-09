@@ -64,6 +64,10 @@ private:
     ExpresionPtr miembro(ExpresionPtr objeto, bool opcional);
     std::string analizar_tipo();
 
+    /// Analiza un tipo y devuelve su texto tal cual aparece en el fuente.
+    /// Admite `&`, `&mutable`, `*` y genéricos `Caja<entero>`.
+    std::string_view analizar_tipo_texto();
+
     const diagnostico::GestorFuentes& fuentes_;
     diagnostico::ArchivoId archivo_;
     diagnostico::Emisor& emisor_;

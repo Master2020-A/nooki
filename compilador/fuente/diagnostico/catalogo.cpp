@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 33> MENSAJES{{
+constexpr std::array<EntradaMensaje, 35> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -97,6 +97,13 @@ constexpr std::array<EntradaMensaje, 33> MENSAJES{{
     {codigos::DEREFERENCIA_INVALIDA, "«*» solo se puede aplicar a una «Caja»",
      "“*” can only be applied to a “Caja”"},
 
+    {codigos::PRESTAMO_INVALIDO, "solo se puede prestar una variable que sea una «Caja»",
+     "only a variable holding a “Caja” can be borrowed"},
+
+    {codigos::PRESTAMO_GUARDADO,
+     "un préstamo no se puede guardar en una variable: solo vive durante la llamada",
+     "a borrow cannot be stored in a variable: it only lives during the call"},
+
     {codigos::TIPO_INCOMPATIBLE,
      "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",
      "expected a value of type “{esperado}” but found “{encontrado}”"},
@@ -117,7 +124,6 @@ constexpr std::array<EntradaMensaje, 33> MENSAJES{{
 
     {codigos::USO_TRAS_MOVER, "no se puede usar «{nombre}»: el valor se movió antes",
      "cannot use “{nombre}”: the value was moved before"},
-
     {codigos::VARIABLE_SIN_MUTAR, "la variable «{nombre}» nunca se modifica",
      "variable “{nombre}” is never mutated"},
 }};

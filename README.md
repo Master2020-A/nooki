@@ -55,7 +55,8 @@ Sprint 17 ✅  Estructuras y clases con campos · objetos por valor
 Sprint 18 ✅  Métodos y `este` · objetos con comportamiento
 Sprint 19 ✅  Enumeraciones y `coincide` · emparejamiento de patrones
 Sprint 20 ✅  `Caja<T>`: propiedad única, movimiento y liberación determinista
-Sprint 21 ⬜  Préstamos e inmutabilidad compartida
+Sprint 21 ✅  Préstamos inmutables: prestar no mueve
+Sprint 22 ⬜  Préstamos mutables y exclusividad
 ```
 
 **Ya compila y ejecuta:**

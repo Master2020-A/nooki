@@ -1,0 +1,13 @@
+// Préstamos inmutables: prestar no mueve.
+funcion suma(a: &Caja<entero>, b: &Caja<entero>) -> entero {
+    retornar *a + *b
+}
+
+funcion principal() -> entero {
+    variable c = Caja.nuevo(20)
+    variable d = Caja.nuevo(22)
+
+    imprimir(suma(&c, &d))
+    imprimir(*c)
+    retornar 0
+}

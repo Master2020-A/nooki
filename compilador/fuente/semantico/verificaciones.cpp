@@ -82,7 +82,50 @@ private:
         std::map<std::string, std::string_view> estructuras;
         std::set<std::string> cajas;
         std::set<std::string> movidas;
+        std::set<std::string> prestamos;
     };
+
+    void registrar_prestamo(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().prestamos.insert(std::string(nombre));
+        }
+    }
+    bool es_prestamo_declarado(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->prestamos.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static bool es_prestamo(std::string_view tipo) {
+        return !tipo.empty() && (tipo.front() == '&' || tipo.front() == '*');
+    }
+
+    /// ¿Es un tipo que el compilador entiende en esta etapa?
+    bool es_tipo_valido(std::string_view tipo) const {
+        if (tipo.empty()) {
+            return false;
+        }
+        if (desde_nombre(tipo) != Tipo::Desconocido) {
+            return true;
+        }
+        if (tipo_por_nombre(tipo) != nullptr || enumeraciones_.count(tipo) != 0) {
+            return true;
+        }
+        if (tipo.rfind("Caja<", 0) == 0) {
+            return true;
+        }
+        if (es_prestamo(tipo)) {
+            std::string_view resto = tipo.substr(1);
+            if (resto.rfind("mutable ", 0) == 0) {
+                resto = resto.substr(8);
+            }
+            return es_tipo_valido(resto);
+        }
+        return false;
+    }
 
     void declarar_caja(std::string_view nombre) {
         if (!ambitos_.empty()) {
@@ -213,13 +256,16 @@ private:
         for (const sintactico::Parametro& parametro : funcion.parametros) {
             const Tipo tipo = desde_nombre(parametro.tipo);
             const sintactico::DefinicionTipo* estructura = tipo_por_nombre(parametro.tipo);
-            if (tipo == Tipo::Desconocido && estructura == nullptr) {
+            if (!es_tipo_valido(parametro.tipo)) {
                 error(diagnostico::codigos::TIPO_INCOMPATIBLE, parametro.span)
                     .parametro("esperado", "un tipo conocido")
                     .parametro("encontrado", std::string(parametro.tipo));
             }
             declarar(parametro.nombre, tipo,
                      estructura != nullptr ? parametro.tipo : std::string_view{});
+            if (es_prestamo(parametro.tipo)) {
+                registrar_prestamo(parametro.nombre);
+            }
         }
 
         for (const Sentencia& sentencia : funcion.cuerpo) {
@@ -251,6 +297,15 @@ private:
                     return;
                 }
                 const Tipo real = tipo_de(*sentencia.expresion);
+
+                // Un préstamo no se puede guardar: solo vive durante la llamada.
+                if (sentencia.expresion->tipo == TipoExpresion::Unaria &&
+                    (sentencia.expresion->lexema == "&" ||
+                     sentencia.expresion->lexema == "&mutable")) {
+                    error(diagnostico::codigos::PRESTAMO_GUARDADO, sentencia.expresion->span)
+                        .ayuda("pase el préstamo directamente como argumento");
+                    return;
+                }
 
                 // ¿Declara una caja nueva, o mueve una que ya existía?
                 if (es_llamada_caja(*sentencia.expresion)) {
@@ -474,10 +529,23 @@ private:
             const bool caja = expresion.izquierda &&
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
                               es_caja(expresion.izquierda->lexema);
-            if (!caja) {
+            const bool prestamo_de_caja =
+                expresion.izquierda &&
+                expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                es_prestamo_declarado(expresion.izquierda->lexema);
+            if (!caja && !prestamo_de_caja) {
                 error(diagnostico::codigos::DEREFERENCIA_INVALIDA, expresion.span);
             }
             return Tipo::Entero;
+        }
+        if (expresion.lexema == "&" || expresion.lexema == "&mutable") {
+            const bool caja = expresion.izquierda &&
+                              expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                              es_caja(expresion.izquierda->lexema);
+            if (!caja) {
+                error(diagnostico::codigos::PRESTAMO_INVALIDO, expresion.span);
+            }
+            return Tipo::Desconocido;
         }
         return Tipo::Desconocido;
     }

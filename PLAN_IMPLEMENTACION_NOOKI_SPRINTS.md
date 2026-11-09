@@ -172,7 +172,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
 | **S20** | `Caja<T>` y movimiento | ✅ Dueño único en el montículo, movimiento al asignar, uso tras mover como error (`NOK5001`), liberación determinista al cerrar ámbito y antes de `retornar`. ADR-016. *La tabla de símbolos ya existía desde S16* |
-| **S21** | Sistema de tipos interno | `TypeId` internado, primitivos, compuestos, unificación, registro de tipos; 100 tests |
+| **S21** | Préstamos de alcance de expresión | ✅ `&caja`, tipo `&Caja<entero>`, prestar sin mover, `&mutable` aceptado sin distinguirse todavía; guardar un préstamo es error (`NOK5002`), prestar algo que no es caja (`NOK4008`). ADR-017. *El `TypeId` internado ya existe en `semantico/tipos.hpp`* |
 | **S22** | Chequeo de expresiones y sentencias | Tipo de toda expresión; conversiones explícitas; errores con span; 150 tests |
 | **S23** | Funciones: sobrecarga, defaults y nombrados | Resolución de sobrecarga, parámetros por defecto y nombrados, retorno implícito; 120 tests |
 | **S24** | Genéricos y monomorfización | Inferencia de argumentos, restricciones, `donde`; monomorfización lista para el IR; 100 tests |

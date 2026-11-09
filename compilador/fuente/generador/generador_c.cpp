@@ -13,6 +13,16 @@ namespace {
 
 /// Tipo de C de un tipo escrito en Nooki.
 std::string tipo_c(std::string_view escrito) {
+    if (!escrito.empty() && (escrito.front() == '&' || escrito.front() == '*')) {
+        std::string_view resto = escrito.substr(1);
+        if (resto.rfind("mutable ", 0) == 0) {
+            resto = resto.substr(8);
+        }
+        return tipo_c(resto) + "*";
+    }
+    if (escrito.rfind("Caja<", 0) == 0) {
+        return "nooki_caja";
+    }
     switch (nooki::semantico::desde_nombre(escrito)) {
         case nooki::semantico::Tipo::Texto:
             return "const char*";
@@ -812,15 +822,25 @@ private:
     }
 
     std::string unaria(const sintactico::Expresion& nodo) {
+        if (nodo.lexema == "&" || nodo.lexema == "&mutable") {
+            if (!nodo.izquierda) {
+                return "0";
+            }
+            return "&" + expresion(*nodo.izquierda);
+        }
         if (nodo.lexema == "*") {
             if (!nodo.izquierda) {
                 return "0";
             }
-            if (tipo_de(*nodo.izquierda) != "nooki_caja") {
-                no_soportado("«*» sobre algo que no es una «Caja»");
-                return "0";
+            const std::string tipo = tipo_de(*nodo.izquierda);
+            if (tipo == "nooki_caja") {
+                return "(*" + expresion(*nodo.izquierda) + ".datos)";
             }
-            return "(*" + expresion(*nodo.izquierda) + ".datos)";
+            if (tipo == "nooki_caja*") {
+                return "(*(*" + expresion(*nodo.izquierda) + ").datos)";
+            }
+            no_soportado("«*» sobre algo que no es una «Caja»");
+            return "0";
         }
         if (nodo.lexema != "-" && nodo.lexema != "!") {
             no_soportado("un operador unario que no sea «-», «!» o «*»");

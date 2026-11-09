@@ -5,6 +5,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 21 — Préstamos inmutables (2026-11-09)
+
+- **`&caja`**: préstamo inmutable que **no mueve**. La variable prestada sigue siendo válida y se
+  libera donde siempre.
+- **Tipo `&Caja<entero>`** en parámetros, traducido a `nooki_caja*` en C. El parser de tipos admite
+  ahora `&T`, `&mutable T`, `*T` y genéricos `Caja<T>`.
+- **Regla**: un préstamo vive durante la expresión que lo crea. Guardarlo en una variable es error
+  `NOK5002`, con la explicación y la alternativa.
+- **Prestar algo que no es una caja** → `NOK4008`.
+- **ADR-017** documenta la regla, el límite (no se pueden devolver préstamos) y que `&mutable` se
+  acepta pero aún no se distingue.
+- Programa de conformidad `0012-prestamos`, compilado y ejecutado.
+
 ### Sprint 20 — `Caja<T>`: propiedad única y movimiento (2026-11-09)
 
 - **`Caja<T>`**: valor en el montículo con **un único dueño**. `Caja.nuevo(41)` asigna; `*c` lee y

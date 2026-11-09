@@ -231,12 +231,8 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
             break;
         }
 
-        if (const Token& tipo = actual();
-            tipo.es(TipoToken::PalabraClave) || tipo.es(TipoToken::Identificador)) {
-            campo.tipo = tipo.lexema;
-            avanzar();
-        } else {
-            error_en(tipo, diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+        campo.tipo = analizar_tipo_texto();
+        if (campo.tipo.empty()) {
             break;
         }
 
@@ -342,12 +338,8 @@ Funcion Parser::analizar_funcion() {
                 error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
                 break;
             }
-            if (const Token& tipo = actual();
-                tipo.es(TipoToken::PalabraClave) || tipo.es(TipoToken::Identificador)) {
-                parametro.tipo = tipo.lexema;
-                avanzar();
-            } else {
-                error_en(tipo, diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+            parametro.tipo = analizar_tipo_texto();
+            if (parametro.tipo.empty()) {
                 break;
             }
 
@@ -364,12 +356,9 @@ Funcion Parser::analizar_funcion() {
 
     funcion.tipo_retorno = "vacio";
     if (aceptar_lexema("->")) {
-        if (const Token& tipo = actual();
-            tipo.es(TipoToken::PalabraClave) || tipo.es(TipoToken::Identificador)) {
-            funcion.tipo_retorno = tipo.lexema;
-            avanzar();
-        } else {
-            error_en(tipo, diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+        const std::string_view tipo = analizar_tipo_texto();
+        if (!tipo.empty()) {
+            funcion.tipo_retorno = tipo;
         }
     }
 
@@ -621,13 +610,7 @@ Sentencia Parser::analizar_declaracion(bool constante) {
     }
 
     if (aceptar_lexema(":")) {
-        if (const Token& tipo = actual();
-            tipo.es(TipoToken::PalabraClave) || tipo.es(TipoToken::Identificador)) {
-            sentencia.tipo_declarado = tipo.lexema;
-            avanzar();
-        } else {
-            error_en(tipo, diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
-        }
+        sentencia.tipo_declarado = analizar_tipo_texto();
     }
 
     if (!aceptar_lexema("=")) {
@@ -1005,6 +988,50 @@ ExpresionPtr Parser::miembro(ExpresionPtr objeto, bool opcional) {
         error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de miembro");
     }
     return nodo;
+}
+
+std::string_view Parser::analizar_tipo_texto() {
+    const std::size_t inicio = actual().span.inicio;
+    std::size_t fin = actual().span.fin;
+
+    if (actual().lexema == "&" || actual().lexema == "*") {
+        avanzar();
+        if (actual().lexema == "mutable") {
+            avanzar();
+        }
+    }
+
+    if (!actual().es(TipoToken::PalabraClave) && !actual().es(TipoToken::Identificador)) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+        return {};
+    }
+
+    fin = actual().span.fin;
+    avanzar();
+
+    // Genéricos: `Caja<entero>`.
+    if (actual().lexema == "<") {
+        int profundidad = 0;
+        while (!actual().es(TipoToken::FinDeArchivo)) {
+            const std::string_view lexema = actual().lexema;
+            fin = actual().span.fin;
+            if (lexema == "<") {
+                ++profundidad;
+            } else if (lexema == ">") {
+                --profundidad;
+            }
+            avanzar();
+            if (profundidad == 0) {
+                break;
+            }
+        }
+    }
+
+    const std::string_view contenido = fuentes_.contenido(archivo_);
+    if (fin <= contenido.size() && inicio < fin) {
+        return contenido.substr(inicio, fin - inicio);
+    }
+    return {};
 }
 
 std::string Parser::analizar_tipo() {
