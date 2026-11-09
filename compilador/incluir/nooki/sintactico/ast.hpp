@@ -30,6 +30,7 @@ enum class TipoExpresion : unsigned char {
     Propagacion,
     Como,
     Asignacion,
+    Construccion,
 };
 
 struct Expresion;
@@ -50,8 +51,11 @@ struct Expresion {
     /// Segundo operando o valor asignado.
     ExpresionPtr derecha;
 
-    /// Argumentos de llamada o índice.
+    /// Argumentos de llamada, índice o valores de una construcción.
     std::vector<ExpresionPtr> lista;
+
+    /// Nombres de los campos en una construcción (`punto { x: 1, y: 2 }`).
+    std::vector<std::string_view> nombres_campo;
 
     diagnostico::Span span;
 };
@@ -112,8 +116,25 @@ struct Funcion {
     diagnostico::Span span;
 };
 
+/// Un campo declarado en una estructura o clase.
+struct Campo {
+    std::string_view nombre;
+    std::string_view tipo;
+    bool publico = false;
+    diagnostico::Span span;
+};
+
+/// `estructura` o `clase`. En la v0.1 comparten representación (ADR-015).
+struct DefinicionTipo {
+    std::string_view nombre;
+    bool es_clase = false;
+    std::vector<Campo> campos;
+    diagnostico::Span span;
+};
+
 struct Programa {
     std::vector<Funcion> funciones;
+    std::vector<DefinicionTipo> tipos;
 };
 
 }  // namespace nooki::sintactico

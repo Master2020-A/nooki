@@ -5,6 +5,19 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 17 — Estructuras y clases con campos (2026-11-09)
+
+- **Declaraciones de tipo**: `estructura punto { publico x: entero }` y `clase persona { ... }`,
+  con visibilidad por campo (`publico`, `privado`, …).
+- **Construcción con campos nombrados**: `punto { x: 1, y: 2 }`, traducida a literal compuesto de C.
+- **Acceso y asignación de campos**: `p.x`, `p.x = 5`, incluido dentro de expresiones.
+- **Verificación de la construcción**: tipo inexistente (`NOK3003`), campo inexistente (`NOK3004`),
+  campo que falta (`NOK3005`) y tipo del valor incorrecto (`NOK4001`).
+- **ADR-015**: en la v0.1, `clase` y `estructura` comparten representación por valor porque la
+  semántica de referencia necesita el modelo de memoria. ADR-001 sigue vigente como objetivo.
+- Programa de conformidad `0007-estructuras`, compilado y ejecutado.
+- 4 casos nuevos de sentencias y 6 de verificación.
+
 ### Sprint 16 — Verificación de tipos (2026-11-09)
 
 - **Verificador semántico** con ámbitos: nombres declarados, aridad de llamadas, tipos de

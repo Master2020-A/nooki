@@ -95,6 +95,16 @@ constexpr Caso CASOS[] = {
     {"funcion f(a: entero, b: texto) {\n}",
      "(programa (funcion f (a entero, b texto) -> vacio))"},
     {"funcion f() {\n    g(1, \"dos\")\n}", "(programa (funcion f -> vacio (llamada g 1 \"dos\")))"},
+
+    // --- Tipos -------------------------------------------------------------
+    {"estructura punto {\n    publico x: entero\n    publico y: entero\n}",
+     "(programa (estructura punto (x entero) (y entero)))"},
+    {"clase persona {\n    privado edad: entero\n}",
+     "(programa (clase persona (edad entero)))"},
+    {"funcion f() {\n    variable p = punto { x: 1, y: 2 }\n}",
+     "(programa (funcion f -> vacio (variable p (construir punto (x 1) (y 2)))))"},
+    {"funcion f() {\n    variable p = punto { x: 1 }\n    p.x = 2\n}",
+     "(programa (funcion f -> vacio (variable p (construir punto (x 1))) (= (. p x) 2)))"},
 };
 
 constexpr std::string_view INVALIDOS[] = {

@@ -1,0 +1,21 @@
+// Estructuras y clases con campos: construcción, acceso y asignación.
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+clase persona {
+    publico nombre: texto
+    publico edad: entero
+}
+
+funcion principal() -> entero {
+    variable p = punto { x: 3, y: 4 }
+    p.x = p.x + 1
+    imprimir(p.x * p.y)
+
+    variable ana = persona { nombre: "Ana", edad: 30 }
+    imprimir(ana.nombre)
+    imprimir(ana.edad)
+    retornar 0
+}

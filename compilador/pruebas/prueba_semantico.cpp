@@ -109,6 +109,16 @@ constexpr Caso VALIDOS[] = {
     {"funcion principal() -> entero {\n    si (1 < 2) { imprimir(1) } sino { imprimir(\"dos\") }\n"
      "    retornar 0\n}",
      ""},
+
+    // --- Estructuras -------------------------------------------------------
+    {"estructura punto {\n    publico x: entero\n    publico y: entero\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 1, y: 2 }\n"
+     "    retornar p.x\n}",
+     ""},
+    {"clase persona {\n    publico nombre: texto\n    publico edad: entero\n}\n"
+     "funcion principal() -> entero {\n    variable a = persona { nombre: \"Ana\", edad: 30 }\n"
+     "    retornar a.edad\n}",
+     ""},
 };
 
 // Programas que deben producir exactamente el código indicado.
@@ -135,6 +145,20 @@ constexpr Caso INVALIDOS[] = {
      "funcion principal() -> entero {\n    retornar 0\n}",
      "NOK4004"},
     {"funcion principal() -> entero {\n    variable x = 1\n    x = \"a\"\n    retornar x\n}",
+     "NOK4001"},
+
+    // --- Estructuras -------------------------------------------------------
+    {"funcion principal() -> entero {\n    variable p = desconocido { x: 1 }\n    retornar 0\n}",
+     "NOK3003"},
+    {"estructura punto {\n    publico x: entero\n    publico y: entero\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 1, y: 2, z: 3 }\n"
+     "    retornar 0\n}",
+     "NOK3004"},
+    {"estructura punto {\n    publico x: entero\n    publico y: entero\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: 1 }\n    retornar 0\n}",
+     "NOK3005"},
+    {"estructura punto {\n    publico x: entero\n}\n"
+     "funcion principal() -> entero {\n    variable p = punto { x: \"a\" }\n    retornar 0\n}",
      "NOK4001"},
 };
 

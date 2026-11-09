@@ -167,11 +167,135 @@ Programa Parser::analizar() {
             programa.funciones.push_back(analizar_funcion());
             continue;
         }
+        if (token.es(TipoToken::PalabraClave) &&
+            (token.lexema == "estructura" || token.lexema == "clase")) {
+            programa.tipos.push_back(analizar_definicion_tipo(token.lexema == "clase"));
+            continue;
+        }
         error_en(token, diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
         avanzar();
     }
 
     return programa;
+}
+
+DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
+    DefinicionTipo definicion;
+    definicion.es_clase = es_clase;
+    definicion.span = actual().span;
+    avanzar();  // "estructura" | "clase"
+
+    if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+        definicion.nombre = nombre.lexema;
+        avanzar();
+    } else {
+        error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de tipo");
+        return definicion;
+    }
+
+    if (!aceptar_lexema("{")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«{»");
+        return definicion;
+    }
+
+    while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
+        Campo campo;
+        campo.span = actual().span;
+
+        if (actual().lexema == "publico" || actual().lexema == "privado" ||
+            actual().lexema == "protegido" || actual().lexema == "interna") {
+            campo.publico = actual().lexema == "publico";
+            avanzar();
+        }
+
+        if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+            campo.nombre = nombre.lexema;
+            avanzar();
+        } else {
+            error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de campo");
+            break;
+        }
+
+        if (!aceptar_lexema(":")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
+            break;
+        }
+
+        if (const Token& tipo = actual();
+            tipo.es(TipoToken::PalabraClave) || tipo.es(TipoToken::Identificador)) {
+            campo.tipo = tipo.lexema;
+            avanzar();
+        } else {
+            error_en(tipo, diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+            break;
+        }
+
+        definicion.campos.push_back(campo);
+        aceptar_lexema(",");
+    }
+
+    if (!aceptar_lexema("}")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«}»");
+    }
+    return definicion;
+}
+
+bool Parser::viene_construccion() {
+    std::size_t i = indice_;
+    while (i < tokens_.size() && tokens_[i].es(TipoToken::NuevaLinea)) {
+        ++i;
+    }
+    if (i >= tokens_.size() || tokens_[i].lexema != "{") {
+        return false;
+    }
+    ++i;
+    while (i < tokens_.size() && tokens_[i].es(TipoToken::NuevaLinea)) {
+        ++i;
+    }
+    if (i >= tokens_.size() || !tokens_[i].es(TipoToken::Identificador)) {
+        return false;
+    }
+    ++i;
+    while (i < tokens_.size() && tokens_[i].es(TipoToken::NuevaLinea)) {
+        ++i;
+    }
+    return i < tokens_.size() && tokens_[i].lexema == ":";
+}
+
+ExpresionPtr Parser::analizar_construccion(std::string_view tipo) {
+    auto nodo = std::make_unique<Expresion>();
+    nodo->tipo = TipoExpresion::Construccion;
+    nodo->anotacion = std::string(tipo);
+    nodo->span = actual().span;
+
+    avanzar();  // "{"
+
+    while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
+        if (!actual().es(TipoToken::Identificador)) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un nombre de campo");
+            break;
+        }
+        const std::string_view nombre_campo = actual().lexema;
+        avanzar();
+
+        if (!aceptar_lexema(":")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
+            break;
+        }
+
+        ExpresionPtr valor = expresion(0);
+        nodo->nombres_campo.push_back(nombre_campo);
+        nodo->lista.push_back(std::move(valor));
+
+        if (!aceptar_lexema(",")) {
+            break;
+        }
+    }
+
+    if (!aceptar_lexema("}")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«}»");
+    }
+    return nodo;
 }
 
 Funcion Parser::analizar_funcion() {
@@ -618,8 +742,13 @@ ExpresionPtr Parser::prefijo() {
             return literal(TipoExpresion::Entero);
         case TipoToken::Flotante:
             return literal(TipoExpresion::Flotante);
-        case TipoToken::Identificador:
-            return literal(TipoExpresion::Identificador);
+        case TipoToken::Identificador: {
+            auto nodo = literal(TipoExpresion::Identificador);
+            if (actual().lexema == "{" && viene_construccion()) {
+                return analizar_construccion(nodo->lexema);
+            }
+            return nodo;
+        }
         default:
             break;
     }

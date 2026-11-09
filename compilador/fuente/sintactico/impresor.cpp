@@ -88,6 +88,20 @@ std::string imprimir(const Expresion& expresion) {
         case TipoExpresion::Como:
             return "(como " + (expresion.izquierda ? imprimir(*expresion.izquierda) : "?") + ' ' +
                    expresion.anotacion + ')';
+
+        case TipoExpresion::Construccion: {
+            std::string salida = "(construir ";
+            salida += expresion.anotacion;
+            for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
+                salida += " (";
+                salida += i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "?";
+                salida += ' ';
+                salida += expresion.lista[i] ? imprimir(*expresion.lista[i]) : "?";
+                salida += ')';
+            }
+            salida += ')';
+            return salida;
+        }
     }
     return "?";
 }
@@ -209,8 +223,26 @@ std::string imprimir(const Funcion& funcion) {
     return salida;
 }
 
+std::string imprimir(const DefinicionTipo& definicion) {
+    std::string salida = definicion.es_clase ? "(clase " : "(estructura ";
+    salida += definicion.nombre;
+    for (const Campo& campo : definicion.campos) {
+        salida += " (";
+        salida += campo.nombre;
+        salida += ' ';
+        salida += campo.tipo;
+        salida += ')';
+    }
+    salida += ')';
+    return salida;
+}
+
 std::string imprimir(const Programa& programa) {
     std::string salida = "(programa";
+    for (const DefinicionTipo& definicion : programa.tipos) {
+        salida += ' ';
+        salida += imprimir(definicion);
+    }
     for (const Funcion& funcion : programa.funciones) {
         salida += ' ';
         salida += imprimir(funcion);

@@ -18,6 +18,7 @@ namespace nooki::sintactico {
 /// Imprime una sentencia, un programa o una función en la misma forma canónica.
 [[nodiscard]] std::string imprimir(const Sentencia& sentencia);
 [[nodiscard]] std::string imprimir(const Funcion& funcion);
+[[nodiscard]] std::string imprimir(const DefinicionTipo& definicion);
 [[nodiscard]] std::string imprimir(const Programa& programa);
 
 }  // namespace nooki::sintactico

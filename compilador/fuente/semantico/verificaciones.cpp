@@ -26,6 +26,9 @@ public:
         for (const Funcion& funcion : programa_.funciones) {
             funciones_.emplace(funcion.nombre, &funcion);
         }
+        for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
+            tipos_.emplace(definicion.nombre, &definicion);
+        }
         for (const Funcion& funcion : programa_.funciones) {
             revisar_funcion(funcion);
         }
@@ -246,6 +249,8 @@ private:
                 return tipo_asignacion(expresion);
             case TipoExpresion::Llamada:
                 return tipo_llamada(expresion);
+            case TipoExpresion::Construccion:
+                return tipo_construccion(expresion);
             default:
                 // Caracteres, flotantes, índices y conversiones: el generador los
                 // rechaza con NOK6003 cuando llegue el momento.
@@ -371,9 +376,62 @@ private:
         return desde_nombre(funcion.tipo_retorno);
     }
 
+    Tipo tipo_construccion(const Expresion& expresion) {
+        const auto encontrado = tipos_.find(expresion.anotacion);
+        if (encontrado == tipos_.end()) {
+            error(diagnostico::codigos::TIPO_DESCONOCIDO, expresion.span)
+                .parametro("nombre", expresion.anotacion);
+            return Tipo::Desconocido;
+        }
+
+        const sintactico::DefinicionTipo& definicion = *encontrado->second;
+
+        for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
+            const std::string_view nombre_campo =
+                i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "";
+            const sintactico::Campo* campo = nullptr;
+            for (const sintactico::Campo& declarado : definicion.campos) {
+                if (declarado.nombre == nombre_campo) {
+                    campo = &declarado;
+                    break;
+                }
+            }
+            if (campo == nullptr) {
+                error(diagnostico::codigos::CAMPO_DESCONOCIDO, expresion.span)
+                    .parametro("tipo", std::string(definicion.nombre))
+                    .parametro("campo", std::string(nombre_campo));
+                continue;
+            }
+            if (expresion.lista[i]) {
+                exigir(desde_nombre(campo->tipo), tipo_de(*expresion.lista[i]),
+                       expresion.lista[i]->span);
+            }
+        }
+
+        for (const sintactico::Campo& campo : definicion.campos) {
+            bool presente = false;
+            for (const std::string_view nombre_campo : expresion.nombres_campo) {
+                if (nombre_campo == campo.nombre) {
+                    presente = true;
+                    break;
+                }
+            }
+            if (!presente) {
+                error(diagnostico::codigos::CAMPO_FALTANTE, expresion.span)
+                    .parametro("tipo", std::string(definicion.nombre))
+                    .parametro("campo", std::string(campo.nombre));
+            }
+        }
+
+        // La v0.1 no distingue tipos de estructura en el verificador: el generador
+        // los conoce por la construcción. Los campos se comprueban igualmente.
+        return Tipo::Desconocido;
+    }
+
     const sintactico::Programa& programa_;
     diagnostico::Emisor& emisor_;
     std::map<std::string_view, const Funcion*> funciones_;
+    std::map<std::string_view, const sintactico::DefinicionTipo*> tipos_;
     std::vector<std::map<std::string, Tipo>> ambitos_;
     int errores_ = 0;
 };

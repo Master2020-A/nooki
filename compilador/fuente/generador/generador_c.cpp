@@ -11,33 +11,20 @@
 namespace nooki::generador {
 namespace {
 
-/// El generador usa el mismo tipo que el verificador: una sola definición de
-/// «qué es un entero» para todo el compilador.
-using TipoValor = nooki::semantico::Tipo;
-
-const char* tipo_c(TipoValor tipo) {
-    switch (tipo) {
-        case TipoValor::Texto:
+/// Tipo de C de un tipo escrito en Nooki.
+std::string tipo_c(std::string_view escrito) {
+    switch (nooki::semantico::desde_nombre(escrito)) {
+        case nooki::semantico::Tipo::Texto:
             return "const char*";
-        case TipoValor::Booleano:
+        case nooki::semantico::Tipo::Booleano:
             return "int";
-        case TipoValor::Vacio:
+        case nooki::semantico::Tipo::Vacio:
             return "void";
-        case TipoValor::Desconocido:
-        case TipoValor::Entero:
+        case nooki::semantico::Tipo::Desconocido:
+        case nooki::semantico::Tipo::Entero:
             return "long long";
     }
     return "long long";
-}
-
-bool es_comparacion(std::string_view op) {
-    return op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=";
-}
-
-bool es_logico(std::string_view op) { return op == "&&" || op == "||"; }
-
-bool es_aritmetico(std::string_view op) {
-    return op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "**";
 }
 
 std::string escapar_c(std::string_view texto) {
@@ -86,11 +73,7 @@ std::string nombre_c(std::string_view nombre) {
     return "nooki_" + std::string(nombre);
 }
 
-TipoValor tipo_declarado(std::string_view tipo) {
-    const TipoValor conocido = nooki::semantico::desde_nombre(tipo);
-    // Un tipo desconocido no debería llegar aquí: el verificador ya lo rechazó.
-    return conocido == TipoValor::Desconocido ? TipoValor::Entero : conocido;
-}
+std::string tipo_estructura(std::string_view nombre) { return "nooki_" + std::string(nombre); }
 
 const char* PRELUDIO =
     "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
@@ -116,14 +99,11 @@ const char* PRELUDIO =
 class EmisorC {
 public:
     std::string generar(const sintactico::Programa& programa) {
-        // Tipos de retorno conocidos: permiten inferir el tipo de una llamada.
-        for (const sintactico::Funcion& funcion : programa.funciones) {
-            funciones_[std::string(funcion.nombre)] = tipo_declarado(funcion.tipo_retorno);
-        }
+        registrar(programa);
 
         salida_ << PRELUDIO;
+        emitir_tipos(programa);
 
-        // Declaraciones anticipadas: una función puede llamar a otra definida después.
         for (const sintactico::Funcion& funcion : programa.funciones) {
             if (funcion.nombre == "principal") {
                 continue;
@@ -138,10 +118,75 @@ public:
         return salida_.str();
     }
 
-    /// Firma de C de una función de Nooki: `static long long nooki_f(long long n)`.
+    [[nodiscard]] bool soportado() const noexcept { return soportado_; }
+    [[nodiscard]] const std::string& motivo() const noexcept { return motivo_; }
+
+private:
+    // --- Registro ----------------------------------------------------------
+    void registrar(const sintactico::Programa& programa) {
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            auto& campos = campos_[std::string(definicion.nombre)];
+            for (const sintactico::Campo& campo : definicion.campos) {
+                campos[std::string(campo.nombre)] = tipo_c(campo.tipo);
+            }
+        }
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            retornos_[std::string(funcion.nombre)] = tipo_c(funcion.tipo_retorno);
+        }
+    }
+
+    void emitir_tipos(const sintactico::Programa& programa) {
+        if (programa.tipos.empty()) {
+            return;
+        }
+        salida_ << '\n';
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            salida_ << "typedef struct " << tipo_estructura(definicion.nombre) << " {\n";
+            for (const sintactico::Campo& campo : definicion.campos) {
+                salida_ << "    " << tipo_c(campo.tipo) << ' ' << campo.nombre << ";\n";
+            }
+            salida_ << "} " << tipo_estructura(definicion.nombre) << ";\n\n";
+        }
+    }
+
+    // --- Ámbito ------------------------------------------------------------
+    void abrir_ambito() { ambitos_.emplace_back(); }
+    void cerrar_ambito() {
+        if (!ambitos_.empty()) {
+            ambitos_.pop_back();
+        }
+    }
+    void declarar(std::string_view nombre, std::string tipo) {
+        if (!ambitos_.empty()) {
+            ambitos_.back()[std::string(nombre)] = std::move(tipo);
+        }
+    }
+    std::string buscar(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            const auto encontrado = it->find(std::string(nombre));
+            if (encontrado != it->end()) {
+                return encontrado->second;
+            }
+        }
+        return "long long";
+    }
+
+    // --- Utilidades --------------------------------------------------------
+    std::string indentacion() const {
+        return std::string(static_cast<std::size_t>(nivel_) * 4, ' ');
+    }
+
+    void no_soportado(std::string descripcion) {
+        if (soportado_) {
+            soportado_ = false;
+            motivo_ = std::move(descripcion);
+        }
+    }
+
+    // --- Funciones ---------------------------------------------------------
     std::string firma(const sintactico::Funcion& funcion) const {
         std::string salida = "static ";
-        salida += tipo_c(tipo_declarado(funcion.tipo_retorno));
+        salida += tipo_c(funcion.tipo_retorno);
         salida += ' ';
         salida += nombre_c(funcion.nombre);
         salida += '(';
@@ -155,7 +200,7 @@ public:
                     salida += ", ";
                 }
                 primero = false;
-                salida += tipo_c(tipo_declarado(parametro.tipo));
+                salida += tipo_c(parametro.tipo);
                 salida += ' ';
                 salida += parametro.nombre;
             }
@@ -165,43 +210,6 @@ public:
         return salida;
     }
 
-    [[nodiscard]] bool soportado() const noexcept { return soportado_; }
-    [[nodiscard]] const std::string& motivo() const noexcept { return motivo_; }
-
-private:
-    // --- Ámbito de tipos ---------------------------------------------------
-    void abrir_ambito() { ambitos_.emplace_back(); }
-    void cerrar_ambito() {
-        if (!ambitos_.empty()) {
-            ambitos_.pop_back();
-        }
-    }
-    void declarar(std::string_view nombre, TipoValor tipo) {
-        if (!ambitos_.empty()) {
-            ambitos_.back()[std::string(nombre)] = tipo;
-        }
-    }
-    TipoValor buscar(std::string_view nombre) const {
-        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            const auto encontrado = it->find(std::string(nombre));
-            if (encontrado != it->end()) {
-                return encontrado->second;
-            }
-        }
-        return TipoValor::Desconocido;
-    }
-
-    // --- Utilidades --------------------------------------------------------
-    std::string indentacion() const { return std::string(static_cast<std::size_t>(nivel_) * 4, ' '); }
-
-    void no_soportado(std::string descripcion) {
-        if (soportado_) {
-            soportado_ = false;
-            motivo_ = std::move(descripcion);
-        }
-    }
-
-    // --- Funciones ---------------------------------------------------------
     void emitir_funcion(const sintactico::Funcion& funcion) {
         const bool principal = funcion.nombre == "principal";
 
@@ -217,7 +225,7 @@ private:
         abrir_ambito();
         ++nivel_;
         for (const sintactico::Parametro& parametro : funcion.parametros) {
-            declarar(parametro.nombre, tipo_declarado(parametro.tipo));
+            declarar(parametro.nombre, tipo_c(parametro.tipo));
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, principal);
@@ -273,32 +281,29 @@ private:
                 emitir_si(sentencia);
                 return;
 
-            case TipoSentencia::Mientras: {
+            case TipoSentencia::Mientras:
                 salida_ << indentacion() << "while (" << condicion(sentencia.expresion.get())
                         << ") {\n";
                 emitir_cuerpo(sentencia.cuerpo);
                 salida_ << indentacion() << "}\n";
                 return;
-            }
 
             case TipoSentencia::Para:
                 emitir_para(sentencia);
                 return;
 
-            case TipoSentencia::Hacer: {
+            case TipoSentencia::Hacer:
                 salida_ << indentacion() << "do {\n";
                 emitir_cuerpo(sentencia.cuerpo);
                 salida_ << indentacion() << "} while (" << condicion(sentencia.paso.get())
                         << ");\n";
                 return;
-            }
 
-            case TipoSentencia::Bucle: {
+            case TipoSentencia::Bucle:
                 salida_ << indentacion() << "for (;;) {\n";
                 emitir_cuerpo(sentencia.cuerpo);
                 salida_ << indentacion() << "}\n";
                 return;
-            }
 
             case TipoSentencia::Romper:
                 salida_ << indentacion() << "break;\n";
@@ -308,12 +313,11 @@ private:
                 salida_ << indentacion() << "continue;\n";
                 return;
 
-            case TipoSentencia::Bloque: {
+            case TipoSentencia::Bloque:
                 salida_ << indentacion() << "{\n";
                 emitir_cuerpo(sentencia.cuerpo);
                 salida_ << indentacion() << "}\n";
                 return;
-            }
         }
     }
 
@@ -323,9 +327,9 @@ private:
             return;
         }
 
-        const TipoValor tipo = sentencia.tipo_declarado.empty()
-                                   ? tipo_de(*sentencia.expresion)
-                                   : tipo_declarado(sentencia.tipo_declarado);
+        const std::string tipo = sentencia.tipo_declarado.empty()
+                                     ? tipo_de(*sentencia.expresion)
+                                     : tipo_c(sentencia.tipo_declarado);
 
         if (sentencia.tipo == sintactico::TipoSentencia::Constante) {
             salida_ << indentacion() << "const ";
@@ -333,9 +337,8 @@ private:
             salida_ << indentacion();
         }
 
-        salida_ << tipo_c(tipo) << ' ' << sentencia.nombre << " = "
-                << expresion(*sentencia.expresion) << ";\n";
-
+        salida_ << tipo << ' ' << sentencia.nombre << " = " << expresion(*sentencia.expresion)
+                << ";\n";
         declarar(sentencia.nombre, tipo);
     }
 
@@ -369,7 +372,7 @@ private:
                 << sentencia.nombre << " += " << paso << ") {\n";
 
         abrir_ambito();
-        declarar(sentencia.nombre, TipoValor::Entero);
+        declarar(sentencia.nombre, "long long");
         ++nivel_;
         for (const sintactico::Sentencia& hija : sentencia.cuerpo) {
             emitir_sentencia(hija, false);
@@ -387,43 +390,66 @@ private:
         return expresion(*expresion_condicion);
     }
 
-    // --- Expresiones -------------------------------------------------------
-    TipoValor tipo_de(const sintactico::Expresion& expresion) const {
+    // --- Tipos de las expresiones -----------------------------------------
+    std::string tipo_de(const sintactico::Expresion& expresion) const {
         using sintactico::TipoExpresion;
 
         switch (expresion.tipo) {
-            case TipoExpresion::Entero:
-                return TipoValor::Entero;
             case TipoExpresion::Texto:
-                return TipoValor::Texto;
+                return "const char*";
+            case TipoExpresion::Entero:
+                return "long long";
             case TipoExpresion::Booleano:
-                return TipoValor::Booleano;
+                return "int";
             case TipoExpresion::Identificador:
                 return buscar(expresion.lexema);
-            case TipoExpresion::Unaria:
-                return expresion.lexema == "!" ? TipoValor::Booleano : TipoValor::Entero;
-            case TipoExpresion::Binaria:
-                return (es_comparacion(expresion.lexema) || es_logico(expresion.lexema))
-                           ? TipoValor::Booleano
-                           : TipoValor::Entero;
-            case TipoExpresion::Asignacion:
-                return expresion.izquierda ? tipo_de(*expresion.izquierda) : TipoValor::Desconocido;
+            case TipoExpresion::Construccion:
+                return tipo_estructura(expresion.anotacion);
+            case TipoExpresion::Miembro: {
+                if (!expresion.izquierda) {
+                    return "long long";
+                }
+                const std::string objeto = tipo_de(*expresion.izquierda);
+                constexpr std::string_view PREFIJO = "nooki_";
+                if (objeto.rfind(PREFIJO, 0) != 0) {
+                    return "long long";
+                }
+                const auto tipo = campos_.find(objeto.substr(PREFIJO.size()));
+                if (tipo == campos_.end()) {
+                    return "long long";
+                }
+                const auto campo = tipo->second.find(expresion.anotacion);
+                return campo == tipo->second.end() ? "long long" : campo->second;
+            }
             case TipoExpresion::Llamada: {
                 if (expresion.izquierda &&
                     expresion.izquierda->tipo == TipoExpresion::Identificador) {
                     const auto encontrada =
-                        funciones_.find(std::string(expresion.izquierda->lexema));
-                    if (encontrada != funciones_.end()) {
+                        retornos_.find(std::string(expresion.izquierda->lexema));
+                    if (encontrada != retornos_.end()) {
                         return encontrada->second;
                     }
                 }
-                return TipoValor::Desconocido;
+                return "void";
             }
+            case TipoExpresion::Unaria:
+                return expresion.lexema == "!" ? "int" : "long long";
+            case TipoExpresion::Binaria: {
+                const std::string_view operador = expresion.lexema;
+                const bool comparacion = operador == "==" || operador == "!=" ||
+                                         operador == "<" || operador == ">" ||
+                                         operador == "<=" || operador == ">=" ||
+                                         operador == "&&" || operador == "||";
+                return comparacion ? "int" : "long long";
+            }
+            case TipoExpresion::Asignacion:
+                return expresion.izquierda ? tipo_de(*expresion.izquierda) : "long long";
             default:
-                return TipoValor::Desconocido;
+                return "long long";
         }
     }
 
+    // --- Expresiones -------------------------------------------------------
     std::string expresion(const sintactico::Expresion& nodo) {
         using sintactico::TipoExpresion;
 
@@ -436,6 +462,10 @@ private:
                 return nodo.lexema == "verdadero" ? "1" : "0";
             case TipoExpresion::Identificador:
                 return std::string(nodo.lexema);
+            case TipoExpresion::Construccion:
+                return construccion(nodo);
+            case TipoExpresion::Miembro:
+                return miembro(nodo);
             case TipoExpresion::Unaria:
                 return unaria(nodo);
             case TipoExpresion::Binaria:
@@ -450,6 +480,30 @@ private:
 
         no_soportado(descripcion_expresion(nodo.tipo));
         return "0";
+    }
+
+    std::string construccion(const sintactico::Expresion& nodo) {
+        const std::string tipo = tipo_estructura(nodo.anotacion);
+        std::string salida = "(" + tipo + "){ ";
+        for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
+            if (i != 0) {
+                salida += ", ";
+            }
+            salida += '.';
+            salida += i < nodo.nombres_campo.size() ? nodo.nombres_campo[i] : "?";
+            salida += " = ";
+            salida += nodo.lista[i] ? expresion(*nodo.lista[i]) : "0";
+        }
+        salida += " }";
+        return salida;
+    }
+
+    std::string miembro(const sintactico::Expresion& nodo) {
+        if (!nodo.izquierda) {
+            no_soportado("un acceso a miembro sin objeto");
+            return "0";
+        }
+        return expresion(*nodo.izquierda) + "." + nodo.anotacion;
     }
 
     std::string unaria(const sintactico::Expresion& nodo) {
@@ -475,7 +529,18 @@ private:
             return "nooki_potencia(" + expresion(*nodo.izquierda) + ", " +
                    expresion(*nodo.derecha) + ")";
         }
-        if (!es_aritmetico(operador) && !es_comparacion(operador) && !es_logico(operador)) {
+
+        static constexpr std::string_view OPERADORES[] = {
+            "+",  "-",  "*",  "/",  "%",  "==", "!=", "<", ">",  "<=", ">=", "&&", "||",
+        };
+        bool conocido = false;
+        for (const std::string_view conocido_operador : OPERADORES) {
+            if (operador == conocido_operador) {
+                conocido = true;
+                break;
+            }
+        }
+        if (!conocido) {
             no_soportado("el operador «" + std::string(operador) + "»");
             return "0";
         }
@@ -489,11 +554,13 @@ private:
             no_soportado("una asignación incompleta");
             return "0";
         }
-        if (nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
-            no_soportado("una asignación a algo que no es una variable");
+        const bool destino_valido = nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador ||
+                                    nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro;
+        if (!destino_valido) {
+            no_soportado("una asignación a algo que no es una variable ni un campo");
             return "0";
         }
-        return std::string(nodo.izquierda->lexema) + " " + std::string(nodo.lexema) + " " +
+        return expresion(*nodo.izquierda) + " " + std::string(nodo.lexema) + " " +
                expresion(*nodo.derecha);
     }
 
@@ -504,25 +571,27 @@ private:
             return "0";
         }
 
-        const std::string_view nombre = nodo.izquierda->lexema;
+        const std::string_view nombre_llamado = nodo.izquierda->lexema;
 
-        if (nombre == "imprimir") {
+        if (nombre_llamado == "imprimir") {
             if (nodo.lista.size() != 1 || !nodo.lista.front()) {
                 no_soportado("«imprimir» con un número de argumentos distinto de uno");
                 return "0";
             }
             const sintactico::Expresion& argumento = *nodo.lista.front();
-            const TipoValor tipo = tipo_de(argumento);
-            if (tipo == TipoValor::Desconocido) {
-                no_soportado("«imprimir» con un valor de tipo desconocido");
+            const std::string tipo = tipo_de(argumento);
+            const char* funcion = tipo == "const char*" ? "nooki_imprimir_texto"
+                                  : (tipo == "long long" || tipo == "int")
+                                      ? "nooki_imprimir_entero"
+                                      : nullptr;
+            if (funcion == nullptr) {
+                no_soportado("«imprimir» con un valor que el backend no sabe imprimir");
                 return "0";
             }
-            const char* funcion =
-                tipo == TipoValor::Texto ? "nooki_imprimir_texto" : "nooki_imprimir_entero";
             return std::string(funcion) + "(" + expresion(argumento) + ")";
         }
 
-        std::string salida = nombre_c(nombre) + "(";
+        std::string salida = nombre_c(nombre_llamado) + "(";
         bool primero = true;
         for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
             if (!argumento) {
@@ -546,8 +615,6 @@ private:
                 return "un número flotante";
             case sintactico::TipoExpresion::Nulo:
                 return "el valor nulo";
-            case sintactico::TipoExpresion::Miembro:
-                return "el acceso a un miembro";
             case sintactico::TipoExpresion::MiembroOpcional:
                 return "el acceso opcional a un miembro";
             case sintactico::TipoExpresion::Indice:
@@ -562,8 +629,9 @@ private:
     }
 
     std::ostringstream salida_;
-    std::vector<std::map<std::string, TipoValor>> ambitos_;
-    std::map<std::string, TipoValor> funciones_;
+    std::map<std::string, std::map<std::string, std::string>> campos_;
+    std::map<std::string, std::string> retornos_;
+    std::vector<std::map<std::string, std::string>> ambitos_;
     int nivel_ = 0;
     bool soportado_ = true;
     std::string motivo_;
