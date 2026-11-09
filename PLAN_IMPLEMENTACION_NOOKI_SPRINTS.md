@@ -121,7 +121,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S01** | Cerrar las 12 ADR y congelar la base | `docs/adr/ADR-001..012.md` aprobadas; `Aurora1.txt` movido a `historico/`; tabla de decisiones cerrada |
 | **S02** | Especificación v0.1 + gramática EBNF normativa | `spec/gramatica.ebnf` validada por un checker; `spec/especificacion-v0.1.md` con léxico, sintaxis, tipos y semántica; lista de **no-objetivos** |
 | **S03** | Andamiaje del repositorio | ✅ Git + CMake presets (MSVC 2022/2026, MinGW, GCC, Clang) + estructura de carpetas + CI en 3 OS + `nooki --version` + clang-format/tidy + ASan/UBSan configurado. *vcpkg y LLVM se incorporan en S06, cuando se necesiten de verdad* |
-| **S04** | Sistema de diagnósticos | `SourceManager`, `Span`, códigos `NOKxxxx`, catálogo i18n es/en, salida con color y en JSON; 5 errores demo con *golden tests* |
+| **S04** | Sistema de diagnósticos | ✅ `GestorFuentes` + `Span`, códigos `NOKxxxx`, catálogo es/en, render en texto con caretos y en JSON, color con `NO_COLOR`; 5 casos dorados + 11 comprobaciones |
 | **S05** | Harness de conformidad y benchmarks | Runner `.oki` → salida esperada en 3 OS; 50 casos; `nooki bench`; línea base de tiempo de compilación |
 | **S06** | **Rebanada vertical: "Hola, Nooki" nativo** | Lexer mínimo + parser mínimo + emisión LLVM + enlace: binario ELF/PE/Mach-O que imprime "¡Hola, Nooki!" en los tres sistemas |
 

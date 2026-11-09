@@ -42,7 +42,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 Sprint 1  ✅  Decisiones: 13 ADR aprobadas
 Sprint 2  ✅  Especificación v0.1 + gramática EBNF
 Sprint 3  ✅  Andamiaje: repositorio, CMake, CLI, CI en 3 sistemas
-Sprint 4  ⬜  Sistema de diagnósticos
+Sprint 4  ✅  Sistema de diagnósticos: códigos NOK, catálogo es/en, texto y JSON
 Sprint 5  ⬜  Harness de conformidad
 Sprint 6  ⬜  Rebanada vertical: "Hola, Nooki" nativo en 3 sistemas
 ```

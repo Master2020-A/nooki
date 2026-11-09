@@ -18,8 +18,16 @@ configure_file(
 # ---------------------------------------------------------------------------
 
 add_library(nooki_nucleo STATIC
+    fuente/utf8.cpp
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
+    fuente/diagnostico/gestor_fuentes.cpp
+    fuente/diagnostico/catalogo.cpp
+    fuente/diagnostico/diagnostico.cpp
+    fuente/diagnostico/emisor.cpp
+    fuente/diagnostico/render_texto.cpp
+    fuente/diagnostico/render_json.cpp
+    fuente/diagnostico/terminal.cpp
 )
 
 target_include_directories(nooki_nucleo

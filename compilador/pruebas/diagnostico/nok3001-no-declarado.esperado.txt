@@ -1,0 +1,7 @@
+error[NOK3001]: no se ha declarado «subtotal»
+  --> nok3001-no-declarado.oki:3:14
+  |
+3 |     imprimir(subtotal)
+  |              ^^^^^^^^
+  |
+   = ayuda: declare la variable antes de usarla: «variable subtotal = ...»

@@ -1,0 +1,8 @@
+error[NOK4001]: se esperaba un valor de tipo «entero» pero se encontró «texto»
+  --> nok4001-tipos.oki:2:29
+  |
+2 |     variable edad: entero = "treinta"
+  |                    ^^^^^^ el tipo declarado es «entero»
+  |                             ^^^^^^^^^
+  |
+   = ayuda: cambie el tipo a «texto» o convierta el valor con «convertir<entero>»

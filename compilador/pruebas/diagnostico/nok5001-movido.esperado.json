@@ -1,0 +1,3 @@
+{"idioma": "es", "diagnosticos": [
+  {"codigo": "NOK5001", "gravedad": "error", "mensaje": "no se puede usar «datos»: el valor se movió antes", "ubicacion": {"archivo": "nok5001-movido.oki", "linea": 4, "columna": 14, "longitud": 5}, "etiquetas": [{"ubicacion": {"archivo": "nok5001-movido.oki", "linea": 3, "columna": 22, "longitud": 5}, "mensaje": "el valor se movió aquí al asignarlo a «copia»"}], "notas": ["asignar un «vector» transfiere la propiedad"], "ayudas": ["use «datos.clonar()» si necesita conservar el original"]}
+]}

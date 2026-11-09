@@ -1,0 +1,3 @@
+funcion principal() {
+    variable edad: entero = "treinta"
+}

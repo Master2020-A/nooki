@@ -1,0 +1,8 @@
+error[NOK1001]: «función» no es una palabra reservada: las palabras clave se escriben sin tilde
+  --> nok1001-tilde.oki:6:1
+  |
+6 | función principal() {
+  | ^^^^^^^
+  |
+   = nota: en Nooki las palabras clave nunca llevan tilde
+   = ayuda: escriba «funcion»

@@ -1,0 +1,8 @@
+// Las palabras clave se escriben sin tilde.
+funcion saludar() {
+    imprimir("hola")
+}
+
+función principal() {
+    saludar()
+}

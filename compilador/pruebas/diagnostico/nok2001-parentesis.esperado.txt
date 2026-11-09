@@ -1,0 +1,8 @@
+error[NOK2001]: falta cerrar «(»
+  --> nok2001-parentesis.oki:2:13
+  |
+2 |     imprimir("hola"
+  |             ^
+  |
+   = nota: los paréntesis deben cerrarse en la misma expresión
+   = ayuda: añada «)» al final de la llamada

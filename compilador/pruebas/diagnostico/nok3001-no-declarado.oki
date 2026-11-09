@@ -1,0 +1,4 @@
+funcion principal() {
+    variable total = 0
+    imprimir(subtotal)
+}

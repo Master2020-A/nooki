@@ -1,0 +1,5 @@
+funcion principal() {
+    variable datos = ["uno", "dos"]
+    variable copia = datos
+    imprimir(datos)
+}

@@ -1,0 +1,10 @@
+error[NOK5001]: no se puede usar «datos»: el valor se movió antes
+  --> nok5001-movido.oki:4:14
+  |
+3 |     variable copia = datos
+  |                      ^^^^^ el valor se movió aquí al asignarlo a «copia»
+4 |     imprimir(datos)
+  |              ^^^^^
+  |
+   = nota: asignar un «vector» transfiere la propiedad
+   = ayuda: use «datos.clonar()» si necesita conservar el original

@@ -1,0 +1,106 @@
+#include "nooki/diagnostico/catalogo.hpp"
+
+#include <array>
+#include <cstddef>
+#include <string>
+
+#include "nooki/diagnostico/codigos.hpp"
+
+namespace nooki::diagnostico {
+namespace {
+
+struct EntradaMensaje {
+    std::string_view codigo;
+    std::string_view espanol;
+    std::string_view ingles;
+};
+
+// Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
+// una línea, y traducir es rellenar la tercera columna.
+constexpr std::array<EntradaMensaje, 6> MENSAJES{{
+    {codigos::PALABRA_RESERVADA_CON_TILDE,
+     "«{palabra}» no es una palabra reservada: las palabras clave se escriben sin tilde",
+     "“{palabra}” is not a reserved word: keywords are written without accents"},
+
+    {codigos::PARENTESIS_SIN_CERRAR, "falta cerrar «{apertura}»",
+     "unclosed “{apertura}”"},
+
+    {codigos::NOMBRE_NO_DECLARADO, "no se ha declarado «{nombre}»",
+     "cannot find “{nombre}” in this scope"},
+
+    {codigos::TIPO_INCOMPATIBLE,
+     "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",
+     "expected a value of type “{esperado}” but found “{encontrado}”"},
+
+    {codigos::USO_TRAS_MOVER, "no se puede usar «{nombre}»: el valor se movió antes",
+     "cannot use “{nombre}”: the value was moved before"},
+
+    {codigos::VARIABLE_SIN_MUTAR, "la variable «{nombre}» nunca se modifica",
+     "variable “{nombre}” is never mutated"},
+}};
+
+struct EntradaFija {
+    std::string_view clave;
+    std::string_view espanol;
+    std::string_view ingles;
+};
+
+constexpr std::array<EntradaFija, 5> FIJOS{{
+    {"error", "error", "error"},
+    {"advertencia", "advertencia", "warning"},
+    {"nota", "nota", "note"},
+    {"ayuda", "ayuda", "help"},
+    {"sin_descripcion", "diagnóstico sin descripción", "diagnostic without description"},
+}};
+
+}  // namespace
+
+std::string_view plantilla_mensaje(std::string_view codigo, Idioma idioma) {
+    for (const EntradaMensaje& entrada : MENSAJES) {
+        if (entrada.codigo == codigo) {
+            return idioma == Idioma::Espanol ? entrada.espanol : entrada.ingles;
+        }
+    }
+    return {};
+}
+
+std::string_view texto_fijo(std::string_view clave, Idioma idioma) {
+    for (const EntradaFija& entrada : FIJOS) {
+        if (entrada.clave == clave) {
+            return idioma == Idioma::Espanol ? entrada.espanol : entrada.ingles;
+        }
+    }
+    return {};
+}
+
+namespace {
+
+void sustituir(std::string& texto, std::string_view nombre, std::string_view valor) {
+    const std::string marca = "{" + std::string(nombre) + "}";
+    std::size_t posicion = 0;
+    while ((posicion = texto.find(marca, posicion)) != std::string::npos) {
+        texto.replace(posicion, marca.size(), valor);
+        posicion += valor.size();
+    }
+}
+
+}  // namespace
+
+std::string componer(std::string_view codigo, const Parametros& parametros, Idioma idioma) {
+    const std::string_view plantilla = plantilla_mensaje(codigo, idioma);
+    if (plantilla.empty()) {
+        std::string salida(texto_fijo("sin_descripcion", idioma));
+        salida += " (";
+        salida += codigo;
+        salida += ')';
+        return salida;
+    }
+
+    std::string salida(plantilla);
+    for (const auto& [nombre, valor] : parametros) {
+        sustituir(salida, nombre, valor);
+    }
+    return salida;
+}
+
+}  // namespace nooki::diagnostico
