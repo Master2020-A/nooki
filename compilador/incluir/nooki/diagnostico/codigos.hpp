@@ -24,6 +24,7 @@ inline constexpr std::string_view PARENTESIS_SIN_CERRAR = "NOK2001";
 inline constexpr std::string_view TOKEN_INESPERADO = "NOK2002";
 inline constexpr std::string_view SIN_PRINCIPAL = "NOK2003";
 inline constexpr std::string_view NO_SOPORTADO = "NOK2004";
+inline constexpr std::string_view RANGO_ENCADENADO = "NOK2005";
 
 // --- Semántico (NOK3xxx) ----------------------------------------------------
 inline constexpr std::string_view NOMBRE_NO_DECLARADO = "NOK3001";
@@ -40,5 +41,6 @@ inline constexpr std::string_view VARIABLE_SIN_MUTAR = "NOK8001";
 // --- Generación y enlazado (NOK6xxx) ---------------------------------------
 inline constexpr std::string_view SIN_COMPILADOR_C = "NOK6001";
 inline constexpr std::string_view FALLO_COMPILADOR_C = "NOK6002";
+inline constexpr std::string_view BACKEND_NO_SOPORTA = "NOK6003";
 
 }  // namespace nooki::diagnostico::codigos

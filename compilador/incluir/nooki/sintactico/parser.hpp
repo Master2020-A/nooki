@@ -10,14 +10,12 @@
 
 namespace nooki::sintactico {
 
-/// Parser descendente recursivo de la rebanada vertical.
+/// Parser descendente recursivo con expresiones Pratt.
 ///
-/// Acepta, por ahora:
-///
-///   funcion <nombre>() [-> <tipo>] { <sentencias> }
-///
-/// con sentencias de expresión (`imprimir("...")`) y `retornar`. Todo lo demás
-/// produce un diagnóstico claro en lugar de un árbol inválido.
+/// Declaraciones: `funcion <nombre>() [-> <tipo>] { ... }`.
+/// Sentencias: expresión y `retornar`.
+/// Expresiones: todos los operadores de la especificación §7.1, con su precedencia
+/// y su asociatividad exactas.
 class Parser {
 public:
     Parser(const diagnostico::GestorFuentes& fuentes, diagnostico::ArchivoId archivo,
@@ -25,6 +23,10 @@ public:
 
     /// Analiza el programa completo. Devuelve un árbol parcial si hubo errores.
     Programa analizar();
+
+    /// Analiza una única expresión y exige que se consuma todo el archivo.
+    /// Es el punto de entrada que usan las pruebas de precedencia.
+    ExpresionPtr analizar_expresion_completa();
 
 private:
     [[nodiscard]] const lexico::Token& actual();
@@ -37,8 +39,15 @@ private:
 
     Funcion analizar_funcion();
     Sentencia analizar_sentencia();
-    ExpresionPtr analizar_expresion();
-    ExpresionPtr analizar_primario();
+
+    /// Núcleo Pratt: analiza una expresión cuyos operadores tengan al menos
+    /// `potencia_minima`.
+    ExpresionPtr expresion(int potencia_minima);
+    ExpresionPtr prefijo();
+    ExpresionPtr llamada(ExpresionPtr destino);
+    ExpresionPtr indice(ExpresionPtr objeto);
+    ExpresionPtr miembro(ExpresionPtr objeto, bool opcional);
+    std::string analizar_tipo();
 
     const diagnostico::GestorFuentes& fuentes_;
     diagnostico::ArchivoId archivo_;

@@ -280,6 +280,12 @@ coincide (valor) {
 
 > `&&` y `||` tienen **cortocircuito obligatorio**: el operando derecho solo se evalúa si hace falta (ADR-013). `??` evalúa el derecho solo si el izquierdo es `nulo` o `error`.
 
+**Dos decisiones de esta tabla que conviene tener presentes:**
+
+1. **Los operadores de bits se unen más fuerte que las comparaciones.** `a & b == c` significa `(a & b) == c`, al contrario que en C (donde significa `a & (b == c)`). Es la misma elección que hace Python: el orden de C es una fuente clásica de errores y casi nadie escribe `a & (b == c)` queriendo.
+2. **Los prefijos se unen más fuerte que `**`.** `-2 ** 2` significa `(-2) ** 2`, no `-(2 ** 2)` como en Python o Ruby. Está registrado como asunto **A-08** para revisar antes de la v1.0: es la clase de detalle que conviene decidir con usuarios reales delante.
+3. **Los rangos no son asociativos:** `a..b..c` es un **error** (NOK2005), no una cadena implícita.
+
 ### 7.2 Operadores especiales
 
 | Operador | Semántica |

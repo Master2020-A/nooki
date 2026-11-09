@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 19> MENSAJES{{
+constexpr std::array<EntradaMensaje, 21> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -54,6 +54,9 @@ constexpr std::array<EntradaMensaje, 19> MENSAJES{{
     {codigos::NO_SOPORTADO, "«{construccion}» todavía no está soportado",
      "“{construccion}” is not supported yet"},
 
+    {codigos::RANGO_ENCADENADO, "los rangos no se pueden encadenar",
+     "ranges cannot be chained"},
+
     {codigos::SIN_COMPILADOR_C,
      "no se encontró un compilador de C; instale gcc, clang o MSVC, o indique uno con "
      "la variable NOOKI_CC",
@@ -61,6 +64,10 @@ constexpr std::array<EntradaMensaje, 19> MENSAJES{{
 
     {codigos::FALLO_COMPILADOR_C, "el compilador de C «{compilador}» terminó con el código {codigo}",
      "the C compiler “{compilador}” exited with code {codigo}"},
+
+    {codigos::BACKEND_NO_SOPORTA,
+     "el backend todavía no sabe traducir {construccion}",
+     "the backend cannot translate {construccion} yet"},
 
     {codigos::NOMBRE_NO_DECLARADO, "no se ha declarado «{nombre}»",
      "cannot find “{nombre}” in this scope"},

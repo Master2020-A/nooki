@@ -79,7 +79,7 @@ std::string nombre_c(std::string_view nombre) {
     return "nooki_" + std::string(nombre);
 }
 
-const char* INDENTACION = "    ";
+constexpr const char* INDENTACION = "    ";
 
 class EmisorC {
 public:
@@ -98,7 +98,17 @@ public:
         return salida_.str();
     }
 
+    [[nodiscard]] bool soportado() const noexcept { return soportado_; }
+    [[nodiscard]] const std::string& motivo() const noexcept { return motivo_; }
+
 private:
+    void no_soportado(std::string descripcion) {
+        if (soportado_) {
+            soportado_ = false;
+            motivo_ = std::move(descripcion);
+        }
+    }
+
     void emitir_funcion(const sintactico::Funcion& funcion) {
         const bool principal = funcion.nombre == "principal";
 
@@ -147,20 +157,26 @@ private:
                 return nombre_c(expresion.lexema);
             case sintactico::TipoExpresion::Llamada:
                 return llamada(expresion);
+            default:
+                break;
         }
+
+        // El resto del árbol todavía no tiene traducción: se avisa en lugar de
+        // generar código silenciosamente incorrecto.
+        no_soportado(descripcion(expresion.tipo));
         return "0";
     }
 
     std::string llamada(const sintactico::Expresion& llamada_expresion) {
-        std::string destino = "nooki_desconocido";
-        if (llamada_expresion.destino &&
-            llamada_expresion.destino->tipo == sintactico::TipoExpresion::Identificador) {
-            destino = nombre_c(llamada_expresion.destino->lexema);
+        if (!llamada_expresion.izquierda ||
+            llamada_expresion.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
+            no_soportado("una llamada a una expresión que no es un nombre");
+            return "0";
         }
 
-        std::string salida = destino + "(";
+        std::string salida = nombre_c(llamada_expresion.izquierda->lexema) + "(";
         bool primero = true;
-        for (const sintactico::ExpresionPtr& argumento : llamada_expresion.argumentos) {
+        for (const sintactico::ExpresionPtr& argumento : llamada_expresion.lista) {
             if (!argumento) {
                 continue;
             }
@@ -174,14 +190,51 @@ private:
         return salida;
     }
 
+    static const char* descripcion(sintactico::TipoExpresion tipo) {
+        switch (tipo) {
+            case sintactico::TipoExpresion::Caracter:
+                return "un literal de carácter";
+            case sintactico::TipoExpresion::Flotante:
+                return "un número flotante";
+            case sintactico::TipoExpresion::Booleano:
+                return "un valor booleano";
+            case sintactico::TipoExpresion::Nulo:
+                return "el valor nulo";
+            case sintactico::TipoExpresion::Unaria:
+                return "un operador unario";
+            case sintactico::TipoExpresion::Binaria:
+                return "un operador binario";
+            case sintactico::TipoExpresion::Miembro:
+                return "el acceso a un miembro";
+            case sintactico::TipoExpresion::MiembroOpcional:
+                return "el acceso opcional a un miembro";
+            case sintactico::TipoExpresion::Indice:
+                return "el acceso por índice";
+            case sintactico::TipoExpresion::Propagacion:
+                return "el operador «?»";
+            case sintactico::TipoExpresion::Como:
+                return "la conversión «como»";
+            case sintactico::TipoExpresion::Asignacion:
+                return "una asignación";
+            default:
+                return "una expresión";
+        }
+    }
+
     std::ostringstream salida_;
+    bool soportado_ = true;
+    std::string motivo_;
 };
 
 }  // namespace
 
-std::string generar_c(const sintactico::Programa& programa) {
+ResultadoGeneracion generar_c(const sintactico::Programa& programa) {
     EmisorC emisor;
-    return emisor.generar(programa);
+    ResultadoGeneracion resultado;
+    resultado.codigo = emisor.generar(programa);
+    resultado.soportado = emisor.soportado();
+    resultado.motivo = emisor.motivo();
+    return resultado;
 }
 
 }  // namespace nooki::generador

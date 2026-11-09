@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -8,16 +9,27 @@
 
 namespace nooki::sintactico {
 
-/// Árbol de sintaxis de la rebanada vertical.
+/// Clase de un nodo de expresión.
 ///
-/// Es deliberadamente pequeño: solo lo necesario para compilar un programa que
-/// llame a `imprimir`. Crecerá en los sprints S12–S19 hasta cubrir la gramática.
-
+/// La forma canónica de cada nodo la define el impresor (`impresor.hpp`), que es
+/// lo que permite probar la precedencia y la asociatividad comparando texto.
 enum class TipoExpresion : unsigned char {
     Texto,
+    Caracter,
     Entero,
+    Flotante,
+    Booleano,
+    Nulo,
     Identificador,
+    Unaria,
+    Binaria,
     Llamada,
+    Miembro,
+    MiembroOpcional,
+    Indice,
+    Propagacion,
+    Como,
+    Asignacion,
 };
 
 struct Expresion;
@@ -26,12 +38,20 @@ using ExpresionPtr = std::unique_ptr<Expresion>;
 struct Expresion {
     TipoExpresion tipo = TipoExpresion::Entero;
 
-    /// Lexema original: el texto sin comillas, el número o el nombre.
+    /// Operador (`+`, `&&`, `=`, `..`) o literal.
     std::string_view lexema;
 
-    /// Solo para llamadas.
-    ExpresionPtr destino;
-    std::vector<ExpresionPtr> argumentos;
+    /// Tipo en `como`, o nombre del miembro en un acceso.
+    std::string anotacion;
+
+    /// Operando, objeto o destino, según el nodo.
+    ExpresionPtr izquierda;
+
+    /// Segundo operando o valor asignado.
+    ExpresionPtr derecha;
+
+    /// Argumentos de llamada o índice.
+    std::vector<ExpresionPtr> lista;
 
     diagnostico::Span span;
 };

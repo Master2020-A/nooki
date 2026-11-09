@@ -154,7 +154,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
-| **S12** | AST base, visitor y arena | Nodos base, patrón visitante, arena por compilación, AST printer; tests de construcción |
+| **S12** | AST base, visitor y arena | ✅ AST de expresiones completo + **parser Pratt** con la tabla de §7.1 + impresor canónico + 197 casos de precedencia + 7 inválidas. *La arena y el visitante se posponen hasta que el tamaño del AST los justifique* |
 | **S13** | Parser Pratt de expresiones | Precedencia completa (`**`, `..`, `..=`, `como`, `?`, `?.`, `??`); 200 tests de precedencia y asociatividad |
 | **S14** | Parser de sentencias | `si/sinosi/sino`, `mientras`, `para`, `hacer`, `bucle`, `retornar`, `romper`, `continuar`; 150 tests |
 | **S15** | Parser de tipos | Primitivos, genéricos `<>`, `&`/`&mut`, `*`, tuplas, arreglos, `T?`, tipo función; 120 tests |

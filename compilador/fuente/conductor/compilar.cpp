@@ -89,7 +89,14 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         return Resultado{1, {}, {}};
     }
 
-    resultado.c_generado = generador::generar_c(programa);
+    const generador::ResultadoGeneracion generado = generador::generar_c(programa);
+    if (!generado.soportado) {
+        emisor.error(diagnostico::codigos::BACKEND_NO_SOPORTA, diagnostico::Span{})
+            .parametro("construccion", generado.motivo)
+            .ayuda("el backend C solo traduce llamadas, textos, enteros e identificadores");
+        return Resultado{1, generado.codigo, {}};
+    }
+    resultado.c_generado = generado.codigo;
 
     if (opciones.solo_c) {
         salida << resultado.c_generado;

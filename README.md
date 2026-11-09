@@ -46,7 +46,8 @@ Sprint 4  ✅  Sistema de diagnósticos: códigos NOK, catálogo es/en, texto y 
 Sprint 5  ✅  Arnés de conformidad (22 casos) + analizador léxico completo
 Sprint 6  ✅  Rebanada vertical: Nooki compila y ejecuta su primer programa
 Fase 2    ⏭️  (S07–S11, léxico) absorbida por el Sprint 5
-Sprint 12 ⬜  Parser de expresiones con precedencia (Pratt)
+Sprint 12 ✅  Parser de expresiones con precedencia (Pratt) · 197 casos
+Sprint 13 ⬜  Sentencias y control de flujo
 ```
 
 **Ya compila y ejecuta:**

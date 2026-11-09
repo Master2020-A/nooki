@@ -88,7 +88,9 @@ int main() {
         comprobar(emisor.cantidad() == 0, "el programa no tiene errores");
         comprobar(programa.funciones.size() == 1, "hay una función");
 
-        const std::string c = generador::generar_c(programa);
+        const generador::ResultadoGeneracion generado = generador::generar_c(programa);
+        const std::string& c = generado.codigo;
+        comprobar(generado.soportado, "el backend soporta este programa");
         comprobar(contiene(c, "int main(void)"), "principal se convierte en main");
         comprobar(contiene(c, "nooki_imprimir(\"¡Hola, Nooki!\")"),
                   "la llamada se traduce al runtime");

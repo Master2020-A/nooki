@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 12 — Parser de expresiones con precedencia (2026-11-09)
+
+- **Parser Pratt** con la tabla de precedencia completa de la especificación §7.1: 15 niveles, con
+  asociatividad izquierda, derecha y no asociativa donde corresponde.
+- **AST de expresiones** propio: literales, identificador, unaria, binaria, llamada, miembro,
+  miembro opcional, índice, propagación, conversión y asignación.
+- **Impresor canónico** (`(+ 1 (* 2 3))`) que fija la precedencia por escrito.
+- **197 comprobaciones** de precedencia y asociatividad, más 7 expresiones que deben fallar.
+- Los rangos encadenados (`a..b..c`) son error `NOK2005`, no asociación implícita.
+- El backend avisa con `NOK6003` en lugar de generar C incorrecto cuando el árbol usa algo que aún
+  no sabe traducir.
+- Dos decisiones de la tabla documentadas y registradas: los operadores de bits se unen más fuerte
+  que las comparaciones (como Python, no como C), y `-2 ** 2` = `(-2) ** 2` (asunto A-08 a revisar).
+
 ### Sprint 6 — Rebanada vertical: "Hola, Nooki" (2026-11-09)
 
 - **El primer programa Nooki compila y se ejecuta**: `.oki` → parser → C → binario nativo PE/ELF/Mach-O.
