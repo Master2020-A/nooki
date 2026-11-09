@@ -26,6 +26,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-013](docs/adr/ADR-013-decisiones-sintacticas.md) | `interfaz`=`rasgo`; `nuevo` invariable; NL termina sentencia; sin turbofish | ✅ Aprobada |
 | [ADR-014](docs/adr/ADR-014-backend-c.md) | Backend C en la v0.1; LLVM más adelante detrás de la misma interfaz | ✅ Aprobada (S06) |
 | [ADR-015](docs/adr/ADR-015-clases-por-valor-en-v01.md) | En la v0.1, `clase` y `estructura` se compilan igual, por valor | ✅ Aprobada (S17) |
+| [ADR-016](docs/adr/ADR-016-caja-y-movimiento.md) | `Caja<T>`: dueño único, movimiento y liberación determinista | ✅ Aprobada (S20) |
 
 ---
 

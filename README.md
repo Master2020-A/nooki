@@ -54,7 +54,8 @@ Sprint 16 ✅  Verificación de tipos · errores en español antes de llegar a C
 Sprint 17 ✅  Estructuras y clases con campos · objetos por valor
 Sprint 18 ✅  Métodos y `este` · objetos con comportamiento
 Sprint 19 ✅  Enumeraciones y `coincide` · emparejamiento de patrones
-Sprint 20 ⬜  Semántica: comprobación de tipos completa
+Sprint 20 ✅  `Caja<T>`: propiedad única, movimiento y liberación determinista
+Sprint 21 ⬜  Préstamos e inmutabilidad compartida
 ```
 
 **Ya compila y ejecuta:**

@@ -131,6 +131,11 @@ constexpr Caso VALIDOS[] = {
      "    coincide (c) {\n        caso color.rojo => imprimir(\"rojo\")\n"
      "        caso _ => imprimir(\"otro\")\n    }\n    retornar 0\n}",
      ""},
+
+    // --- Cajas -------------------------------------------------------------
+    {"funcion principal() -> entero {\n    variable c = Caja.nuevo(41)\n"
+     "    variable d = c\n    imprimir(*d)\n    retornar 0\n}",
+     ""},
 };
 
 // Programas que deben producir exactamente el código indicado.
@@ -198,6 +203,13 @@ constexpr Caso INVALIDOS[] = {
      "    coincide (c) {\n        caso color.rojo => imprimir(\"rojo\")\n    }\n"
      "    retornar 0\n}",
      "NOK4006"},
+
+    // --- Cajas -------------------------------------------------------------
+    {"funcion principal() -> entero {\n    variable c = Caja.nuevo(41)\n"
+     "    variable d = c\n    imprimir(*c)\n    retornar 0\n}",
+     "NOK5001"},
+    {"funcion principal() -> entero {\n    variable x = 1\n    *x = 2\n    retornar 0\n}",
+     "NOK4007"},
 };
 
 }  // namespace

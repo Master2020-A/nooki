@@ -42,6 +42,7 @@ inline constexpr std::string_view ARIDAD_INCORRECTA = "NOK4003";
 inline constexpr std::string_view RETORNO_INCOMPATIBLE = "NOK4004";
 inline constexpr std::string_view CONDICION_NO_BOOLEANA = "NOK4005";
 inline constexpr std::string_view COINCIDE_NO_EXHAUSTIVO = "NOK4006";
+inline constexpr std::string_view DEREFERENCIA_INVALIDA = "NOK4007";
 
 // --- Propiedad y préstamos (NOK5xxx) ---------------------------------------
 inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";

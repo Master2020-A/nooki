@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 32> MENSAJES{{
+constexpr std::array<EntradaMensaje, 33> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -93,6 +93,9 @@ constexpr std::array<EntradaMensaje, 32> MENSAJES{{
     {codigos::COINCIDE_NO_EXHAUSTIVO,
      "el «coincide» no cubre todos los casos: añada un caso «_»",
      "the “coincide” is not exhaustive: add a “_” case"},
+
+    {codigos::DEREFERENCIA_INVALIDA, "«*» solo se puede aplicar a una «Caja»",
+     "“*” can only be applied to a “Caja”"},
 
     {codigos::TIPO_INCOMPATIBLE,
      "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",

@@ -5,6 +5,23 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 20 — `Caja<T>`: propiedad única y movimiento (2026-11-09)
+
+- **`Caja<T>`**: valor en el montículo con **un único dueño**. `Caja.nuevo(41)` asigna; `*c` lee y
+  escribe; al salir del ámbito el dueño libera.
+- **Movimiento**: `variable d = c` transfiere la propiedad y anula el origen. Usar `c` después es
+  **error de compilación** (`NOK5001`), con span y explicación.
+- **Liberación determinista**: el generador registra las cajas de cada ámbito y emite
+  `nooki_caja_soltar` al cerrarlo y antes de cada `retornar`. `soltar` es nulo-seguro, así que un
+  movimiento no produce doble liberación.
+- **`*` sobre algo que no es una caja** → `NOK4007`.
+- **ADR-016** documenta la decisión, los límites (solo `Caja<entero>` hasta los genéricos) y el
+  riesgo conocido con `romper`/`continuar`.
+- **Corregido un fallo grave del parser**: un operador al principio de una línea nueva continuaba la
+  expresión anterior. `variable x = 1` seguido de `*p = 2` se interpretaba como `1 * p = 2`, es
+  decir, dos sentencias se fusionaban en silencio.
+- Programa de conformidad `0011-cajas`, compilado y ejecutado.
+
 ### Sprint 19 — Enumeraciones y `coincide` (2026-11-09)
 
 - **Enumeraciones**: `enumeracion color { rojo, verde, azul }`, con variantes accesibles como

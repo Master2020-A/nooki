@@ -171,7 +171,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
-| **S20** | Tabla de símbolos y ámbitos | Scopes anidados, *shadowing*, resolución de nombres, preludio; 100 tests |
+| **S20** | `Caja<T>` y movimiento | ✅ Dueño único en el montículo, movimiento al asignar, uso tras mover como error (`NOK5001`), liberación determinista al cerrar ámbito y antes de `retornar`. ADR-016. *La tabla de símbolos ya existía desde S16* |
 | **S21** | Sistema de tipos interno | `TypeId` internado, primitivos, compuestos, unificación, registro de tipos; 100 tests |
 | **S22** | Chequeo de expresiones y sentencias | Tipo de toda expresión; conversiones explícitas; errores con span; 150 tests |
 | **S23** | Funciones: sobrecarga, defaults y nombrados | Resolución de sobrecarga, parámetros por defecto y nombrados, retorno implícito; 120 tests |

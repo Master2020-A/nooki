@@ -1,0 +1,9 @@
+// Caja<T>: propiedad única, movimiento al asignar y liberación determinista.
+funcion principal() -> entero {
+    variable c = Caja.nuevo(41)
+    *c = *c + 1
+
+    variable d = c
+    imprimir(*d)
+    retornar 0
+}

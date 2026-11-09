@@ -807,6 +807,12 @@ ExpresionPtr Parser::expresion(int potencia_minima) {
             break;
         }
 
+        // Un operador al principio de una línea nueva no continúa la expresión:
+        // `variable x = 1` seguido de `*p = 2` son dos sentencias, no una multiplicación.
+        if (salto_previo_) {
+            break;
+        }
+
         const std::string_view operador = token.lexema;
         avanzar();
 

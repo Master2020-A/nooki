@@ -1,6 +1,7 @@
 #include "nooki/semantico/verificaciones.hpp"
 
 #include <map>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -79,7 +80,49 @@ private:
     struct Ambito {
         std::map<std::string, Tipo> tipos;
         std::map<std::string, std::string_view> estructuras;
+        std::set<std::string> cajas;
+        std::set<std::string> movidas;
     };
+
+    void declarar_caja(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().cajas.insert(std::string(nombre));
+        }
+    }
+    bool es_caja(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->cajas.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    void marcar_movida(std::string_view nombre) {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->cajas.count(std::string(nombre)) != 0) {
+                it->movidas.insert(std::string(nombre));
+                return;
+            }
+        }
+    }
+    bool esta_movida(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->movidas.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static bool es_llamada_caja(const Expresion& expresion) {
+        if (expresion.tipo != TipoExpresion::Llamada || !expresion.izquierda) {
+            return false;
+        }
+        const Expresion& destino = *expresion.izquierda;
+        return destino.tipo == TipoExpresion::Miembro && destino.izquierda &&
+               destino.izquierda->tipo == TipoExpresion::Identificador &&
+               destino.izquierda->lexema == "Caja" && destino.anotacion == "nuevo";
+    }
 
     void abrir_ambito() { ambitos_.emplace_back(); }
     void cerrar_ambito() {
@@ -208,6 +251,21 @@ private:
                     return;
                 }
                 const Tipo real = tipo_de(*sentencia.expresion);
+
+                // ¿Declara una caja nueva, o mueve una que ya existía?
+                if (es_llamada_caja(*sentencia.expresion)) {
+                    declarar_caja(sentencia.nombre);
+                    declarar(sentencia.nombre, real);
+                    return;
+                }
+                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                    es_caja(sentencia.expresion->lexema)) {
+                    marcar_movida(sentencia.expresion->lexema);
+                    declarar_caja(sentencia.nombre);
+                    declarar(sentencia.nombre, real);
+                    return;
+                }
+
                 const bool es_construccion =
                     sentencia.expresion->tipo == TipoExpresion::Construccion;
                 if (sentencia.tipo_declarado.empty()) {
@@ -368,8 +426,18 @@ private:
                 return Tipo::Entero;
             case TipoExpresion::Booleano:
                 return Tipo::Booleano;
-            case TipoExpresion::Identificador:
+            case TipoExpresion::Identificador: {
+                if (expresion.lexema == "Caja") {
+                    return Tipo::Desconocido;
+                }
+                if (esta_movida(expresion.lexema)) {
+                    error(diagnostico::codigos::USO_TRAS_MOVER, expresion.span)
+                        .parametro("nombre", std::string(expresion.lexema))
+                        .ayuda("el valor se movió al asignarlo a otra variable");
+                    return Tipo::Desconocido;
+                }
                 return buscar(expresion.lexema, expresion.span);
+            }
             case TipoExpresion::Unaria:
                 return tipo_unaria(expresion);
             case TipoExpresion::Binaria:
@@ -400,6 +468,15 @@ private:
         }
         if (expresion.lexema == "-") {
             exigir(Tipo::Entero, operando, expresion.span);
+            return Tipo::Entero;
+        }
+        if (expresion.lexema == "*") {
+            const bool caja = expresion.izquierda &&
+                              expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                              es_caja(expresion.izquierda->lexema);
+            if (!caja) {
+                error(diagnostico::codigos::DEREFERENCIA_INVALIDA, expresion.span);
+            }
             return Tipo::Entero;
         }
         return Tipo::Desconocido;
@@ -441,6 +518,10 @@ private:
         const Tipo destino =
             expresion.izquierda ? tipo_de(*expresion.izquierda) : Tipo::Desconocido;
         const Tipo valor = expresion.derecha ? tipo_de(*expresion.derecha) : Tipo::Desconocido;
+        if (expresion.derecha && expresion.derecha->tipo == TipoExpresion::Identificador &&
+            es_caja(expresion.derecha->lexema)) {
+            marcar_movida(expresion.derecha->lexema);
+        }
         exigir(destino, valor, expresion.span);
         return destino;
     }

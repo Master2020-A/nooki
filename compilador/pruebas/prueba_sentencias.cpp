@@ -122,6 +122,10 @@ constexpr Caso CASOS[] = {
      "    }\n}",
      "(programa (funcion f -> vacio (coincide c (rama color.rojo (llamada a)) (rama _ "
      "(llamada b)))))"},
+
+    // --- Nueva línea significativa ----------------------------------------
+    {"funcion f() {\n    variable x = 1\n    *p = 2\n}",
+     "(programa (funcion f -> vacio (variable x 1) (= (* p) 2)))"},
 };
 
 constexpr std::string_view INVALIDOS[] = {

@@ -95,6 +95,28 @@ std::string tipo_estructura(std::string_view nombre) { return "nooki_" + std::st
 const char* PRELUDIO =
     "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
     "#include <stdio.h>\n"
+    "#include <stdlib.h>\n"
+    "\n"
+    "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
+    "typedef struct {\n"
+    "    long long* datos;\n"
+    "} nooki_caja;\n"
+    "\n"
+    "static nooki_caja nooki_caja_nuevo(long long valor) {\n"
+    "    nooki_caja caja;\n"
+    "    caja.datos = (long long*)malloc(sizeof(long long));\n"
+    "    if (caja.datos != NULL) {\n"
+    "        *caja.datos = valor;\n"
+    "    }\n"
+    "    return caja;\n"
+    "}\n"
+    "\n"
+    "static void nooki_caja_soltar(nooki_caja* caja) {\n"
+    "    if (caja->datos != NULL) {\n"
+    "        free(caja->datos);\n"
+    "        caja->datos = NULL;\n"
+    "    }\n"
+    "}\n"
     "\n"
     "static void nooki_imprimir_texto(const char* texto) {\n"
     "    fputs(texto, stdout);\n"
@@ -209,21 +231,53 @@ private:
     }
 
     // --- Ámbito ------------------------------------------------------------
+    struct Ambito {
+        std::map<std::string, std::string> tipos;
+        std::vector<std::string> cajas;  // en orden de declaración
+    };
+
     void abrir_ambito() { ambitos_.emplace_back(); }
     void cerrar_ambito() {
-        if (!ambitos_.empty()) {
-            ambitos_.pop_back();
+        if (ambitos_.empty()) {
+            return;
+        }
+        liberar_cajas(ambitos_.back());
+        ambitos_.pop_back();
+    }
+
+    /// Libera las cajas de un ámbito, de la última declarada a la primera.
+    void liberar_cajas(Ambito& ambito) {
+        for (auto it = ambito.cajas.rbegin(); it != ambito.cajas.rend(); ++it) {
+            salida_ << indentacion() << "nooki_caja_soltar(&" << *it << ");\n";
+        }
+        ambito.cajas.clear();
+    }
+
+    /// Antes de un `retornar` hay que liberar todas las cajas vivas.
+    void liberar_todo() {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            liberar_cajas(*it);
         }
     }
+
     void declarar(std::string_view nombre, std::string tipo) {
+        if (ambitos_.empty()) {
+            return;
+        }
+        Ambito& ambito = ambitos_.back();
+        ambito.tipos[std::string(nombre)] = std::move(tipo);
+    }
+
+    void registrar_caja(std::string_view nombre) {
         if (!ambitos_.empty()) {
-            ambitos_.back()[std::string(nombre)] = std::move(tipo);
+            ambitos_.back().cajas.emplace_back(nombre);
         }
     }
+
     std::string buscar(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            const auto encontrado = it->find(std::string(nombre));
-            if (encontrado != it->end()) {
+            const auto encontrado = it->tipos.find(std::string(nombre));
+            if (encontrado != it->tipos.end()) {
                 return encontrado->second;
             }
         }
@@ -348,6 +402,7 @@ private:
             !funcion.cuerpo.empty() &&
             funcion.cuerpo.back().tipo == sintactico::TipoSentencia::Retornar;
         if (principal && !termina_en_retorno) {
+            liberar_todo();
             salida_ << indentacion() << "return 0;\n";
         }
         salida_ << "}\n";
@@ -376,6 +431,7 @@ private:
                 return;
 
             case TipoSentencia::Retornar:
+                liberar_todo();
                 if (sentencia.expresion) {
                     salida_ << indentacion() << "return " << expresion(*sentencia.expresion)
                             << ";\n";
@@ -455,6 +511,16 @@ private:
 
         salida_ << tipo << ' ' << sentencia.nombre << " = " << expresion(*sentencia.expresion)
                 << ";\n";
+
+        const bool es_caja = tipo == "nooki_caja";
+        if (es_caja) {
+            // Asignar una caja transfiere la propiedad: el origen queda vacío.
+            if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
+                salida_ << indentacion() << sentencia.expresion->lexema << ".datos = NULL;\n";
+            }
+            registrar_caja(sentencia.nombre);
+        }
+
         declarar(sentencia.nombre, tipo);
     }
 
@@ -564,6 +630,11 @@ private:
                 }
                 if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
                     const sintactico::Expresion& acceso = *expresion.izquierda;
+                    if (acceso.izquierda &&
+                        acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                        acceso.izquierda->lexema == "Caja") {
+                        return "nooki_caja";
+                    }
                     const std::string tipo_objeto =
                         acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
                     constexpr std::string_view PREFIJO = "nooki_";
@@ -741,8 +812,18 @@ private:
     }
 
     std::string unaria(const sintactico::Expresion& nodo) {
+        if (nodo.lexema == "*") {
+            if (!nodo.izquierda) {
+                return "0";
+            }
+            if (tipo_de(*nodo.izquierda) != "nooki_caja") {
+                no_soportado("«*» sobre algo que no es una «Caja»");
+                return "0";
+            }
+            return "(*" + expresion(*nodo.izquierda) + ".datos)";
+        }
         if (nodo.lexema != "-" && nodo.lexema != "!") {
-            no_soportado("un operador unario que no sea «-» o «!»");
+            no_soportado("un operador unario que no sea «-», «!» o «*»");
             return "0";
         }
         if (!nodo.izquierda) {
@@ -788,8 +869,11 @@ private:
             no_soportado("una asignación incompleta");
             return "0";
         }
-        const bool destino_valido = nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador ||
-                                    nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro;
+        const bool destino_valido =
+            nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador ||
+            nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro ||
+            (nodo.izquierda->tipo == sintactico::TipoExpresion::Unaria &&
+             nodo.izquierda->lexema == "*");
         if (!destino_valido) {
             no_soportado("una asignación a algo que no es una variable ni un campo");
             return "0";
@@ -805,6 +889,16 @@ private:
         }
 
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro) {
+            const sintactico::Expresion& acceso = *nodo.izquierda;
+            if (acceso.izquierda &&
+                acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+                acceso.izquierda->lexema == "Caja") {
+                if (nodo.lista.size() != 1 || !nodo.lista.front()) {
+                    no_soportado("«Caja.nuevo» con un número de argumentos distinto de uno");
+                    return "0";
+                }
+                return "nooki_caja_nuevo(" + expresion(*nodo.lista.front()) + ")";
+            }
             return llamada_metodo(nodo);
         }
 
@@ -905,7 +999,7 @@ private:
     std::map<std::string, std::string> retornos_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
-    std::vector<std::map<std::string, std::string>> ambitos_;
+    std::vector<Ambito> ambitos_;
     std::string estructura_actual_c_;
     int contador_temporal_ = 0;
     int nivel_ = 0;
