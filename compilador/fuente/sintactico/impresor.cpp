@@ -192,6 +192,31 @@ std::string imprimir(const Sentencia& sentencia) {
         case TipoSentencia::Continuar:
             return "(continuar)";
 
+        case TipoSentencia::Coincide: {
+            std::string salida = "(coincide ";
+            salida += sentencia.expresion ? imprimir(*sentencia.expresion) : "?";
+            for (const Rama& rama : sentencia.ramas) {
+                salida += " (rama ";
+                switch (rama.patron.clase) {
+                    case Patron::Clase::Comodin:
+                        salida += "_";
+                        break;
+                    case Patron::Clase::Variante:
+                        salida += rama.patron.enumeracion;
+                        salida += '.';
+                        salida += rama.patron.valor;
+                        break;
+                    case Patron::Clase::Literal:
+                        salida += rama.patron.valor;
+                        break;
+                }
+                agregar_sentencias(salida, rama.cuerpo);
+                salida += ')';
+            }
+            salida += ')';
+            return salida;
+        }
+
         case TipoSentencia::Bloque: {
             std::string salida = "(bloque";
             agregar_sentencias(salida, sentencia.cuerpo);
@@ -246,6 +271,15 @@ std::string imprimir(const DefinicionTipo& definicion) {
 
 std::string imprimir(const Programa& programa) {
     std::string salida = "(programa";
+    for (const Enumeracion& enumeracion : programa.enumeraciones) {
+        salida += " (enumeracion ";
+        salida += enumeracion.nombre;
+        for (const std::string_view variante : enumeracion.variantes) {
+            salida += ' ';
+            salida += variante;
+        }
+        salida += ')';
+    }
     for (const DefinicionTipo& definicion : programa.tipos) {
         salida += ' ';
         salida += imprimir(definicion);

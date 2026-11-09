@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 30> MENSAJES{{
+constexpr std::array<EntradaMensaje, 32> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -86,6 +86,13 @@ constexpr std::array<EntradaMensaje, 30> MENSAJES{{
 
     {codigos::MIEMBRO_DESCONOCIDO, "«{tipo}» no tiene ningún miembro «{nombre}»",
      "“{tipo}” has no member named “{nombre}”"},
+
+    {codigos::VARIANTE_DESCONOCIDA, "«{enumeracion}» no tiene ninguna variante «{variante}»",
+     "“{enumeracion}” has no variant named “{variante}”"},
+
+    {codigos::COINCIDE_NO_EXHAUSTIVO,
+     "el «coincide» no cubre todos los casos: añada un caso «_»",
+     "the “coincide” is not exhaustive: add a “_” case"},
 
     {codigos::TIPO_INCOMPATIBLE,
      "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",

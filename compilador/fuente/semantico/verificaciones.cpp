@@ -13,6 +13,8 @@ namespace {
 
 using sintactico::Expresion;
 using sintactico::Funcion;
+using sintactico::Patron;
+using sintactico::Rama;
 using sintactico::Sentencia;
 using sintactico::TipoExpresion;
 using sintactico::TipoSentencia;
@@ -28,6 +30,9 @@ public:
         }
         for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
             tipos_.emplace(definicion.nombre, &definicion);
+        }
+        for (const sintactico::Enumeracion& enumeracion : programa_.enumeraciones) {
+            enumeraciones_.emplace(enumeracion.nombre, &enumeracion);
         }
         for (const Funcion& funcion : programa_.funciones) {
             revisar_funcion(funcion);
@@ -278,6 +283,50 @@ private:
             case TipoSentencia::Bloque:
                 revisar_cuerpo(sentencia.cuerpo, funcion);
                 return;
+
+            case TipoSentencia::Coincide:
+                revisar_coincide(sentencia, funcion);
+                return;
+        }
+    }
+
+    void revisar_coincide(const Sentencia& sentencia, const Funcion& funcion) {
+        if (sentencia.expresion) {
+            tipo_de(*sentencia.expresion);
+        }
+
+        bool hay_comodin = false;
+        for (const Rama& rama : sentencia.ramas) {
+            if (rama.patron.clase == Patron::Clase::Comodin) {
+                hay_comodin = true;
+            } else if (rama.patron.clase == Patron::Clase::Variante) {
+                const auto enumeracion = enumeraciones_.find(rama.patron.enumeracion);
+                if (enumeracion == enumeraciones_.end()) {
+                    error(diagnostico::codigos::TIPO_DESCONOCIDO, rama.patron.span)
+                        .parametro("nombre", std::string(rama.patron.enumeracion));
+                } else {
+                    bool existe = false;
+                    for (const std::string_view variante : enumeracion->second->variantes) {
+                        if (variante == rama.patron.valor) {
+                            existe = true;
+                            break;
+                        }
+                    }
+                    if (!existe) {
+                        error(diagnostico::codigos::VARIANTE_DESCONOCIDA, rama.patron.span)
+                            .parametro("enumeracion",
+                                       std::string(enumeracion->second->nombre))
+                            .parametro("variante", std::string(rama.patron.valor));
+                    }
+                }
+            }
+
+            revisar_cuerpo(rama.cuerpo, funcion);
+        }
+
+        if (!hay_comodin) {
+            error(diagnostico::codigos::COINCIDE_NO_EXHAUSTIVO, sentencia.span)
+                .ayuda("añada «caso _ => ...» para los casos que falten");
         }
     }
 
@@ -517,6 +566,22 @@ private:
             return Tipo::Desconocido;
         }
 
+        // ¿Es una variante de enumeración? `color.rojo`.
+        if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
+            const auto enumeracion = enumeraciones_.find(expresion.izquierda->lexema);
+            if (enumeracion != enumeraciones_.end()) {
+                for (const std::string_view variante : enumeracion->second->variantes) {
+                    if (variante == expresion.anotacion) {
+                        return Tipo::Desconocido;
+                    }
+                }
+                error(diagnostico::codigos::VARIANTE_DESCONOCIDA, expresion.span)
+                    .parametro("enumeracion", std::string(enumeracion->second->nombre))
+                    .parametro("variante", expresion.anotacion);
+                return Tipo::Desconocido;
+            }
+        }
+
         const sintactico::DefinicionTipo* definicion =
             tipo_por_nombre(estructura_de(*expresion.izquierda));
         if (definicion == nullptr) {
@@ -595,6 +660,7 @@ private:
     diagnostico::Emisor& emisor_;
     std::map<std::string_view, const Funcion*> funciones_;
     std::map<std::string_view, const sintactico::DefinicionTipo*> tipos_;
+    std::map<std::string_view, const sintactico::Enumeracion*> enumeraciones_;
     std::string_view estructura_actual_;
     std::vector<Ambito> ambitos_;
     int errores_ = 0;

@@ -52,6 +52,9 @@ private:
     Sentencia analizar_para();
     Sentencia analizar_hacer();
     Sentencia analizar_bucle();
+    Sentencia analizar_coincide();
+    Enumeracion analizar_enumeracion();
+    Patron analizar_patron();
 
     /// Analiza una expresión cuyos operadores tengan al menos `potencia_minima`.
     ExpresionPtr expresion(int potencia_minima);

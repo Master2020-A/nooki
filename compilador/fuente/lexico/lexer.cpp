@@ -215,7 +215,8 @@ constexpr std::array<std::string_view, 25> OPERADORES{{
 }};
 
 bool es_operador_simple(char c) {
-    constexpr std::string_view SIMPLES = "+-*/%=<>!&|^~?.,:;()[]{}@";
+    // `_` solo llega aquí cuando no inicia un identificador: es el comodín.
+    constexpr std::string_view SIMPLES = "+-*/%=<>!&|^~?.,:;()[]{}@_";
     return SIMPLES.find(c) != std::string_view::npos;
 }
 

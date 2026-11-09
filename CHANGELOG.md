@@ -5,6 +5,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 19 — Enumeraciones y `coincide` (2026-11-09)
+
+- **Enumeraciones**: `enumeracion color { rojo, verde, azul }`, con variantes accesibles como
+  `color.rojo`.
+- **Emparejamiento de patrones**: `coincide (valor) { caso 1 => ... caso color.rojo => ... caso _ => ... }`
+  con literales, variantes y comodín, en una sola línea o con bloque.
+- **Generación**: enumeraciones como constantes enteras y `coincide` como cadena `if/else` sobre una
+  temporal, para no evaluar la expresión más de una vez.
+- **Verificación**: variante inexistente (`NOK3007`) y `coincide` sin comodín (`NOK4006`).
+- El lexer acepta `_` como comodín sin romper los identificadores que empiezan por guion bajo.
+- Programa de conformidad `0010-patrones`, compilado y ejecutado.
+- **Decisión registrada**: la semántica de referencia para `clase` (y con ella la herencia) se
+  pospone a la fase de memoria. Un conteo de referencias a medias produce dobles liberaciones, que
+  son corrupción de memoria; hacerlo bien exige liberar en todas las salidas de ámbito e incrementar
+  en cada copia. Se hará una sola vez, junto al ownership.
+
 ### Sprint 18 — Métodos y `este` (2026-11-09)
 
 - **Métodos dentro de tipos**: `publico funcion suma(otro: punto) -> entero { ... }`, con parámetros

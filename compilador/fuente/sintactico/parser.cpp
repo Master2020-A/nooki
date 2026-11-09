@@ -172,6 +172,10 @@ Programa Parser::analizar() {
             programa.tipos.push_back(analizar_definicion_tipo(token.lexema == "clase"));
             continue;
         }
+        if (token.es(TipoToken::PalabraClave) && token.lexema == "enumeracion") {
+            programa.enumeraciones.push_back(analizar_enumeracion());
+            continue;
+        }
         error_en(token, diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
         avanzar();
     }
@@ -395,6 +399,144 @@ std::vector<Sentencia> Parser::analizar_bloque() {
     return cuerpo;
 }
 
+Enumeracion Parser::analizar_enumeracion() {
+    Enumeracion enumeracion;
+    enumeracion.span = actual().span;
+    avanzar();  // "enumeracion"
+
+    if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+        enumeracion.nombre = nombre.lexema;
+        avanzar();
+    } else {
+        error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de enumeración");
+        return enumeracion;
+    }
+
+    if (!aceptar_lexema("{")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«{»");
+        return enumeracion;
+    }
+
+    while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
+        if (const Token& variante = actual(); variante.es(TipoToken::Identificador)) {
+            enumeracion.variantes.push_back(variante.lexema);
+            avanzar();
+        } else {
+            error_en(variante, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de variante");
+            break;
+        }
+        if (!aceptar_lexema(",")) {
+            break;
+        }
+    }
+
+    if (!aceptar_lexema("}")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«}»");
+    }
+    return enumeracion;
+}
+
+Patron Parser::analizar_patron() {
+    Patron patron;
+    patron.span = actual().span;
+
+    if (actual().lexema == "_") {
+        patron.clase = Patron::Clase::Comodin;
+        avanzar();
+        return patron;
+    }
+
+    if (actual().es(TipoToken::Entero) || actual().es(TipoToken::Texto) ||
+        actual().es(TipoToken::Caracter) ||
+        (actual().es(TipoToken::PalabraClave) &&
+         (actual().lexema == "verdadero" || actual().lexema == "falso"))) {
+        patron.clase = Patron::Clase::Literal;
+        patron.valor = actual().lexema;
+        avanzar();
+        return patron;
+    }
+
+    if (actual().es(TipoToken::Identificador)) {
+        const std::string_view nombre = actual().lexema;
+        avanzar();
+
+        if (aceptar_lexema(".")) {
+            if (const Token& variante = actual(); variante.es(TipoToken::Identificador)) {
+                patron.clase = Patron::Clase::Variante;
+                patron.enumeracion = nombre;
+                patron.valor = variante.lexema;
+                avanzar();
+                return patron;
+            }
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un nombre de variante");
+            return patron;
+        }
+
+        patron.clase = Patron::Clase::Literal;
+        patron.valor = nombre;
+        return patron;
+    }
+
+    error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un patrón");
+    avanzar();
+    return patron;
+}
+
+Sentencia Parser::analizar_coincide() {
+    Sentencia sentencia;
+    sentencia.tipo = TipoSentencia::Coincide;
+    sentencia.span = actual().span;
+    avanzar();  // "coincide"
+
+    if (!aceptar_lexema("(")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
+    }
+    sentencia.expresion = expresion(0);
+    if (!aceptar_lexema(")")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
+    }
+
+    if (!aceptar_lexema("{")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«{»");
+        return sentencia;
+    }
+
+    while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
+        if (actual().lexema != "caso") {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«caso»");
+            avanzar();
+            continue;
+        }
+        avanzar();
+
+        Rama rama;
+        rama.patron = analizar_patron();
+
+        if (!aceptar_lexema("=>")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«=>»");
+            break;
+        }
+
+        if (actual().lexema == "{") {
+            rama.cuerpo = analizar_bloque();
+        } else {
+            Sentencia cuerpo;
+            cuerpo.tipo = TipoSentencia::Expresion;
+            cuerpo.span = actual().span;
+            cuerpo.expresion = expresion(0);
+            rama.cuerpo.push_back(std::move(cuerpo));
+        }
+
+        sentencia.ramas.push_back(std::move(rama));
+        aceptar_lexema(",");
+    }
+
+    if (!aceptar_lexema("}")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«}»");
+    }
+    return sentencia;
+}
+
 Sentencia Parser::analizar_sentencia() {
     Sentencia sentencia;
     sentencia.span = actual().span;
@@ -447,25 +589,7 @@ Sentencia Parser::analizar_sentencia() {
             return sentencia;
         }
         if (palabra == "coincide") {
-            auto& diagnostico = emisor_.error(diagnostico::codigos::NO_SOPORTADO, actual().span);
-            diagnostico.parametro("construccion", "«coincide»")
-                .ayuda("el emparejamiento de patrones llega en el Sprint 17");
-            // Se consume el bloque entero para no encadenar errores en cascada.
-            avanzar();
-            int profundidad = 0;
-            while (!actual().es(TipoToken::FinDeArchivo)) {
-                if (actual().lexema == "{") {
-                    ++profundidad;
-                } else if (actual().lexema == "}") {
-                    if (profundidad <= 0) {
-                        avanzar();
-                        break;
-                    }
-                    --profundidad;
-                }
-                avanzar();
-            }
-            return sentencia;
+            return analizar_coincide();
         }
         if (palabra != "verdadero" && palabra != "falso" && palabra != "nulo" &&
             palabra != "este") {

@@ -1,0 +1,24 @@
+// Enumeraciones y emparejamiento de patrones.
+enumeracion color {
+    rojo,
+    verde,
+    azul,
+}
+
+funcion principal() -> entero {
+    variable c = color.verde
+
+    coincide (c) {
+        caso color.rojo => imprimir("rojo")
+        caso color.verde => imprimir("verde")
+        caso _ => imprimir("otro")
+    }
+
+    variable n = 3
+    coincide (n) {
+        caso 1 => imprimir("uno")
+        caso 3 => imprimir("tres")
+        caso _ => imprimir("otro número")
+    }
+    retornar 0
+}

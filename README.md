@@ -53,7 +53,8 @@ Sprint 15 ✅  Funciones con parámetros · factorial recursivo y primera verifi
 Sprint 16 ✅  Verificación de tipos · errores en español antes de llegar a C
 Sprint 17 ✅  Estructuras y clases con campos · objetos por valor
 Sprint 18 ✅  Métodos y `este` · objetos con comportamiento
-Sprint 19 ⬜  Herencia y polimorfismo
+Sprint 19 ✅  Enumeraciones y `coincide` · emparejamiento de patrones
+Sprint 20 ⬜  Semántica: comprobación de tipos completa
 ```
 
 **Ya compila y ejecuta:**

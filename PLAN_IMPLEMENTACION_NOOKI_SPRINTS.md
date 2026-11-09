@@ -161,7 +161,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S16** | Verificación de tipos básica | ✅ Nombres declarados, aridad, tipos de argumentos, operadores, condiciones booleanas y retornos compatibles; 22 casos. *El parser de OOP pasa a S17* |
 | **S17** | Estructuras y clases con campos | ✅ `estructura`/`clase`, campos con visibilidad, construcción `punto { x: 1 }`, acceso y asignación, verificación de campos. *El emparejamiento de patrones pasa a S18* |
 | **S18** | Métodos y `este` | ✅ Métodos en tipos, `este` para campos propios, llamadas `p.metodo(args)` traducidas a funciones con el objeto como puntero, y verificación de miembro/aridad/tipos. *La recuperación de errores multi-diagnóstico pasa a S19* |
-| **S19** | **Cierre v0.2: parser completo** | El 100 % de los ejemplos de los planes parsea; golden AST; fuzz 24 h; comando `nooki ast` usable |
+| **S19** | Enumeraciones y emparejamiento | ✅ `enumeracion` con variantes, `coincide` con literales, variantes y comodín, verificación de variante y exhaustividad, generado como `if/else` sobre una temporal. *La semántica de referencia y la herencia se posponen a la fase de memoria (asunto A-09)* |
 
 ---
 

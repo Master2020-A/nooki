@@ -124,6 +124,13 @@ constexpr Caso VALIDOS[] = {
      "funcion principal() -> entero {\n    variable p = punto { x: 2 }\n"
      "    retornar p.doble()\n}",
      ""},
+
+    // --- Enumeraciones y patrones -----------------------------------------
+    {"enumeracion color { rojo, verde }\n"
+     "funcion principal() -> entero {\n    variable c = color.verde\n"
+     "    coincide (c) {\n        caso color.rojo => imprimir(\"rojo\")\n"
+     "        caso _ => imprimir(\"otro\")\n    }\n    retornar 0\n}",
+     ""},
 };
 
 // Programas que deben producir exactamente el código indicado.
@@ -181,6 +188,16 @@ constexpr Caso INVALIDOS[] = {
      "funcion principal() -> entero {\n    variable p = punto { x: 1 }\n"
      "    retornar p.suma(5)\n}",
      "NOK4002"},
+
+    // --- Enumeraciones y patrones -----------------------------------------
+    {"enumeracion color { rojo, verde }\n"
+     "funcion principal() -> entero {\n    variable c = color.azul\n    retornar 0\n}",
+     "NOK3007"},
+    {"enumeracion color { rojo, verde }\n"
+     "funcion principal() -> entero {\n    variable c = color.rojo\n"
+     "    coincide (c) {\n        caso color.rojo => imprimir(\"rojo\")\n    }\n"
+     "    retornar 0\n}",
+     "NOK4006"},
 };
 
 }  // namespace

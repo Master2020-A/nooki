@@ -73,6 +73,23 @@ std::string nombre_c(std::string_view nombre) {
     return "nooki_" + std::string(nombre);
 }
 
+std::string mayusculas(std::string_view texto) {
+    std::string salida;
+    salida.reserve(texto.size());
+    for (const char caracter : texto) {
+        if (caracter >= 'a' && caracter <= 'z') {
+            salida += static_cast<char>(caracter - 'a' + 'A');
+        } else {
+            salida += caracter;
+        }
+    }
+    return salida;
+}
+
+std::string constante_enum(std::string_view enumeracion, std::string_view variante) {
+    return "NOOKI_" + mayusculas(enumeracion) + "_" + mayusculas(variante);
+}
+
 std::string tipo_estructura(std::string_view nombre) { return "nooki_" + std::string(nombre); }
 
 const char* PRELUDIO =
@@ -102,6 +119,7 @@ public:
         registrar(programa);
 
         salida_ << PRELUDIO;
+        emitir_enumeraciones(programa);
         emitir_tipos(programa);
 
         for (const sintactico::Funcion& funcion : programa.funciones) {
@@ -151,6 +169,28 @@ private:
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
             retornos_[std::string(funcion.nombre)] = tipo_c(funcion.tipo_retorno);
+        }
+        for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
+            enumeraciones_[std::string(enumeracion.nombre)] = &enumeracion;
+        }
+    }
+
+    void emitir_enumeraciones(const sintactico::Programa& programa) {
+        if (programa.enumeraciones.empty()) {
+            return;
+        }
+        salida_ << '\n';
+        for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
+            salida_ << "typedef int nooki_" << enumeracion.nombre << ";\n";
+            salida_ << "enum {";
+            for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
+                if (i != 0) {
+                    salida_ << ", ";
+                }
+                salida_ << constante_enum(enumeracion.nombre, enumeracion.variantes[i]) << " = "
+                        << i;
+            }
+            salida_ << "};\n\n";
         }
     }
 
@@ -390,6 +430,10 @@ private:
                 emitir_cuerpo(sentencia.cuerpo);
                 salida_ << indentacion() << "}\n";
                 return;
+
+            case TipoSentencia::Coincide:
+                emitir_coincide(sentencia);
+                return;
         }
     }
 
@@ -480,6 +524,13 @@ private:
             case TipoExpresion::Miembro: {
                 if (!expresion.izquierda) {
                     return "long long";
+                }
+                if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
+                    const auto enumeracion =
+                        enumeraciones_.find(std::string(expresion.izquierda->lexema));
+                    if (enumeracion != enumeraciones_.end()) {
+                        return "nooki_" + std::string(expresion.izquierda->lexema);
+                    }
                 }
                 const std::string objeto = tipo_de(*expresion.izquierda);
                 constexpr std::string_view PREFIJO = "nooki_";
@@ -604,10 +655,84 @@ private:
         return salida;
     }
 
+    void emitir_coincide(const sintactico::Sentencia& sentencia) {
+        if (!sentencia.expresion) {
+            no_soportado("un «coincide» sin valor que examinar");
+            return;
+        }
+
+        const std::string temporal =
+            "__nooki_valor" + std::to_string(contador_temporal_++);
+
+        salida_ << indentacion() << "{\n";
+        ++nivel_;
+        salida_ << indentacion() << "long long " << temporal << " = "
+                << expresion(*sentencia.expresion) << ";\n";
+
+        bool primero = true;
+        for (const sintactico::Rama& rama : sentencia.ramas) {
+            if (rama.patron.clase == sintactico::Patron::Clase::Comodin) {
+                salida_ << indentacion() << (primero ? "{" : "else {") << "\n";
+            } else {
+                const std::string valor = patron_c(rama.patron);
+                if (valor.empty()) {
+                    no_soportado("un patrón que el backend no sabe comparar");
+                    --nivel_;
+                    salida_ << indentacion() << "}\n";
+                    return;
+                }
+                salida_ << indentacion() << (primero ? "if" : "else if") << " (" << temporal
+                        << " == " << valor << ") {\n";
+            }
+            primero = false;
+
+            ++nivel_;
+            for (const sintactico::Sentencia& hija : rama.cuerpo) {
+                emitir_sentencia(hija, false);
+            }
+            --nivel_;
+            salida_ << indentacion() << "}\n";
+        }
+
+        --nivel_;
+        salida_ << indentacion() << "}\n";
+    }
+
+    std::string patron_c(const sintactico::Patron& patron) {
+        using sintactico::Patron;
+
+        switch (patron.clase) {
+            case Patron::Clase::Variante:
+                return constante_enum(patron.enumeracion, patron.valor);
+            case Patron::Clase::Literal:
+                if (patron.valor == "verdadero") {
+                    return "1";
+                }
+                if (patron.valor == "falso") {
+                    return "0";
+                }
+                if (!patron.valor.empty() && (patron.valor.front() == '"' ||
+                                              patron.valor.front() == '\'')) {
+                    return {};
+                }
+                return limpiar_separadores(patron.valor);
+            case Patron::Clase::Comodin:
+                break;
+        }
+        return {};
+    }
+
     std::string miembro(const sintactico::Expresion& nodo) {
         if (!nodo.izquierda) {
             no_soportado("un acceso a miembro sin objeto");
             return "0";
+        }
+        if (nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador) {
+            const auto enumeracion =
+                enumeraciones_.find(std::string(nodo.izquierda->lexema));
+            if (enumeracion != enumeraciones_.end()) {
+                return constante_enum(enumeracion->first, nodo.anotacion);
+            }
         }
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Este) {
             return "este->" + nodo.anotacion;
@@ -779,8 +904,10 @@ private:
     std::map<std::string, std::map<std::string, std::string>> campos_;
     std::map<std::string, std::string> retornos_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
+    std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::vector<std::map<std::string, std::string>> ambitos_;
     std::string estructura_actual_c_;
+    int contador_temporal_ = 0;
     int nivel_ = 0;
     bool soportado_ = true;
     std::string motivo_;

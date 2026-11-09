@@ -112,6 +112,16 @@ constexpr Caso CASOS[] = {
     {"funcion f() {\n    variable p = punto { x: 1 }\n    p.mover(5)\n}",
      "(programa (funcion f -> vacio (variable p (construir punto (x 1))) (llamada (. p mover) "
      "5)))"},
+
+    // --- Enumeraciones y patrones -----------------------------------------
+    {"enumeracion color {\n    rojo,\n    verde,\n}",
+     "(programa (enumeracion color rojo verde))"},
+    {"funcion f() {\n    coincide (x) {\n        caso 1 => a()\n        caso _ => b()\n    }\n}",
+     "(programa (funcion f -> vacio (coincide x (rama 1 (llamada a)) (rama _ (llamada b)))))"},
+    {"funcion f() {\n    coincide (c) {\n        caso color.rojo => a()\n        caso _ => b()\n"
+     "    }\n}",
+     "(programa (funcion f -> vacio (coincide c (rama color.rojo (llamada a)) (rama _ "
+     "(llamada b)))))"},
 };
 
 constexpr std::string_view INVALIDOS[] = {

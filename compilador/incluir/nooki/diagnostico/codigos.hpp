@@ -33,6 +33,7 @@ inline constexpr std::string_view TIPO_DESCONOCIDO = "NOK3003";
 inline constexpr std::string_view CAMPO_DESCONOCIDO = "NOK3004";
 inline constexpr std::string_view CAMPO_FALTANTE = "NOK3005";
 inline constexpr std::string_view MIEMBRO_DESCONOCIDO = "NOK3006";
+inline constexpr std::string_view VARIANTE_DESCONOCIDA = "NOK3007";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";
@@ -40,6 +41,7 @@ inline constexpr std::string_view ARGUMENTO_INCOMPATIBLE = "NOK4002";
 inline constexpr std::string_view ARIDAD_INCORRECTA = "NOK4003";
 inline constexpr std::string_view RETORNO_INCOMPATIBLE = "NOK4004";
 inline constexpr std::string_view CONDICION_NO_BOOLEANA = "NOK4005";
+inline constexpr std::string_view COINCIDE_NO_EXHAUSTIVO = "NOK4006";
 
 // --- Propiedad y préstamos (NOK5xxx) ---------------------------------------
 inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";

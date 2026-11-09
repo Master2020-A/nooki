@@ -75,6 +75,26 @@ enum class TipoSentencia : unsigned char {
     Romper,
     Continuar,
     Bloque,
+    Coincide,
+};
+
+/// Un patrón de `coincide`: comodín, literal o variante de enumeración.
+struct Patron {
+    enum class Clase : unsigned char { Comodin, Literal, Variante };
+
+    Clase clase = Clase::Comodin;
+    /// Literal tal cual, o nombre de la variante.
+    std::string_view valor;
+    /// Nombre de la enumeración cuando el patrón es una variante.
+    std::string_view enumeracion;
+    diagnostico::Span span;
+};
+
+struct Sentencia;
+
+struct Rama {
+    Patron patron;
+    std::vector<Sentencia> cuerpo;
 };
 
 struct Sentencia {
@@ -97,6 +117,9 @@ struct Sentencia {
 
     /// Rama `sino`. Un `sinosi` se representa como un `Si` anidado aquí dentro.
     std::vector<Sentencia> sino;
+
+    /// Ramas de un `coincide`.
+    std::vector<Rama> ramas;
 
     diagnostico::Span span;
 };
@@ -134,9 +157,17 @@ struct DefinicionTipo {
     diagnostico::Span span;
 };
 
+/// `enumeracion color { rojo, verde, azul }`.
+struct Enumeracion {
+    std::string_view nombre;
+    std::vector<std::string_view> variantes;
+    diagnostico::Span span;
+};
+
 struct Programa {
     std::vector<Funcion> funciones;
     std::vector<DefinicionTipo> tipos;
+    std::vector<Enumeracion> enumeraciones;
 };
 
 }  // namespace nooki::sintactico
