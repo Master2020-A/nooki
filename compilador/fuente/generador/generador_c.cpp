@@ -117,6 +117,11 @@ const char* PRELUDIO =
 class EmisorC {
 public:
     std::string generar(const sintactico::Programa& programa) {
+        // Tipos de retorno conocidos: permiten inferir el tipo de una llamada.
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            funciones_[std::string(funcion.nombre)] = tipo_declarado(funcion.tipo_retorno);
+        }
+
         salida_ << PRELUDIO;
 
         // Declaraciones anticipadas: una función puede llamar a otra definida después.
@@ -124,8 +129,7 @@ public:
             if (funcion.nombre == "principal") {
                 continue;
             }
-            salida_ << "static " << tipo_c(tipo_declarado(funcion.tipo_retorno)) << ' '
-                    << nombre_c(funcion.nombre) << "(void);\n";
+            salida_ << firma(funcion) << ";\n";
         }
 
         for (const sintactico::Funcion& funcion : programa.funciones) {
@@ -133,6 +137,33 @@ public:
             emitir_funcion(funcion);
         }
         return salida_.str();
+    }
+
+    /// Firma de C de una función de Nooki: `static long long nooki_f(long long n)`.
+    std::string firma(const sintactico::Funcion& funcion) const {
+        std::string salida = "static ";
+        salida += tipo_c(tipo_declarado(funcion.tipo_retorno));
+        salida += ' ';
+        salida += nombre_c(funcion.nombre);
+        salida += '(';
+
+        if (funcion.parametros.empty()) {
+            salida += "void";
+        } else {
+            bool primero = true;
+            for (const sintactico::Parametro& parametro : funcion.parametros) {
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                salida += tipo_c(tipo_declarado(parametro.tipo));
+                salida += ' ';
+                salida += parametro.nombre;
+            }
+        }
+
+        salida += ')';
+        return salida;
     }
 
     [[nodiscard]] bool soportado() const noexcept { return soportado_; }
@@ -176,14 +207,19 @@ private:
         const bool principal = funcion.nombre == "principal";
 
         if (principal) {
+            if (!funcion.parametros.empty()) {
+                no_soportado("una función «principal» con parámetros");
+            }
             salida_ << "int main(void) {\n";
         } else {
-            salida_ << "static " << tipo_c(tipo_declarado(funcion.tipo_retorno)) << ' '
-                    << nombre_c(funcion.nombre) << "(void) {\n";
+            salida_ << firma(funcion) << " {\n";
         }
 
         abrir_ambito();
         ++nivel_;
+        for (const sintactico::Parametro& parametro : funcion.parametros) {
+            declarar(parametro.nombre, tipo_declarado(parametro.tipo));
+        }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, principal);
         }
@@ -373,6 +409,17 @@ private:
                            : TipoValor::Entero;
             case TipoExpresion::Asignacion:
                 return expresion.izquierda ? tipo_de(*expresion.izquierda) : TipoValor::Desconocido;
+            case TipoExpresion::Llamada: {
+                if (expresion.izquierda &&
+                    expresion.izquierda->tipo == TipoExpresion::Identificador) {
+                    const auto encontrada =
+                        funciones_.find(std::string(expresion.izquierda->lexema));
+                    if (encontrada != funciones_.end()) {
+                        return encontrada->second;
+                    }
+                }
+                return TipoValor::Desconocido;
+            }
             default:
                 return TipoValor::Desconocido;
         }
@@ -476,11 +523,20 @@ private:
             return std::string(funcion) + "(" + expresion(argumento) + ")";
         }
 
-        if (!nodo.lista.empty()) {
-            no_soportado("una llamada con argumentos: las funciones aún no tienen parámetros");
-            return "0";
+        std::string salida = nombre_c(nombre) + "(";
+        bool primero = true;
+        for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+            if (!argumento) {
+                continue;
+            }
+            if (!primero) {
+                salida += ", ";
+            }
+            primero = false;
+            salida += expresion(*argumento);
         }
-        return nombre_c(nombre) + "()";
+        salida += ')';
+        return salida;
     }
 
     static std::string descripcion_expresion(sintactico::TipoExpresion tipo) {
@@ -508,6 +564,7 @@ private:
 
     std::ostringstream salida_;
     std::vector<std::map<std::string, TipoValor>> ambitos_;
+    std::map<std::string, TipoValor> funciones_;
     int nivel_ = 0;
     bool soportado_ = true;
     std::string motivo_;

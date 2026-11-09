@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 15 — Funciones con parámetros y primera verificación semántica (2026-11-09)
+
+- **Funciones con parámetros**: `funcion factorial(n: entero) -> entero`, con cualquier número de
+  parámetros y tipos (`entero`, `texto`, `booleano`).
+- **Llamadas con argumentos** traducidas a C, con declaraciones anticipadas: la recursión funciona
+  (el factorial recursivo se compila y ejecuta).
+- **Inferencia del tipo de una llamada** a partir del tipo de retorno declarado, para que
+  `imprimir(factorial(i))` elija la función de impresión correcta.
+- **Primera verificación semántica**: `NOK3002` cuando se llama a una función que no existe, con
+  span y sugerencia. Antes, ese error aparecía como un mensaje del compilador de C en inglés.
+- Dos programas nuevos de conformidad, compilados y ejecutados: factorial recursivo y saludo con
+  parámetro de texto.
+- 37 comprobaciones de sentencias (4 nuevas sobre parámetros).
+
 ### Sprint 14 — El backend C compila variables y control de flujo (2026-11-09)
 
 - **El generador traduce ahora el lenguaje que el parser ya entendía**: variables y constantes con

@@ -96,8 +96,16 @@ struct Sentencia {
     diagnostico::Span span;
 };
 
+/// Un parámetro de función: `nombre: tipo`.
+struct Parametro {
+    std::string_view nombre;
+    std::string_view tipo;
+    diagnostico::Span span;
+};
+
 struct Funcion {
     std::string_view nombre;
+    std::vector<Parametro> parametros;
     /// Tipo de retorno tal como se escribió (`vacio` si no se indicó).
     std::string_view tipo_retorno;
     std::vector<Sentencia> cuerpo;

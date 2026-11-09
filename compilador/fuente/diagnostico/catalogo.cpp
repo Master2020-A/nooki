@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 21> MENSAJES{{
+constexpr std::array<EntradaMensaje, 22> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -71,6 +71,9 @@ constexpr std::array<EntradaMensaje, 21> MENSAJES{{
 
     {codigos::NOMBRE_NO_DECLARADO, "no se ha declarado «{nombre}»",
      "cannot find “{nombre}” in this scope"},
+
+    {codigos::FUNCION_NO_DECLARADA, "no existe ninguna función «{nombre}»",
+     "there is no function named “{nombre}”"},
 
     {codigos::TIPO_INCOMPATIBLE,
      "se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}»",

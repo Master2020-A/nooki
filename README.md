@@ -49,7 +49,8 @@ Fase 2    ⏭️  (S07–S11, léxico) absorbida por el Sprint 5
 Sprint 12 ✅  Parser de expresiones con precedencia (Pratt) · 197 casos
 Sprint 13 ✅  Sentencias y control de flujo · `nooki ast`
 Sprint 14 ✅  El backend compila variables y control de flujo · FizzBuzz y Fibonacci ejecutándose
-Sprint 15 ⬜  Parser de tipos (genéricos, referencias, tuplas, arreglos)
+Sprint 15 ✅  Funciones con parámetros · factorial recursivo y primera verificación semántica
+Sprint 16 ⬜  Parser de tipos y clases
 ```
 
 **Ya compila y ejecuta:**

@@ -1,0 +1,10 @@
+// Funciones con parámetro de texto y retorno vacío.
+funcion saludar(nombre: texto) -> vacio {
+    imprimir("Hola desde una función")
+    imprimir(nombre)
+}
+
+funcion principal() -> entero {
+    saludar("Nooki")
+    retornar 0
+}

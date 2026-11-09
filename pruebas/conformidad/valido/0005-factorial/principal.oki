@@ -1,0 +1,14 @@
+// Factorial recursivo: funciones con parámetros, retorno y llamadas con argumentos.
+funcion factorial(n: entero) -> entero {
+    si (n <= 1) {
+        retornar 1
+    }
+    retornar n * factorial(n - 1)
+}
+
+funcion principal() -> entero {
+    para (i en 1..=5) {
+        imprimir(factorial(i))
+    }
+    retornar 0
+}

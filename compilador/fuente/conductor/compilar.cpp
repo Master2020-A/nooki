@@ -13,6 +13,7 @@
 #include "nooki/generador/generador_c.hpp"
 #include "nooki/lexico/lexer.hpp"
 #include "nooki/proceso.hpp"
+#include "nooki/semantico/verificaciones.hpp"
 #include "nooki/sintactico/parser.hpp"
 
 namespace nooki::conductor {
@@ -86,6 +87,11 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     const sintactico::Programa programa = parser.analizar();
 
     if (emisor.hay_errores()) {
+        return Resultado{1, {}, {}};
+    }
+
+    // Primera verificación semántica: toda llamada debe apuntar a algo que exista.
+    if (semantico::verificar_llamadas(programa, emisor) > 0) {
         return Resultado{1, {}, {}};
     }
 

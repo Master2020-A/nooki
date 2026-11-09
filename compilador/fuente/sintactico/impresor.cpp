@@ -188,6 +188,20 @@ std::string imprimir(const Sentencia& sentencia) {
 std::string imprimir(const Funcion& funcion) {
     std::string salida = "(funcion ";
     salida += funcion.nombre;
+    if (!funcion.parametros.empty()) {
+        salida += " (";
+        bool primero = true;
+        for (const Parametro& parametro : funcion.parametros) {
+            if (!primero) {
+                salida += ", ";
+            }
+            primero = false;
+            salida += parametro.nombre;
+            salida += ' ';
+            salida += parametro.tipo;
+        }
+        salida += ')';
+    }
     salida += " -> ";
     salida += funcion.tipo_retorno;
     agregar_sentencias(salida, funcion.cuerpo);

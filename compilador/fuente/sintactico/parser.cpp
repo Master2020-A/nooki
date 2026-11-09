@@ -190,6 +190,40 @@ Funcion Parser::analizar_funcion() {
     if (!aceptar_lexema("(")) {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
     }
+
+    if (actual().lexema != ")") {
+        for (;;) {
+            Parametro parametro;
+            parametro.span = actual().span;
+
+            if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+                parametro.nombre = nombre.lexema;
+                avanzar();
+            } else {
+                error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de parámetro");
+                break;
+            }
+
+            if (!aceptar_lexema(":")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
+                break;
+            }
+            if (const Token& tipo = actual();
+                tipo.es(TipoToken::PalabraClave) || tipo.es(TipoToken::Identificador)) {
+                parametro.tipo = tipo.lexema;
+                avanzar();
+            } else {
+                error_en(tipo, diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+                break;
+            }
+
+            funcion.parametros.push_back(parametro);
+            if (!aceptar_lexema(",")) {
+                break;
+            }
+        }
+    }
+
     if (!aceptar_lexema(")")) {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
     }

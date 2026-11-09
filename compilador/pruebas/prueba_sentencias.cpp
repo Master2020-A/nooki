@@ -88,6 +88,13 @@ constexpr Caso CASOS[] = {
     // --- Sentencias tras un retorno ---------------------------------------
     {"funcion f() -> entero {\n    retornar 0\n    retornar 1\n}",
      "(programa (funcion f -> entero (retornar 0) (retornar 1)))"},
+
+    // --- Parámetros --------------------------------------------------------
+    {"funcion f(a: entero) -> entero {\n    retornar a\n}",
+     "(programa (funcion f (a entero) -> entero (retornar a)))"},
+    {"funcion f(a: entero, b: texto) {\n}",
+     "(programa (funcion f (a entero, b texto) -> vacio))"},
+    {"funcion f() {\n    g(1, \"dos\")\n}", "(programa (funcion f -> vacio (llamada g 1 \"dos\")))"},
 };
 
 constexpr std::string_view INVALIDOS[] = {
@@ -97,6 +104,7 @@ constexpr std::string_view INVALIDOS[] = {
     "para (i 0..10) { }",
     "funcion f( {",
     "coincide (x) { }",
+    "funcion f(a) { }",
 };
 
 void analizar_y_comparar(const Caso& caso) {

@@ -28,6 +28,7 @@ inline constexpr std::string_view RANGO_ENCADENADO = "NOK2005";
 
 // --- Semántico (NOK3xxx) ----------------------------------------------------
 inline constexpr std::string_view NOMBRE_NO_DECLARADO = "NOK3001";
+inline constexpr std::string_view FUNCION_NO_DECLARADA = "NOK3002";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";

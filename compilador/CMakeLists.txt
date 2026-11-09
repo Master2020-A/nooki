@@ -36,6 +36,7 @@ add_library(nooki_nucleo STATIC
     fuente/lexico/lexer.cpp
     fuente/sintactico/parser.cpp
     fuente/sintactico/impresor.cpp
+    fuente/semantico/verificaciones.cpp
     fuente/generador/generador_c.cpp
     fuente/conductor/compilar.cpp
 )
