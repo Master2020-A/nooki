@@ -1,0 +1,15 @@
+// FizzBuzz del 1 al 15: usa rango inclusivo, sinosi encadenado y asignaciones.
+funcion principal() -> entero {
+    para (i en 1..=15) {
+        si (i % 15 == 0) {
+            imprimir("FizzBuzz")
+        } sinosi (i % 3 == 0) {
+            imprimir("Fizz")
+        } sinosi (i % 5 == 0) {
+            imprimir("Buzz")
+        } sino {
+            imprimir(i)
+        }
+    }
+    retornar 0
+}

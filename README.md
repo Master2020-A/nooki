@@ -48,7 +48,8 @@ Sprint 6  ✅  Rebanada vertical: Nooki compila y ejecuta su primer programa
 Fase 2    ⏭️  (S07–S11, léxico) absorbida por el Sprint 5
 Sprint 12 ✅  Parser de expresiones con precedencia (Pratt) · 197 casos
 Sprint 13 ✅  Sentencias y control de flujo · `nooki ast`
-Sprint 14 ⬜  Funciones completas: parámetros, tipos y retorno
+Sprint 14 ✅  El backend compila variables y control de flujo · FizzBuzz y Fibonacci ejecutándose
+Sprint 15 ⬜  Parser de tipos (genéricos, referencias, tuplas, arreglos)
 ```
 
 **Ya compila y ejecuta:**

@@ -1,0 +1,13 @@
+// Tabla de multiplicar del 2 al 4 con bucles anidados y mientras.
+funcion principal() -> entero {
+    variable i = 2
+    mientras (i <= 4) {
+        variable j = 1
+        mientras (j <= 3) {
+            imprimir(i * j)
+            j = j + 1
+        }
+        i = i + 1
+    }
+    retornar 0
+}

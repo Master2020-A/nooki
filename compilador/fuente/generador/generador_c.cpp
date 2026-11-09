@@ -1,14 +1,42 @@
 #include "nooki/generador/generador_c.hpp"
 
+#include <map>
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace nooki::generador {
 namespace {
 
-/// Escapa un texto de Nooki para que sea un literal de C válido.
-/// Los bytes UTF-8 se copian tal cual: el compilador de C los conserva.
+/// Tipo mínimo que el generador necesita conocer. No es el sistema de tipos del
+/// lenguaje (eso llega en S20): es lo justo para elegir la función de impresión y
+/// el tipo de C de cada variable.
+enum class TipoValor : unsigned char { Desconocido, Entero, Texto, Booleano };
+
+const char* tipo_c(TipoValor tipo) {
+    switch (tipo) {
+        case TipoValor::Texto:
+            return "const char*";
+        case TipoValor::Booleano:
+            return "int";
+        case TipoValor::Desconocido:
+        case TipoValor::Entero:
+            return "long long";
+    }
+    return "long long";
+}
+
+bool es_comparacion(std::string_view op) {
+    return op == "==" || op == "!=" || op == "<" || op == ">" || op == "<=" || op == ">=";
+}
+
+bool es_logico(std::string_view op) { return op == "&&" || op == "||"; }
+
+bool es_aritmetico(std::string_view op) {
+    return op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "**";
+}
+
 std::string escapar_c(std::string_view texto) {
     std::string salida;
     salida.reserve(texto.size() + 2);
@@ -37,30 +65,6 @@ std::string escapar_c(std::string_view texto) {
     return salida;
 }
 
-/// Traduce un tipo de Nooki a su equivalente en C.
-std::string tipo_c(std::string_view tipo) {
-    if (tipo == "vacio") {
-        return "void";
-    }
-    if (tipo == "booleano") {
-        return "int";
-    }
-    if (tipo == "texto") {
-        return "const char*";
-    }
-    if (tipo == "flotante" || tipo == "flotante32") {
-        return "double";
-    }
-    if (tipo == "byte" || tipo == "natural8") {
-        return "unsigned char";
-    }
-    if (tipo == "natural" || tipo == "tamano") {
-        return "unsigned long long";
-    }
-    return "long long";
-}
-
-/// `1_000` en Nooki es `1000` en C: los separadores son solo legibilidad.
 std::string limpiar_separadores(std::string_view numero) {
     std::string salida;
     salida.reserve(numero.size());
@@ -79,17 +83,50 @@ std::string nombre_c(std::string_view nombre) {
     return "nooki_" + std::string(nombre);
 }
 
-constexpr const char* INDENTACION = "    ";
+TipoValor tipo_declarado(std::string_view tipo) {
+    if (tipo == "texto") {
+        return TipoValor::Texto;
+    }
+    if (tipo == "booleano") {
+        return TipoValor::Booleano;
+    }
+    return TipoValor::Entero;
+}
+
+const char* PRELUDIO =
+    "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
+    "#include <stdio.h>\n"
+    "\n"
+    "static void nooki_imprimir_texto(const char* texto) {\n"
+    "    fputs(texto, stdout);\n"
+    "    fputc('\\n', stdout);\n"
+    "}\n"
+    "\n"
+    "static void nooki_imprimir_entero(long long valor) {\n"
+    "    printf(\"%lld\\n\", valor);\n"
+    "}\n"
+    "\n"
+    "static long long nooki_potencia(long long base, long long exponente) {\n"
+    "    long long resultado = 1;\n"
+    "    for (long long i = 0; i < exponente; ++i) {\n"
+    "        resultado *= base;\n"
+    "    }\n"
+    "    return resultado;\n"
+    "}\n";
 
 class EmisorC {
 public:
     std::string generar(const sintactico::Programa& programa) {
-        salida_ << "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n";
-        salida_ << "#include <stdio.h>\n\n";
-        salida_ << "static void nooki_imprimir(const char* texto) {\n";
-        salida_ << INDENTACION << "fputs(texto, stdout);\n";
-        salida_ << INDENTACION << "fputc('\\n', stdout);\n";
-        salida_ << "}\n";
+        salida_ << PRELUDIO;
+
+        // Declaraciones anticipadas: una función puede llamar a otra definida después.
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            if (funcion.nombre == "principal") {
+                continue;
+            }
+            salida_ << "static " << tipo_c(tipo_declarado(funcion.tipo_retorno)) << ' '
+                    << nombre_c(funcion.nombre) << "(void);\n";
+        }
 
         for (const sintactico::Funcion& funcion : programa.funciones) {
             salida_ << '\n';
@@ -102,6 +139,31 @@ public:
     [[nodiscard]] const std::string& motivo() const noexcept { return motivo_; }
 
 private:
+    // --- Ámbito de tipos ---------------------------------------------------
+    void abrir_ambito() { ambitos_.emplace_back(); }
+    void cerrar_ambito() {
+        if (!ambitos_.empty()) {
+            ambitos_.pop_back();
+        }
+    }
+    void declarar(std::string_view nombre, TipoValor tipo) {
+        if (!ambitos_.empty()) {
+            ambitos_.back()[std::string(nombre)] = tipo;
+        }
+    }
+    TipoValor buscar(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            const auto encontrado = it->find(std::string(nombre));
+            if (encontrado != it->end()) {
+                return encontrado->second;
+            }
+        }
+        return TipoValor::Desconocido;
+    }
+
+    // --- Utilidades --------------------------------------------------------
+    std::string indentacion() const { return std::string(static_cast<std::size_t>(nivel_) * 4, ' '); }
+
     void no_soportado(std::string descripcion) {
         if (soportado_) {
             soportado_ = false;
@@ -109,137 +171,326 @@ private:
         }
     }
 
+    // --- Funciones ---------------------------------------------------------
     void emitir_funcion(const sintactico::Funcion& funcion) {
         const bool principal = funcion.nombre == "principal";
 
         if (principal) {
             salida_ << "int main(void) {\n";
         } else {
-            salida_ << "static " << tipo_c(funcion.tipo_retorno) << ' ' << nombre_c(funcion.nombre)
-                    << "(void) {\n";
+            salida_ << "static " << tipo_c(tipo_declarado(funcion.tipo_retorno)) << ' '
+                    << nombre_c(funcion.nombre) << "(void) {\n";
         }
 
+        abrir_ambito();
+        ++nivel_;
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, principal);
         }
+        --nivel_;
 
-        // `main` devuelve int: si el cuerpo no termina en `retornar`, se añade.
         const bool termina_en_retorno =
             !funcion.cuerpo.empty() &&
             funcion.cuerpo.back().tipo == sintactico::TipoSentencia::Retornar;
         if (principal && !termina_en_retorno) {
-            salida_ << INDENTACION << "return 0;\n";
+            salida_ << indentacion() << "return 0;\n";
         }
         salida_ << "}\n";
+        cerrar_ambito();
+    }
+
+    // --- Sentencias --------------------------------------------------------
+    void emitir_cuerpo(const std::vector<sintactico::Sentencia>& cuerpo, bool principal = false) {
+        abrir_ambito();
+        ++nivel_;
+        for (const sintactico::Sentencia& sentencia : cuerpo) {
+            emitir_sentencia(sentencia, principal);
+        }
+        --nivel_;
+        cerrar_ambito();
     }
 
     void emitir_sentencia(const sintactico::Sentencia& sentencia, bool principal) {
+        using sintactico::TipoSentencia;
+
         switch (sentencia.tipo) {
-            case sintactico::TipoSentencia::Expresion:
+            case TipoSentencia::Expresion:
                 if (sentencia.expresion) {
-                    salida_ << INDENTACION << expresion(*sentencia.expresion) << ";\n";
+                    salida_ << indentacion() << expresion(*sentencia.expresion) << ";\n";
                 }
                 return;
 
-            case sintactico::TipoSentencia::Retornar:
+            case TipoSentencia::Retornar:
                 if (sentencia.expresion) {
-                    salida_ << INDENTACION << "return " << expresion(*sentencia.expresion)
+                    salida_ << indentacion() << "return " << expresion(*sentencia.expresion)
                             << ";\n";
                 } else {
-                    salida_ << INDENTACION << (principal ? "return 0;\n" : "return;\n");
+                    salida_ << indentacion() << (principal ? "return 0;\n" : "return;\n");
                 }
                 return;
 
-            default:
-                no_soportado(descripcion_sentencia(sentencia.tipo));
+            case TipoSentencia::Variable:
+            case TipoSentencia::Constante:
+                emitir_declaracion(sentencia);
                 return;
+
+            case TipoSentencia::Si:
+                emitir_si(sentencia);
+                return;
+
+            case TipoSentencia::Mientras: {
+                salida_ << indentacion() << "while (" << condicion(sentencia.expresion.get())
+                        << ") {\n";
+                emitir_cuerpo(sentencia.cuerpo);
+                salida_ << indentacion() << "}\n";
+                return;
+            }
+
+            case TipoSentencia::Para:
+                emitir_para(sentencia);
+                return;
+
+            case TipoSentencia::Hacer: {
+                salida_ << indentacion() << "do {\n";
+                emitir_cuerpo(sentencia.cuerpo);
+                salida_ << indentacion() << "} while (" << condicion(sentencia.paso.get())
+                        << ");\n";
+                return;
+            }
+
+            case TipoSentencia::Bucle: {
+                salida_ << indentacion() << "for (;;) {\n";
+                emitir_cuerpo(sentencia.cuerpo);
+                salida_ << indentacion() << "}\n";
+                return;
+            }
+
+            case TipoSentencia::Romper:
+                salida_ << indentacion() << "break;\n";
+                return;
+
+            case TipoSentencia::Continuar:
+                salida_ << indentacion() << "continue;\n";
+                return;
+
+            case TipoSentencia::Bloque: {
+                salida_ << indentacion() << "{\n";
+                emitir_cuerpo(sentencia.cuerpo);
+                salida_ << indentacion() << "}\n";
+                return;
+            }
         }
     }
 
-    static const char* descripcion_sentencia(sintactico::TipoSentencia tipo) {
-        switch (tipo) {
-            case sintactico::TipoSentencia::Variable:
-                return "una declaración de variable";
-            case sintactico::TipoSentencia::Constante:
-                return "una declaración de constante";
-            case sintactico::TipoSentencia::Si:
-                return "una sentencia «si»";
-            case sintactico::TipoSentencia::Mientras:
-                return "un bucle «mientras»";
-            case sintactico::TipoSentencia::Para:
-                return "un bucle «para»";
-            case sintactico::TipoSentencia::Hacer:
-                return "un bucle «hacer»";
-            case sintactico::TipoSentencia::Bucle:
-                return "un bucle «bucle»";
-            case sintactico::TipoSentencia::Romper:
-                return "«romper»";
-            case sintactico::TipoSentencia::Continuar:
-                return "«continuar»";
-            case sintactico::TipoSentencia::Bloque:
-                return "un bloque anidado";
-            default:
-                return "una sentencia";
+    void emitir_declaracion(const sintactico::Sentencia& sentencia) {
+        if (!sentencia.expresion) {
+            no_soportado("una declaración sin valor inicial");
+            return;
+        }
+
+        const TipoValor tipo = sentencia.tipo_declarado.empty()
+                                   ? tipo_de(*sentencia.expresion)
+                                   : tipo_declarado(sentencia.tipo_declarado);
+
+        if (sentencia.tipo == sintactico::TipoSentencia::Constante) {
+            salida_ << indentacion() << "const ";
+        } else {
+            salida_ << indentacion();
+        }
+
+        salida_ << tipo_c(tipo) << ' ' << sentencia.nombre << " = "
+                << expresion(*sentencia.expresion) << ";\n";
+
+        declarar(sentencia.nombre, tipo);
+    }
+
+    void emitir_si(const sintactico::Sentencia& sentencia) {
+        salida_ << indentacion() << "if (" << condicion(sentencia.expresion.get()) << ") {\n";
+        emitir_cuerpo(sentencia.cuerpo);
+        salida_ << indentacion() << "}";
+        if (!sentencia.sino.empty()) {
+            salida_ << " else {\n";
+            emitir_cuerpo(sentencia.sino);
+            salida_ << indentacion() << "}\n";
+        } else {
+            salida_ << '\n';
         }
     }
 
-    std::string expresion(const sintactico::Expresion& expresion) {
+    void emitir_para(const sintactico::Sentencia& sentencia) {
+        const sintactico::Expresion* rango = sentencia.expresion.get();
+        if (rango == nullptr || rango->tipo != sintactico::TipoExpresion::Binaria ||
+            (rango->lexema != ".." && rango->lexema != "..=")) {
+            no_soportado("un «para» que no recorre un rango");
+            return;
+        }
+
+        const bool inclusivo = rango->lexema == "..=";
+        const std::string paso = sentencia.paso ? expresion(*sentencia.paso) : "1";
+
+        salida_ << indentacion() << "for (long long " << sentencia.nombre << " = "
+                << expresion(*rango->izquierda) << "; " << sentencia.nombre
+                << (inclusivo ? " <= " : " < ") << expresion(*rango->derecha) << "; "
+                << sentencia.nombre << " += " << paso << ") {\n";
+
+        abrir_ambito();
+        declarar(sentencia.nombre, TipoValor::Entero);
+        ++nivel_;
+        for (const sintactico::Sentencia& hija : sentencia.cuerpo) {
+            emitir_sentencia(hija, false);
+        }
+        --nivel_;
+        cerrar_ambito();
+        salida_ << indentacion() << "}\n";
+    }
+
+    std::string condicion(const sintactico::Expresion* expresion_condicion) {
+        if (expresion_condicion == nullptr) {
+            no_soportado("una condición vacía");
+            return "0";
+        }
+        return expresion(*expresion_condicion);
+    }
+
+    // --- Expresiones -------------------------------------------------------
+    TipoValor tipo_de(const sintactico::Expresion& expresion) const {
+        using sintactico::TipoExpresion;
+
         switch (expresion.tipo) {
-            case sintactico::TipoExpresion::Texto:
-                return "\"" + escapar_c(expresion.lexema) + "\"";
-            case sintactico::TipoExpresion::Entero:
-                return limpiar_separadores(expresion.lexema);
-            case sintactico::TipoExpresion::Identificador:
-                return nombre_c(expresion.lexema);
-            case sintactico::TipoExpresion::Llamada:
-                return llamada(expresion);
+            case TipoExpresion::Entero:
+                return TipoValor::Entero;
+            case TipoExpresion::Texto:
+                return TipoValor::Texto;
+            case TipoExpresion::Booleano:
+                return TipoValor::Booleano;
+            case TipoExpresion::Identificador:
+                return buscar(expresion.lexema);
+            case TipoExpresion::Unaria:
+                return expresion.lexema == "!" ? TipoValor::Booleano : TipoValor::Entero;
+            case TipoExpresion::Binaria:
+                return (es_comparacion(expresion.lexema) || es_logico(expresion.lexema))
+                           ? TipoValor::Booleano
+                           : TipoValor::Entero;
+            case TipoExpresion::Asignacion:
+                return expresion.izquierda ? tipo_de(*expresion.izquierda) : TipoValor::Desconocido;
+            default:
+                return TipoValor::Desconocido;
+        }
+    }
+
+    std::string expresion(const sintactico::Expresion& nodo) {
+        using sintactico::TipoExpresion;
+
+        switch (nodo.tipo) {
+            case TipoExpresion::Texto:
+                return "\"" + escapar_c(nodo.lexema) + "\"";
+            case TipoExpresion::Entero:
+                return limpiar_separadores(nodo.lexema);
+            case TipoExpresion::Booleano:
+                return nodo.lexema == "verdadero" ? "1" : "0";
+            case TipoExpresion::Identificador:
+                return std::string(nodo.lexema);
+            case TipoExpresion::Unaria:
+                return unaria(nodo);
+            case TipoExpresion::Binaria:
+                return binaria(nodo);
+            case TipoExpresion::Asignacion:
+                return asignacion(nodo);
+            case TipoExpresion::Llamada:
+                return llamada(nodo);
             default:
                 break;
         }
 
-        // El resto del árbol todavía no tiene traducción: se avisa en lugar de
-        // generar código silenciosamente incorrecto.
-        no_soportado(descripcion(expresion.tipo));
+        no_soportado(descripcion_expresion(nodo.tipo));
         return "0";
     }
 
-    std::string llamada(const sintactico::Expresion& llamada_expresion) {
-        if (!llamada_expresion.izquierda ||
-            llamada_expresion.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
-            no_soportado("una llamada a una expresión que no es un nombre");
+    std::string unaria(const sintactico::Expresion& nodo) {
+        if (nodo.lexema != "-" && nodo.lexema != "!") {
+            no_soportado("un operador unario que no sea «-» o «!»");
+            return "0";
+        }
+        if (!nodo.izquierda) {
+            return "0";
+        }
+        return "(" + std::string(nodo.lexema) + expresion(*nodo.izquierda) + ")";
+    }
+
+    std::string binaria(const sintactico::Expresion& nodo) {
+        if (!nodo.izquierda || !nodo.derecha) {
+            no_soportado("un operador sin sus dos operandos");
             return "0";
         }
 
-        std::string salida = nombre_c(llamada_expresion.izquierda->lexema) + "(";
-        bool primero = true;
-        for (const sintactico::ExpresionPtr& argumento : llamada_expresion.lista) {
-            if (!argumento) {
-                continue;
-            }
-            if (!primero) {
-                salida += ", ";
-            }
-            primero = false;
-            salida += expresion(*argumento);
+        const std::string_view operador = nodo.lexema;
+
+        if (operador == "**") {
+            return "nooki_potencia(" + expresion(*nodo.izquierda) + ", " +
+                   expresion(*nodo.derecha) + ")";
         }
-        salida += ')';
-        return salida;
+        if (!es_aritmetico(operador) && !es_comparacion(operador) && !es_logico(operador)) {
+            no_soportado("el operador «" + std::string(operador) + "»");
+            return "0";
+        }
+
+        return "(" + expresion(*nodo.izquierda) + " " + std::string(operador) + " " +
+               expresion(*nodo.derecha) + ")";
     }
 
-    static const char* descripcion(sintactico::TipoExpresion tipo) {
+    std::string asignacion(const sintactico::Expresion& nodo) {
+        if (!nodo.izquierda || !nodo.derecha) {
+            no_soportado("una asignación incompleta");
+            return "0";
+        }
+        if (nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
+            no_soportado("una asignación a algo que no es una variable");
+            return "0";
+        }
+        return std::string(nodo.izquierda->lexema) + " " + std::string(nodo.lexema) + " " +
+               expresion(*nodo.derecha);
+    }
+
+    std::string llamada(const sintactico::Expresion& nodo) {
+        if (!nodo.izquierda ||
+            nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
+            no_soportado("una llamada a algo que no es un nombre");
+            return "0";
+        }
+
+        const std::string_view nombre = nodo.izquierda->lexema;
+
+        if (nombre == "imprimir") {
+            if (nodo.lista.size() != 1 || !nodo.lista.front()) {
+                no_soportado("«imprimir» con un número de argumentos distinto de uno");
+                return "0";
+            }
+            const sintactico::Expresion& argumento = *nodo.lista.front();
+            const TipoValor tipo = tipo_de(argumento);
+            if (tipo == TipoValor::Desconocido) {
+                no_soportado("«imprimir» con un valor de tipo desconocido");
+                return "0";
+            }
+            const char* funcion =
+                tipo == TipoValor::Texto ? "nooki_imprimir_texto" : "nooki_imprimir_entero";
+            return std::string(funcion) + "(" + expresion(argumento) + ")";
+        }
+
+        if (!nodo.lista.empty()) {
+            no_soportado("una llamada con argumentos: las funciones aún no tienen parámetros");
+            return "0";
+        }
+        return nombre_c(nombre) + "()";
+    }
+
+    static std::string descripcion_expresion(sintactico::TipoExpresion tipo) {
         switch (tipo) {
             case sintactico::TipoExpresion::Caracter:
                 return "un literal de carácter";
             case sintactico::TipoExpresion::Flotante:
                 return "un número flotante";
-            case sintactico::TipoExpresion::Booleano:
-                return "un valor booleano";
             case sintactico::TipoExpresion::Nulo:
                 return "el valor nulo";
-            case sintactico::TipoExpresion::Unaria:
-                return "un operador unario";
-            case sintactico::TipoExpresion::Binaria:
-                return "un operador binario";
             case sintactico::TipoExpresion::Miembro:
                 return "el acceso a un miembro";
             case sintactico::TipoExpresion::MiembroOpcional:
@@ -250,14 +501,14 @@ private:
                 return "el operador «?»";
             case sintactico::TipoExpresion::Como:
                 return "la conversión «como»";
-            case sintactico::TipoExpresion::Asignacion:
-                return "una asignación";
             default:
                 return "una expresión";
         }
     }
 
     std::ostringstream salida_;
+    std::vector<std::map<std::string, TipoValor>> ambitos_;
+    int nivel_ = 0;
     bool soportado_ = true;
     std::string motivo_;
 };

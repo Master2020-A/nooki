@@ -5,6 +5,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 14 — El backend C compila variables y control de flujo (2026-11-09)
+
+- **El generador traduce ahora el lenguaje que el parser ya entendía**: variables y constantes con
+  tipo explícito o inferido, `si`/`sino`, `mientras`, `para` sobre rangos con `paso`, `hacer`,
+  `bucle`, `romper`, `continuar`, bloques y asignaciones.
+- **Aritmética y comparaciones** en C, y `**` mediante la función `nooki_potencia` del preludio.
+- **`imprimir` distingue enteros de textos**: `nooki_imprimir_entero` y `nooki_imprimir_texto`.
+- **Ámbito de tipos mínimo** (pila de mapas) para inferir el tipo de C de cada variable; no es el
+  sistema de tipos del lenguaje, que llega en S20.
+- **Declaraciones anticipadas** de funciones: se puede llamar a una función definida después.
+- Tres programas nuevos de conformidad, **compilados y ejecutados**: FizzBuzz (1..15), Fibonacci
+  (10 términos) y tabla de multiplicar con bucles anidados.
+- El backend sigue negándose con `NOK6003` ante lo que no sabe traducir (flotantes, `coincide`,
+  índice, conversiones) en lugar de generar código incorrecto.
+
 ### Sprint 13 — Sentencias y control de flujo (2026-11-09)
 
 - **Sentencias completas**: `variable`/`constante` con tipo opcional, `si`/`sinosi`/`sino`,

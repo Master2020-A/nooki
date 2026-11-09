@@ -1,0 +1,12 @@
+// Los diez primeros números de Fibonacci, con variables y asignaciones.
+funcion principal() -> entero {
+    variable a = 0
+    variable b = 1
+    para (i en 0..10) {
+        imprimir(a)
+        variable siguiente = a + b
+        a = b
+        b = siguiente
+    }
+    retornar 0
+}
