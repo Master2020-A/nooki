@@ -24,6 +24,8 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | **[spec/especificacion-v0.1.md](spec/especificacion-v0.1.md)** | Especificación normativa: léxico, tipos, OOP, memoria, errores, FFI |
 | **[spec/gramatica.ebnf](spec/gramatica.ebnf)** | Gramática formal completa (EBNF), normativa |
 | **[docs/adr/](docs/adr/)** | 13 Architecture Decision Records: el *porqué* de cada decisión |
+| **[CHANGELOG.md](CHANGELOG.md)** | Qué cambió en cada sprint |
+| **[CONTRIBUIR.md](CONTRIBUIR.md)** | Requisitos, cómo compilar, estilo y proceso de RFC |
 
 ### Documentos históricos
 
@@ -39,11 +41,29 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 ```
 Sprint 1  ✅  Decisiones: 13 ADR aprobadas
 Sprint 2  ✅  Especificación v0.1 + gramática EBNF
-Sprint 3  ⬜  Andamiaje del repositorio (CMake + CI 3 OS)
+Sprint 3  ✅  Andamiaje: repositorio, CMake, CLI, CI en 3 sistemas
 Sprint 4  ⬜  Sistema de diagnósticos
 Sprint 5  ⬜  Harness de conformidad
 Sprint 6  ⬜  Rebanada vertical: "Hola, Nooki" nativo en 3 sistemas
 ```
+
+El binario `nooki` ya existe y responde (`--version`, `ayuda`), pero **todavía no compila `.oki`**:
+eso llega en el Sprint 6.
+
+### Compilar y probar
+
+```bash
+cmake --preset windows-msvc      # o: windows-msvc-2026, windows-mingw, linux, macos
+cmake --build --preset windows-msvc
+ctest --preset windows-msvc
+```
+
+```bash
+build/windows-msvc/compilador/Release/nooki.exe --version
+#  nooki 0.1.0 (windows-x86_64, edición 2026)
+```
+
+Requisitos y estilo en [CONTRIBUIR.md](CONTRIBUIR.md). Historial en [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

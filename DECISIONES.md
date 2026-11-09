@@ -97,6 +97,8 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-03 | Infraestructura del registro de paquetes | ⬜ Abierto | S55 |
 | A-04 | Política de seguridad y divulgación de vulnerabilidades | ⬜ Abierto | S91 |
 | A-05 | Financiación (becas, patrocinio, fundación) | ⬜ Abierto | Antes de S52 |
+| A-06 | Incorporar el texto completo de Apache-2.0 (`LICENSE-APACHE`) | ⬜ Abierto | Antes de la primera publicación (S94) |
+| A-07 | Conectar el repositorio a GitHub y comprobar la primera ejecución de CI | ⬜ Abierto | Al cerrar S03 |
 
 ### 5.1 Resultado de la verificación del nombre (A-01)
 
