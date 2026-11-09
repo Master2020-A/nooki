@@ -31,5 +31,13 @@ pruebas/conformidad/
 
 ## Estado actual
 
-Todavía no hay casos: el arnés que los ejecuta se construye en el Sprint 5. Las pruebas de la
-v0.1 viven en `compilador/pruebas/`.
+**22 casos** (12 válidos, 10 inválidos), todos sobre el análisis léxico. Se ejecutan con la prueba
+`conformidad` de `ctest`, o directamente:
+
+```
+build/<preset>/compilador/pruebas/nooki_conformidad.exe --detalle
+```
+
+El arnés comprueba además el rendimiento del lexer sobre un corpus de 128 KB. Cuando exista el
+compilador (S06 en adelante), los casos válidos también se compilarán y se comparará su salida
+estándar con `esperado.txt`; los inválidos seguirán comparando códigos.

@@ -8,6 +8,13 @@ namespace nooki::diagnostico::codigos {
 
 // --- Léxico (NOK1xxx) -------------------------------------------------------
 inline constexpr std::string_view PALABRA_RESERVADA_CON_TILDE = "NOK1001";
+inline constexpr std::string_view TEXTO_SIN_CERRAR = "NOK1003";
+inline constexpr std::string_view CARACTER_INVALIDO = "NOK1004";
+inline constexpr std::string_view NUMERO_MAL_FORMADO = "NOK1005";
+inline constexpr std::string_view UTF8_INVALIDO = "NOK1006";
+inline constexpr std::string_view CARACTER_LITERAL_SIN_CERRAR = "NOK1007";
+inline constexpr std::string_view COMENTARIO_SIN_CERRAR = "NOK1008";
+inline constexpr std::string_view ESCAPE_DESCONOCIDO = "NOK1009";
 
 // --- Sintáctico (NOK2xxx) ---------------------------------------------------
 inline constexpr std::string_view PARENTESIS_SIN_CERRAR = "NOK2001";

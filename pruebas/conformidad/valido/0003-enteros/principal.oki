@@ -1,0 +1,7 @@
+variable a = 0
+variable b = 42
+variable c = 1_000_000
+variable d = 0xFF
+variable e = 0b1010
+variable f = 0o755
+variable g = 0xDEAD_BEEF

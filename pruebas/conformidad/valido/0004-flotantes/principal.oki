@@ -1,0 +1,4 @@
+variable pi = 3.14
+variable pequeno = 1e-9
+variable grande = 2.5E10
+variable mitad = 0.5

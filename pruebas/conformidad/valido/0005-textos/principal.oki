@@ -1,0 +1,5 @@
+variable saludo = "Hola, {nombre}"
+variable comillas = "dijo: \"hola\""
+variable llaves = "llaves: {{ }} literales"
+variable escapado = "linea\n\ttabulada \u{1F600}"
+variable acentos = "año, niño, después"

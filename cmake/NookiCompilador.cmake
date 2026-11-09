@@ -35,11 +35,12 @@ function(nooki_aplicar_opciones objetivo)
             target_compile_options(${objetivo} PRIVATE -Werror)
         endif()
 
-        # Windows + MinGW: enlazar libstdc++ y libgcc de forma estática.
-        # Así el binario no depende de las DLL del compilador (que además pueden
-        # entrar en conflicto con otras versiones instaladas en el sistema).
+        # Windows + MinGW: enlazado totalmente estático.
+        # El binario no debe depender de las DLL del compilador ni de la versión de
+        # libwinpthread que haya en el PATH del usuario (una versión antigua provoca
+        # "no se encuentra el punto de entrada" al arrancar).
         if(WIN32)
-            target_link_options(${objetivo} PRIVATE -static-libgcc -static-libstdc++)
+            target_link_options(${objetivo} PRIVATE -static)
         endif()
     endif()
 

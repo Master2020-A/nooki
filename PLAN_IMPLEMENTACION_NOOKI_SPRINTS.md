@@ -122,8 +122,8 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S02** | Especificación v0.1 + gramática EBNF normativa | `spec/gramatica.ebnf` validada por un checker; `spec/especificacion-v0.1.md` con léxico, sintaxis, tipos y semántica; lista de **no-objetivos** |
 | **S03** | Andamiaje del repositorio | ✅ Git + CMake presets (MSVC 2022/2026, MinGW, GCC, Clang) + estructura de carpetas + CI en 3 OS + `nooki --version` + clang-format/tidy + ASan/UBSan configurado. *vcpkg y LLVM se incorporan en S06, cuando se necesiten de verdad* |
 | **S04** | Sistema de diagnósticos | ✅ `GestorFuentes` + `Span`, códigos `NOKxxxx`, catálogo es/en, render en texto con caretos y en JSON, color con `NO_COLOR`; 5 casos dorados + 11 comprobaciones |
-| **S05** | Harness de conformidad y benchmarks | Runner `.oki` → salida esperada en 3 OS; 50 casos; `nooki bench`; línea base de tiempo de compilación |
-| **S06** | **Rebanada vertical: "Hola, Nooki" nativo** | Lexer mínimo + parser mínimo + emisión LLVM + enlace: binario ELF/PE/Mach-O que imprime "¡Hola, Nooki!" en los tres sistemas |
+| **S05** | Arnés de conformidad y primer consumidor | ✅ `nooki_conformidad` + 22 casos (12 válidos / 10 inválidos) + **lexer completo** (se adelanta de S06: el arnés necesitaba algo real que probar) + línea base 26,7 MB/s |
+| **S06** | **Rebanada vertical: "Hola, Nooki" nativo** | Parser mínimo + HIR mínimo + emisión LLVM + enlace: binario ELF/PE/Mach-O que imprime "¡Hola, Nooki!" en los tres sistemas |
 
 > **S06 es el sprint más importante del proyecto.** Demuestra que la cadena completa funciona antes de invertir años en semántica. Es también la demo que te permite conseguir colaboradores.
 

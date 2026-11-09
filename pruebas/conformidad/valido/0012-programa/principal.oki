@@ -1,0 +1,29 @@
+// Un programa que ejercita el léxico completo del lenguaje.
+importar nooki.texto.{dividir, unir}
+
+constante MAXIMO: entero = 1_000
+
+clase saludo {
+    privado nombre: texto
+    privado veces: entero = 1
+
+    constructor(nombre: texto, veces: entero) {
+        este.nombre = nombre
+        este.veces = veces
+    }
+
+    @virtual
+    publico funcion decir() -> texto {
+        variable salida = "Hola, {este.nombre}!"
+        para (i en 0..este.veces) {
+            imprimir(salida)
+        }
+        retornar salida
+    }
+}
+
+funcion principal() -> entero {
+    variable s = nuevo saludo("Ana", 2)
+    s.decir()
+    retornar 0
+}

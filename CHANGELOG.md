@@ -5,6 +5,23 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 5 — Arnés de conformidad y analizador léxico (2026-11-09)
+
+- **Arnés de conformidad** (`nooki_conformidad`): recorre `pruebas/conformidad/`, ejecuta cada caso
+  y compara los códigos obtenidos con los esperados; informa del rendimiento del lexer.
+- **22 casos de conformidad**: 12 válidos (léxico completo) y 10 inválidos con su código esperado.
+- **Analizador léxico** de la v0.1: 84 palabras reservadas con búsqueda binaria verificada en
+  compilación (`static_assert`), identificadores con tildes y eñe, enteros en cuatro bases,
+  flotantes, textos con escapes y multilínea, caracteres y tiempos de vida, comentarios anidados y
+  de documentación.
+- Diagnóstico `NOK1001` con sugerencia cuando una palabra clave se escribe con tilde.
+- 33 comprobaciones unitarias del lexer.
+- Enlazado **totalmente estático** en MinGW: elimina la dependencia de `libwinpthread-1.dll`, que
+  provocaba un fallo de arranque cuando el sistema tenía otra versión en el `PATH`.
+- Línea base de rendimiento: **26,7 MB/s · 5,6 M tokens/s** (corpus de 128 KB).
+- Re-corte del plan: el lexer pasa de S06 a S05 (el arnés necesitaba un consumidor real); S06 queda
+  como parser mínimo + LLVM + enlace.
+
 ### Sprint 4 — Sistema de diagnósticos (2026-11-09)
 
 - `nooki/utf8`: decodificador propio que detecta secuencias inválidas sin abortar.

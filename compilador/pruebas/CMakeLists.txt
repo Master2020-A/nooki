@@ -11,3 +11,16 @@ nooki_aplicar_opciones(prueba_diagnosticos)
 target_compile_definitions(prueba_diagnosticos
     PRIVATE NOOKI_DIR_CASOS="${CMAKE_CURRENT_SOURCE_DIR}/diagnostico")
 add_test(NAME diagnosticos COMMAND prueba_diagnosticos)
+
+add_executable(prueba_lexico prueba_lexico.cpp)
+target_link_libraries(prueba_lexico PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_lexico)
+add_test(NAME lexico COMMAND prueba_lexico)
+
+# Arnés de conformidad: ejecuta los programas .oki de pruebas/conformidad.
+add_executable(nooki_conformidad arnes_conformidad.cpp)
+target_link_libraries(nooki_conformidad PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(nooki_conformidad)
+target_compile_definitions(nooki_conformidad
+    PRIVATE NOOKI_DIR_CONFORMIDAD="${CMAKE_SOURCE_DIR}/pruebas/conformidad")
+add_test(NAME conformidad COMMAND nooki_conformidad)

@@ -1,0 +1,11 @@
+para (i en 0..10) {
+    imprimir(i)
+}
+para (i en 0..=10) {
+    imprimir(i)
+}
+para (i en 0..100 paso 5) {
+    imprimir(i)
+}
+variable medio = 1.5
+variable rango_de_flotantes = 0.5..1.5

@@ -1,0 +1,5 @@
+variable poema = """
+La luz de la mañana
+sobre el río.
+"""
+variable despues = 1

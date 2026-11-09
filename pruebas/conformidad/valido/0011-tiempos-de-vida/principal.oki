@@ -1,0 +1,7 @@
+funcion el_mas_largo<'v>(a: &'v texto, b: &'v texto) -> &'v texto {
+    retornar a
+}
+
+estructura referencia_texto<'v> {
+    contenido: &'v texto
+}

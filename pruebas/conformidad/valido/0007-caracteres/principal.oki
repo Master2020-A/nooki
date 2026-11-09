@@ -1,0 +1,7 @@
+variable letra = 'a'
+variable enie = 'ñ'
+variable salto = '\n'
+variable tabulador = '\t'
+variable barra = '\\'
+variable comilla = '\''
+variable emoji = '\u{1F600}'

@@ -28,6 +28,8 @@ add_library(nooki_nucleo STATIC
     fuente/diagnostico/render_texto.cpp
     fuente/diagnostico/render_json.cpp
     fuente/diagnostico/terminal.cpp
+    fuente/lexico/token.cpp
+    fuente/lexico/lexer.cpp
 )
 
 target_include_directories(nooki_nucleo

@@ -17,10 +17,27 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 6> MENSAJES{{
+constexpr std::array<EntradaMensaje, 13> MENSAJES{{
     {codigos::PALABRA_RESERVADA_CON_TILDE,
      "«{palabra}» no es una palabra reservada: las palabras clave se escriben sin tilde",
      "“{palabra}” is not a reserved word: keywords are written without accents"},
+
+    {codigos::TEXTO_SIN_CERRAR, "texto sin cerrar", "unterminated string literal"},
+
+    {codigos::CARACTER_INVALIDO, "el carácter «{caracter}» no se usa en Nooki",
+     "character “{caracter}” is not used in Nooki"},
+
+    {codigos::NUMERO_MAL_FORMADO, "número mal formado", "malformed number"},
+
+    {codigos::UTF8_INVALIDO, "secuencia UTF-8 no válida", "invalid UTF-8 sequence"},
+
+    {codigos::CARACTER_LITERAL_SIN_CERRAR, "falta cerrar el carácter literal",
+     "unterminated character literal"},
+
+    {codigos::COMENTARIO_SIN_CERRAR, "comentario sin cerrar", "unterminated comment"},
+
+    {codigos::ESCAPE_DESCONOCIDO, "la secuencia de escape «{escape}» no existe",
+     "unknown escape sequence “{escape}”"},
 
     {codigos::PARENTESIS_SIN_CERRAR, "falta cerrar «{apertura}»",
      "unclosed “{apertura}”"},

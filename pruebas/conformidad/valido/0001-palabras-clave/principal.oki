@@ -1,0 +1,15 @@
+// Todas las palabras reservadas de la v0.1 (especificación §2.3).
+entero entero8 entero16 entero32 entero64 entero128
+natural natural8 natural16 natural32 natural64 natural128
+flotante flotante32 booleano caracter texto vacio byte tamano tamano_signado
+verdadero falso nulo
+publico privado protegido interna estatico abstracta
+variable constante funcion clase estructura rasgo interfaz enumeracion tipo
+modulo importar exportar implementar externo
+hereda implementa nuevo este Este super constructor destructor propiedad
+obtener establecer
+si sinosi sino mientras para en paso hacer bucle romper continuar retornar
+coincide caso como donde
+inseguro mutable asm
+intentar atrapar finalmente lanzar
+asincrono esperar macro union mixin es
