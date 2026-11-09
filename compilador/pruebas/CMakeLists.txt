@@ -27,6 +27,11 @@ target_link_libraries(prueba_expresiones PRIVATE nooki_nucleo)
 nooki_aplicar_opciones(prueba_expresiones)
 add_test(NAME expresiones COMMAND prueba_expresiones)
 
+add_executable(prueba_sentencias prueba_sentencias.cpp)
+target_link_libraries(prueba_sentencias PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_sentencias)
+add_test(NAME sentencias COMMAND prueba_sentencias)
+
 # Arnés de conformidad: ejecuta los programas .oki de pruebas/conformidad.
 add_executable(nooki_conformidad arnes_conformidad.cpp)
 target_link_libraries(nooki_conformidad PRIVATE nooki_nucleo)

@@ -1,5 +1,6 @@
 #include "nooki/cli/orden.hpp"
 
+#include "nooki/cli/ast.hpp"
 #include "nooki/cli/ayuda.hpp"
 #include "nooki/cli/comandos.hpp"
 #include "nooki/cli/compilar.hpp"
@@ -116,6 +117,9 @@ int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
     }
     if (comando->nombre == "ejecutar") {
         return comando_ejecutar(argumentos.subspan(1), salida, error);
+    }
+    if (comando->nombre == "ast") {
+        return comando_ast(argumentos.subspan(1), salida, error);
     }
 
     // Un comando marcado como disponible sin implementación es un fallo del propio compilador:

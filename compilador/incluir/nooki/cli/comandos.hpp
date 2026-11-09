@@ -23,7 +23,7 @@ inline constexpr std::array<Comando, 11> COMANDOS{{
     {"version", "Muestra la versión del compilador", 0},
     {"compilar", "Compila un archivo .oki y genera un ejecutable", 0},
     {"ejecutar", "Compila y ejecuta un archivo .oki", 0},
-    {"ast", "Muestra el árbol de sintaxis del archivo", 19},
+    {"ast", "Muestra el árbol de sintaxis del archivo", 0},
     {"nuevo", "Crea un proyecto nuevo", 53},
     {"probar", "Ejecuta las pruebas del proyecto", 53},
     {"limpiar", "Borra los artefactos de compilación", 53},

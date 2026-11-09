@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 13 — Sentencias y control de flujo (2026-11-09)
+
+- **Sentencias completas**: `variable`/`constante` con tipo opcional, `si`/`sinosi`/`sino`,
+  `mientras`, `para` (con `paso`), `hacer`, `bucle`, `romper`, `continuar`, `retornar`, bloques y
+  expresiones sueltas.
+- **`sinosi` encadenado** sin límite: se representa como un `si` anidado en la rama `sino`.
+- **Nueva línea significativa**: `retornar` sin valor se distingue de `retornar x` por el salto de
+  línea previo, no por mirar el token siguiente.
+- **Impresor de sentencias y programas**: `(para i en (.. 0 10) paso 2 (si ...))`.
+- **Comando `nooki ast`**: muestra el árbol canónico de un archivo `.oki`.
+- **33 comprobaciones**: 27 programas válidos y 6 inválidos.
+- `coincide` produce `NOK2004` con la explicación de que llega en el Sprint 17, en lugar de un error
+  de sintaxis críptico.
+
 ### Sprint 12 — Parser de expresiones con precedencia (2026-11-09)
 
 - **Parser Pratt** con la tabla de precedencia completa de la especificación §7.1: 15 niveles, con

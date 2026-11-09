@@ -56,14 +56,43 @@ struct Expresion {
     diagnostico::Span span;
 };
 
+/// Clase de una sentencia.
 enum class TipoSentencia : unsigned char {
     Expresion,
     Retornar,
+    Variable,
+    Constante,
+    Si,
+    Mientras,
+    Para,
+    Hacer,
+    Bucle,
+    Romper,
+    Continuar,
+    Bloque,
 };
 
 struct Sentencia {
     TipoSentencia tipo = TipoSentencia::Expresion;
-    ExpresionPtr expresion;  // puede ser nula en `retornar` sin valor
+
+    /// Expresión de la sentencia: valor inicial, condición o expresión suelta.
+    ExpresionPtr expresion;
+
+    /// Paso de `para` y condición final de `hacer`.
+    ExpresionPtr paso;
+
+    /// Nombre declarado o variable de iteración.
+    std::string_view nombre;
+
+    /// Tipo escrito en la declaración, si lo hay.
+    std::string_view tipo_declarado;
+
+    /// Cuerpo del bloque o del bucle.
+    std::vector<Sentencia> cuerpo;
+
+    /// Rama `sino`. Un `sinosi` se representa como un `Si` anidado aquí dentro.
+    std::vector<Sentencia> sino;
+
     diagnostico::Span span;
 };
 

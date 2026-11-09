@@ -134,16 +134,52 @@ private:
     }
 
     void emitir_sentencia(const sintactico::Sentencia& sentencia, bool principal) {
-        if (sentencia.tipo == sintactico::TipoSentencia::Retornar) {
-            if (sentencia.expresion) {
-                salida_ << INDENTACION << "return " << expresion(*sentencia.expresion) << ";\n";
-            } else {
-                salida_ << INDENTACION << (principal ? "return 0;\n" : "return;\n");
-            }
-            return;
+        switch (sentencia.tipo) {
+            case sintactico::TipoSentencia::Expresion:
+                if (sentencia.expresion) {
+                    salida_ << INDENTACION << expresion(*sentencia.expresion) << ";\n";
+                }
+                return;
+
+            case sintactico::TipoSentencia::Retornar:
+                if (sentencia.expresion) {
+                    salida_ << INDENTACION << "return " << expresion(*sentencia.expresion)
+                            << ";\n";
+                } else {
+                    salida_ << INDENTACION << (principal ? "return 0;\n" : "return;\n");
+                }
+                return;
+
+            default:
+                no_soportado(descripcion_sentencia(sentencia.tipo));
+                return;
         }
-        if (sentencia.expresion) {
-            salida_ << INDENTACION << expresion(*sentencia.expresion) << ";\n";
+    }
+
+    static const char* descripcion_sentencia(sintactico::TipoSentencia tipo) {
+        switch (tipo) {
+            case sintactico::TipoSentencia::Variable:
+                return "una declaración de variable";
+            case sintactico::TipoSentencia::Constante:
+                return "una declaración de constante";
+            case sintactico::TipoSentencia::Si:
+                return "una sentencia «si»";
+            case sintactico::TipoSentencia::Mientras:
+                return "un bucle «mientras»";
+            case sintactico::TipoSentencia::Para:
+                return "un bucle «para»";
+            case sintactico::TipoSentencia::Hacer:
+                return "un bucle «hacer»";
+            case sintactico::TipoSentencia::Bucle:
+                return "un bucle «bucle»";
+            case sintactico::TipoSentencia::Romper:
+                return "«romper»";
+            case sintactico::TipoSentencia::Continuar:
+                return "«continuar»";
+            case sintactico::TipoSentencia::Bloque:
+                return "un bloque anidado";
+            default:
+                return "una sentencia";
         }
     }
 

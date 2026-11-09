@@ -13,7 +13,8 @@ namespace nooki::sintactico {
 /// Parser descendente recursivo con expresiones Pratt.
 ///
 /// Declaraciones: `funcion <nombre>() [-> <tipo>] { ... }`.
-/// Sentencias: expresión y `retornar`.
+/// Sentencias: `variable`, `constante`, `si`/`sinosi`/`sino`, `mientras`, `para`,
+/// `hacer`, `bucle`, `romper`, `continuar`, `retornar`, bloques y expresiones.
 /// Expresiones: todos los operadores de la especificación §7.1, con su precedencia
 /// y su asociatividad exactas.
 class Parser {
@@ -38,10 +39,17 @@ private:
     void error_en(const lexico::Token& token, std::string_view codigo, std::string_view esperado);
 
     Funcion analizar_funcion();
+    std::vector<Sentencia> analizar_bloque();
     Sentencia analizar_sentencia();
+    Sentencia analizar_declaracion(bool constante);
+    Sentencia analizar_si();
+    Sentencia analizar_rama_si(Sentencia sentencia);
+    Sentencia analizar_mientras();
+    Sentencia analizar_para();
+    Sentencia analizar_hacer();
+    Sentencia analizar_bucle();
 
-    /// Núcleo Pratt: analiza una expresión cuyos operadores tengan al menos
-    /// `potencia_minima`.
+    /// Analiza una expresión cuyos operadores tengan al menos `potencia_minima`.
     ExpresionPtr expresion(int potencia_minima);
     ExpresionPtr prefijo();
     ExpresionPtr llamada(ExpresionPtr destino);
@@ -54,6 +62,10 @@ private:
     diagnostico::Emisor& emisor_;
     std::vector<lexico::Token> tokens_;
     std::size_t indice_ = 0;
+
+    /// Verdadero si entre el token anterior y el actual había un salto de línea.
+    /// Es lo que distingue `retornar` de `retornar valor`.
+    bool salto_previo_ = false;
 };
 
 }  // namespace nooki::sintactico

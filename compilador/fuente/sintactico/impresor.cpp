@@ -19,6 +19,13 @@ std::string entre_parentesis(std::string_view operador, const Expresion& izquier
     return salida;
 }
 
+void agregar_sentencias(std::string& salida, const std::vector<Sentencia>& sentencias) {
+    for (const Sentencia& sentencia : sentencias) {
+        salida += ' ';
+        salida += imprimir(sentencia);
+    }
+}
+
 }  // namespace
 
 std::string imprimir(const Expresion& expresion) {
@@ -83,6 +90,119 @@ std::string imprimir(const Expresion& expresion) {
                    expresion.anotacion + ')';
     }
     return "?";
+}
+
+std::string imprimir(const Sentencia& sentencia) {
+    switch (sentencia.tipo) {
+        case TipoSentencia::Expresion:
+            return sentencia.expresion ? imprimir(*sentencia.expresion) : "(?)";
+
+        case TipoSentencia::Retornar:
+            return sentencia.expresion ? "(retornar " + imprimir(*sentencia.expresion) + ")"
+                                       : "(retornar)";
+
+        case TipoSentencia::Variable:
+        case TipoSentencia::Constante: {
+            std::string salida =
+                sentencia.tipo == TipoSentencia::Variable ? "(variable " : "(constante ";
+            salida += sentencia.nombre;
+            if (!sentencia.tipo_declarado.empty()) {
+                salida += ' ';
+                salida += sentencia.tipo_declarado;
+            }
+            if (sentencia.expresion) {
+                salida += ' ';
+                salida += imprimir(*sentencia.expresion);
+            }
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Si: {
+            std::string salida = "(si ";
+            salida += sentencia.expresion ? imprimir(*sentencia.expresion) : "?";
+            agregar_sentencias(salida, sentencia.cuerpo);
+            if (!sentencia.sino.empty()) {
+                salida += " (sino";
+                agregar_sentencias(salida, sentencia.sino);
+                salida += ')';
+            }
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Mientras: {
+            std::string salida = "(mientras ";
+            salida += sentencia.expresion ? imprimir(*sentencia.expresion) : "?";
+            agregar_sentencias(salida, sentencia.cuerpo);
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Para: {
+            std::string salida = "(para ";
+            salida += sentencia.nombre;
+            salida += " en ";
+            salida += sentencia.expresion ? imprimir(*sentencia.expresion) : "?";
+            if (sentencia.paso) {
+                salida += " paso ";
+                salida += imprimir(*sentencia.paso);
+            }
+            agregar_sentencias(salida, sentencia.cuerpo);
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Hacer: {
+            std::string salida = "(hacer";
+            agregar_sentencias(salida, sentencia.cuerpo);
+            salida += " mientras ";
+            salida += sentencia.paso ? imprimir(*sentencia.paso) : "?";
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Bucle: {
+            std::string salida = "(bucle";
+            agregar_sentencias(salida, sentencia.cuerpo);
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Romper:
+            return "(romper)";
+
+        case TipoSentencia::Continuar:
+            return "(continuar)";
+
+        case TipoSentencia::Bloque: {
+            std::string salida = "(bloque";
+            agregar_sentencias(salida, sentencia.cuerpo);
+            salida += ')';
+            return salida;
+        }
+    }
+    return "?";
+}
+
+std::string imprimir(const Funcion& funcion) {
+    std::string salida = "(funcion ";
+    salida += funcion.nombre;
+    salida += " -> ";
+    salida += funcion.tipo_retorno;
+    agregar_sentencias(salida, funcion.cuerpo);
+    salida += ')';
+    return salida;
+}
+
+std::string imprimir(const Programa& programa) {
+    std::string salida = "(programa";
+    for (const Funcion& funcion : programa.funciones) {
+        salida += ' ';
+        salida += imprimir(funcion);
+    }
+    salida += ')';
+    return salida;
 }
 
 }  // namespace nooki::sintactico

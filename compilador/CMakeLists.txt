@@ -24,6 +24,7 @@ add_library(nooki_nucleo STATIC
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
     fuente/cli/compilar.cpp
+    fuente/cli/ast.cpp
     fuente/diagnostico/gestor_fuentes.cpp
     fuente/diagnostico/catalogo.cpp
     fuente/diagnostico/diagnostico.cpp
