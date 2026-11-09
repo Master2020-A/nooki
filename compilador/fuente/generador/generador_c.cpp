@@ -143,7 +143,7 @@ private:
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             salida_ << "typedef struct " << tipo_estructura(definicion.nombre) << " {\n";
             for (const sintactico::Campo& campo : definicion.campos) {
-                salida_ << "    " << tipo_c(campo.tipo) << ' ' << campo.nombre << ";\n";
+                salida_ << "    " << tipo_declarado_c(campo.tipo) << ' ' << campo.nombre << ";\n";
             }
             salida_ << "} " << tipo_estructura(definicion.nombre) << ";\n\n";
         }
@@ -172,6 +172,15 @@ private:
     }
 
     // --- Utilidades --------------------------------------------------------
+    /// Tipo de C de un tipo declarado: si el nombre corresponde a una estructura
+    /// del programa, se usa su `typedef`; si no, el tipo primitivo.
+    std::string tipo_declarado_c(std::string_view escrito) const {
+        if (campos_.find(std::string(escrito)) != campos_.end()) {
+            return tipo_estructura(escrito);
+        }
+        return tipo_c(escrito);
+    }
+
     std::string indentacion() const {
         return std::string(static_cast<std::size_t>(nivel_) * 4, ' ');
     }
@@ -186,7 +195,7 @@ private:
     // --- Funciones ---------------------------------------------------------
     std::string firma(const sintactico::Funcion& funcion) const {
         std::string salida = "static ";
-        salida += tipo_c(funcion.tipo_retorno);
+        salida += tipo_declarado_c(funcion.tipo_retorno);
         salida += ' ';
         salida += nombre_c(funcion.nombre);
         salida += '(';
@@ -200,7 +209,7 @@ private:
                     salida += ", ";
                 }
                 primero = false;
-                salida += tipo_c(parametro.tipo);
+                salida += tipo_declarado_c(parametro.tipo);
                 salida += ' ';
                 salida += parametro.nombre;
             }
@@ -225,7 +234,7 @@ private:
         abrir_ambito();
         ++nivel_;
         for (const sintactico::Parametro& parametro : funcion.parametros) {
-            declarar(parametro.nombre, tipo_c(parametro.tipo));
+            declarar(parametro.nombre, tipo_declarado_c(parametro.tipo));
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, principal);
@@ -329,7 +338,7 @@ private:
 
         const std::string tipo = sentencia.tipo_declarado.empty()
                                      ? tipo_de(*sentencia.expresion)
-                                     : tipo_c(sentencia.tipo_declarado);
+                                     : tipo_declarado_c(sentencia.tipo_declarado);
 
         if (sentencia.tipo == sintactico::TipoSentencia::Constante) {
             salida_ << indentacion() << "const ";

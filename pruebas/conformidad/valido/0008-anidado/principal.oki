@@ -1,0 +1,18 @@
+// Estructuras anidadas: un campo cuyo tipo es otra estructura.
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+estructura linea {
+    publico inicio: punto
+    publico fin: punto
+}
+
+funcion principal() -> entero {
+    variable a = punto { x: 1, y: 2 }
+    variable b = punto { x: 3, y: 4 }
+    variable l = linea { inicio: a, fin: b }
+    imprimir(l.fin.x - l.inicio.x)
+    retornar 0
+}
