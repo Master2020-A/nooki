@@ -1,0 +1,23 @@
+#pragma once
+
+// ---------------------------------------------------------------------------
+// Archivo GENERADO por CMake a partir de version.hpp.in.
+// No editar a mano: la versión se define en el CMakeLists.txt raíz.
+// ---------------------------------------------------------------------------
+
+namespace nooki::version {
+
+inline constexpr int MAYOR = @PROJECT_VERSION_MAJOR@;
+inline constexpr int MENOR = @PROJECT_VERSION_MINOR@;
+inline constexpr int PARCHE = @PROJECT_VERSION_PATCH@;
+
+/// Versión completa, por ejemplo "0.1.0".
+inline constexpr const char* TEXTO = "@PROJECT_VERSION@";
+
+/// Edición del lenguaje que implementa este compilador.
+inline constexpr const char* EDICION = "@NOOKI_EDICION@";
+
+/// Objetivo de compilación nativo, por ejemplo "windows-x86_64".
+inline constexpr const char* OBJETIVO = "@NOOKI_OBJETIVO@";
+
+}  // namespace nooki::version

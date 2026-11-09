@@ -1,0 +1,103 @@
+name: Integración continua
+
+on:
+  push:
+    branches: [principal, main]
+  pull_request:
+    branches: [principal, main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Compilación y pruebas en los tres sistemas objetivo.
+  # Es el trabajo obligatorio: si falla, el sprint no está terminado.
+  # ---------------------------------------------------------------------------
+  compilar:
+    name: ${{ matrix.nombre }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nombre: Windows · MSVC 2022
+            os: windows-2022
+            preset: windows-msvc
+          - nombre: Linux · GCC
+            os: ubuntu-24.04
+            preset: linux
+          - nombre: macOS · Clang
+            os: macos-14
+            preset: macos
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Compilar
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Probar
+        run: ctest --preset ${{ matrix.preset }}
+
+      # Verifica el criterio de terminado del Sprint 3: el binario existe y responde.
+      - name: Comprobar el ejecutable
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            bin="build/${{ matrix.preset }}/compilador/Release/nooki.exe"
+          else
+            bin="build/${{ matrix.preset }}/compilador/nooki"
+          fi
+          "$bin" --version
+          "$bin" --version | grep -q "^nooki "
+          "$bin" ayuda > /dev/null
+
+  # ---------------------------------------------------------------------------
+  # Formato. Por ahora es informativo: se vuelve bloqueante en el Sprint 7,
+  # cuando el estilo del código esté estabilizado.
+  # ---------------------------------------------------------------------------
+  formato:
+    name: Formato (clang-format)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Comprobar el formato
+        run: |
+          find compilador cmake -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.in' \) -print0 \
+            | xargs -0 -r clang-format --dry-run --Werror
+
+  # ---------------------------------------------------------------------------
+  # Análisis estático. También informativo hasta el Sprint 7.
+  # ---------------------------------------------------------------------------
+  analisis:
+    name: Análisis (clang-tidy)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar clang-tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy
+
+      - name: Configurar
+        run: cmake --preset linux
+
+      - name: Analizar
+        run: |
+          find compilador/fuente -name '*.cpp' -print0 \
+            | xargs -0 -r -n1 clang-tidy -p build/linux

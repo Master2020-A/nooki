@@ -1,0 +1,2895 @@
+# 🛡️ PLAN MAESTRO: Lenguaje de Programación "AURORA"
+
+## *"El primer lenguaje de programación de alto rendimiento en español"*
+
+---
+
+## 📋 ÍNDICE DEL PLAN
+
+```
+1. Visión General y Filosofía
+2. Arquitectura del Compilador
+3. Especificación del Lenguaje
+4. Sistema de Tipos
+5. Sistema de Memoria (Modelo Rust adaptado)
+6. Programación Orientada a Objetos
+7. Biblioteca Estándar
+8. Ecosistema de IA/ML
+9. Sistema de UI
+10. Sistema de Paquetes
+11. Multiplataforma
+12. Fases de Desarrollo
+13. Estructura del Proyecto
+14. Herramientas de Desarrollo
+15. Cronograma
+```
+
+---
+
+## 1. 🌅 VISIÓN GENERAL Y FILOSOFÍA
+
+### Nombre: **AURORA**
+> *"La luz que precede al amanecer del código en español"*
+
+### Principios Fundamentales
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  AURORA - PILARES                    │
+├─────────────────────────────────────────────────────┤
+│ 🔧 Poder de C/C++     → Control total del hardware │
+│ 🛡️ Seguridad de Rust  → Memoria segura sin GC      │
+│ 🐍 Facilidad de Python → Sintaxis limpia y clara   │
+│ 🇪🇸 100% en Español    → Democratización total      │
+│ ⚡ Compilado           → Rendimiento nativo         │
+│ 🖥️ Multiplataforma    → Windows, Mac, Linux        │
+└─────────────────────────────────────────────────────┘
+```
+
+### Ejemplo de cómo se vería el código Aurora
+
+```
+// Esto es un ejemplo conceptual de Aurora
+
+importar sistema.io
+importar ia.redes_neuronales
+
+clase Animal {
+    protegido nombre: Texto
+    protegido edad: Entero
+
+    constructor(nombre: Texto, edad: Entero) {
+        este.nombre = nombre
+        este.edad = edad
+    }
+
+    publico funcion hablar() -> Texto {
+        retornar "..."
+    }
+}
+
+clase Perro hereda Animal {
+    privado raza: Texto
+
+    constructor(nombre: Texto, edad: Entero, raza: Texto) {
+        super(nombre, edad)
+        este.raza = raza
+    }
+
+    publico funcion hablar() -> Texto {
+        retornar "¡Guau!"
+    }
+}
+
+funcion principal() {
+    variable mi_perro = nuevo Perro("Rex", 5, "Pastor Alemán")
+    imprimir("Mi perro dice: {mi_perro.hablar()}")
+
+    // Manejo de memoria seguro (estilo Rust)
+    variable datos: propio Vec<Entero> = nuevo Vec<Entero>()
+    datos.agregar(1)
+    datos.agregar(2)
+
+    // Préstamo inmutable
+    variable referencia: &Vec<Entero> = &datos
+    imprimir("Datos: {referencia}")
+
+    // Puntero directo (bloque inseguro para hardware)
+    inseguro {
+        variable ptr: *Entero = asignar_memoria(4)
+        *ptr = 42
+        liberar_memoria(ptr)
+    }
+}
+```
+
+---
+
+## 2. 🏗️ ARQUITECTURA DEL COMPILADOR
+
+### Pipeline Completo de Compilación
+
+```
+                    ARQUITECTURA DEL COMPILADOR AURORA
+                    ===================================
+
+ Código Fuente (.aur)
+        │
+        ▼
+┌──────────────────┐
+│  FASE 1: LÉXICO  │  → Análisis léxico (Tokenización)
+│    (Lexer)       │  → Tokens en español
+│                  │  → Manejo de UTF-8/Unicode
+└────────┬─────────┘
+         │ Flujo de Tokens
+         ▼
+┌──────────────────┐
+│ FASE 2: SINTAXIS │  → Parser descendente recursivo
+│   (Parser)       │  → Gramática LL(k) / Pratt Parser
+│                  │  → Genera AST
+└────────┬─────────┘
+         │ AST (Árbol Sintáctico Abstracto)
+         ▼
+┌──────────────────┐
+│ FASE 3: SEMÁNTIC │  → Resolución de nombres
+│  (Analizador     │  → Verificación de tipos
+│   Semántico)     │  → Verificación de propiedad (ownership)
+│                  │  → Verificación de préstamos (borrowing)
+│                  │  → Verificación de tiempos de vida
+└────────┬─────────┘
+         │ AST Anotado + Tabla de Símbolos
+         ▼
+┌──────────────────┐
+│ FASE 4: HIR      │  → Representación Intermedia Alta
+│ (High-Level IR)  │  → Desugaring
+│                  │  → Resolución de genéricos
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ FASE 5: MIR      │  → Representación Intermedia Media
+│ (Mid-Level IR)   │  → Verificación de ownership aquí
+│                  │  → Análisis de flujo de control
+│                  │  → Optimizaciones de alto nivel
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│ FASE 6: LIR/     │  → Generación a LLVM IR
+│ LLVM IR          │  → O generación directa a ensamblador
+│                  │  → Optimizaciones de bajo nivel
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│         FASE 7: BACKEND                  │
+├──────────────┬───────────┬───────────────┤
+│   Windows    │   Linux   │    macOS      │
+│   (PE/COFF)  │   (ELF)  │  (Mach-O)    │
+│   x86_64     │  x86_64  │  x86_64      │
+│   ARM64      │  ARM64   │  ARM64 (M1+) │
+└──────────────┴───────────┴───────────────┘
+         │
+         ▼
+   Ejecutable Nativo / Biblioteca
+```
+
+### 2.1 Módulo Léxico (Lexer/Tokenizador)
+
+```
+COMPONENTES DEL LEXER
+=====================
+
+Archivo: src/lexer/
+
+├── tokenizador.cpp        → Motor principal del lexer
+├── tokens.hpp             → Definición de todos los tokens
+├── unicode.cpp            → Manejo completo de UTF-8
+├── ubicacion.hpp          → Tracking de línea/columna
+└── errores_lexicos.cpp    → Mensajes de error en español
+
+TOKENS DEL LENGUAJE (todos en español):
+═══════════════════════════════════════
+
+Palabras Reservadas:
+────────────────────
+funcion, retornar, variable, constante, si, sino, sinosi,
+mientras, para, en, hacer, romper, continuar, clase, hereda,
+implementa, interfaz, publico, privado, protegido, estatico,
+nuevo, eliminar, este, super, nulo, verdadero, falso,
+importar, exportar, modulo, paquete, como, desde,
+inseguro, propio, prestamo, mutable, inmutable,
+intentar, atrapar, lanzar, finalmente,
+asincrono, esperar, concurrente, hilo,
+coincide, caso, defecto,
+tipo, alias, enumeracion, estructura, union,
+donde, rasgo, implementar
+
+Tipos Primitivos:
+─────────────────
+Entero, Entero8, Entero16, Entero32, Entero64
+EnteroSinSigno, ESS8, ESS16, ESS32, ESS64
+Flotante, Flotante32, Flotante64
+Texto, Caracter, Booleano, Vacio, Nulo
+Byte, Tamaño
+
+Operadores:
+───────────
++  -  *  /  %  **
+== != < > <= >=
+&& || !
+& | ^ ~ << >>
+= += -= *= /= %=
+-> => :: . .. ...
+? ?? ?. 
+@ # $
+```
+
+### 2.2 Módulo Parser
+
+```
+COMPONENTES DEL PARSER
+======================
+
+Archivo: src/parser/
+
+├── parser.cpp              → Parser principal (Pratt Parser)
+├── ast.hpp                 → Definición de nodos AST
+├── nodos/
+│   ├── expresiones.hpp     → Nodos de expresión
+│   ├── declaraciones.hpp   → Nodos de declaración
+│   ├── sentencias.hpp      → Nodos de sentencia
+│   ├── tipos.hpp           → Nodos de tipo
+│   ├── patrones.hpp        → Pattern matching
+│   └── modulos.hpp         → Sistema de módulos
+├── precedencia.hpp         → Tabla de precedencia
+├── gramatica.hpp           → Reglas gramaticales
+└── errores_sintacticos.cpp → Errores en español
+
+GRAMÁTICA (BNF simplificada):
+══════════════════════════════
+
+<programa>     ::= <declaracion>*
+<declaracion>  ::= <dec_funcion> | <dec_clase> | <dec_variable>
+                 | <dec_importar> | <dec_modulo> | <dec_interfaz>
+                 | <dec_enumeracion> | <dec_estructura>
+
+<dec_funcion>  ::= "funcion" <identificador> "(" <parametros>? ")"
+                   ("->" <tipo>)? <bloque>
+
+<dec_clase>    ::= "clase" <identificador> 
+                   ("hereda" <tipo>)?
+                   ("implementa" <tipo> ("," <tipo>)*)?
+                   "{" <miembro_clase>* "}"
+
+<dec_variable> ::= ("variable" | "constante") <identificador>
+                   (":" <tipo>)? "=" <expresion>
+
+<sentencia>    ::= <si_sentencia> | <mientras_sentencia>
+                 | <para_sentencia> | <coincide_sentencia>
+                 | <retornar_sentencia> | <expresion> ";"
+
+<si_sentencia> ::= "si" "(" <expresion> ")" <bloque>
+                   ("sinosi" "(" <expresion> ")" <bloque>)*
+                   ("sino" <bloque>)?
+```
+
+### 2.3 Analizador Semántico
+
+```
+COMPONENTES SEMÁNTICOS
+======================
+
+Archivo: src/semantico/
+
+├── analizador_semantico.cpp    → Motor principal
+├── tabla_simbolos.hpp          → Tabla de símbolos jerárquica
+├── verificador_tipos.cpp       → Sistema de tipos
+├── inferencia_tipos.cpp        → Inferencia automática de tipos
+├── verificador_propiedad.cpp   → Ownership checker (estilo Rust)
+├── verificador_prestamos.cpp   → Borrow checker
+├── verificador_vidas.cpp       → Lifetime checker
+├── resolucion_nombres.cpp      → Resolución de identificadores
+├── resolucion_sobrecarga.cpp   → Resolución de sobrecarga
+├── verificador_rasgos.cpp      → Verificación de traits/rasgos
+└── errores_semanticos.cpp      → Errores descriptivos en español
+
+SISTEMA DE PROPIEDAD (Ownership):
+═════════════════════════════════
+
+Reglas fundamentales (adaptadas de Rust):
+1. Cada valor tiene exactamente UN propietario
+2. Solo puede haber un propietario a la vez
+3. Cuando el propietario sale del ámbito, el valor se libera
+
+Préstamos (Borrowing):
+- &variable      → Préstamo inmutable (múltiples permitidos)
+- &mut variable  → Préstamo mutable (solo uno a la vez)
+- propio variable → Transferencia de propiedad (move)
+
+Ejemplo en Aurora:
+─────────────────
+funcion principal() {
+    variable texto: propio Texto = "Hola Aurora"
+    
+    // Préstamo inmutable
+    variable ref1: &Texto = &texto
+    variable ref2: &Texto = &texto  // OK: múltiples inmutables
+    
+    // Préstamo mutable
+    variable ref_mut: &mut Texto = &mut texto
+    // variable ref3: &Texto = &texto  // ERROR: no se puede
+    
+    // Transferencia de propiedad
+    variable nuevo_dueño: propio Texto = mover(texto)
+    // imprimir(texto)  // ERROR: texto ya fue movido
+}
+```
+
+### 2.4 Representaciones Intermedias
+
+```
+SISTEMA DE IR (Representación Intermedia)
+=========================================
+
+Archivo: src/ir/
+
+├── hir/
+│   ├── hir.hpp              → High-level IR
+│   ├── hir_constructor.cpp  → Construye HIR desde AST
+│   └── hir_simplificar.cpp  → Desugaring
+├── mir/
+│   ├── mir.hpp              → Mid-level IR (CFG)
+│   ├── mir_constructor.cpp  → Construye MIR desde HIR
+│   ├── mir_ownership.cpp    → Verificación de propiedad en MIR
+│   └── mir_optimizar.cpp    → Optimizaciones
+└── lir/
+    ├── generador_llvm.cpp   → Genera LLVM IR
+    ├── generador_x86.cpp    → Backend x86_64 directo (opcional)
+    └── generador_arm.cpp    → Backend ARM64 directo (opcional)
+
+PIPELINE DE IR:
+═══════════════
+
+AST → HIR (desugaring) → MIR (ownership check) → LLVM IR → Nativo
+
+HIR Transformaciones:
+- for azucarado → while
+- pattern matching → if/switch
+- closures → structs + función
+- operador ?  → match Result
+- string interpolation → concatenación
+
+MIR Características:
+- Grafo de flujo de control (CFG)
+- SSA (Static Single Assignment)
+- Puntos de drop insertados
+- Verificación de ownership completa
+- Análisis de alcance de vida (lifetime)
+```
+
+### 2.5 Backend y Generación de Código
+
+```
+BACKEND
+=======
+
+Opción Principal: LLVM
+──────────────────────
+
+Archivo: src/backend/
+
+├── llvm/
+│   ├── generador_llvm.cpp      → Generación de LLVM IR
+│   ├── optimizador_llvm.cpp    → Pases de optimización
+│   ├── enlazador.cpp           → Linking
+│   └── plataforma/
+│       ├── windows.cpp         → Configuración Windows
+│       ├── linux.cpp           → Configuración Linux
+│       └── macos.cpp           → Configuración macOS
+├── objetivo/
+│   ├── x86_64.cpp              → Target x86_64
+│   ├── arm64.cpp               → Target ARM64
+│   └── wasm.cpp                → Target WebAssembly (futuro)
+└── depurador/
+    ├── dwarf.cpp               → Info de depuración DWARF
+    └── pdb.cpp                 → Info de depuración PDB (Windows)
+
+¿Por qué LLVM?
+- Optimizaciones de clase mundial
+- Soporte multiplataforma automático
+- Genera código nativo de alto rendimiento
+- Soporte para x86_64, ARM64, RISC-V, WebAssembly
+- Información de depuración
+- Ya usado por Rust, Swift, Clang
+```
+
+---
+
+## 3. 📝 ESPECIFICACIÓN COMPLETA DEL LENGUAJE
+
+### 3.1 Estructura de un Programa
+
+```
+ESTRUCTURA BÁSICA DE UN PROGRAMA AURORA
+========================================
+
+// Declaración de módulo (opcional)
+modulo mi_aplicacion
+
+// Importaciones
+importar sistema.io
+importar sistema.colecciones.Lista
+importar matematicas.{seno, coseno, PI}
+importar mi_paquete.utilidades como util
+
+// Constantes globales
+constante VERSION: Texto = "1.0.0"
+constante MAX_ELEMENTOS: Entero = 1000
+
+// Función principal (punto de entrada)
+funcion principal() {
+    imprimir("¡Hola, Aurora!")
+}
+
+// O con argumentos
+funcion principal(argumentos: Vec<Texto>) -> Entero {
+    imprimir("Argumentos: {argumentos}")
+    retornar 0
+}
+```
+
+### 3.2 Variables y Constantes
+
+```
+VARIABLES Y CONSTANTES
+=======================
+
+// Variables mutables
+variable nombre: Texto = "Aurora"
+variable edad: Entero = 25
+variable precio: Flotante64 = 19.99
+variable activo: Booleano = verdadero
+
+// Inferencia de tipos
+variable mensaje = "Hola"          // Texto inferido
+variable contador = 0              // Entero inferido
+variable temperatura = 36.5        // Flotante64 inferido
+
+// Constantes (inmutables)
+constante PI: Flotante64 = 3.14159265358979
+constante NOMBRE_APP: Texto = "Aurora"
+
+// Variables mutables explícitas
+variable mut lista = nueva Lista<Entero>()
+
+// Tipo opcional (nullable seguro)
+variable resultado: Opcional<Entero> = Nulo
+variable dato: Entero? = nulo  // Sintaxis corta
+
+// Destructuring
+variable (x, y, z) = obtener_coordenadas()
+variable {nombre, edad} = obtener_persona()
+```
+
+### 3.3 Estructuras de Control
+
+```
+ESTRUCTURAS DE CONTROL
+======================
+
+// Condicional
+si (edad >= 18) {
+    imprimir("Mayor de edad")
+} sinosi (edad >= 13) {
+    imprimir("Adolescente")  
+} sino {
+    imprimir("Menor de edad")
+}
+
+// Expresión condicional (ternario)
+variable estado = si (activo) "Activo" sino "Inactivo"
+
+// Bucle mientras
+mientras (condicion) {
+    // código
+    si (emergencia) romper
+    si (saltar) continuar
+}
+
+// Bucle hacer-mientras
+hacer {
+    // código
+} mientras (condicion)
+
+// Bucle para (for-each)
+para (elemento en coleccion) {
+    imprimir(elemento)
+}
+
+// Bucle para con rango
+para (i en 0..10) {
+    imprimir(i)  // 0, 1, 2, ..., 9
+}
+
+para (i en 0..=10) {
+    imprimir(i)  // 0, 1, 2, ..., 10
+}
+
+// Para con paso
+para (i en 0..100 paso 5) {
+    imprimir(i)  // 0, 5, 10, 15, ...
+}
+
+// Bucle infinito
+bucle {
+    si (condicion) romper
+}
+
+// Pattern Matching
+coincide (valor) {
+    caso 1 => imprimir("Uno")
+    caso 2 | 3 => imprimir("Dos o tres")
+    caso n si n > 10 => imprimir("Mayor que 10: {n}")
+    caso _ => imprimir("Otro valor")
+}
+
+// Pattern matching con tipos
+coincide (figura) {
+    caso c: Circulo => imprimir("Área: {PI * c.radio ** 2}")
+    caso r: Rectangulo => imprimir("Área: {r.ancho * r.alto}")
+    caso _ => imprimir("Figura desconocida")
+}
+
+// Manejo de errores
+intentar {
+    variable archivo = abrir_archivo("datos.txt")
+    variable contenido = archivo.leer_todo()
+} atrapar (error: ErrorArchivo) {
+    imprimir("Error de archivo: {error.mensaje}")
+} atrapar (error: ErrorGeneral) {
+    imprimir("Error general: {error.mensaje}")
+} finalmente {
+    imprimir("Limpieza completada")
+}
+
+// Operador de propagación de error
+funcion leer_datos() -> Resultado<Texto, Error> {
+    variable archivo = abrir_archivo("datos.txt")?
+    variable contenido = archivo.leer_todo()?
+    retornar Ok(contenido)
+}
+```
+
+### 3.4 Funciones
+
+```
+FUNCIONES
+=========
+
+// Función básica
+funcion saludar() {
+    imprimir("¡Hola!")
+}
+
+// Con parámetros y retorno
+funcion sumar(a: Entero, b: Entero) -> Entero {
+    retornar a + b
+}
+
+// Retorno implícito (última expresión)
+funcion multiplicar(a: Entero, b: Entero) -> Entero {
+    a * b
+}
+
+// Parámetros por defecto
+funcion crear_usuario(nombre: Texto, edad: Entero = 0, 
+                       activo: Booleano = verdadero) -> Usuario {
+    retornar nuevo Usuario(nombre, edad, activo)
+}
+
+// Parámetros nombrados en llamada
+variable user = crear_usuario(nombre: "Ana", edad: 25)
+
+// Funciones genéricas
+funcion maximo<T: Comparable>(a: T, b: T) -> T {
+    si (a > b) a sino b
+}
+
+// Funciones con múltiples retornos
+funcion dividir(a: Entero, b: Entero) -> (Entero, Entero) {
+    retornar (a / b, a % b)
+}
+
+// Funciones lambda/anónimas
+variable cuadrado = |x: Entero| -> Entero { x * x }
+variable doble = |x| x * 2  // Tipos inferidos
+
+// Funciones de orden superior
+funcion aplicar(lista: Lista<Entero>, 
+                transformar: funcion(Entero) -> Entero) -> Lista<Entero> {
+    retornar lista.mapear(transformar)
+}
+
+// Funciones asíncronas
+asincrono funcion obtener_datos(url: Texto) -> Resultado<Texto, Error> {
+    variable respuesta = esperar http.obtener(url)
+    retornar respuesta.cuerpo()
+}
+
+// Closures
+funcion crear_contador() -> funcion() -> Entero {
+    variable mut cuenta = 0
+    retornar || {
+        cuenta += 1
+        cuenta
+    }
+}
+
+// Sobrecarga de funciones
+funcion area(radio: Flotante) -> Flotante {
+    retornar PI * radio * radio
+}
+
+funcion area(ancho: Flotante, alto: Flotante) -> Flotante {
+    retornar ancho * alto
+}
+
+// Operadores como funciones
+operador +(a: Vector3D, b: Vector3D) -> Vector3D {
+    retornar nuevo Vector3D(a.x + b.x, a.y + b.y, a.z + b.z)
+}
+```
+
+---
+
+## 4. 🔢 SISTEMA DE TIPOS
+
+```
+SISTEMA DE TIPOS COMPLETO
+==========================
+
+TIPOS PRIMITIVOS
+─────────────────
+Entero          → i64 (por defecto)
+Entero8         → i8    (-128 a 127)
+Entero16        → i16   (-32,768 a 32,767)
+Entero32        → i32   (-2^31 a 2^31-1)
+Entero64        → i64   (-2^63 a 2^63-1)
+Entero128       → i128
+
+EnteroSinSigno  → u64 (por defecto)
+ESS8            → u8    (0 a 255)
+ESS16           → u16   (0 a 65,535)
+ESS32           → u32   (0 a 2^32-1)
+ESS64           → u64   (0 a 2^64-1)
+ESS128          → u128
+
+Flotante        → f64 (por defecto)
+Flotante32      → f32
+Flotante64      → f64
+
+Booleano        → bool (verdadero / falso)
+Caracter        → char (Unicode, 4 bytes)
+Texto           → String (UTF-8, heap-allocated)
+TextoRef        → &str (referencia a texto)
+Byte            → u8
+Tamaño          → usize
+TamañoSignado   → isize
+Vacio           → void / unit ()
+Nulo            → null (solo para Opcional<T>)
+
+TIPOS COMPUESTOS
+────────────────
+Tupla           → (Entero, Texto, Booleano)
+Arreglo         → [Entero; 10]  (tamaño fijo)
+Vector          → Vec<Entero>   (tamaño dinámico)
+Mapa            → Mapa<Texto, Entero>
+Conjunto        → Conjunto<Texto>
+Lista           → Lista<Entero> (lista enlazada)
+Cola            → Cola<Entero>
+Pila            → Pila<Entero>
+
+TIPOS ESPECIALES
+────────────────
+Opcional<T>     → Some(valor) o Nulo
+Resultado<T, E> → Ok(valor) o Error(error)
+Referencia<T>   → &T (préstamo inmutable)
+ReferenciaMut<T>→ &mut T (préstamo mutable)
+Puntero<T>      → *T (puntero crudo, solo en inseguro)
+Caja<T>         → Caja<T> (heap allocation, como Box<T>)
+Rc<T>           → ContadorRef<T> (reference counting)
+Arc<T>          → ContadorRefAtomico<T> (thread-safe RC)
+Debil<T>        → RefDebil<T> (weak reference)
+
+TIPOS FUNCIÓN
+─────────────
+funcion(Entero) -> Entero
+funcion(Texto, Entero) -> Booleano
+funcion() -> Vacio
+
+CONVERSIÓN DE TIPOS
+───────────────────
+variable x: Entero32 = 42
+variable y: Entero64 = x.como<Entero64>()     // Conversión segura
+variable z: Entero8 = x.intentar_como<Entero8>()? // Puede fallar
+variable w: Entero8 = x.forzar_como<Entero8>()    // inseguro
+
+SISTEMA DE INFERENCIA
+─────────────────────
+variable a = 42           // Entero (i64)
+variable b = 3.14         // Flotante (f64)
+variable c = "hola"       // Texto
+variable d = verdadero    // Booleano
+variable e = [1, 2, 3]    // Vec<Entero>
+variable f = {"a": 1}     // Mapa<Texto, Entero>
+```
+
+---
+
+## 5. 🛡️ SISTEMA DE MEMORIA (Modelo de Seguridad)
+
+```
+SISTEMA DE MEMORIA AURORA
+==========================
+
+INSPIRADO EN RUST, ADAPTADO AL ESPAÑOL
+
+╔══════════════════════════════════════════════════════╗
+║              TRES NIVELES DE MEMORIA                 ║
+╠══════════════════════════════════════════════════════╣
+║                                                      ║
+║  NIVEL 1: SEGURO (por defecto)                      ║
+║  ─────────────────────────────                      ║
+║  • Ownership automático                              ║
+║  • Borrow checker en compilación                     ║
+║  • No hay punteros crudos                           ║
+║  • No hay fugas de memoria                          ║
+║  • No hay data races                                ║
+║  • RAII automático (liberación al salir del ámbito) ║
+║                                                      ║
+║  NIVEL 2: GESTIONADO                                ║
+║  ────────────────────                                ║
+║  • ContadorRef<T> para compartir propiedad          ║
+║  • ContadorRefAtomico<T> para multihilo             ║
+║  • Recolector de ciclos opcional                    ║
+║                                                      ║
+║  NIVEL 3: INSEGURO (explícito)                      ║
+║  ─────────────────────────────                      ║
+║  • Punteros crudos (*T, *mut T)                     ║
+║  • Acceso directo a memoria                         ║
+║  • FFI (Interfaz con C/C++)                         ║
+║  • Manipulación de hardware                         ║
+║  • Debe estar en bloque "inseguro {}"               ║
+║                                                      ║
+╚══════════════════════════════════════════════════════╝
+
+OWNERSHIP (PROPIEDAD):
+═════════════════════
+
+// Cada valor tiene un dueño
+variable a = nuevo Vec<Entero>()  // 'a' es dueño
+
+// Transferencia de propiedad (move)
+variable b = a  // propiedad transferida a 'b'
+// a ya no es válido aquí → ERROR de compilación si se usa
+
+// Copia explícita
+variable c = nuevo Vec<Entero>()
+variable d = c.clonar()  // Copia profunda, ambos son válidos
+
+// Tipos simples se copian automáticamente
+variable x: Entero = 5
+variable y = x  // Copia automática, ambos válidos
+
+PRÉSTAMOS (BORROWING):
+═════════════════════
+
+// Préstamo inmutable (múltiples permitidos)
+funcion calcular_longitud(texto: &Texto) -> Tamaño {
+    retornar texto.longitud()
+}
+
+variable mi_texto = "Hola Aurora"
+variable len = calcular_longitud(&mi_texto)
+imprimir(mi_texto)  // OK: préstamo ya terminó
+
+// Préstamo mutable (solo uno a la vez)
+funcion agregar_exclamacion(texto: &mut Texto) {
+    texto.agregar("!")
+}
+
+variable mut saludo = "Hola"
+agregar_exclamacion(&mut saludo)
+imprimir(saludo)  // "Hola!"
+
+// Reglas de préstamo (verificadas en compilación):
+// 1. Múltiples &T  O  un solo &mut T (nunca ambos)
+// 2. Las referencias siempre deben ser válidas
+// 3. No se puede prestar mutablemente algo prestado inmutablemente
+
+TIEMPOS DE VIDA (LIFETIMES):
+════════════════════════════
+
+// Implícitos la mayoría del tiempo
+funcion primero(lista: &Vec<Entero>) -> &Entero {
+    retornar &lista[0]
+}
+
+// Explícitos cuando es necesario
+funcion mas_largo<'a>(x: &'a Texto, y: &'a Texto) -> &'a Texto {
+    si (x.longitud() > y.longitud()) x sino y
+}
+
+// En estructuras
+estructura ReferenciaTexto<'a> {
+    contenido: &'a Texto
+}
+
+PUNTEROS INTELIGENTES:
+═════════════════════
+
+// Caja<T> - Asignación en heap
+variable dato: Caja<Entero> = Caja.nuevo(42)
+variable lista_grande: Caja<[Entero; 1000000]> = Caja.nuevo([0; 1000000])
+
+// ContadorRef<T> - Múltiples propietarios (un solo hilo)
+variable compartido = ContadorRef.nuevo("datos compartidos")
+variable copia1 = compartido.clonar()  // Incrementa contador
+variable copia2 = compartido.clonar()  // Incrementa contador
+// Se libera cuando todos los ContadorRef se destruyen
+
+// ContadorRefAtomico<T> - Múltiples propietarios (multihilo)
+variable seguro_hilos = ContadorRefAtomico.nuevo(0)
+
+BLOQUE INSEGURO:
+═══════════════
+
+inseguro {
+    // Punteros crudos
+    variable ptr: *mut Entero = asignar_memoria<Entero>(1)
+    *ptr = 42
+    variable valor = *ptr
+    liberar_memoria(ptr)
+    
+    // Acceso a hardware
+    variable registro: *mut ESS32 = 0xFF00_0000 como *mut ESS32
+    *registro = 0x01
+    
+    // FFI - Llamar a función C
+    externo "C" {
+        funcion malloc(tamaño: Tamaño) -> *mut Vacio
+        funcion free(ptr: *mut Vacio)
+        funcion printf(formato: *Caracter, ...) -> Entero
+    }
+}
+
+GESTIÓN DE RECURSOS (RAII):
+══════════════════════════
+
+clase Archivo {
+    privado manejador: ManejadorSistema
+    
+    constructor(ruta: Texto) {
+        este.manejador = sistema.abrir(ruta)
+    }
+    
+    // Destructor automático - se llama al salir del ámbito
+    destructor() {
+        este.manejador.cerrar()
+    }
+}
+
+// El archivo se cierra automáticamente al salir del bloque
+{
+    variable archivo = nuevo Archivo("datos.txt")
+    archivo.escribir("Hola")
+}  // ← archivo.destructor() se llama aquí automáticamente
+```
+
+---
+
+## 6. 🏛️ PROGRAMACIÓN ORIENTADA A OBJETOS
+
+```
+SISTEMA OOP COMPLETO
+====================
+
+╔══════════════════════════════════════════╗
+║         CARACTERÍSTICAS OOP             ║
+╠══════════════════════════════════════════╣
+║ ✅ Clases                               ║
+║ ✅ Herencia simple                       ║
+║ ✅ Interfaces (múltiples)                ║
+║ ✅ Polimorfismo                          ║
+║ ✅ Encapsulamiento (publico/privado/prot)║
+║ ✅ Clases abstractas                     ║
+║ ✅ Métodos estáticos                     ║
+║ ✅ Sobrecarga de operadores              ║
+║ ✅ Genéricos                             ║
+║ ✅ Rasgos (traits, como Rust)            ║
+║ ✅ Mixins                                ║
+║ ✅ Propiedades (getters/setters)         ║
+║ ✅ Destructores                          ║
+║ ✅ Constructores múltiples               ║
+╚══════════════════════════════════════════╝
+
+CLASES:
+═══════
+
+clase Persona {
+    // Campos
+    protegido nombre: Texto
+    protegido edad: Entero
+    privado _id: Entero
+    publico correo: Texto
+    
+    // Constructor principal
+    constructor(nombre: Texto, edad: Entero, correo: Texto) {
+        este.nombre = nombre
+        este.edad = edad
+        este._id = generar_id()
+        este.correo = correo
+    }
+    
+    // Constructor alternativo (named constructor)
+    constructor.desde_mapa(datos: Mapa<Texto, Texto>) {
+        este.nombre = datos["nombre"]
+        este.edad = datos["edad"].a_entero()
+        este._id = generar_id()
+        este.correo = datos.obtener("correo", "")
+    }
+    
+    // Propiedades
+    publico propiedad nombre_completo: Texto {
+        obtener { retornar "{este.nombre}" }
+    }
+    
+    publico propiedad esta_activo: Booleano {
+        obtener { retornar este.edad > 0 }
+        establecer(valor) { /* lógica */ }
+    }
+    
+    // Métodos públicos
+    publico funcion saludar() -> Texto {
+        retornar "Hola, soy {este.nombre}"
+    }
+    
+    publico funcion cumplir_años() {
+        este.edad += 1
+    }
+    
+    // Método estático
+    publico estatico funcion crear_anonimo() -> Persona {
+        retornar nuevo Persona("Anónimo", 0, "")
+    }
+    
+    // Destructor
+    destructor() {
+        imprimir("Persona {este.nombre} liberada")
+    }
+}
+
+HERENCIA:
+════════
+
+clase Empleado hereda Persona {
+    privado salario: Flotante64
+    privado puesto: Texto
+    
+    constructor(nombre: Texto, edad: Entero, correo: Texto,
+                salario: Flotante64, puesto: Texto) {
+        super(nombre, edad, correo)
+        este.salario = salario
+        este.puesto = puesto
+    }
+    
+    // Sobrescritura de método
+    @sobrescribir
+    publico funcion saludar() -> Texto {
+        retornar "{super.saludar()}, trabajo como {este.puesto}"
+    }
+    
+    publico funcion calcular_salario_anual() -> Flotante64 {
+        retornar este.salario * 12.0
+    }
+}
+
+INTERFACES:
+═══════════
+
+interfaz Serializable {
+    funcion a_json() -> Texto
+    funcion desde_json(json: Texto) -> Este  // 'Este' = tipo actual
+}
+
+interfaz Imprimible {
+    funcion a_texto() -> Texto
+    
+    // Método con implementación por defecto
+    funcion imprimir() {
+        sistema.io.imprimir(este.a_texto())
+    }
+}
+
+interfaz Comparable<T> {
+    funcion comparar_con(otro: &T) -> Entero
+    
+    funcion es_mayor_que(otro: &T) -> Booleano {
+        retornar este.comparar_con(otro) > 0
+    }
+    
+    funcion es_menor_que(otro: &T) -> Booleano {
+        retornar este.comparar_con(otro) < 0
+    }
+}
+
+// Implementación de interfaces
+clase Producto implementa Serializable, Imprimible, Comparable<Producto> {
+    publico nombre: Texto
+    publico precio: Flotante64
+    
+    constructor(nombre: Texto, precio: Flotante64) {
+        este.nombre = nombre
+        este.precio = precio
+    }
+    
+    @sobrescribir
+    funcion a_json() -> Texto {
+        retornar '{"nombre": "{este.nombre}", "precio": {este.precio}}'
+    }
+    
+    @sobrescribir
+    funcion desde_json(json: Texto) -> Producto {
+        // Parsear JSON
+    }
+    
+    @sobrescribir
+    funcion a_texto() -> Texto {
+        retornar "Producto({este.nombre}, ${este.precio})"
+    }
+    
+    @sobrescribir
+    funcion comparar_con(otro: &Producto) -> Entero {
+        retornar (este.precio - otro.precio).a_entero()
+    }
+}
+
+CLASES ABSTRACTAS:
+═════════════════
+
+abstracta clase Figura {
+    protegido color: Texto
+    
+    constructor(color: Texto) {
+        este.color = color
+    }
+    
+    // Método abstracto (sin implementación)
+    abstracta funcion area() -> Flotante64
+    abstracta funcion perimetro() -> Flotante64
+    
+    // Método concreto
+    publico funcion describir() -> Texto {
+        retornar "Figura de color {este.color} con área {este.area()}"
+    }
+}
+
+clase Circulo hereda Figura {
+    privado radio: Flotante64
+    
+    constructor(radio: Flotante64, color: Texto) {
+        super(color)
+        este.radio = radio
+    }
+    
+    @sobrescribir
+    funcion area() -> Flotante64 {
+        retornar PI * este.radio ** 2
+    }
+    
+    @sobrescribir
+    funcion perimetro() -> Flotante64 {
+        retornar 2.0 * PI * este.radio
+    }
+}
+
+RASGOS (TRAITS - estilo Rust):
+═════════════════════════════
+
+rasgo Sumable {
+    funcion sumar(otro: &Este) -> Este
+    funcion zero() -> Este
+}
+
+// Implementar rasgo para tipo existente
+implementar Sumable para Entero {
+    funcion sumar(otro: &Entero) -> Entero {
+        retornar este + *otro
+    }
+    
+    funcion zero() -> Entero {
+        retornar 0
+    }
+}
+
+// Restricciones de rasgos en genéricos
+funcion sumar_todos<T: Sumable>(lista: &Vec<T>) -> T {
+    variable resultado = T.zero()
+    para (elemento en lista) {
+        resultado = resultado.sumar(&elemento)
+    }
+    retornar resultado
+}
+
+GENÉRICOS:
+═════════
+
+clase Contenedor<T> {
+    privado datos: Vec<T>
+    
+    constructor() {
+        este.datos = nuevo Vec<T>()
+    }
+    
+    publico funcion agregar(elemento: T) {
+        este.datos.agregar(elemento)
+    }
+    
+    publico funcion obtener(indice: Tamaño) -> Opcional<&T> {
+        retornar este.datos.obtener(indice)
+    }
+}
+
+// Restricciones múltiples
+clase Cache<K: Hashable + Comparable, V: Clonable> {
+    privado datos: Mapa<K, V>
+    // ...
+}
+
+// Genéricos con where (donde)
+funcion procesar<T, U>(entrada: T) -> U 
+    donde T: Serializable + Clonable,
+          U: Deserializable {
+    // ...
+}
+
+ENUMERACIONES CON DATOS:
+═══════════════════════
+
+enumeracion Color {
+    Rojo,
+    Verde, 
+    Azul,
+    Personalizado(r: ESS8, g: ESS8, b: ESS8)
+}
+
+enumeracion Resultado<T, E> {
+    Ok(valor: T),
+    Error(error: E)
+}
+
+enumeracion Opcional<T> {
+    Algo(valor: T),
+    Nulo
+}
+
+enumeracion Forma {
+    Circulo { radio: Flotante64 },
+    Rectangulo { ancho: Flotante64, alto: Flotante64 },
+    Triangulo { base: Flotante64, altura: Flotante64 }
+}
+
+// Uso con pattern matching
+variable forma = Forma.Circulo { radio: 5.0 }
+coincide (forma) {
+    caso Forma.Circulo { radio } => imprimir("Área: {PI * radio ** 2}")
+    caso Forma.Rectangulo { ancho, alto } => imprimir("Área: {ancho * alto}")
+    caso Forma.Triangulo { base, altura } => imprimir("Área: {base * altura / 2}")
+}
+
+ESTRUCTURAS (sin herencia, como Rust):
+═════════════════════════════════════
+
+estructura Punto {
+    x: Flotante64,
+    y: Flotante64
+}
+
+// Implementación de métodos para estructura
+implementar Punto {
+    funcion nuevo(x: Flotante64, y: Flotante64) -> Punto {
+        retornar Punto { x: x, y: y }
+    }
+    
+    funcion distancia_a(&este, otro: &Punto) -> Flotante64 {
+        retornar ((este.x - otro.x) ** 2 + (este.y - otro.y) ** 2).raiz()
+    }
+    
+    funcion origen() -> Punto {
+        retornar Punto { x: 0.0, y: 0.0 }
+    }
+}
+
+POLIMORFISMO:
+════════════
+
+// Polimorfismo de subtipo
+funcion describir_figura(figura: &Figura) {
+    imprimir(figura.describir())  // Despacho dinámico
+}
+
+variable figuras: Vec<Caja<Figura>> = nuevo Vec()
+figuras.agregar(Caja.nuevo(nuevo Circulo(5.0, "rojo")))
+figuras.agregar(Caja.nuevo(nuevo Rectangulo(3.0, 4.0, "azul")))
+
+para (fig en &figuras) {
+    describir_figura(fig)  // Polimorfismo
+}
+
+// Polimorfismo con rasgos (trait objects)
+funcion procesar(item: &impl Serializable) {
+    variable json = item.a_json()
+    // ...
+}
+
+// O con dispatch dinámico
+funcion procesar_dinamico(item: &dyn Serializable) {
+    variable json = item.a_json()
+    // ...
+}
+
+SOBRECARGA DE OPERADORES:
+════════════════════════
+
+clase Vector2D {
+    publico x: Flotante64
+    publico y: Flotante64
+    
+    constructor(x: Flotante64, y: Flotante64) {
+        este.x = x
+        este.y = y
+    }
+}
+
+implementar Operador.Suma para Vector2D {
+    tipo Resultado = Vector2D
+    
+    funcion sumar(otro: &Vector2D) -> Vector2D {
+        retornar nuevo Vector2D(este.x + otro.x, este.y + otro.y)
+    }
+}
+
+implementar Operador.Igualdad para Vector2D {
+    funcion es_igual(otro: &Vector2D) -> Booleano {
+        retornar este.x == otro.x && este.y == otro.y
+    }
+}
+
+implementar Operador.Indice<Entero> para Vector2D {
+    tipo Resultado = Flotante64
+    
+    funcion indice(i: Entero) -> &Flotante64 {
+        coincide (i) {
+            caso 0 => &este.x
+            caso 1 => &este.y
+            caso _ => lanzar ErrorIndice("Índice fuera de rango")
+        }
+    }
+}
+
+// Uso
+variable v1 = nuevo Vector2D(1.0, 2.0)
+variable v2 = nuevo Vector2D(3.0, 4.0)
+variable v3 = v1 + v2  // (4.0, 6.0)
+variable componente = v3[0]  // 4.0
+```
+
+---
+
+## 7. 📚 BIBLIOTECA ESTÁNDAR
+
+```
+BIBLIOTECA ESTÁNDAR AURORA
+===========================
+
+aurora_std/
+├── sistema/
+│   ├── io.aur                → Entrada/salida
+│   │   ├── imprimir()        → Print a consola
+│   │   ├── leer_linea()      → Leer de consola
+│   │   ├── formatear()       → String formatting
+│   │   ├── Archivo           → Clase archivo
+│   │   ├── LectorBuffer      → Lectura buffered
+│   │   └── EscritorBuffer    → Escritura buffered
+│   │
+│   ├── os.aur                → Sistema operativo
+│   │   ├── variables_entorno()
+│   │   ├── directorio_actual()
+│   │   ├── ejecutar_comando()
+│   │   └── info_sistema()
+│   │
+│   ├── proceso.aur           → Procesos del SO
+│   ├── señales.aur           → Señales del sistema
+│   ├── tiempo.aur            → Fecha, hora, temporizadores
+│   │   ├── Fecha
+│   │   ├── Hora
+│   │   ├── FechaHora
+│   │   ├── Duracion
+│   │   ├── Cronometro
+│   │   └── ahora()
+│   │
+│   └── ruta.aur              → Manejo de rutas de archivo
+│
+├── colecciones/
+│   ├── vector.aur            → Vec<T> (arreglo dinámico)
+│   ├── lista.aur             → Lista enlazada
+│   ├── mapa.aur              → HashMap
+│   ├── mapa_ordenado.aur     → BTreeMap
+│   ├── conjunto.aur          → HashSet
+│   ├── conjunto_ordenado.aur → BTreeSet
+│   ├── cola.aur              → Queue (FIFO)
+│   ├── cola_prioridad.aur    → Priority Queue
+│   ├── pila.aur              → Stack (LIFO)
+│   ├── deque.aur             → Doble cola
+│   ├── arbol.aur             → Árbol binario
+│   └── grafo.aur             → Grafo
+│
+├── texto/
+│   ├── texto.aur             → String processing
+│   │   ├── dividir()
+│   │   ├── unir()
+│   │   ├── reemplazar()
+│   │   ├── recortar()
+│   │   ├── mayusculas()
+│   │   ├── minusculas()
+│   │   ├── contiene()
+│   │   ├── empieza_con()
+│   │   ├── termina_con()
+│   │   └── formato()
+│   │
+│   ├── regex.aur             → Expresiones regulares
+│   ├── codificacion.aur      → UTF-8, UTF-16, ASCII
+│   └── plantilla.aur         → Template strings
+│
+├── matematicas/
+│   ├── basicas.aur           → Funciones matemáticas básicas
+│   │   ├── abs(), potencia(), raiz(), raiz_cubica()
+│   │   ├── seno(), coseno(), tangente()
+│   │   ├── logaritmo(), logaritmo10(), logaritmo2()
+│   │   ├── PI, E, TAU, INFINITO
+│   │   ├── piso(), techo(), redondear()
+│   │   ├── maximo(), minimo()
+│   │   └── aleatorio()
+│   │
+│   ├── algebra_lineal.aur    → Matrices, vectores
+│   │   ├── Matriz<T>
+│   │   ├── Vector<T>
+│   │   ├── multiplicar_matrices()
+│   │   ├── determinante()
+│   │   ├── inversa()
+│   │   └── transpuesta()
+│   │
+│   ├── estadistica.aur       → Estadísticas
+│   │   ├── media(), mediana(), moda()
+│   │   ├── desviacion_estandar(), varianza()
+│   │   ├── correlacion(), covarianza()
+│   │   └── regresion_lineal()
+│   │
+│   ├── complejos.aur         → Números complejos
+│   └── aleatorio.aur         → Generación aleatoria
+│
+├── concurrencia/
+│   ├── hilo.aur              → Threads
+│   │   ├── Hilo
+│   │   ├── crear_hilo()
+│   │   ├── unir_hilo()
+│   │   └── dormir()
+│   │
+│   ├── mutex.aur             → Mutex y locks
+│   ├── canal.aur             → Channels (message passing)
+│   ├── atomico.aur           → Tipos atómicos
+│   ├── barrera.aur           → Barriers
+│   ├── semaforo.aur          → Semáforos
+│   ├── grupo_hilos.aur       → Thread pool
+│   └── asincrono/
+│       ├── ejecutor.aur      → Async runtime
+│       ├── futuro.aur        → Futures
+│       ├── tarea.aur         → Tasks
+│       └── flujo.aur         → Async streams
+│
+├── red/
+│   ├── tcp.aur               → TCP sockets
+│   ├── udp.aur               → UDP sockets
+│   ├── http/
+│   │   ├── cliente.aur       → HTTP client
+│   │   ├── servidor.aur      → HTTP server
+│   │   ├── peticion.aur      → Request
+│   │   └── respuesta.aur     → Response
+│   │
+│   ├── websocket.aur         → WebSockets
+│   ├── dns.aur               → DNS resolver
+│   └── tls.aur               → TLS/SSL
+│
+├── datos/
+│   ├── json.aur              → JSON parser/generator
+│   ├── xml.aur               → XML parser
+│   ├── csv.aur               → CSV parser
+│   ├── yaml.aur              → YAML parser
+│   ├── toml.aur              → TOML parser
+│   ├── binario.aur           → Serialización binaria
+│   └── base64.aur            → Base64 encoding
+│
+├── seguridad/
+│   ├── hash.aur              → SHA-256, SHA-512, MD5
+│   ├── cifrado.aur           → AES, RSA, etc
+│   ├── firma.aur             → Firmas digitales
+│   ├── certificado.aur       → Certificados X.509
+│   └── aleatorio_seguro.aur  → CSPRNG
+│
+├── base_datos/
+│   ├── sql.aur               → SQL genérico
+│   ├── sqlite.aur            → SQLite embebido
+│   ├── postgres.aur          → PostgreSQL
+│   ├── mysql.aur             → MySQL/MariaDB
+│   └── redis.aur             → Redis
+│
+├── memoria/
+│   ├── asignador.aur         → Allocators personalizados
+│   ├── arena.aur             → Arena allocator
+│   ├── pool.aur              → Pool allocator
+│   └── mmap.aur              → Memory mapping
+│
+├── pruebas/
+│   ├── assert.aur            → Aserciones
+│   ├── marco_pruebas.aur     → Testing framework
+│   ├── mock.aur              → Mocking
+│   └── benchmark.aur         → Benchmarking
+│
+└── utilidades/
+    ├── iterador.aur          → Iteradores
+    ├── rango.aur             → Rangos
+    ├── conversion.aur        → Conversiones de tipos
+    ├── comparacion.aur       → Traits de comparación
+    ├── clonacion.aur         → Cloning
+    ├── formato.aur           → Display/Debug formatting
+    └── error.aur             → Manejo de errores
+```
+
+---
+
+## 8. 🤖 ECOSISTEMA DE IA/ML
+
+```
+ECOSISTEMA DE INTELIGENCIA ARTIFICIAL
+======================================
+
+aurora_ia/
+│
+├── 📊 datos/ (equivalente a Pandas)
+│   ├── marco_datos.aur           → DataFrame
+│   │   ├── MarcoDatos            → Clase principal
+│   │   ├── Serie                 → Series/columnas
+│   │   ├── leer_csv()            → Importar CSV
+│   │   ├── leer_excel()          → Importar Excel
+│   │   ├── leer_json()           → Importar JSON
+│   │   ├── leer_sql()            → Importar desde SQL
+│   │   ├── filtrar()             → Filtrado
+│   │   ├── agrupar()             → Group by
+│   │   ├── unir()                → Join/merge
+│   │   ├── pivotar()             → Pivot tables
+│   │   ├── describir()           → Estadísticas descriptivas
+│   │   ├── valores_nulos()       → Manejo de nulls
+│   │   └── transformar()         → Apply/transform
+│   │
+│   ├── preprocesamiento.aur      → Data preprocessing
+│   │   ├── normalizar()
+│   │   ├── estandarizar()
+│   │   ├── codificar_etiquetas()
+│   │   ├── codificar_one_hot()
+│   │   ├── dividir_datos()       → train/test split
+│   │   ├── manejar_nulos()
+│   │   └── escalar()
+│   │
+│   └── visualizacion.aur         → Gráficas (como matplotlib)
+│       ├── Grafica
+│       ├── grafica_lineas()
+│       ├── grafica_barras()
+│       ├── histograma()
+│       ├── dispersion()
+│       ├── grafica_pastel()
+│       ├── mapa_calor()
+│       └── guardar_imagen()
+│
+├── 🔢 tensor/ (equivalente a NumPy + parte de PyTorch)
+│   ├── tensor.aur                → Tensores n-dimensionales
+│   │   ├── Tensor<T>            → Clase tensor principal
+│   │   ├── crear_zeros()
+│   │   ├── crear_unos()
+│   │   ├── crear_aleatorio()
+│   │   ├── operaciones aritméticas
+│   │   ├── multiplicacion_matricial()
+│   │   ├── transposicion()
+│   │   ├── reshape()
+│   │   └── soporte GPU (CUDA/OpenCL/Metal)
+│   │
+│   ├── autograd.aur              → Diferenciación automática
+│   │   ├── grafo_computacional()
+│   │   ├── retropropagacion()
+│   │   └── gradientes()
+│   │
+│   └── gpu.aur                   → Aceleración GPU
+│       ├── CudaContexto
+│       ├── OpenCLContexto
+│       ├── MetalContexto (macOS)
+│       └── transferir_a_gpu()
+│
+├── 🧠 redes_neuronales/ (equivalente a PyTorch)
+│   ├── modulo.aur                → Base para redes neuronales
+│   │   ├── Modulo               → Clase base (como nn.Module)
+│   │   ├── Secuencial           → Modelo secuencial
+│   │   └── parametros()
+│   │
+│   ├── capas.aur                 → Capas de red neuronal
+│   │   ├── Densa                → Linear/Dense
+│   │   ├── Conv2D               → Convolución 2D
+│   │   ├── Conv3D               → Convolución 3D
+│   │   ├── MaxPool2D            → Max pooling
+│   │   ├── AvgPool2D            → Average pooling
+│   │   ├── Dropout              → Regularización dropout
+│   │   ├── BatchNorm            → Batch normalization
+│   │   ├── LayerNorm            → Layer normalization
+│   │   ├── LSTM                 → Long Short-Term Memory
+│   │   ├── GRU                  → Gated Recurrent Unit
+│   │   ├── Atencion             → Attention mechanism
+│   │   ├── AtencionMultiCabeza  → Multi-head attention
+│   │   ├── Transformador        → Transformer block
+│   │   ├── Embedding            → Word embeddings
+│   │   └── Aplanar              → Flatten
+│   │
+│   ├── activaciones.aur          → Funciones de activación
+│   │   ├── relu(), sigmoid(), tanh()
+│   │   ├── softmax(), log_softmax()
+│   │   ├── leaky_relu(), elu(), selu()
+│   │   ├── gelu(), swish()
+│   │   └── Activacion (interfaz)
+│   │
+│   ├── perdidas.aur              → Funciones de pérdida
+│   │   ├── MSE                  → Error cuadrático medio
+│   │   ├── CrossEntropy         → Entropía cruzada
+│   │   ├── BCELoss              → Binary cross entropy
+│   │   ├── L1Loss               → Error absoluto
+│   │   ├── HuberLoss
+│   │   └── Personalizada
+│   │
+│   ├── optimizadores.aur         → Optimizadores
+│   │   ├── SGD                  → Descenso de gradiente
+│   │   ├── Adam                 → Adaptive moment
+│   │   ├── AdamW                → Adam con weight decay
+│   │   ├── RMSprop
+│   │   ├── Adagrad
+│   │   └── planificador_lr()    → Learning rate scheduler
+│   │
+│   └── entrenamiento.aur        → Loop de entrenamiento
+│       ├── Entrenador           → Trainer class
+│       ├── entrenar()
+│       ├── evaluar()
+│       ├── predecir()
+│       ├── guardar_modelo()
+│       └── cargar_modelo()
+│
+├── 📝 pln/ (Procesamiento de Lenguaje Natural)
+│   ├── tokenizador_texto.aur     → Tokenización de texto
+│   │   ├── TokenizadorPalabras
+│   │   ├── TokenizadorBPE       → Byte Pair Encoding
+│   │   ├── TokenizadorWordPiece
+│   │   └── TokenizadorSentencePiece
+│   │
+│   ├── embeddings.aur            → Word embeddings
+│   │   ├── Word2Vec
+│   │   ├── GloVe
+│   │   ├── FastText
+│   │   └── cargar_embeddings()
+│   │
+│   ├── modelos_lenguaje.aur      → Language models
+│   │   ├── BERT
+│   │   ├── GPT
+│   │   ├── T5
+│   │   └── cargar_preentrenado()
+│   │
+│   ├── tareas.aur                → NLP tasks
+│   │   ├── clasificacion_texto()
+│   │   ├── analisis_sentimiento()
+│   │   ├── reconocimiento_entidades()
+│   │   ├── respuesta_preguntas()
+│   │   ├── resumen_texto()
+│   │   ├── traduccion()
+│   │   └── generacion_texto()
+│   │
+│   └── utilidades_texto.aur      → Text utilities
+│       ├── limpiar_texto()
+│       ├── eliminar_stopwords()
+│       ├── stemming()
+│       ├── lematizacion()
+│       └── ngrams()
+│
+├── 🎨 ia_generativa/
+│   ├── modelos/
+│   │   ├── vae.aur              → Variational Autoencoder
+│   │   ├── gan.aur              → Generative Adversarial Network
+│   │   ├── difusion.aur         → Diffusion models
+│   │   ├── transformer_gen.aur  → Generative transformers
+│   │   └── autoregresivo.aur    → Autoregressive models
+│   │
+│   ├── generacion_texto.aur     → Text generation
+│   │   ├── completar_texto()
+│   │   ├── chat()
+│   │   ├── instrucciones()
+│   │   └── configurar_generacion()
+│   │
+│   ├── generacion_imagen.aur    → Image generation
+│   │   ├── texto_a_imagen()
+│   │   ├── imagen_a_imagen()
+│   │   ├── inpainting()
+│   │   └── super_resolucion()
+│   │
+│   └── generacion_audio.aur     → Audio generation
+│       ├── texto_a_voz()
+│       ├── voz_a_texto()
+│       └── generacion_musica()
+│
+├── 👁️ vision/
+│   ├── imagen.aur               → Procesamiento de imágenes
+│   │   ├── Imagen
+│   │   ├── cargar_imagen()
+│   │   ├── guardar_imagen()
+│   │   ├── redimensionar()
+│   │   ├── recortar()
+│   │   ├── rotar()
+│   │   └── filtros()
+│   │
+│   ├── modelos_vision.aur        → Vision models
+│   │   ├── ResNet
+│   │   ├── VGG
+│   │   ├── EfficientNet
+│   │   ├── YOLO
+│   │   └── ViT (Vision Transformer)
+│   │
+│   └── tareas_vision.aur        → Vision tasks
+│       ├── clasificacion_imagen()
+│       ├── deteccion_objetos()
+│       ├── segmentacion()
+│       ├── reconocimiento_facial()
+│       └── estimacion_pose()
+│
+├── 📈 aprendizaje_automatico/ (ML clásico, como scikit-learn)
+│   ├── clasificacion/
+│   │   ├── RegresionLogistica
+│   │   ├── ArbolDecision
+│   │   ├── BosqueAleatorio
+│   │   ├── SVM
+│   │   ├── KNN
+│   │   ├── NaiveBayes
+│   │   └── GradientBoosting
+│   │
+│   ├── regresion/
+│   │   ├── RegresionLineal
+│   │   ├── RegresionPolinomial
+│   │   ├── RegresionRidge
+│   │   ├── RegresionLasso
+│   │   └── RegresionElasticNet
+│   │
+│   ├── clustering/
+│   │   ├── KMeans
+│   │   ├── DBSCAN
+│   │   ├── JerarquicoAglomerativo
+│   │   └── GaussianMixture
+│   │
+│   ├── reduccion_dimensionalidad/
+│   │   ├── PCA
+│   │   ├── tSNE
+│   │   ├── UMAP
+│   │   └── LDA
+│   │
+│   └── evaluacion/
+│       ├── precision()
+│       ├── recall()
+│       ├── f1_score()
+│       ├── matriz_confusion()
+│       ├── curva_roc()
+│       ├── auc()
+│       ├── r2_score()
+│       └── validacion_cruzada()
+│
+├── 🤝 agentes/ (AI Agents)
+│   ├── agente.aur                → Base agent class
+│   ├── herramientas.aur          → Tools for agents
+│   ├── memoria_agente.aur        → Agent memory
+│   ├── planificador.aur          → Planning
+│   └── cadena.aur                → Chaining (como LangChain)
+│
+└── 🔌 integraciones/
+    ├── onnx.aur                  → ONNX runtime
+    ├── huggingface.aur           → HuggingFace Hub
+    ├── openai.aur                → OpenAI API
+    └── exportar.aur              → Export models
+```
+
+### Ejemplo de uso del ecosistema IA:
+
+```
+importar aurora_ia.datos.MarcoDatos
+importar aurora_ia.redes_neuronales.{Secuencial, capas, optimizadores}
+importar aurora_ia.tensor.Tensor
+
+funcion principal() {
+    // Cargar datos (estilo Pandas)
+    variable datos = MarcoDatos.leer_csv("ventas.csv")
+    imprimir(datos.describir())
+    
+    variable datos_limpios = datos
+        .filtrar(|fila| fila["precio"] > 0)
+        .agrupar("categoria")
+        .sumar()
+    
+    // Crear red neuronal (estilo PyTorch)
+    variable modelo = nuevo Secuencial([
+        capas.Densa(784, 256),
+        capas.BatchNorm(256),
+        capas.relu(),
+        capas.Dropout(0.3),
+        capas.Densa(256, 128),
+        capas.relu(),
+        capas.Densa(128, 10),
+        capas.softmax()
+    ])
+    
+    // Entrenar
+    variable optimizador = optimizadores.Adam(modelo.parametros(), lr: 0.001)
+    variable perdida = perdidas.CrossEntropy()
+    
+    para (epoca en 0..100) {
+        para (lote en datos_entrenamiento.lotes(32)) {
+            variable prediccion = modelo.adelante(lote.x)
+            variable error = perdida(prediccion, lote.y)
+            error.retropropagar()
+            optimizador.paso()
+            optimizador.limpiar_gradientes()
+        }
+        imprimir("Época {epoca}: pérdida = {error.valor()}")
+    }
+    
+    // Guardar modelo
+    modelo.guardar("mi_modelo.aurora_modelo")
+}
+```
+
+---
+
+## 9. 🖥️ SISTEMA DE UI
+
+```
+SISTEMA DE INTERFACES DE USUARIO
+=================================
+
+aurora_ui/
+│
+├── 🖥️ escritorio/ (UI nativa multiplataforma)
+│   ├── aplicacion.aur          → Clase aplicación principal
+│   ├── ventana.aur             → Ventanas
+│   ├── widgets/
+│   │   ├── boton.aur           → Botón
+│   │   ├── etiqueta.aur        → Label
+│   │   ├── campo_texto.aur     → TextInput
+│   │   ├── area_texto.aur      → TextArea
+│   │   ├── lista.aur           → ListView
+│   │   ├── tabla.aur           → TableView
+│   │   ├── arbol.aur           → TreeView
+│   │   ├── combo.aur           → ComboBox/Dropdown
+│   │   ├── casilla.aur         → Checkbox
+│   │   ├── radio.aur           → RadioButton
+│   │   ├── deslizador.aur      → Slider
+│   │   ├── barra_progreso.aur  → ProgressBar
+│   │   ├── imagen_ui.aur       → Image widget
+│   │   ├── menu.aur            → Menú
+│   │   ├── dialogo.aur         → Diálogos
+│   │   ├── pestañas.aur        → Tabs
+│   │   ├── panel.aur           → Panel/Container
+│   │   ├── scroll.aur          → ScrollView
+│   │   ├── divisor.aur         → Splitter
+│   │   └── canvas.aur          → Canvas para dibujo
+│   │
+│   ├── layouts/
+│   │   ├── horizontal.aur      → HBox
+│   │   ├── vertical.aur        → VBox
+│   │   ├── grilla.aur          → Grid
+│   │   ├── flujo.aur           → Flow
+│   │   ├── apilado.aur         → Stack
+│   │   └── absoluto.aur        → Absolute positioning
+│   │
+│   ├── estilos/
+│   │   ├── estilo.aur          → Styling system
+│   │   ├── tema.aur            → Themes
+│   │   ├── colores.aur         → Color system
+│   │   ├── fuentes.aur         → Font system
+│   │   └── animaciones.aur     → Animations
+│   │
+│   └── eventos/
+│       ├── evento.aur          → Event system
+│       ├── teclado.aur         → Keyboard events
+│       ├── raton.aur           → Mouse events
+│       └── gesto.aur           → Gesture events
+│
+├── 🌐 web/ (UI para web, compila a WebAssembly)
+│   ├── componente_web.aur      → Web components
+│   ├── dom.aur                 → DOM manipulation
+│   ├── css.aur                 → CSS-in-Aurora
+│   └── enrutador.aur           → Router
+│
+├── 📱 movil/ (futuro)
+│   ├── android/
+│   └── ios/
+│
+└── 🎮 graficos/
+    ├── opengl.aur              → OpenGL bindings
+    ├── vulkan.aur              → Vulkan bindings
+    ├── metal.aur               → Metal bindings (macOS)
+    └── graficos2d.aur          → 2D graphics simplified
+
+BACKEND NATIVO POR PLATAFORMA:
+═════════════════════════════
+
+Windows  → Win32 API / DirectX
+Linux    → GTK4 / X11 / Wayland
+macOS    → Cocoa / AppKit / Metal
+```
+
+### Ejemplo de UI:
+
+```
+importar aurora_ui.escritorio.*
+importar aurora_ui.escritorio.widgets.*
+importar aurora_ui.escritorio.layouts.*
+
+clase MiAplicacion hereda Aplicacion {
+    privado contador: Entero = 0
+    privado etiqueta_contador: Etiqueta
+    
+    constructor() {
+        super("Mi Primera App Aurora")
+    }
+    
+    @sobrescribir
+    funcion construir() -> Ventana {
+        este.etiqueta_contador = nueva Etiqueta("Contador: 0")
+        
+        variable ventana = nueva Ventana(
+            titulo: "Contador Aurora",
+            ancho: 400,
+            alto: 300,
+            tema: Tema.Oscuro
+        )
+        
+        ventana.contenido = nuevo Vertical(
+            alineacion: Centro,
+            espaciado: 20,
+            hijos: [
+                nueva Etiqueta("¡Bienvenido a Aurora UI!")
+                    .fuente(tamaño: 24, peso: Negrita)
+                    .color(Colores.Azul),
+                
+                este.etiqueta_contador
+                    .fuente(tamaño: 18),
+                
+                nuevo Horizontal(
+                    espaciado: 10,
+                    hijos: [
+                        nuevo Boton("Incrementar")
+                            .al_hacer_clic(|| este.incrementar())
+                            .estilo(color_fondo: Colores.Verde),
+                        
+                        nuevo Boton("Decrementar")
+                            .al_hacer_clic(|| este.decrementar())
+                            .estilo(color_fondo: Colores.Rojo),
+                        
+                        nuevo Boton("Reiniciar")
+                            .al_hacer_clic(|| este.reiniciar())
+                    ]
+                ),
+                
+                nuevo CampoTexto(placeholder: "Escribe algo...")
+                    .al_cambiar(|texto| imprimir("Texto: {texto}"))
+            ]
+        )
+        
+        retornar ventana
+    }
+    
+    privado funcion incrementar() {
+        este.contador += 1
+        este.etiqueta_contador.texto = "Contador: {este.contador}"
+    }
+    
+    privado funcion decrementar() {
+        este.contador -= 1
+        este.etiqueta_contador.texto = "Contador: {este.contador}"
+    }
+    
+    privado funcion reiniciar() {
+        este.contador = 0
+        este.etiqueta_contador.texto = "Contador: 0"
+    }
+}
+
+funcion principal() {
+    variable app = nueva MiAplicacion()
+    app.ejecutar()
+}
+```
+
+---
+
+## 10. 📦 SISTEMA DE PAQUETES
+
+```
+SISTEMA DE PAQUETES: "CONSTELACIÓN"
+====================================
+
+Gestor de paquetes integrado (como Cargo/pip/npm)
+
+HERRAMIENTA DE LÍNEA DE COMANDOS: aurora
+═══════════════════════════════════════
+
+aurora nuevo mi_proyecto          → Crear proyecto nuevo
+aurora nuevo --lib mi_libreria    → Crear librería
+aurora compilar                   → Compilar proyecto
+aurora ejecutar                   → Compilar y ejecutar
+aurora probar                     → Ejecutar pruebas
+aurora instalar paquete           → Instalar dependencia
+aurora desinstalar paquete        → Desinstalar dependencia
+aurora actualizar                 → Actualizar dependencias
+aurora publicar                   → Publicar al registro
+aurora documentar                 → Generar documentación
+aurora formatear                  → Formatear código
+aurora verificar                  → Verificar sin compilar
+aurora benchmark                  → Ejecutar benchmarks
+aurora limpiar                    → Limpiar artefactos
+
+ESTRUCTURA DE PROYECTO:
+══════════════════════
+
+mi_proyecto/
+├── aurora.toml              → Manifiesto del proyecto
+├── fuente/                  → Código fuente
+│   ├── principal.aur        → Punto de entrada
+│   ├── lib.aur              → Si es librería
+│   └── modulos/             → Módulos adicionales
+├── pruebas/                 → Tests
+│   ├── test_principal.aur
+│   └── test_modulos.aur
+├── ejemplos/                → Código de ejemplo
+├── docs/                    → Documentación
+├── recursos/                → Assets/resources
+└── benchmarks/              → Benchmarks
+
+ARCHIVO aurora.toml:
+═══════════════════
+
+[proyecto]
+nombre = "mi_aplicacion"
+version = "1.0.0"
+autores = ["Tu Nombre <tu@email.com>"]
+descripcion = "Una aplicación increíble en Aurora"
+licencia = "MIT"
+edicion = "2025"
+
+[dependencias]
+aurora_ui = "1.0"
+aurora_ia = "0.5"
+servidor_http = "2.1"
+base_datos = { version = "1.2", caracteristicas = ["postgres", "sqlite"] }
+
+[dependencias-desarrollo]
+benchmark = "0.3"
+mock = "1.0"
+
+[compilacion]
+objetivo = "nativo"          # nativo, wasm, especifico
+optimizacion = "release"     # debug, release, tamaño
+lto = verdadero              # Link-time optimization
+
+[plataforma.windows]
+icono = "recursos/icono.ico"
+subsistema = "ventanas"      # ventanas, consola
+
+[plataforma.macos]
+bundle_id = "com.ejemplo.miapp"
+icono = "recursos/icono.icns"
+
+[plataforma.linux]
+desktop_file = verdadero
+
+REGISTRO DE PAQUETES:
+════════════════════
+
+constelacion.aurora-lang.org  → Registro central de paquetes
+                              → Como crates.io / pypi.org
+```
+
+---
+
+## 11. 🌍 MULTIPLATAFORMA
+
+```
+ESTRATEGIA MULTIPLATAFORMA
+============================
+
+┌──────────────────────────────────────────────────────┐
+│                 CAPA DE ABSTRACCIÓN                  │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  Código Aurora (100% portable)                       │
+│         │                                            │
+│         ▼                                            │
+│  ┌─────────────────────────────────┐                │
+│  │    Compilador Aurora (LLVM)     │                │
+│  └───────┬───────┬───────┬────────┘                │
+│          │       │       │                           │
+│    ┌─────▼──┐ ┌──▼────┐ ┌▼──────┐                  │
+│    │Windows │ │ Linux │ │ macOS │                   │
+│    │x86_64  │ │x86_64 │ │x86_64 │                  │
+│    │ARM64   │ │ARM64  │ │ARM64  │                  │
+│    │MSVC/   │ │GCC/   │ │Clang/ │                  │
+│    │MinGW   │ │Clang  │ │XCode  │                  │
+│    └────────┘ └───────┘ └───────┘                  │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+
+CAPA DE ABSTRACCIÓN DEL SISTEMA OPERATIVO:
+═════════════════════════════════════════
+
+src/plataforma/
+├── comun/
+│   ├── plataforma.hpp        → Interfaz abstracta
+│   ├── sistema_archivos.hpp  → Filesystem abstracto
+│   ├── hilos.hpp             → Threading abstracto
+│   ├── memoria.hpp           → Memory mapping
+│   ├── red.hpp               → Networking
+│   ├── proceso.hpp           → Procesos
+│   ├── reloj.hpp             → Timing
+│   └── dinamica.hpp          → Dynamic library loading
+│
+├── windows/
+│   ├── plataforma_win.cpp    → Implementación Windows
+│   ├── win32_api.cpp         → Win32 wrappers
+│   ├── consola_win.cpp       → Terminal Windows
+│   └── ui_win.cpp            → UI nativa Windows
+│
+├── linux/
+│   ├── plataforma_linux.cpp  → Implementación Linux
+│   ├── posix.cpp             → POSIX wrappers
+│   ├── consola_linux.cpp     → Terminal Linux
+│   └── ui_linux.cpp          → UI nativa Linux (GTK4)
+│
+└── macos/
+    ├── plataforma_mac.cpp    → Implementación macOS
+    ├── cocoa.mm              → Cocoa/ObjC++ wrappers
+    ├── consola_mac.cpp       → Terminal macOS
+    └── ui_mac.mm             → UI nativa macOS (AppKit)
+
+COMPILACIÓN CRUZADA:
+═══════════════════
+
+# Desde cualquier plataforma
+aurora compilar --objetivo=windows-x86_64
+aurora compilar --objetivo=linux-x86_64
+aurora compilar --objetivo=linux-arm64
+aurora compilar --objetivo=macos-x86_64
+aurora compilar --objetivo=macos-arm64
+aurora compilar --objetivo=wasm32            # WebAssembly (futuro)
+
+DETECCIÓN CONDICIONAL DE PLATAFORMA EN CÓDIGO:
+═════════════════════════════════════════════
+
+#[si(plataforma = "windows")]
+funcion obtener_ruta_config() -> Texto {
+    retornar variable_entorno("APPDATA") + "/MiApp"
+}
+
+#[si(plataforma = "linux")]
+funcion obtener_ruta_config() -> Texto {
+    retornar variable_entorno("HOME") + "/.config/MiApp"
+}
+
+#[si(plataforma = "macos")]
+funcion obtener_ruta_config() -> Texto {
+    retornar variable_entorno("HOME") + "/Library/MiApp"
+}
+
+CI/CD MULTIPLATAFORMA:
+═════════════════════
+
+- GitHub Actions para compilar en Windows, Linux, macOS
+- Pruebas automatizadas en las tres plataformas
+- Releases con binarios para cada plataforma
+```
+
+---
+
+## 12. 📅 FASES DE DESARROLLO
+
+```
+PLAN DE DESARROLLO POR FASES
+==============================
+
+╔══════════════════════════════════════════════════════════════╗
+║ FASE 0: FUNDAMENTOS (Meses 1-3)                            ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Configurar repositorio y CI/CD                            ║
+║ □ Configurar compilación con CMake multiplataforma          ║
+║ □ Instalar y configurar LLVM como dependencia               ║
+║ □ Definir especificación formal del lenguaje (documento)    ║
+║ □ Diseñar gramática completa (BNF)                          ║
+║ □ Crear suite de pruebas básica                             ║
+║ □ Implementar sistema de errores en español                 ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 1: LEXER + PARSER (Meses 3-6)                         ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Implementar Lexer completo                                ║
+║   □ Tokenización de palabras clave en español               ║
+║   □ Soporte Unicode/UTF-8 completo                          ║
+║   □ Manejo de comentarios, strings, números                 ║
+║   □ Tracking de ubicación (línea/columna)                   ║
+║   □ Mensajes de error en español                            ║
+║                                                              ║
+║ □ Implementar Parser                                        ║
+║   □ Parser Pratt para expresiones                           ║
+║   □ Parser recursivo descendente para declaraciones         ║
+║   □ Generación de AST completo                              ║
+║   □ Recuperación de errores                                 ║
+║   □ Todas las estructuras de control                        ║
+║   □ Declaraciones de funciones, clases, interfaces          ║
+║                                                              ║
+║ □ Pruebas exhaustivas del lexer y parser                    ║
+║ □ Herramienta de visualización del AST                      ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 2: ANÁLISIS SEMÁNTICO (Meses 6-10)                    ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Tabla de símbolos jerárquica                              ║
+║ □ Resolución de nombres y ámbitos                           ║
+║ □ Sistema de tipos                                          ║
+║   □ Tipos primitivos                                        ║
+║   □ Tipos compuestos                                        ║
+║   □ Genéricos                                               ║
+║   □ Inferencia de tipos (Hindley-Milner adaptado)           ║
+║   □ Verificación de tipos                                   ║
+║ □ Verificación de ownership (propiedad)                     ║
+║   □ Reglas de propiedad                                     ║
+║   □ Borrow checker                                          ║
+║   □ Análisis de lifetimes                                   ║
+║   □ Detección de use-after-move                             ║
+║   □ Detección de data races potenciales                     ║
+║ □ Resolución de sobrecarga                                  ║
+║ □ Verificación de rasgos/interfaces                         ║
+║ □ Mensajes de error descriptivos en español                 ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 3: IR + CODEGEN BÁSICO (Meses 10-14)                  ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Diseñar e implementar HIR                                 ║
+║   □ Desugaring de sintaxis                                  ║
+║   □ Resolución de genéricos                                 ║
+║ □ Diseñar e implementar MIR                                 ║
+║   □ CFG (Control Flow Graph)                                ║
+║   □ SSA form                                                ║
+║   □ Inserción de drops automáticos                          ║
+║   □ Verificación de ownership en MIR                        ║
+║ □ Backend LLVM                                              ║
+║   □ Generación de LLVM IR desde MIR                         ║
+║   □ Compilación a código nativo                             ║
+║   □ Soporte Windows (x86_64)                                ║
+║   □ Soporte Linux (x86_64)                                  ║
+║   □ Soporte macOS (x86_64 + ARM64)                          ║
+║ □ Enlazado (linking)                                        ║
+║ □ "Hola Mundo" compilando y ejecutando ✅                    ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 4: BIBLIOTECA ESTÁNDAR CORE (Meses 14-18)             ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ sistema.io (entrada/salida)                               ║
+║ □ Tipos básicos (Texto, Vec, Mapa, etc.)                    ║
+║ □ Colecciones                                               ║
+║ □ Matemáticas básicas                                       ║
+║ □ Manejo de archivos                                        ║
+║ □ Sistema operativo                                         ║
+║ □ Concurrencia (hilos, mutex, canales)                      ║
+║ □ Red (TCP, UDP, HTTP básico)                               ║
+║ □ Formatos de datos (JSON, CSV)                             ║
+║ □ Manejo de errores                                         ║
+║ □ Iteradores                                                ║
+║ □ Pruebas y benchmarks                                      ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 5: OOP COMPLETO + FEATURES (Meses 18-22)              ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Herencia completa                                         ║
+║ □ Interfaces y rasgos                                       ║
+║ □ Polimorfismo (estático y dinámico)                        ║
+║ □ Genéricos avanzados                                       ║
+║ □ Sobrecarga de operadores                                  ║
+║ □ Pattern matching completo                                 ║
+║ □ Async/await                                               ║
+║ □ Closures y funciones de orden superior                    ║
+║ □ Macros (sistema de macros básico)                         ║
+║ □ FFI (Foreign Function Interface) con C/C++               ║
+║ □ Bloques inseguros                                         ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 6: HERRAMIENTAS DE DESARROLLO (Meses 22-26)           ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Sistema de paquetes "Constelación"                        ║
+║   □ aurora nuevo, compilar, ejecutar, probar                ║
+║   □ Resolución de dependencias                              ║
+║   □ Registro de paquetes (servidor)                         ║
+║ □ Formateador de código (aurora formatear)                  ║
+║ □ Linter (aurora verificar)                                 ║
+║ □ LSP (Language Server Protocol) para IDEs                  ║
+║ □ Plugin para VS Code                                       ║
+║ □ Generador de documentación                                ║
+║ □ Depurador (integración con GDB/LLDB)                     ║
+║ □ Profiler básico                                           ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 7: UI FRAMEWORK (Meses 26-32)                         ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Diseño del framework UI                                   ║
+║ □ Widgets básicos (botón, etiqueta, campo texto)            ║
+║ □ Sistema de layouts                                        ║
+║ □ Sistema de eventos                                        ║
+║ □ Sistema de estilos/temas                                  ║
+║ □ Backend Windows (Win32/Direct2D)                          ║
+║ □ Backend Linux (GTK4 o custom con Wayland/X11)             ║
+║ □ Backend macOS (Cocoa/AppKit)                              ║
+║ □ Widgets avanzados                                         ║
+║ □ Animaciones                                               ║
+║ □ Canvas/dibujo personalizado                               ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 8: ECOSISTEMA IA/ML (Meses 32-42)                     ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Tensores (aurora_ia.tensor)                               ║
+║   □ Operaciones básicas                                     ║
+║   □ Soporte GPU (CUDA)                                      ║
+║   □ Soporte GPU (OpenCL/Metal)                              ║
+║ □ MarcoDatos (aurora_ia.datos) - estilo Pandas              ║
+║ □ Autograd (diferenciación automática)                      ║
+║ □ Capas de redes neuronales                                 ║
+║ □ Optimizadores                                             ║
+║ □ Modelos preentrenados                                     ║
+║ □ NLP básico                                                ║
+║ □ Visión por computadora                                    ║
+║ □ ML clásico (regresión, clasificación, clustering)         ║
+║ □ IA generativa                                             ║
+║ □ Integración con ONNX                                      ║
+║ □ Visualización de datos                                    ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 9: OPTIMIZACIÓN + ESTABILIZACIÓN (Meses 42-48)        ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Optimizaciones del compilador                             ║
+║   □ Inlining agresivo                                       ║
+║   □ Eliminación de código muerto                            ║
+║   □ Optimización de tail calls                              ║
+║   □ Vectorización SIMD                                      ║
+║   □ LTO (Link-Time Optimization)                            ║
+║ □ Reducir tiempos de compilación                            ║
+║   □ Compilación incremental                                 ║
+║   □ Caché de compilación                                    ║
+║   □ Compilación paralela                                    ║
+║ □ Benchmarks contra C/C++/Rust                              ║
+║ □ Fuzzing del compilador                                    ║
+║ □ Auditoría de seguridad                                    ║
+║ □ Documentación completa en español                         ║
+║ □ Tutoriales y guías                                        ║
+║ □ Website del proyecto                                      ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║ FASE 10: LANZAMIENTO v1.0 (Mes 48+)                        ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║ □ Release v1.0.0                                            ║
+║ □ Instaladores para Windows, Linux, macOS                   ║
+║ □ Documentación completa                                    ║
+║ □ Comunidad y contribuciones                                ║
+║ □ Registro de paquetes público                              ║
+║ □ Conferencia/presentación                                  ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 13. 📁 ESTRUCTURA DEL PROYECTO EN C++
+
+```
+ESTRUCTURA COMPLETA DEL REPOSITORIO
+=====================================
+
+aurora/
+├── 📄 CMakeLists.txt                → Build system principal
+├── 📄 README.md                     → Documentación principal
+├── 📄 LICENCIA.md                   → Licencia del proyecto
+├── 📄 CONTRIBUIR.md                 → Guía de contribución
+├── 📄 CHANGELOG.md                  → Historial de cambios
+│
+├── 📁 compilador/                   → CÓDIGO DEL COMPILADOR (C++)
+│   ├── CMakeLists.txt
+│   ├── 📁 incluir/aurora/          → Headers públicos
+│   │   ├── aurora.hpp              → Header principal
+│   │   ├── version.hpp             → Versión del compilador
+│   │   └── config.hpp              → Configuración
+│   │
+│   ├── 📁 fuente/                  → Código fuente del compilador
+│   │   ├── principal.cpp           → main() del compilador
+│   │   │
+│   │   ├── 📁 lexico/             → LEXER
+│   │   │   ├── tokenizador.hpp
+│   │   │   ├── tokenizador.cpp
+│   │   │   ├── token.hpp
+│   │   │   ├── tipos_token.hpp
+│   │   │   ├── palabras_clave.hpp  → Mapa de palabras clave español
+│   │   │   ├── unicode.hpp
+│   │   │   ├── unicode.cpp
+│   │   │   ├── ubicacion.hpp       → SourceLocation
+│   │   │   └── errores_lexico.cpp
+│   │   │
+│   │   ├── 📁 sintactico/         → PARSER
+│   │   │   ├── parser.hpp
+│   │   │   ├── parser.cpp
+│   │   │   ├── parser_expresiones.cpp
+│   │   │   ├── parser_declaraciones.cpp
+│   │   │   ├── parser_sentencias.cpp
+│   │   │   ├── parser_tipos.cpp
+│   │   │   ├── parser_patrones.cpp
+│   │   │   ├── precedencia.hpp
+│   │   │   ├── 📁 ast/
+│   │   │   │   ├── nodo_ast.hpp        → Base node
+│   │   │   │   ├── expresiones.hpp     → Expression nodes
+│   │   │   │   ├── declaraciones.hpp   → Declaration nodes
+│   │   │   │   ├── sentencias.hpp      → Statement nodes
+│   │   │   │   ├── tipos_ast.hpp       → Type nodes
+│   │   │   │   ├── patrones.hpp        → Pattern nodes
+│   │   │   │   └── visitante.hpp       → Visitor pattern
+│   │   │   └── errores_parser.cpp
+│   │   │
+│   │   ├── 📁 semantico/          → ANÁLISIS SEMÁNTICO
+│   │   │   ├── analizador.hpp
+│   │   │   ├── analizador.cpp
+│   │   │   ├── tabla_simbolos.hpp
+│   │   │   ├── tabla_simbolos.cpp
+│   │   │   ├── ambito.hpp
+│   │   │   ├── verificador_tipos.hpp
+│   │   │   ├── verificador_tipos.cpp
+│   │   │   ├── inferencia_tipos.hpp
+│   │   │   ├── inferencia_tipos.cpp
+│   │   │   ├── verificador_propiedad.hpp
+│   │   │   ├── verificador_propiedad.cpp
+│   │   │   ├── verificador_prestamos.hpp
+│   │   │   ├── verificador_prestamos.cpp
+│   │   │   ├── verificador_vidas.hpp
+│   │   │   ├── verificador_vidas.cpp
+│   │   │   ├── resolucion_nombres.hpp
+│   │   │   ├── resolucion_nombres.cpp
+│   │   │   ├── resolucion_sobrecarga.hpp
+│   │   │   ├── resolucion_sobrecarga.cpp
+│   │   │   └── errores_semantico.cpp
+│   │   │
+│   │   ├── 📁 ir/                  → REPRESENTACIONES INTERMEDIAS
+│   │   │   ├── 📁 hir/
+│   │   │   │   ├── hir.hpp
+│   │   │   │   ├── hir_nodos.hpp
+│   │   │   │   ├── hir_constructor.cpp
+│   │   │   │   └── hir_simplificar.cpp
+│   │   │   │
+│   │   │   ├── 📁 mir/
+│   │   │   │   ├── mir.hpp
+│   │   │   │   ├── mir_nodos.hpp
+│   │   │   │   ├── mir_constructor.cpp
+│   │   │   │   ├── mir_cfg.hpp         → Control Flow Graph
+│   │   │   │   ├── mir_cfg.cpp
+│   │   │   │   ├── mir_ownership.cpp   → Ownership en MIR
+│   │   │   │   ├── mir_optimizar.cpp
+│   │   │   │   └── mir_ssa.cpp         → SSA transformation
+│   │   │   │
+│   │   │   └── 📁 lir/
+│   │   │       ├── generador_llvm.hpp
+│   │   │       └── generador_llvm.cpp
+│   │   │
+│   │   ├── 📁 backend/            → BACKENDS
+│   │   │   ├── backend.hpp         → Interfaz abstracta
+│   │   │   ├── 📁 llvm/
+│   │   │   │   ├── codegen_llvm.hpp
+│   │   │   │   ├── codegen_llvm.cpp
+│   │   │   │   ├── optimizador_llvm.hpp
+│   │   │   │   ├── optimizador_llvm.cpp
+│   │   │   │   ├── enlazador.hpp
+│   │   │   │   └── enlazador.cpp
+│   │   │   │
+│   │   │   └── 📁 objetivos/
+│   │   │       ├── x86_64.hpp
+│   │   │       ├── x86_64.cpp
+│   │   │       ├── arm64.hpp
+│   │   │       └── arm64.cpp
+│   │   │
+│   │   ├── 📁 plataforma/         → ABSTRACCIÓN DE PLATAFORMA
+│   │   │   ├── plataforma.hpp
+│   │   │   ├── windows/
+│   │   │   │   └── plataforma_win.cpp
+│   │   │   ├── linux/
+│   │   │   │   └── plataforma_linux.cpp
+│   │   │   └── macos/
+│   │   │       └── plataforma_mac.cpp
+│   │   │
+│   │   ├── 📁 diagnosticos/       → SISTEMA DE ERRORES
+│   │   │   ├── diagnostico.hpp
+│   │   │   ├── diagnostico.cpp
+│   │   │   ├── mensajes_es.hpp    → Mensajes en español
+│   │   │   ├── colores_terminal.hpp
+│   │   │   └── sugerencias.cpp    → "¿Quisiste decir...?"
+│   │   │
+│   │   ├── 📁 tipos/              → SISTEMA DE TIPOS INTERNO
+│   │   │   ├── tipo.hpp
+│   │   │   ├── tipo.cpp
+│   │   │   ├── tipos_primitivos.hpp
+│   │   │   ├── tipos_compuestos.hpp
+│   │   │   ├── tipos_funcion.hpp
+│   │   │   ├── tipos_genericos.hpp
+│   │   │   └── registro_tipos.cpp
+│   │   │
+│   │   └── 📁 utilidades/         → UTILIDADES INTERNAS
+│   │       ├── arena_memoria.hpp   → Arena allocator para AST
+│   │       ├── arena_memoria.cpp
+│   │       ├── string_interner.hpp → String interning
+│   │       ├── string_interner.cpp
+│   │       ├── archivo_fuente.hpp
+│   │       ├── archivo_fuente.cpp
+│   │       └── formato.hpp
+│   │
+│   └── 📁 pruebas/                → TESTS DEL COMPILADOR
+│       ├── test_lexer.cpp
+│       ├── test_parser.cpp
+│       ├── test_semantico.cpp
+│       ├── test_tipos.cpp
+│       ├── test_ownership.cpp
+│       ├── test_codegen.cpp
+│       ├── test_integracion.cpp
+│       └── 📁 casos/              → Archivos .aur de prueba
+│           ├── basico/
+│           ├── tipos/
+│           ├── ownership/
+│           ├── clases/
+│           ├── errores/
+│           └── integracion/
+│
+├── 📁 std/                         → BIBLIOTECA ESTÁNDAR (en Aurora)
+│   ├── sistema/
+│   │   ├── io.aur
+│   │   ├── os.aur
+│   │   ├── proceso.aur
+│   │   └── tiempo.aur
+│   ├── colecciones/
+│   │   ├── vector.aur
+│   │   ├── mapa.aur
+│   │   ├── lista.aur
+│   │   └── ...
+│   ├── texto/
+│   ├── matematicas/
+│   ├── concurrencia/
+│   ├── red/
+│   └── ...
+│
+├── 📁 runtime/                     → RUNTIME (C++)
+│   ├── CMakeLists.txt
+│   ├── aurora_runtime.hpp
+│   ├── aurora_runtime.cpp
+│   ├── asignador_memoria.hpp      → Memory allocator
+│   ├── asignador_memoria.cpp
+│   ├── recolector_ciclos.hpp      → Cycle collector (para Rc)
+│   ├── recolector_ciclos.cpp
+│   ├── manejador_panico.hpp       → Panic handler
+│   ├── manejador_panico.cpp
+│   ├── asincrono_runtime.hpp      → Async runtime
+│   └── asincrono_runtime.cpp
+│
+├── 📁 herramientas/                → HERRAMIENTAS ADICIONALES
+│   ├── 📁 aurora_cli/             → CLI principal
+│   │   ├── main.cpp
+│   │   ├── comandos/
+│   │   │   ├── nuevo.cpp
+│   │   │   ├── compilar.cpp
+│   │   │   ├── ejecutar.cpp
+│   │   │   ├── probar.cpp
+│   │   │   ├── instalar.cpp
+│   │   │   └── formatear.cpp
+│   │   └── CMakeLists.txt
+│   │
+│   ├── 📁 aurora_fmt/             → Formateador de código
+│   │   ├── formateador.cpp
+│   │   └── CMakeLists.txt
+│   │
+│   ├── 📁 aurora_lsp/             → Language Server Protocol
+│   │   ├── servidor_lsp.cpp
+│   │   ├── completado.cpp
+│   │   ├── diagnosticos_lsp.cpp
+│   │   └── CMakeLists.txt
+│   │
+│   └── 📁 aurora_doc/             → Generador de documentación
+│       ├── generador_doc.cpp
+│       └── CMakeLists.txt
+│
+├── 📁 paquetes/                    → PAQUETES OFICIALES
+│   ├── aurora_ui/                  → Framework UI
+│   ├── aurora_ia/                  → Ecosistema IA
+│   ├── aurora_web/                 → Framework web
+│   └── aurora_juegos/              → Game engine (futuro)
+│
+├── 📁 editores/                    → PLUGINS DE EDITOR
+│   ├── vscode/                     → Extension VS Code
+│   │   ├── package.json
+│   │   ├── syntaxes/aurora.tmLanguage.json
+│   │   └── src/extension.ts
+│   ├── sublime/                    → Sublime Text
+│   └── vim/                        → Vim/Neovim
+│
+├── 📁 docs/                        → DOCUMENTACIÓN
+│   ├── especificacion/             → Spec del lenguaje
+│   ├── tutorial/                   → Tutorial en español
+│   ├── referencia/                 → Referencia completa
+│   ├── guia_contribucion/          → Cómo contribuir
+│   └── arquitectura/              → Docs de arquitectura
+│
+├── 📁 ejemplos/                    → EJEMPLOS DE CÓDIGO
+│   ├── hola_mundo.aur
+│   ├── calculadora.aur
+│   ├── servidor_web.aur
+│   ├── app_escritorio.aur
+│   ├── red_neuronal.aur
+│   ├── chat_ia.aur
+│   └── juego_basico.aur
+│
+├── 📁 scripts/                     → SCRIPTS DE BUILD
+│   ├── build_windows.bat
+│   ├── build_linux.sh
+│   ├── build_macos.sh
+│   ├── instalar.sh
+│   └── ci/
+│       ├── github_actions.yml
+│       └── test_all.sh
+│
+└── 📁 terceros/                    → DEPENDENCIAS DE TERCEROS
+    ├── llvm/                       → LLVM (submodule o precompilado)
+    ├── googletest/                 → Framework de testing
+    └── fmt/                        → Formatting library
+```
+
+---
+
+## 14. 🔧 HERRAMIENTAS Y DEPENDENCIAS
+
+```
+DEPENDENCIAS Y HERRAMIENTAS NECESARIAS
+========================================
+
+COMPILACIÓN DEL COMPILADOR AURORA:
+══════════════════════════════════
+
+Lenguaje:     C++20 (para desarrollar el compilador)
+Build System: CMake 3.20+
+Compiladores: 
+  - Windows: MSVC 2022+ / Clang 15+
+  - Linux:   GCC 12+ / Clang 15+
+  - macOS:   Apple Clang 14+ (Xcode)
+
+DEPENDENCIAS PRINCIPALES:
+═════════════════════════
+
+┌────────────────────┬──────────────┬─────────────────────────┐
+│ Dependencia        │ Versión      │ Propósito               │
+├────────────────────┼──────────────┼─────────────────────────┤
+│ LLVM               │ 17+          │ Backend de compilación  │
+│ LLD                │ 17+          │ Linker                  │
+│ Google Test        │ 1.14+        │ Testing framework       │
+│ fmt                │ 10+          │ String formatting       │
+│ ICU                │ 73+          │ Unicode support         │
+│ zlib               │ 1.3+         │ Compresión              │
+│ libcurl            │ 8+           │ HTTP (paquetes)         │
+│ SQLite             │ 3.40+        │ BD para paquetes        │
+│ nlohmann/json      │ 3.11+        │ JSON parsing            │
+└────────────────────┴──────────────┴─────────────────────────┘
+
+PARA PAQUETES DE IA (cuando se desarrollen):
+═══════════════════════════════════════════
+
+┌────────────────────┬──────────────┬─────────────────────────┐
+│ CUDA Toolkit       │ 12+          │ GPU NVIDIA              │
+│ cuDNN              │ 8+           │ DNN en NVIDIA           │
+│ OpenCL             │ 3.0+         │ GPU genérica            │
+│ Metal              │ 3+           │ GPU Apple               │
+│ BLAS/LAPACK        │ -            │ Álgebra lineal          │
+│ OpenBLAS           │ 0.3+         │ BLAS optimizado         │
+│ ONNX Runtime       │ 1.16+        │ Inferencia de modelos   │
+└────────────────────┴──────────────┴─────────────────────────┘
+
+PARA UI (cuando se desarrolle):
+══════════════════════════════
+
+┌────────────────────┬──────────────┬─────────────────────────┐
+│ Windows            │ Win32 API    │ UI nativa Windows       │
+│ Linux              │ GTK4 4.12+   │ UI nativa Linux         │
+│ macOS              │ AppKit       │ UI nativa macOS         │
+│ Skia (opcional)    │ -            │ Rendering 2D            │
+│ FreeType           │ 2.13+        │ Font rendering          │
+│ HarfBuzz           │ 8+           │ Text shaping            │
+└────────────────────┴──────────────┴─────────────────────────┘
+
+HERRAMIENTAS DE DESARROLLO:
+═══════════════════════════
+
+- Git                → Control de versiones
+- GitHub Actions     → CI/CD
+- Doxygen            → Documentación del código C++
+- Valgrind           → Memory checking (Linux)
+- AddressSanitizer   → Memory errors
+- ThreadSanitizer    → Data race detection
+- ClangFormat        → Formateo del código C++
+- ClangTidy          → Linting del código C++
+- Benchmark (Google) → Performance benchmarks
+```
+
+---
+
+## 15. 📊 CRONOGRAMA VISUAL
+
+```
+CRONOGRAMA DE DESARROLLO (48 MESES)
+═════════════════════════════════════
+
+Año 1 (Meses 1-12): FUNDAMENTOS
+────────────────────────────────
+
+M1  M2  M3  M4  M5  M6  M7  M8  M9  M10 M11 M12
+├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤
+│▓▓▓▓▓▓▓▓▓▓│                                   │ Fase 0: Setup
+│          │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                │ Fase 1: Lexer+Parser
+│                              │▓▓▓▓▓▓▓▓▓▓▓▓▓▓│ Fase 2: Semántico
+│                                               │
+│ HITO: "Hola Mundo" parseando correctamente    │
+
+Año 2 (Meses 13-24): COMPILADOR FUNCIONAL
+──────────────────────────────────────────
+
+M13 M14 M15 M16 M17 M18 M19 M20 M21 M22 M23 M24
+├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤
+│▓▓▓▓▓▓▓▓▓▓│                                   │ Fase 3: IR+CodeGen
+│          │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                  │ Fase 4: Std Library
+│                            │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│ Fase 5: OOP
+│                                               │
+│ HITO: Primer programa compilado y ejecutado!! │
+│ HITO: Alpha release                          │
+
+Año 3 (Meses 25-36): ECOSISTEMA
+─────────────────────────────────
+
+M25 M26 M27 M28 M29 M30 M31 M32 M33 M34 M35 M36
+├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤
+│▓▓▓▓▓▓▓▓▓▓▓▓│                                 │ Fase 6: Herramientas
+│            │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│            │ Fase 7: UI
+│                                  │▓▓▓▓▓▓▓▓▓▓│ Fase 8: IA (inicio)
+│                                               │
+│ HITO: Beta release con UI                    │
+│ HITO: Sistema de paquetes funcional          │
+
+Año 4 (Meses 37-48): IA + LANZAMIENTO
+──────────────────────────────────────
+
+M37 M38 M39 M40 M41 M42 M43 M44 M45 M46 M47 M48
+├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤
+│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│                           │ Fase 8: IA (cont)
+│                    │▓▓▓▓▓▓▓▓▓▓▓▓▓▓│          │ Fase 9: Optimización
+│                                    │▓▓▓▓▓▓▓▓│ Fase 10: Lanzamiento
+│                                               │
+│ ★ LANZAMIENTO AURORA v1.0.0 ★               │
+```
+
+---
+
+## 16. 🎯 MÉTRICAS DE ÉXITO
+
+```
+MÉTRICAS Y OBJETIVOS DE CALIDAD
+=================================
+
+RENDIMIENTO:
+───────────
+□ Velocidad de ejecución: dentro del 10% de C++ equivalente
+□ Velocidad de compilación: <5 seg para proyectos medianos
+□ Uso de memoria del compilador: <500MB para proyectos grandes
+□ Tamaño del ejecutable: competitivo con C++
+
+CALIDAD:
+────────
+□ 0 memory leaks en código seguro (garantizado por diseño)
+□ 0 data races en código seguro (garantizado por diseño)
+□ >95% code coverage en tests del compilador
+□ >99.9% de programas válidos compilan correctamente
+□ Mensajes de error claros y útiles EN ESPAÑOL
+
+COMPATIBILIDAD:
+───────────────
+□ Windows 10+ (x86_64, ARM64)
+□ Ubuntu 20.04+ / Fedora 36+ / Arch (x86_64, ARM64)
+□ macOS 12+ (x86_64, ARM64/Apple Silicon)
+
+ECOSISTEMA:
+───────────
+□ >50 paquetes en el registro al lanzamiento
+□ Plugin VS Code funcional con autocompletado
+□ Documentación completa en español
+□ >10 tutoriales/ejemplos
+```
+
+---
+
+## 17. ⚠️ RIESGOS Y MITIGACIONES
+
+```
+ANÁLISIS DE RIESGOS
+====================
+
+┌─────────────────────────────┬──────────┬─────────────────────────────┐
+│ Riesgo                      │Severidad │ Mitigación                  │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ Borrow checker muy complejo │ ALTA     │ Comenzar con subset simple  │
+│ de implementar              │          │ e ir incrementando.         │
+│                             │          │ Estudiar impl. de Rust.     │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ LLVM learning curve         │ MEDIA    │ Comenzar con subset mínimo  │
+│                             │          │ Tutoriales "My First Lang"  │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ UI multiplataforma compleja │ ALTA     │ Usar biblioteca existente   │
+│                             │          │ como base (SDL2, GTK, etc)  │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ Ecosistema IA es enorme     │ ALTA     │ Priorizar FFI con libs C++  │
+│                             │          │ existentes. Wrappers.       │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ Scope creep (alcance)       │ MEDIA    │ MVPs incrementales.         │
+│                             │          │ Priorizar features core.    │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ Rendimiento insuficiente    │ MEDIA    │ LLVM maneja optimizaciones  │
+│                             │          │ Benchmarks continuos.       │
+├─────────────────────────────┼──────────┼─────────────────────────────┤
+│ Un solo desarrollador       │ ALTA     │ Diseño modular para futuras │
+│                             │          │ contribuciones. Open source.│
+└─────────────────────────────┴──────────┴─────────────────────────────┘
+```
+
+---
+
+## 18. 🧪 ESTRATEGIA DE PRUEBAS
+
+```
+ESTRATEGIA DE TESTING
+======================
+
+NIVELES DE PRUEBA:
+─────────────────
+
+1. PRUEBAS UNITARIAS (Google Test)
+   - Cada módulo del compilador
+   - Lexer: tokenización correcta
+   - Parser: AST correctos
+   - Semántico: tipos, ownership
+   - Codegen: LLVM IR correcto
+
+2. PRUEBAS DE INTEGRACIÓN
+   - Compilar programas .aur completos
+   - Verificar salida correcta
+   - Verificar errores esperados
+
+3. PRUEBAS DE REGRESIÓN
+   - Suite de programas que deben compilar
+   - Suite de programas que deben fallar
+   - Cada bug fix agrega un test
+
+4. PRUEBAS DE RENDIMIENTO
+   - Benchmarks de tiempo de compilación
+   - Benchmarks de rendimiento del código generado
+   - Comparación con C/C++/Rust
+
+5. FUZZING
+   - Fuzzing del lexer con entrada aleatoria
+   - Fuzzing del parser
+   - Asegurar que nunca hay crash del compilador
+
+ESTRUCTURA DE TESTS:
+═══════════════════
+
+pruebas/
+├── unitarias/
+│   ├── test_tokenizador.cpp
+│   ├── test_parser.cpp
+│   ├── test_tipos.cpp
+│   ├── test_ownership.cpp
+│   └── test_codegen.cpp
+├── integracion/
+│   ├── compilar_y_ejecutar/
+│   │   ├── hola_mundo.aur          → espera: "¡Hola, Aurora!"
+│   │   ├── aritmetica.aur          → espera: resultados correctos
+│   │   ├── clases_basicas.aur      → espera: OOP funcional
+│   │   ├── ownership_basico.aur    → espera: compila OK
+│   │   └── ...
+│   └── debe_fallar/
+│       ├── tipo_incorrecto.aur     → espera: error de tipo
+│       ├── use_after_move.aur      → espera: error ownership
+│       ├── doble_mut_borrow.aur    → espera: error préstamo
+│       └── ...
+├── rendimiento/
+│   ├── benchmark_fibonacci.aur
+│   ├── benchmark_ordenamiento.aur
+│   └── benchmark_matrices.aur
+└── fuzzing/
+    ├── fuzz_lexer.cpp
+    └── fuzz_parser.cpp
+```
+
+---
+
+## RESUMEN EJECUTIVO
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║                    AURORA - RESUMEN                         ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  🎯 QUÉ: Lenguaje de programación compilado en español     ║
+║                                                              ║
+║  💪 PODER: Nivel C/C++ con acceso a hardware                ║
+║  🛡️ SEGURIDAD: Ownership + Borrow Checker (estilo Rust)    ║
+║  😊 FACILIDAD: Sintaxis limpia (inspirada en Python)        ║
+║  🏗️ OOP: Clases, herencia, polimorfismo, genéricos         ║
+║  ⚡ COMPILADO: Via LLVM, rendimiento nativo                 ║
+║  🌍 MULTIPLATAFORMA: Windows + Linux + macOS               ║
+║  🤖 IA: Tensores, redes neuronales, NLP, IA generativa     ║
+║  🖥️ UI: Framework nativo multiplataforma                   ║
+║  📦 PAQUETES: Sistema integrado "Constelación"             ║
+║  🇪🇸 IDIOMA: 100% en español                               ║
+║                                                              ║
+║  🔧 IMPLEMENTADO EN: C++20                                  ║
+║  🔧 BACKEND: LLVM 17+                                      ║
+║  📅 DURACIÓN ESTIMADA: 48 meses (4 años)                   ║
+║  📅 MVP FUNCIONAL: ~18 meses                                ║
+║                                                              ║
+║  10 FASES DE DESARROLLO:                                    ║
+║  0. Fundamentos        6. Herramientas                      ║
+║  1. Lexer + Parser     7. UI Framework                      ║
+║  2. Semántico          8. Ecosistema IA                     ║
+║  3. IR + CodeGen       9. Optimización                      ║
+║  4. Std Library       10. Lanzamiento v1.0                  ║
+║  5. OOP Completo                                            ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+---

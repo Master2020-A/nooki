@@ -1,0 +1,120 @@
+# DECISIONES — Registro de decisiones del proyecto NOOKI
+
+> **Última actualización:** 2026-11-09
+> Este archivo es un índice. El detalle normativo está en cada ADR (`docs/adr/`) y en la especificación (`spec/`).
+
+---
+
+## 1. Decisiones cerradas (aprobadas)
+
+Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se crea un ADR nuevo que cita al anterior.
+
+| ADR | Decisión en una línea | Estado |
+|---|---|---|
+| [ADR-001](docs/adr/ADR-001-modelo-de-objetos.md) | `clase` = referencia (sin `nulo`), `estructura` = valor | ✅ Aprobada |
+| [ADR-002](docs/adr/ADR-002-mutabilidad-y-nombres.md) | `variable` mutable / `constante` inmutable; primitivos en minúscula; `texto` | ✅ Aprobada |
+| [ADR-003](docs/adr/ADR-003-aritmetica-entera.md) | Desbordamiento comprobado siempre; `envolver()` para *wrap* | ✅ Aprobada |
+| [ADR-004](docs/adr/ADR-004-modelo-de-errores.md) | `resultado<T,E>` + `?`; `intentar` solo para pánico | ✅ Aprobada |
+| [ADR-005](docs/adr/ADR-005-async-fuera-de-v1.md) | `async`/`await` fuera de la v1.0 (reservadas) | ✅ Aprobada |
+| [ADR-006](docs/adr/ADR-006-atributos-y-macros.md) | Atributos con `@`; `///` para documentar; macros en v0.7 | ✅ Aprobada |
+| [ADR-007](docs/adr/ADR-007-memoria-transitoria.md) | RC temporal de S44 a S52, con fecha de caducidad | ✅ Aprobada |
+| [ADR-008](docs/adr/ADR-008-unicode-e-identificadores.md) | Keywords ASCII sin tildes; identificadores normalizados a NFC | ✅ Aprobada |
+| [ADR-009](docs/adr/ADR-009-virtualidad-explicita.md) | No virtual por defecto; `@virtual` + `@sobrescribir` obligatorios | ✅ Aprobada |
+| [ADR-010](docs/adr/ADR-010-abi-y-ffi.md) | `@repr(C)`, *mangling* propio estable, pánicos no cruzan FFI | ✅ Aprobada |
+| [ADR-011](docs/adr/ADR-011-ensamblador-e-intrinsecos.md) | `asm!` en `inseguro`, operandos nombrados, sintaxis Intel | ✅ Aprobada |
+| [ADR-012](docs/adr/ADR-012-licencia-y-gobernanza.md) | MIT OR Apache-2.0 + excepción de runtime; RFC, ediciones, semver | ✅ Aprobada |
+| [ADR-013](docs/adr/ADR-013-decisiones-sintacticas.md) | `interfaz`=`rasgo`; `nuevo` invariable; NL termina sentencia; sin turbofish | ✅ Aprobada |
+
+---
+
+## 2. Aprobaciones del Anexo B del plan
+
+| Pregunta | Respuesta | Consecuencia |
+|---|---|---|
+| ¿13 ADR por defecto? | **Sí** | Cerradas en `docs/adr/` |
+| ¿Sprints de 2 semanas? | **Sí** (2 semanas de alcance) | 96 sprints; en solitario cada uno ocupa ~3,5–4 semanas reales |
+| ¿Cuántas personas? | **1 (solo el autor)** | **Lenguaje completo ~4 años · v1.0 ~5,5–6 años · todo ~7–7,5 años** |
+| ¿Recorte de alcance (IA/UI por FFI)? | **Sí**, y además **post-1.0** (D-14) | v1.0 = 78 sprints, sin UI ni IA |
+| ¿Nombre y extensión? | **`nooki`** y **`.oki`** (2026-11-09) | Renombrado aplicado a todo el repositorio |
+| ¿Licencia MIT/Apache-2.0? | **Sí** | + excepción de runtime (ADR-012) |
+
+### 2.1 Nomenclatura oficial
+
+| Elemento | Nombre | Nota |
+|---|---|---|
+| Lenguaje | **Nooki** (en código y rutas: `nooki`) | Nombre propio en prosa, minúsculas en identificadores |
+| Extensión de fuentes | **`.oki`** | p. ej. `principal.oki` |
+| CLI / compilador | **`nooki`** | Un solo binario hasta v0.7 (D-16) |
+| Manifiesto de proyecto | `nooki.toml` | |
+| Lockfile | `nooki.lock` | |
+| Configuración del formateador | `.nooki-formato.toml` | |
+| Espacios de nombres | `nooki.nucleo`, `nooki.io`, `nooki.texto`… | |
+| Paquetes oficiales | `nooki_std`, `nooki_ui`, `nooki_ia` | |
+| Registro de paquetes | índice Git + estáticos (D-15); dominio por confirmar | |
+| Gestor de paquetes | `nooki paquete …` | Se **descarta** el nombre "Constelación" (era temático de Aurora) |
+
+---
+
+## 3. Decisiones tomadas al escribir la especificación (revisables hasta S06)
+
+Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pueden vetar antes de S06 sin coste**, porque aún no hay código.
+
+| # | Decisión tomada | Alternativa si la vetas | Impacto del cambio |
+|---|---|---|---|
+| D-01 | `texto` como nombre del tipo cadena | `cadena` | Renombrar en gramática, spec y ejemplos (1 hora) |
+| D-02 | `natural` para enteros sin signo (`natural8`…`natural128`) | `entero_sin_signo`, `ess8` | Renombrar tabla de tipos (1 hora) |
+| D-03 | Miembros `privado` por defecto | `publico` por defecto | Cambia ejemplos y linter (2 horas) |
+| D-04 | `&mutable` (alias aceptado `&mut`) | Solo `&mut`, o `prestamo mutable` | Cambia el lexer (1 hora) |
+| D-05 | Sin sufijos numéricos (`5`, no `5u`) | Sufijos tipo Rust | Añadir regla léxica (2 horas) |
+| D-06 | `principal()` y `principal(argumentos: vector<texto>) -> entero` | Solo una firma | Cambia la resolución del punto de entrada (1 hora) |
+| D-07 | `para i en 0..10 paso 2` con `paso` como palabra reservada | Método `.paso(2)` | Añadir/quitar palabra reservada |
+| D-08 | `_` como comodín en `coincide` (sin `defecto`) | `defecto` como alias | Añadir palabra reservada |
+| D-09 | Cierres con `|x| expr` | `funcion(x) { }` | Cambia el parser de expresiones |
+| D-10 | Los módulos se derivan de la ruta del archivo; `modulo` es opcional | Declaración obligatoria | Cambia la resolución de módulos |
+| D-11 | `interna` como cuarta visibilidad (visible en el módulo) | Solo tres niveles | Añadir palabra reservada |
+| D-12 | Cadenas multilínea con `"""` | Solo `\n` escapado | Regla léxica extra |
+
+---
+
+## 4. Modo solitario — decisiones de alcance (2026-11-09)
+
+| # | Decisión | Por qué |
+|---|---|---|
+| D-13 | **Sprint de alcance = 2 semanas; sprint real = 3,5–4 semanas.** No se renumeran los 96 sprints | La rejilla de sprints es la unidad de alcance, no el calendario |
+| D-14 | **La v1.0 no incluye UI ni IA**: las fases 10 y 11 pasan a post-1.0. v1.0 = 78 sprints | UI e IA son dos carreras separadas; el lenguaje y su stdlib no |
+| D-15 | **Registro de paquetes por Git + archivos estáticos** en lugar de un servidor propio | Ahorra semanas de desarrollo y toda la operación; un servidor solo se justifica con usuarios |
+| D-16 | **Un solo binario `nooki`** (compilador + CLI + paquetes) hasta v0.7 | Menos superficie que mantener; se separa cuando haya equipo |
+| D-17 | **macOS se valida en CI**; firma y notarización condicionadas a un Mac o financiación | Sin hardware Apple no hay notarización posible |
+
+---
+
+## 5. Asuntos abiertos
+
+| # | Asunto | Estado | Cuándo |
+|---|---|---|---|
+| A-01 | **Marca y dominio de "Nooki"** | 🟡 Parcialmente resuelto | Ver §5.1 |
+| A-02 | **Equipo** | ✅ **Cerrado:** 1 persona | — |
+| A-03 | Infraestructura del registro de paquetes | ⬜ Abierto | S55 |
+| A-04 | Política de seguridad y divulgación de vulnerabilidades | ⬜ Abierto | S91 |
+| A-05 | Financiación (becas, patrocinio, fundación) | ⬜ Abierto | Antes de S52 |
+
+### 5.1 Resultado de la verificación del nombre (A-01)
+
+**Lo que se comprobó el 2026-11-09:**
+
+- **No hay ningún lenguaje de programación llamado "Nooki".** Los más cercanos son [Nooklang](https://github.com/tsklxiv/Nooklang) y el lenguaje [Nock](https://github.com/antlr/grammars-v4/blob/c306207ac870e7c5a95763b518ba3e3a1ca61409/nock/README.md) de Urbit: nombres distintos, sin conflicto de búsqueda.
+- **Los dominios `nooki.online`, `nooki.club` y `nooki.capital` están registrados**; falta comprobar en el registrador la disponibilidad de **`nooki.dev`** y **`nooki.org`**.
+- **La extensión `.oki` no tiene conflicto conocido** en lenguajes de programación. *Oki* es una marca de impresoras (Oki Electric), pero en otro sector y con otro uso.
+
+**Pendiente (bloquea S03, no el diseño):** comprar el dominio definitivo y hacer una búsqueda formal en el registro de marcas del país de residencia. Si `nooki.dev` está tomado, alternativas: `nooki-lang.org`, `nooki-lang.dev`, `nooki.es`.
+
+---
+
+## 6. Cómo se cambia una decisión
+
+1. Se abre un **RFC** en `docs/rfcs/` con la plantilla `0000-plantilla.md`.
+2. Se discute en público (mínimo 7 días).
+3. Si se aprueba, se crea un **ADR nuevo** que cita y reemplaza al anterior; el ADR viejo **no se modifica**.
+4. Si el cambio afecta al lenguaje, sube la **edición** (ADR-012) o se marca como ruptura en la versión mayor.
+
+> Regla de oro: *un ADR no se edita, se reemplaza.* El historial de decisiones es parte del activo del proyecto.

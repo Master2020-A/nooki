@@ -1,0 +1,1213 @@
+PLAN MAESTRO DE IMPLEMENTACIÓN DE AURORA
+Lenguaje de programación en español, compilado, escrito en C++
+FASE 0 — INVESTIGACIÓN Y ARQUITECTURA BASE
+0.1 — Definición filosófica del lenguaje
+
+text
+
+Principios fundamentales:
+├── Todo en español (palabras reservadas, errores, documentación)
+├── Control de hardware como C/C++
+├── Seguridad de memoria como Rust (ownership + borrowing)
+├── Sintaxis limpia como Python
+├── OOP completa (herencia, polimorfismo, interfaces)
+├── Compilado a código nativo
+├── Multiplataforma (Windows, macOS, Linux)
+└── Ecosistema de librerías integrado
+
+0.2 — Definición de la sintaxis del lenguaje
+Palabras reservadas (todo en español):
+
+text
+
+// Tipos primitivos
+entero, entero8, entero16, entero32, entero64
+flotante, flotante32, flotante64
+caracter
+cadena
+booleano
+vacio
+nulo
+
+// Estructuras de control
+si / sino / sinosi
+mientras
+para
+hacer
+romper
+continuar
+retornar
+en
+rango
+
+// OOP
+clase
+hereda
+interfaz
+implementa
+publico
+privado
+protegido
+estatico
+abstracto
+nuevo
+este         // equivalente a "this"
+super
+
+// Ownership y memoria (inspirado en Rust)
+propio       // owned
+prestamo     // borrow (&)
+mutable      // mut
+inmutable    // const
+seguro       // safe block
+inseguro     // unsafe block
+apuntador    // raw pointer
+referencia
+liberar
+
+// Funciones y módulos
+funcion
+modulo
+importar
+exportar
+desde
+como
+
+// Manejo de errores
+intentar
+atrapar
+lanzar
+finalmente
+error
+
+// Concurrencia
+asincrono
+esperar
+hilo
+canal
+bloqueo
+
+// Otros
+constante
+variable      // let equivalente
+tipo
+coincide      // match/switch
+es            // instanceof
+verdadero
+falso
+enumerar
+estructura
+rasgo         // trait (Rust)
+
+Ejemplo de sintaxis objetivo:
+
+aura
+
+importar ia.generativa desde "aura/ia"
+importar ui desde "aura/interfaz"
+
+clase Animal {
+    protegido cadena nombre
+    protegido entero edad
+
+    publico funcion crear(cadena nombre, entero edad) {
+        este.nombre = nombre
+        este.edad = edad
+    }
+
+    publico funcion hablar() -> cadena {
+        retornar "..."
+    }
+}
+
+clase Perro hereda Animal {
+    privado cadena raza
+
+    publico funcion crear(cadena nombre, entero edad, cadena raza) {
+        super.crear(nombre, edad)
+        este.raza = raza
+    }
+
+    publico funcion hablar() -> cadena {
+        retornar "¡Guau!"
+    }
+}
+
+funcion principal() -> vacio {
+    variable miPerro = nuevo Perro("Max", 3, "Labrador")
+    variable sonido = miPerro.hablar()
+
+    si sonido es cadena {
+        imprimir("El perro dice: {sonido}")
+    }
+
+    // Manejo de memoria seguro
+    variable prestamo ref = prestamo miPerro
+    imprimir(ref.nombre)
+
+    // Manejo inseguro para hardware
+    inseguro {
+        variable apuntador<entero> ptr = apuntador(0xFF00)
+        ptr.escribir(42)
+    }
+}
+
+0.3 — Arquitectura del compilador
+
+text
+
+Código fuente (.aura)
+       │
+       ▼
+┌─────────────────┐
+│   LEXER/SCANNER │  ← Análisis léxico (tokenización)
+│   (Analizador    │
+│    Léxico)       │
+└────────┬────────┘
+         │ Tokens
+         ▼
+┌─────────────────┐
+│   PARSER         │  ← Análisis sintáctico
+│   (Analizador    │
+│    Sintáctico)   │
+└────────┬────────┘
+         │ AST (Árbol de Sintaxis Abstracta)
+         ▼
+┌─────────────────┐
+│   ANALIZADOR     │  ← Análisis semántico
+│   SEMÁNTICO      │     Tipos, ownership, borrowing
+│                  │
+└────────┬────────┘
+         │ AST Anotado
+         ▼
+┌─────────────────┐
+│   GENERADOR IR   │  ← Representación Intermedia
+│   (LLVM IR)      │     Usando LLVM como backend
+│                  │
+└────────┬────────┘
+         │ LLVM IR
+         ▼
+┌─────────────────┐
+│   LLVM BACKEND   │  ← Optimización + Generación
+│                  │     de código máquina
+└────────┬────────┘
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+  .exe  Mach-O  ELF
+  Win   macOS  Linux
+
+0.4 — Stack tecnológico
+
+text
+
+Componente              Tecnología
+─────────────────────────────────────────
+Lenguaje del compilador  C++20/23
+Backend de compilación   LLVM 18+
+Build system             CMake
+Testing                  Google Test
+Documentación            Doxygen + MkDocs
+Paquetería               Sistema propio "paquete"
+Gestión de dependencias  Conan / vcpkg
+Control de versiones     Git
+CI/CD                    GitHub Actions
+
+FASE 1 — FUNDAMENTOS DEL COMPILADOR
+
+Duración estimada: 3-4 meses
+1.1 — Configuración del proyecto multiplataforma
+
+text
+
+aura/
+├── CMakeLists.txt                 # Build principal
+├── README.md
+├── LICENSE
+├── .github/
+│   └── workflows/
+│       ├── build-windows.yml
+│       ├── build-macos.yml
+│       └── build-linux.yml
+├── compilador/
+│   ├── CMakeLists.txt
+│   ├── include/
+│   │   └── aura/
+│   │       ├── lexico/
+│   │       │   ├── token.hpp
+│   │       │   ├── tipo_token.hpp
+│   │       │   └── lexer.hpp
+│   │       ├── sintactico/
+│   │       │   ├── parser.hpp
+│   │       │   ├── ast.hpp
+│   │       │   └── nodos/
+│   │       │       ├── nodo_expresion.hpp
+│   │       │       ├── nodo_declaracion.hpp
+│   │       │       ├── nodo_clase.hpp
+│   │       │       ├── nodo_funcion.hpp
+│   │       │       ├── nodo_control.hpp
+│   │       │       └── nodo_memoria.hpp
+│   │       ├── semantico/
+│   │       │   ├── analizador_semantico.hpp
+│   │       │   ├── tabla_simbolos.hpp
+│   │       │   ├── sistema_tipos.hpp
+│   │       │   ├── verificador_ownership.hpp
+│   │       │   └── verificador_prestamos.hpp
+│   │       ├── generador/
+│   │       │   ├── generador_ir.hpp
+│   │       │   ├── generador_llvm.hpp
+│   │       │   └── optimizador.hpp
+│   │       ├── errores/
+│   │       │   ├── error.hpp
+│   │       │   ├── error_lexico.hpp
+│   │       │   ├── error_sintactico.hpp
+│   │       │   └── error_semantico.hpp
+│   │       └── comun/
+│   │           ├── ubicacion_fuente.hpp
+│   │           └── utilidades.hpp
+│   └── src/
+│       ├── main.cpp
+│       ├── lexico/
+│       ├── sintactico/
+│       ├── semantico/
+│       └── generador/
+├── libreria_estandar/
+│   ├── nucleo/           # Core: tipos básicos, memoria
+│   ├── io/               # Entrada/Salida
+│   ├── colecciones/      # Vectores, mapas, etc.
+│   ├── cadenas/          # Manipulación de strings
+│   ├── matematicas/      # Funciones matemáticas
+│   ├── hilos/            # Concurrencia
+│   ├── red/              # Networking
+│   ├── archivos/         # File system
+│   └── tiempo/           # Fecha y hora
+├── librerias/
+│   ├── interfaz_ui/      # Framework UI
+│   ├── ia/               # Inteligencia Artificial
+│   ├── datos/            # Equivalente a pandas
+│   ├── pln/              # Procesamiento Lenguaje Natural
+│   └── ia_generativa/    # IA Generativa
+├── herramientas/
+│   ├── gestor_paquetes/  # "paquete" - package manager
+│   ├── formateador/      # Code formatter
+│   └── lsp/              # Language Server Protocol
+├── pruebas/
+│   ├── unitarias/
+│   ├── integracion/
+│   └── programas_ejemplo/
+├── docs/
+│   ├── especificacion/
+│   ├── tutorial/
+│   └── referencia/
+└── ejemplos/
+    ├── hola_mundo.aura
+    ├── clases.aura
+    ├── memoria.aura
+    └── ia_ejemplo.aura
+
+1.2 — Analizador Léxico (Lexer)
+
+text
+
+Tareas:
+├── Definir todos los tipos de tokens (150+)
+│   ├── Palabras reservadas en español
+│   ├── Operadores (+, -, *, /, ==, !=, >=, <=, etc.)
+│   ├── Delimitadores ({, }, (, ), [, ], etc.)
+│   ├── Literales (enteros, flotantes, cadenas, booleanos)
+│   ├── Identificadores
+│   └── Comentarios (// y /* */)
+│
+├── Implementar scanner
+│   ├── Lectura carácter por carácter
+│   ├── Soporte completo UTF-8 (acentos: á,é,í,ó,ú,ñ,ü)
+│   ├── Reconocimiento de tokens
+│   ├── Manejo de ubicación (línea, columna, archivo)
+│   └── Buffer de tokens con lookahead
+│
+├── Manejo de errores léxicos
+│   ├── Caracteres no reconocidos
+│   ├── Cadenas sin cerrar
+│   ├── Números malformados
+│   └── Mensajes de error EN ESPAÑOL
+│
+└── Pruebas unitarias del lexer
+    ├── Cada tipo de token
+    ├── Combinaciones complejas
+    ├── Caracteres Unicode/UTF-8
+    └── Casos de error
+
+1.3 — Analizador Sintáctico (Parser)
+
+text
+
+Tareas:
+├── Definir gramática formal del lenguaje
+│   ├── Gramática EBNF completa
+│   ├── Resolución de ambigüedades
+│   └── Precedencia de operadores
+│
+├── Definir nodos del AST
+│   ├── NodoPrograma
+│   ├── NodoDeclaracionVariable
+│   ├── NodoDeclaracionFuncion
+│   ├── NodoClase (con herencia, interfaces)
+│   ├── NodoBloque
+│   ├── NodoSi / NodoSinoSi / NodoSino
+│   ├── NodoMientras / NodoPara / NodoHacer
+│   ├── NodoCoincide (pattern matching)
+│   ├── NodoExpresion
+│   │   ├── NodoBinaria
+│   │   ├── NodoUnaria
+│   │   ├── NodoLlamada
+│   │   ├── NodoAccesoMiembro
+│   │   ├── NodoIndice
+│   │   ├── NodoLiteral
+│   │   └── NodoAsignacion
+│   ├── NodoRetornar
+│   ├── NodoImportar
+│   ├── NodoInseguro
+│   ├── NodoPrestamo
+│   ├── NodoApuntador
+│   └── NodoAsincrono / NodoEsperar
+│
+├── Implementar parser (Recursive Descent / Pratt)
+│   ├── Parser de declaraciones
+│   ├── Parser de expresiones (Pratt parser)
+│   ├── Parser de tipos
+│   ├── Parser de clases y OOP
+│   ├── Parser de control de flujo
+│   ├── Parser de memoria/ownership
+│   └── Parser de módulos/imports
+│
+├── Recuperación de errores
+│   ├── Modo pánico con sincronización
+│   ├── Múltiples errores por compilación
+│   └── Mensajes descriptivos en español
+│
+└── Pruebas del parser
+    ├── Cada construcción del lenguaje
+    ├── Programas completos
+    └── Casos de error con recovery
+
+1.4 — Sistema de tipos
+
+text
+
+Tareas:
+├── Tipos primitivos
+│   ├── entero (8, 16, 32, 64 bits, con/sin signo)
+│   ├── flotante (32, 64 bits)
+│   ├── booleano
+│   ├── caracter (Unicode)
+│   ├── cadena (UTF-8)
+│   └── vacio
+│
+├── Tipos compuestos
+│   ├── Arreglos: arreglo<entero>
+│   ├── Vectores dinámicos: vector<cadena>
+│   ├── Mapas: mapa<cadena, entero>
+│   ├── Tuplas: tupla<entero, cadena>
+│   ├── Opcionales: opcional<entero>  (como Option en Rust)
+│   └── Resultado: resultado<entero, error> (como Result)
+│
+├── Tipos definidos por usuario
+│   ├── Clases
+│   ├── Interfaces
+│   ├── Enumeraciones
+│   ├── Estructuras
+│   ├── Rasgos (traits)
+│   └── Alias de tipos
+│
+├── Inferencia de tipos
+│   ├── Variables locales
+│   ├── Retorno de funciones
+│   └── Genéricos
+│
+├── Genéricos
+│   ├── Funciones genéricas
+│   ├── Clases genéricas
+│   ├── Restricciones de tipo
+│   └── Monomorfización en compilación
+│
+└── Verificación de tipos
+    ├── Compatibilidad
+    ├── Conversiones implícitas (mínimas)
+    ├── Conversiones explícitas
+    └── Covarianza / Contravarianza
+
+FASE 2 — ANÁLISIS SEMÁNTICO Y SISTEMA DE OWNERSHIP
+
+Duración estimada: 3-4 meses
+2.1 — Analizador Semántico
+
+text
+
+Tareas:
+├── Tabla de símbolos
+│   ├── Ámbitos anidados (scoping)
+│   ├── Resolución de nombres
+│   ├── Sobrecarga de funciones
+│   ├── Resolución de métodos
+│   └── Manejo de módulos
+│
+├── Verificaciones semánticas
+│   ├── Declaración antes de uso
+│   ├── Tipos compatibles en operaciones
+│   ├── Retorno correcto en funciones
+│   ├── Accesibilidad (público/privado/protegido)
+│   ├── Herencia correcta
+│   ├── Implementación completa de interfaces
+│   ├── Variables no utilizadas (advertencia)
+│   └── Código inalcanzable (advertencia)
+│
+└── Resolución de tipos
+    ├── Inferencia completa
+    ├── Unificación de tipos
+    └── Verificación de genéricos
+
+2.2 — Sistema de Ownership y Borrowing (estilo Rust)
+
+text
+
+Tareas:
+├── Modelo de propiedad (ownership)
+│   ├── Cada valor tiene un único propietario
+│   ├── Transferencia de propiedad (mover)
+│   ├── Copia para tipos primitivos
+│   ├── Destrucción automática al salir del ámbito
+│   └── Semántica de movimiento
+│
+├── Sistema de préstamos (borrowing)
+│   ├── Referencias inmutables (múltiples permitidas)
+│   ├── Referencias mutables (solo una a la vez)
+│   ├── No mezclar mutables e inmutables
+│   ├── Referencias no pueden vivir más que el propietario
+│   └── Verificación en tiempo de compilación
+│
+├── Tiempos de vida (lifetimes)
+│   ├── Inferencia automática
+│   ├── Anotación explícita cuando sea necesario
+│   ├── Sintaxis: funcion ejemplo<'v>(prestamo<'v> dato: cadena)
+│   └── Elision rules
+│
+├── Bloque inseguro
+│   ├── Apuntadores crudos
+│   ├── Llamadas a funciones externas (FFI)
+│   ├── Manipulación directa de memoria
+│   └── Acceso a hardware
+│
+└── Pruebas exhaustivas
+    ├── Casos de uso válidos
+    ├── Detección de use-after-free
+    ├── Detección de double-free
+    ├── Data races en compilación
+    └── Dangling references
+
+2.3 — Modelo de OOP
+
+text
+
+Tareas:
+├── Clases
+│   ├── Propiedades (campos)
+│   ├── Métodos
+│   ├── Constructor (crear) y destructor (destruir)
+│   ├── Métodos estáticos
+│   └── Propiedades estáticas
+│
+├── Herencia
+│   ├── Herencia simple
+│   ├── Llamada a super
+│   ├── Override de métodos
+│   ├── Clases abstractas
+│   └── Prevención de herencia (final/sellada)
+│
+├── Polimorfismo
+│   ├── Polimorfismo de subtipo
+│   ├── Despacho dinámico (vtable)
+│   ├── Despacho estático (genéricos)
+│   └── Sobrecarga de operadores
+│
+├── Interfaces y Rasgos
+│   ├── Definición de contratos
+│   ├── Implementación múltiple
+│   ├── Métodos por defecto
+│   └── Rasgos como restricciones genéricas
+│
+└── Enumeraciones avanzadas
+    ├── Con valores asociados
+    ├── Pattern matching con coincide
+    └── Métodos en enumeraciones
+
+FASE 3 — GENERACIÓN DE CÓDIGO CON LLVM
+
+Duración estimada: 3-4 meses
+3.1 — Integración con LLVM
+
+text
+
+Tareas:
+├── Configurar LLVM como dependencia
+│   ├── LLVM 18+ API de C++
+│   ├── Compilación condicional por plataforma
+│   └── Enlace estático/dinámico configurable
+│
+├── Generación de LLVM IR
+│   ├── Módulos LLVM
+│   ├── Funciones
+│   ├── Variables globales y locales
+│   ├── Tipos LLVM (mapping desde tipos Aura)
+│   ├── Estructuras (para clases)
+│   ├── VTables (para polimorfismo)
+│   ├── Operaciones aritméticas
+│   ├── Control de flujo (branches, loops)
+│   ├── Llamadas a funciones
+│   ├── Alocación de memoria
+│   └── Interop con C (FFI)
+│
+├── Optimizaciones
+│   ├── Pasar por pipeline de optimización LLVM
+│   ├── Niveles: -O0, -O1, -O2, -O3, -Os
+│   ├── Inlining
+│   ├── Dead code elimination
+│   ├── Loop optimization
+│   └── Auto-vectorización
+│
+├── Generación de ejecutables
+│   ├── Emisión de código objeto
+│   ├── Linking (usar system linker)
+│   │   ├── Windows: MSVC linker / LLD
+│   │   ├── macOS: ld64 / LLD
+│   │   └── Linux: ld / LLD
+│   ├── Generación de ejecutable final
+│   └── Generación de bibliotecas (.a, .so, .dll, .dylib)
+│
+└── Debug info
+    ├── Generación de DWARF (Linux/macOS)
+    ├── Generación de PDB (Windows)
+    ├── Mapeo línea-a-línea
+    └── Variables en debugger
+
+3.2 — Runtime del lenguaje
+
+text
+
+Tareas:
+├── Gestión de memoria
+│   ├── Allocator propio (arena, pool)
+│   ├── RAII automático
+│   ├── Destrucción determinística
+│   ├── Optional GC para objetos compartidos
+│   └── Conteo de referencias atómico (ARC) como alternativa
+│
+├── Manejo de excepciones
+│   ├── Implementación de intentar/atrapar
+│   ├── Stack unwinding
+│   ├── Cleanup handlers
+│   └── Panic handler
+│
+├── Concurrencia
+│   ├── Abstracción de hilos del SO
+│   ├── Canales de comunicación
+│   ├── Mutex / RWLock
+│   ├── Async/await runtime
+│   └── Thread pool
+│
+└── Entrada/Salida
+    ├── Funciones imprimir/leer
+    ├── Formateo de cadenas
+    ├── Streams
+    └── Buffering
+
+FASE 4 — LIBRERÍA ESTÁNDAR
+
+Duración estimada: 3-4 meses
+4.1 — Módulos core
+
+text
+
+aura/nucleo/
+├── tipos.aura          # Tipos fundamentales
+├── memoria.aura        # Gestión de memoria
+├── opciones.aura       # Tipo Optional
+├── resultado.aura      # Tipo Result
+├── iteradores.aura     # Traits de iteración
+└── conversion.aura     # Conversión entre tipos
+
+aura/colecciones/
+├── vector.aura         # Vector dinámico
+├── lista.aura          # Lista enlazada
+├── mapa.aura           # HashMap
+├── mapa_ordenado.aura  # BTreeMap
+├── conjunto.aura       # HashSet
+├── cola.aura           # Queue
+├── pila.aura           # Stack
+└── arbol.aura          # Árbol binario
+
+aura/cadenas/
+├── cadena.aura         # String type
+├── formato.aura        # Formateo
+├── regex.aura          # Expresiones regulares
+└── unicode.aura        # Utilidades Unicode
+
+aura/io/
+├── archivo.aura        # File I/O
+├── consola.aura        # Console I/O
+├── ruta.aura           # Path handling
+├── directorio.aura     # Directory operations
+└── flujo.aura          # Streams
+
+aura/matematicas/
+├── basico.aura         # Funciones básicas
+├── aleatorio.aura      # Random
+├── algebra.aura        # Álgebra lineal
+├── estadistica.aura    # Estadísticas
+└── complejo.aura       # Números complejos
+
+aura/red/
+├── tcp.aura            # TCP sockets
+├── udp.aura            # UDP sockets
+├── http.aura           # HTTP client/server
+├── websocket.aura      # WebSocket
+└── url.aura            # URL parsing
+
+aura/hilos/
+├── hilo.aura           # Thread management
+├── canal.aura          # Channels
+├── mutex.aura          # Mutex
+├── atomico.aura        # Atomic operations
+├── grupo.aura          # Thread pool
+└── asincrono.aura      # Async runtime
+
+aura/tiempo/
+├── fecha.aura          # Date
+├── hora.aura           # Time
+├── duracion.aura       # Duration
+├── cronometro.aura     # Timer
+└── zona.aura           # Timezone
+
+aura/sistema/
+├── proceso.aura        # Process management
+├── entorno.aura        # Environment variables
+├── plataforma.aura     # Platform detection
+└── señales.aura        # Signal handling
+
+aura/serializar/
+├── json.aura           # JSON
+├── xml.aura            # XML
+├── csv.aura            # CSV
+├── yaml.aura           # YAML
+└── binario.aura        # Binary serialization
+
+FASE 5 — FRAMEWORK DE INTERFAZ DE USUARIO (UI)
+
+Duración estimada: 3-4 meses
+5.1 — Framework UI multiplataforma
+
+text
+
+aura/interfaz/
+├── Arquitectura
+│   ├── Renderizado nativo por plataforma
+│   │   ├── Windows: Win32/WinUI3
+│   │   ├── macOS: Cocoa/AppKit (via FFI)
+│   │   └── Linux: GTK4 o Qt (via FFI)
+│   ├── Alternativa: Renderizado propio con Skia/Cairo
+│   └── API unificada en español
+│
+├── Componentes básicos
+│   ├── Ventana
+│   ├── Boton
+│   ├── Etiqueta
+│   ├── CampoTexto
+│   ├── AreaTexto
+│   ├── CasillaVerificacion
+│   ├── BotonRadio
+│   ├── ListaDesplegable
+│   ├── Deslizador
+│   ├── BarraProgreso
+│   ├── Menu
+│   ├── BarraHerramientas
+│   ├── Tabla
+│   ├── Arbol (TreeView)
+│   ├── Pestañas
+│   ├── Dialogo
+│   ├── SelectorArchivo
+│   └── SelectorColor
+│
+├── Layouts
+│   ├── LayoutVertical
+│   ├── LayoutHorizontal
+│   ├── LayoutCuadricula (Grid)
+│   ├── LayoutApilado (Stack)
+│   └── LayoutFlexible
+│
+├── Sistema de eventos
+│   ├── alHacerClic
+│   ├── alCambiar
+│   ├── alEscribir
+│   ├── alArrastrar
+│   ├── alSoltar
+│   ├── alEnfocar
+│   ├── alPerderEnfoque
+│   └── Callbacks y closures
+│
+├── Estilos y temas
+│   ├── Sistema de estilos CSS-like
+│   ├── Temas predefinidos
+│   ├── Modo oscuro/claro
+│   └── Personalización completa
+│
+└── Ejemplo de uso
+    // Así de simple debería ser:
+    importar ui desde "aura/interfaz"
+    
+    funcion principal() {
+        variable app = nueva ui.Aplicacion("Mi App")
+        variable ventana = nueva ui.Ventana("Hola AURA", 800, 600)
+        
+        variable boton = nuevo ui.Boton("¡Haz clic!")
+        boton.alHacerClic(funcion() {
+            ui.Dialogo.mostrar("¡Hola desde AURA!")
+        })
+        
+        ventana.agregar(boton)
+        app.ejecutar()
+    }
+
+FASE 6 — ECOSISTEMA DE INTELIGENCIA ARTIFICIAL
+
+Duración estimada: 4-6 meses
+6.1 — Librería de datos (equivalente a Pandas)
+
+text
+
+aura/datos/
+├── MarcosDeDatos (DataFrame)
+│   ├── Creación desde CSV, JSON, bases de datos
+│   ├── Selección de columnas y filas
+│   ├── Filtrado
+│   ├── Agrupación
+│   ├── Ordenamiento
+│   ├── Fusión / Unión (merge/join)
+│   ├── Pivoteo
+│   ├── Estadísticas descriptivas
+│   ├── Manejo de valores nulos
+│   └── Exportación a múltiples formatos
+│
+├── Series
+│   ├── Operaciones vectorizadas
+│   ├── Aplicar funciones
+│   └── Estadísticas
+│
+└── Implementación
+    ├── Backend en C++ con columnas vectorizadas
+    ├── Operaciones SIMD donde sea posible
+    └── Manejo eficiente de memoria
+
+6.2 — Librería de IA/ML (equivalente a PyTorch/TensorFlow)
+
+text
+
+aura/ia/
+├── Tensores
+│   ├── Creación y manipulación
+│   ├── Operaciones matemáticas
+│   ├── Broadcasting
+│   ├── GPU support (CUDA/Metal/Vulkan)
+│   ├── Autograd (diferenciación automática)
+│   └── Serialización de modelos
+│
+├── Redes Neuronales
+│   ├── Capas
+│   │   ├── CapaDensa (Linear/Dense)
+│   │   ├── CapaConvolucional (Conv2D)
+│   │   ├── CapaRecurrente (LSTM, GRU)
+│   │   ├── CapaAtencion (Transformer)
+│   │   ├── CapaNormalizacion
+│   │   ├── CapaDropout
+│   │   ├── CapaEmbedding
+│   │   └── CapaPooling
+│   │
+│   ├── Funciones de activación
+│   │   ├── relu, sigmoide, tanh, softmax, gelu
+│   │
+│   ├── Funciones de pérdida
+│   │   ├── EntropiaCruzada
+│   │   ├── ErrorCuadratico
+│   │   └── Personalizada
+│   │
+│   ├── Optimizadores
+│   │   ├── SGD, Adam, AdamW, RMSprop
+│   │
+│   └── Entrenamiento
+│       ├── Bucle de entrenamiento
+│       ├── Validación
+│       ├── Callbacks
+│       └── Checkpointing
+│
+├── Implementación
+│   ├── Bindings a ONNX Runtime para inferencia
+│   ├── Bindings a LibTorch (PyTorch C++) como backend
+│   ├── API propia en español
+│   └── Soporte GPU vía backends nativos
+│
+└── Ejemplo
+    importar ia desde "aura/ia"
+    
+    clase MiModelo hereda ia.Modelo {
+        privado ia.CapaDensa capa1
+        privado ia.CapaDensa capa2
+        
+        publico funcion crear() {
+            este.capa1 = nueva ia.CapaDensa(784, 128)
+            este.capa2 = nueva ia.CapaDensa(128, 10)
+        }
+        
+        publico funcion adelante(ia.Tensor x) -> ia.Tensor {
+            x = ia.relu(este.capa1.adelante(x))
+            retornar este.capa2.adelante(x)
+        }
+    }
+
+6.3 — Procesamiento de Lenguaje Natural (PLN/NLP)
+
+text
+
+aura/pln/
+├── Tokenización
+│   ├── TokenizadorPalabras
+│   ├── TokenizadorBPE
+│   ├── TokenizadorSentencePiece
+│   └── Soporte específico para español
+│
+├── Preprocesamiento
+│   ├── Normalización de texto
+│   ├── Eliminación de stopwords (español)
+│   ├── Stemming (español)
+│   ├── Lematización (español)
+│   └── Extracción de entidades
+│
+├── Modelos preentrenados
+│   ├── Carga de modelos ONNX
+│   ├── Carga de modelos HuggingFace (via ONNX)
+│   ├── BERT en español
+│   ├── GPT-2 en español
+│   └── Modelos de embeddings
+│
+├── Tareas
+│   ├── ClasificacionTexto
+│   ├── AnalisisSentimiento
+│   ├── ReconocimientoEntidades
+│   ├── Resumen
+│   ├── Traduccion
+│   └── PreguntaRespuesta
+│
+└── Ejemplo
+    importar pln desde "aura/pln"
+    
+    variable analizador = nuevo pln.AnalisisSentimiento()
+    variable resultado = analizador.analizar("¡AURA es increíble!")
+    imprimir("Sentimiento: {resultado.etiqueta}")  // Positivo
+    imprimir("Confianza: {resultado.puntuacion}")   // 0.95
+
+6.4 — IA Generativa
+
+text
+
+aura/ia_generativa/
+├── Modelos de lenguaje
+│   ├── Carga de modelos LLM (GGUF, ONNX)
+│   ├── Inferencia local
+│   ├── Generación de texto
+│   ├── Chat / Conversación
+│   └── Configuración (temperatura, top_p, etc.)
+│
+├── Modelos de imagen
+│   ├── Generación de imágenes
+│   ├── Stable Diffusion (via bindings)
+│   └── Variación de imágenes
+│
+├── APIs externas
+│   ├── Conector OpenAI
+│   ├── Conector Anthropic
+│   ├── Conector Google AI
+│   └── Conector Ollama (local)
+│
+├── RAG (Retrieval Augmented Generation)
+│   ├── Base de datos vectorial
+│   ├── Embeddings
+│   ├── Búsqueda semántica
+│   └── Generación aumentada
+│
+└── Ejemplo
+    importar gen desde "aura/ia_generativa"
+    
+    variable modelo = nuevo gen.ModeloLenguaje("llama3-8b")
+    variable respuesta = modelo.generar(
+        "Explica la fotosíntesis en términos simples",
+        temperatura: 0.7,
+        max_tokens: 200
+    )
+    imprimir(respuesta.texto)
+
+FASE 7 — HERRAMIENTAS DEL ECOSISTEMA
+
+Duración estimada: 2-3 meses
+7.1 — Gestor de paquetes ("paquete")
+
+text
+
+herramientas/gestor_paquetes/
+├── Archivo de proyecto: proyecto.aura.toml
+│   [proyecto]
+│   nombre = "mi_app"
+│   version = "1.0.0"
+│   autor = "Tu Nombre"
+│   descripcion = "Mi aplicación en AURA"
+│   
+│   [dependencias]
+│   aura_interfaz = "0.1.0"
+│   aura_ia = "0.2.0"
+│   
+│   [compilacion]
+│   optimizacion = 2
+│   objetivo = "nativo"
+│
+├── Comandos
+│   ├── aura crear <proyecto>     # Crear proyecto nuevo
+│   ├── aura compilar             # Compilar
+│   ├── aura ejecutar             # Compilar y ejecutar
+│   ├── aura probar               # Ejecutar pruebas
+│   ├── aura paquete agregar <x>  # Agregar dependencia
+│   ├── aura paquete actualizar   # Actualizar dependencias
+│   ├── aura paquete publicar     # Publicar paquete
+│   ├── aura formatear            # Formatear código
+│   └── aura documentar           # Generar documentación
+│
+├── Registro de paquetes
+│   ├── Repositorio central (paquetes.aura.dev)
+│   ├── Repositorios privados
+│   └── Desde Git directamente
+│
+└── Resolución de dependencias
+    ├── Resolución semántica (semver)
+    ├── Lock file (aura.lock)
+    └── Caché local
+
+7.2 — LSP (Language Server Protocol)
+
+text
+
+herramientas/lsp/
+├── Autocompletado inteligente
+├── Diagnósticos en tiempo real
+├── Ir a definición
+├── Encontrar referencias
+├── Renombrar símbolo
+├── Formateo de código
+├── Hover con documentación
+├── Signature help
+├── Code actions / Quick fixes
+└── Plugins para:
+    ├── VS Code (extensión)
+    ├── Neovim
+    ├── Sublime Text
+    └── IntelliJ
+
+7.3 — Formateador de código
+
+text
+
+herramientas/formateador/
+├── Estilo consistente
+├── Configurable via .aura-formato.toml
+├── Integración con LSP
+└── Comando: aura formatear
+
+7.4 — Framework de pruebas integrado
+
+text
+
+// Integrado en el lenguaje:
+importar pruebas desde "aura/pruebas"
+
+#[prueba]
+funcion probar_suma() {
+    variable resultado = sumar(2, 3)
+    pruebas.afirmar_igual(resultado, 5)
+}
+
+#[prueba]
+funcion probar_division_por_cero() {
+    pruebas.afirmar_error(funcion() {
+        dividir(10, 0)
+    })
+}
+
+#[prueba]
+#[rendimiento]
+funcion probar_rendimiento_ordenamiento() {
+    variable lista = generar_lista_aleatoria(10000)
+    ordenar(lista)
+    // Automáticamente mide tiempo de ejecución
+}
+
+FASE 8 — INTEROPERABILIDAD Y FFI
+
+Duración estimada: 2 meses
+8.1 — Foreign Function Interface (FFI)
+
+text
+
+Tareas:
+├── Llamar funciones de C desde AURA
+│   externo "C" {
+│       funcion printf(formato: apuntador<caracter>, ...) -> entero
+│       funcion malloc(tamaño: entero) -> apuntador<vacio>
+│       funcion free(ptr: apuntador<vacio>)
+│   }
+│
+├── Llamar funciones de C++ desde AURA
+│   ├── Mangling de nombres
+│   ├── Clases de C++ como objetos AURA
+│   └── Templates mapping
+│
+├── Exportar funciones de AURA para C
+│   #[exportar_c]
+│   funcion mi_funcion(x: entero) -> entero {
+│       retornar x * 2
+│   }
+│
+├── Bindings automáticos
+│   ├── Generador de bindings desde headers C
+│   ├── Generador de bindings desde headers C++
+│   └── Herramienta: aura generar-bindings <header.h>
+│
+└── Integración con librerías existentes
+    ├── CUDA (para GPU computing)
+    ├── Metal (macOS GPU)
+    ├── Vulkan (cross-platform GPU)
+    ├── OpenGL
+    ├── SQLite
+    └── Cualquier librería C/C++
+
+FASE 9 — CALIDAD, TESTING Y DOCUMENTACIÓN
+
+Duración estimada: Continuo
+9.1 — Testing del compilador
+
+text
+
+pruebas/
+├── unitarias/
+│   ├── lexer/           # ~500 tests
+│   ├── parser/          # ~800 tests
+│   ├── semantico/       # ~600 tests
+│   ├── tipos/           # ~400 tests
+│   ├── ownership/       # ~500 tests
+│   └── generador/       # ~400 tests
+│
+├── integracion/
+│   ├── programas_validos/     # ~200 programas completos
+│   ├── programas_invalidos/   # ~200 con errores esperados
+│   ├── rendimiento/           # Benchmarks
+│   └── multiplataforma/      # Tests específicos por OS
+│
+├── regresion/
+│   └── bugs_reportados/       # Cada bug = un test
+│
+└── fuzzing/
+    ├── Fuzzing del lexer
+    ├── Fuzzing del parser
+    └── Fuzzing de programas completos
+
+9.2 — Documentación
+
+text
+
+docs/
+├── especificacion/
+│   ├── gramatica_formal.md
+│   ├── sistema_tipos.md
+│   ├── ownership_borrowing.md
+│   ├── modelo_memoria.md
+│   └── oop.md
+│
+├── tutorial/
+│   ├── 01_hola_mundo.md
+│   ├── 02_variables_tipos.md
+│   ├── 03_control_flujo.md
+│   ├── 04_funciones.md
+│   ├── 05_clases.md
+│   ├── 06_memoria_segura.md
+│   ├── 07_colecciones.md
+│   ├── 08_manejo_errores.md
+│   ├── 09_concurrencia.md
+│   ├── 10_interfaz_ui.md
+│   ├── 11_inteligencia_artificial.md
+│   └── 12_ia_generativa.md
+│
+├── referencia/
+│   ├── palabras_reservadas.md
+│   ├── operadores.md
+│   ├── tipos_primitivos.md
+│   ├── libreria_estandar/
+│   └── api_completa/
+│
+└── contribuir/
+    ├── guia_contribucion.md
+    ├── estilo_codigo.md
+    └── arquitectura.md
+
+CRONOGRAMA GENERAL
+
+text
+
+╔═══════════════════════════════════════════════════════════════╗
+║                    CRONOGRAMA AURA                           ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  Fase 0: Arquitectura          ██░░░░░░░░░░  Mes 1-2         ║
+║  Fase 1: Compilador base       ████████░░░░  Mes 2-5         ║
+║  Fase 2: Semántico+Ownership   ████████░░░░  Mes 5-9         ║
+║  Fase 3: LLVM Backend          ████████░░░░  Mes 9-13        ║
+║  Fase 4: Librería estándar     ████████░░░░  Mes 13-17       ║
+║  Fase 5: Framework UI          ████████░░░░  Mes 17-21       ║
+║  Fase 6: Ecosistema IA         ██████████░░  Mes 21-27       ║
+║  Fase 7: Herramientas          ██████░░░░░░  Mes 27-30       ║
+║  Fase 8: FFI                   ████░░░░░░░░  Mes 30-32       ║
+║  Fase 9: Calidad+Docs          ████████████  Continuo        ║
+║                                                               ║
+║  TOTAL ESTIMADO: 28-36 meses (equipo pequeño)                ║
+║  Con equipo de 5-10 devs: 18-24 meses                        ║
+║                                                               ║
+║  Hitos:                                                       ║
+║  v0.1 - "Hola Mundo" compila          ~ Mes 6                ║
+║  v0.2 - OOP + Ownership funcional     ~ Mes 12               ║
+║  v0.3 - Librería estándar básica      ~ Mes 18               ║
+║  v0.5 - UI + IA básica                ~ Mes 24               ║
+║  v1.0 - Release pública               ~ Mes 30-36            ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+RESUMEN EJECUTIVO
+
+text
+
+┌─────────────────────────────────────────────────────┐
+│                    A U R A                           │
+│      Arquitectura Unificada de Recursos Avanzados   │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  🔧 Control: Hardware como C/C++                    │
+│  🛡️ Seguridad: Memoria como Rust                    │
+│  🐍 Simplicidad: Sintaxis como Python               │
+│  🏗️ OOP: Clases, herencia, polimorfismo             │
+│  ⚡ Rendimiento: Compilado vía LLVM                  │
+│  🖥️ UI: Framework integrado                         │
+│  🤖 IA: ML, NLP, IA Generativa                      │
+│  🇪🇸 Idioma: 100% en español                        │
+│  🌍 Plataformas: Windows, macOS, Linux              │
+│  🔨 Construido en: C++20 + LLVM 

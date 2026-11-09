@@ -1,0 +1,48 @@
+# compilador/CMakeLists.txt
+
+# ---------------------------------------------------------------------------
+# Cabecera de versión generada: única fuente de verdad (CMakeLists.txt raíz).
+# ---------------------------------------------------------------------------
+
+set(NOOKI_DIR_GENERADO "${CMAKE_BINARY_DIR}/generado")
+file(MAKE_DIRECTORY "${NOOKI_DIR_GENERADO}/nooki")
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/incluir/nooki/version.hpp.in"
+    "${NOOKI_DIR_GENERADO}/nooki/version.hpp"
+    @ONLY)
+
+# ---------------------------------------------------------------------------
+# Núcleo del compilador: biblioteca estática que concentra la lógica.
+# El ejecutable solo traduce la línea de comandos y llama al núcleo.
+# ---------------------------------------------------------------------------
+
+add_library(nooki_nucleo STATIC
+    fuente/cli/orden.cpp
+    fuente/cli/ayuda.cpp
+)
+
+target_include_directories(nooki_nucleo
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}/incluir"
+        "${NOOKI_DIR_GENERADO}")
+
+nooki_aplicar_opciones(nooki_nucleo)
+
+# ---------------------------------------------------------------------------
+# Ejecutable `nooki`
+# ---------------------------------------------------------------------------
+
+add_executable(nooki fuente/principal.cpp)
+target_link_libraries(nooki PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(nooki)
+
+set_target_properties(nooki PROPERTIES OUTPUT_NAME "nooki")
+
+# ---------------------------------------------------------------------------
+# Pruebas
+# ---------------------------------------------------------------------------
+
+if(NOOKI_PRUEBAS)
+    add_subdirectory(pruebas)
+endif()

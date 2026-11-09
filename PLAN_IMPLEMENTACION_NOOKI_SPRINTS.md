@@ -1,0 +1,496 @@
+# NOOKI — Plan de implementación por sprints
+
+> **Estado:** documento de planificación. **No contiene código.**
+> **Base adoptada:** `Aurora2.txt` como especificación canónica, con las correcciones del Anexo A.
+> **Objetivo:** lenguaje compilado, 100 % en español, multiplataforma (Windows / macOS / Linux), escrito en C++20 con backend LLVM.
+> **Nombre:** **Nooki** · extensión de fuentes: **`.oki`** · CLI: **`nooki`**
+> **Unidad de planificación:** sprint de 2 semanas (alcance). **Escenario real: 1 persona → ~3,5–4 semanas por sprint.**
+
+---
+
+## 0. Veredicto: ¿se puede seguir con alguno de los dos archivos?
+
+**Sí, se puede seguir — pero solo con uno: `Aurora2.txt`.**
+
+| Documento | Acople con tu visión | Veredicto |
+|---|---|---|
+| `Aurora2.txt` (2 895 líneas) | **~85 %** | **Base canónica.** Cubre OOP completa, ownership estilo Rust, sintaxis estilo Python, UI, IA (pandas/PyTorch), NLP, IA generativa, multiplataforma, C++ + LLVM |
+| `Aurora1.txt` (1 213 líneas) | ~55 % | **No sirve como base**: es un subconjunto del anterior con otra sintaxis. Se archiva como histórico y se rescatan **dos ideas** (ver abajo) |
+
+### Lo que hay que rescatar de `Aurora1.txt`
+
+1. **Nombres de tipos primitivos en minúscula** (`entero`, `cadena`, `booleano`) en lugar de `Entero`/`Texto`/`Booleano`. Es más coherente con el objetivo "fácil como Python": menos mayúsculas arbitrarias y menos ruido visual. *(Decisión pendiente en ADR-02.)*
+2. **`prestamo` como palabra clave** en lugar de `&`/`&mut`. Más legible para principiantes hispanohablantes, aunque menos familiar para quien viene de C/Rust. *(Decisión pendiente en ADR-02.)*
+
+### Lo que NO se puede seguir tal cual (ni de `Nooki1` ni de `Nooki2`)
+
+Ninguno de los dos es implementable hoy, por cinco razones — todas ya corregidas en este plan:
+
+| # | Problema en los planes originales | Corrección en este plan |
+|---|---|---|
+| 1 | **Dos especificaciones contradictorias** (extensión `.nooki`/`.oki`, constructor `crear`/`constructor`, `prestamo`/`&`, 28–36 vs 48 meses) | Sprint 1: congelar base única + 12 ADR |
+| 2 | **FFI después de la stdlib** (mes 18–22 vs 14–18): la stdlib no se puede escribir sin libc | S37: FFI **antes** de toda la stdlib |
+| 3 | **Compilación incremental en la fase final** (mes 42–48): condiciona el diseño del AST y del LSP | S57: arquitectura *query-based* desde S30 |
+| 4 | **IA y UI como núcleo** (10 meses para "PyTorch + pandas + NLP + visión") | Fases 10–11 como **paquetes sobre FFI** (ONNX, BLAS, Skia), no reimplementaciones |
+| 5 | **Sin decisiones semánticas** (¿clase por valor o referencia? ¿overflow? ¿excepciones o `Resultado`?) | Sprint 1: 12 ADR que hay que cerrar antes de escribir la primera línea |
+
+---
+
+## 1. Trazabilidad: tu visión → el plan
+
+| Tu requisito | ¿Está en `Nooki2`? | Viabilidad | Dónde se implementa |
+|---|---|---|---|
+| Manejo de hardware como C/C++ | Parcial (falta `asm!` e `inseguro` operativo, falta `core`/`no_std`) | ✅ Viable | Fase 6 (S40, S43) |
+| Seguridad de memoria como Rust | Parcial (falta `Send`/`Sync`, modelo de memoria) | ✅ Viable, es lo más caro | Fase 7 (S45–S52) |
+| Facilidad como Python | Sí en sintaxis; el ownership lo complica | ⚠️ Viable con mitigaciones | Fase 4 + "modo didáctico" (S92) |
+| OOP: clases, herencia, polimorfismo | Sí, completo | ✅ Viable | S16, S26, S33 |
+| Lenguaje compilado | Sí (LLVM) | ✅ Viable | Fase 5 |
+| Librerías UI fáciles | Sí en intención; **3 toolkits nativos es inviable** | ⚠️ Recortado a 1 stack | Fase 10 (Skia + capa de ventanas) |
+| Librerías IA tipo pandas/PyTorch | Enumerado, pero **"desde cero" es inviable** | 🔴 Reframado a FFI | Fase 11 (ONNX, BLAS, Arrow) |
+| NLP e IA generativa | Enumerado | ⚠️ Vía ONNX + APIs | S86, S87 |
+| **Todo en español** | Sí, pero sin política Unicode ni i18n del tooling | ✅ Con ADR-08 | Fase 1–2 |
+| Escrito en C++ | Sí (C++20) | ✅ Viable | Todo el proyecto |
+| Windows + macOS + Linux | Sí, pero sin estrategia de enlace ni de firma | ✅ Viable | S03, S34, S94 |
+
+**Nota honesta sobre "IA desde cero":** PyTorch equivale a cientos de ingenieros-año. Lo que sí es viable —y es lo que propone este plan— es una **API en español idiomática** sobre ONNX Runtime, BLAS/LAPACK y Arrow. El usuario final no nota la diferencia; el esfuerzo baja de 10 años a 10 sprints.
+
+---
+
+## 2. Las 12 decisiones a cerrar antes del Sprint 1
+
+Sin esto, cualquier sprint posterior rehace trabajo. Cada una se documenta como ADR de una página (decisión + alternativas + consecuencias).
+
+| # | Pregunta | Recomendación por defecto |
+|---|---|---|
+| ADR-01 | ¿Una `clase` es valor o referencia? | **Híbrido**: `clase` = referencia (heap, identidad, herencia); `estructura` = valor (stack, copia). Como C#/Swift |
+| ADR-02 | ¿`variable` mutable por defecto? ¿Tipos en minúscula? | **Mutable por defecto** (estilo Python) + `constante` inmutable; primitivos en **minúscula** (`entero`, `cadena`); préstamos con `&`/`&mut` |
+| ADR-03 | ¿Overflow de enteros? | **Comprobado por defecto** (panic), con `envolver()` explícito. Coherente con el pilar "seguridad" |
+| ADR-04 | ¿Errores: `Resultado` o excepciones? | **`Resultado` + `?` como primario.** `intentar/atrapar` solo en fronteras (FFI/panic) |
+| ADR-05 | ¿Async/await en v1.0? | **No.** Hilos + canales primero (S42); async diferido a v1.1 |
+| ADR-06 | ¿Macros y atributos? | **Una sola sintaxis de atributos (`@`)**; doc comments `///`; macros declarativas en v0.7; sin macros procedurales |
+| ADR-07 | ¿Cómo ejecutar programas antes de que exista el borrow checker? | **RC/GC temporal** (S44) con fecha de caducidad: se elimina en S52. Deuda técnica *declarada* |
+| ADR-08 | ¿Acentos y `ñ` en identificadores? | **Keywords 100 % ASCII sin tildes** (`funcion`, `tamano`); tildes/`ñ` permitidas en identificadores de usuario, normalizados **NFC**; rutas de archivo ASCII |
+| ADR-09 | ¿Herencia virtual por defecto? | **Explícita**: `@virtual` para permitir override, `@sobrescribir` obligatorio. Mejor ABI y rendimiento |
+| ADR-10 | ¿ABI y *name mangling*? | `@repr(C)` para FFI; mangling propio documentado y estable; sin `extern` implícito |
+| ADR-11 | ¿Ensamblador en línea? | **Sí**, `asm!` dentro de `inseguro { }`, desde S40. Sin esto no hay "control de hardware como C" |
+| ADR-12 | ¿Licencia, gobernanza y versionado? | **MIT OR Apache-2.0** + excepción de runtime; semver; "ediciones" tipo Rust; RFC para cambios de lenguaje |
+
+**Extra administrativo (no bloquea sprint):** verificar disponibilidad de la marca "Nooki" y del dominio antes de invertir en identidad visual — ya existe [Nooki (SNN)](https://core.ac.uk/download/613982078.pdf), [Latino](https://www.languajelatino.org/) y [Águila](https://aguila.compilandocode.com/) en el espacio de lenguajes en español.
+
+---
+
+## 3. Reglas de ejecución (guardarraíles)
+
+1. **Todo sprint termina con `main` verde en Windows, Linux y macOS.** Si no compila en los tres, no está terminado.
+2. **Ninguna funcionalidad sin caso de conformidad.** El test es el contrato; la documentación es derivada.
+3. **Todo error nuevo es de primera clase:** código (`NOKxxxx`), span, y sugerencia de arreglo en español.
+4. **Un sprint = una funcionalidad grande.** WIP = 1 por desarrollador.
+5. **Demo de 5 minutos al final de cada sprint**, grabada. Sin demo, no hay sprint.
+6. **Deuda técnica con fecha de caducidad.** Toda excepción se anota con el sprint en que se paga (ver ADR-07).
+7. **`inseguro` prohibido en la stdlib** salvo lista blanca revisada en code review.
+8. **Fuzzing continuo desde S10**, en nightly, con corpus acumulado.
+9. **Benchmarks desde S05.** Toda regresión > 5 % bloquea el merge.
+10. **Idioma:** documentación, mensajes y **nombres de identificadores en C++** en español (coherente con el proyecto). Commits en español.
+11. **Cobertura mínima del compilador: 85 %.** No baja nunca.
+12. **Cero funcionalidades nuevas durante el cierre de cada fase** (feature freeze).
+
+### Definition of Done (plantilla)
+
+- [ ] Código en `main`, revisado por al menos una persona (o auto-revisión documentada si estás solo).
+- [ ] Tests de conformidad añadidos (válidos e inválidos).
+- [ ] CI verde en 3 sistemas operativos.
+- [ ] Diagnóstico de errores con span, código y sugerencia.
+- [ ] Documentación actualizada (`docs/`).
+- [ ] Benchmark sin regresión.
+- [ ] Demo grabada de 5 minutos.
+
+---
+
+## 4. El plan: 96 sprints en 12 fases
+
+Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint de 2 semanas.
+
+---
+
+### Fase 1 — Cimientos y especificación (S01–S06)
+
+**Entrada:** dos planes en texto plano. **Salida:** repositorio, especificación v0.1, "Hola, Nooki" nativo en 3 sistemas.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S01** | Cerrar las 12 ADR y congelar la base | `docs/adr/ADR-001..012.md` aprobadas; `Aurora1.txt` movido a `historico/`; tabla de decisiones cerrada |
+| **S02** | Especificación v0.1 + gramática EBNF normativa | `spec/gramatica.ebnf` validada por un checker; `spec/especificacion-v0.1.md` con léxico, sintaxis, tipos y semántica; lista de **no-objetivos** |
+| **S03** | Andamiaje del repositorio | Git + CMake presets + vcpkg + estructura de carpetas + CI en 3 OS verde + `nooki --version` + clang-format/tidy + ASan/UBSan |
+| **S04** | Sistema de diagnósticos | `SourceManager`, `Span`, códigos `NOKxxxx`, catálogo i18n es/en, salida con color y en JSON; 5 errores demo con *golden tests* |
+| **S05** | Harness de conformidad y benchmarks | Runner `.oki` → salida esperada en 3 OS; 50 casos; `nooki bench`; línea base de tiempo de compilación |
+| **S06** | **Rebanada vertical: "Hola, Nooki" nativo** | Lexer mínimo + parser mínimo + emisión LLVM + enlace: binario ELF/PE/Mach-O que imprime "¡Hola, Nooki!" en los tres sistemas |
+
+> **S06 es el sprint más importante del proyecto.** Demuestra que la cadena completa funciona antes de invertir años en semántica. Es también la demo que te permite conseguir colaboradores.
+
+---
+
+### Fase 2 — Análisis léxico (S07–S11)
+
+**Entrada:** gramática v0.1. **Salida:** lexer completo, probado y fuzzeado.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S07** | Palabras clave y operadores | Tabla definitiva (sin tildes, ADR-08); 100 % de operadores de la spec; test por token |
+| **S08** | Literales numéricos y de texto | Dec/hex/bin/octal, separadores `_`, sufijos; escapes, raw strings, multilínea; 100 tests |
+| **S09** | UTF-8 e identificadores | Decodificador propio; normalización NFC; tildes y `ñ` en identificadores; rechazo con sugerencia de keyword acentuada (`función` → `funcion`); tests de normalización |
+| **S10** | Ubicaciones, errores y recuperación | Línea/columna/offset; errores `NOK1xxx` con span y sugerencia; 0 crashes con fuzz de 1 h |
+| **S11** | Rendimiento y cierre | String interning + arena; lexer > 50 MB/s; fuzz 24 h en nightly; cobertura > 90 % |
+
+---
+
+### Fase 3 — Sintaxis y AST (S12–S19)
+
+**Entrada:** tokens. **Salida:** parser completo del lenguaje; hito **v0.2**.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S12** | AST base, visitor y arena | Nodos base, patrón visitante, arena por compilación, AST printer; tests de construcción |
+| **S13** | Parser Pratt de expresiones | Precedencia completa (`**`, `..`, `..=`, `como`, `?`, `?.`, `??`); 200 tests de precedencia y asociatividad |
+| **S14** | Parser de sentencias | `si/sinosi/sino`, `mientras`, `para`, `hacer`, `bucle`, `retornar`, `romper`, `continuar`; 150 tests |
+| **S15** | Parser de tipos | Primitivos, genéricos `<>`, `&`/`&mut`, `*`, tuplas, arreglos, `T?`, tipo función; 120 tests |
+| **S16** | Parser de OOP | `clase/hereda/implementa/interfaz/rasgo/estructura/enumeracion`, visibilidad, `constructor/destructor/propiedad`; 150 tests |
+| **S17** | Parser de patrones y `coincide` | Literales, tupla, struct, enum, *guards*, `\|`, `_`, bindings; 100 tests |
+| **S18** | Recuperación de errores multi-diagnóstico | Sync sets; al menos 3 errores por archivo; sugerencias "¿quisiste decir…?"; 80 casos inválidos |
+| **S19** | **Cierre v0.2: parser completo** | El 100 % de los ejemplos de los planes parsea; golden AST; fuzz 24 h; comando `nooki ast` usable |
+
+---
+
+### Fase 4 — Semántica y sistema de tipos (S20–S28)
+
+**Entrada:** AST. **Salida:** checo semántico completo con tipos, genéricos, traits y OOP; hito **v0.3**.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S20** | Tabla de símbolos y ámbitos | Scopes anidados, *shadowing*, resolución de nombres, preludio; 100 tests |
+| **S21** | Sistema de tipos interno | `TypeId` internado, primitivos, compuestos, unificación, registro de tipos; 100 tests |
+| **S22** | Chequeo de expresiones y sentencias | Tipo de toda expresión; conversiones explícitas; errores con span; 150 tests |
+| **S23** | Funciones: sobrecarga, defaults y nombrados | Resolución de sobrecarga, parámetros por defecto y nombrados, retorno implícito; 120 tests |
+| **S24** | Genéricos y monomorfización | Inferencia de argumentos, restricciones, `donde`; monomorfización lista para el IR; 100 tests |
+| **S25** | Rasgos e interfaces | Coherencia, regla de huérfanos, métodos por defecto, *dispatch* estático y dinámico; 100 tests |
+| **S26** | Clases: herencia, override y acceso | Jerarquías, `super`, abstractas y finales, visibilidad; errores de override; 120 tests |
+| **S27** | *Pattern matching*: exhaustividad | Chequeo de exhaustividad, tipos de patrones, bindings por referencia; 100 tests |
+| **S28** | **Módulos, imports y cierre v0.3** | Resolución de rutas, ciclos, visibilidad; 300 casos válidos + 300 inválidos; fuzz semántico |
+
+---
+
+### Fase 5 — IR y generación de código (S29–S36)
+
+**Entrada:** AST anotado. **Salida:** programas reales compilados a nativo en 3 sistemas; hito **v0.4**.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S29** | HIR y *desugaring* | `para` → iterador, `?` → `coincide`, interpolación → concatenación, operadores → funciones; tests de HIR |
+| **S30** | MIR: CFG y SSA | Bloques básicos, grafo de flujo, forma SSA; **arquitectura *query-based* (tipo salsa) desde aquí**; 50 tests |
+| **S31** | Codegen LLVM: funciones y control | Aritmética, condicionales, bucles, llamadas, `imprimir` real; fib y ordenamiento funcionando |
+| **S32** | Codegen de tipos compuestos | Structs, tuplas, arreglos, punteros, `texto`, vector mínimo; layout y `@repr(C)`; 80 tests |
+| **S33** | Codegen de OOP | VTables, herencia, *dispatch* dinámico, constructores y destructores; 60 tests |
+| **S34** | Enlazado y multiplataforma | MSVC / LLD / ld64; compilación cruzada a 6 objetivos; `-O0..-O3`, LTO; *smoke test* por objetivo |
+| **S35** | Información de depuración | DWARF + PDB, mapeo de líneas y variables; verificado con gdb, lldb y VS Code; 20 casos |
+| **S36** | **Cierre v0.4: programas reales** | 20 programas de ejemplo; benchmarks fib/nbody/matmul vs C y Rust; manifiesto `nooki.toml` mínimo con dependencias locales y Git |
+
+---
+
+### Fase 6 — Runtime, FFI y núcleo (S37–S44)
+
+**Entrada:** codegen estable. **Salida:** el lenguaje controla el hardware y el sistema operativo; hito **v0.5**.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S37** | **FFI con C** | `externo "C"`, `@repr(C)`, funciones variádicas, enlace con libc; llamar a `printf` y `malloc`; 30 tests. *Va antes que la stdlib, a propósito* |
+| **S38** | Runtime: asignador y pánico | Asignador global + arena/pool; pánico con backtrace simbolizado; separación `core` / `no_std`; 20 tests |
+| **S39** | `core`: primitivos, Opcional, Resultado | Tipos fundamentales usables desde Nooki; vector mínimo; iteradores base; 100 tests en `.oki` |
+| **S40** | **Ensamblador e intrínsecos** | `asm!` en bloque `inseguro`; intrínsecos SIMD básicos; ejemplo de registro MMIO; 15 tests |
+| **S41** | RAII y *drops* | Inserción de drops en MIR, orden de destrucción, `destructor`; verificado con ASan/LSan; 40 tests |
+| **S42** | Concurrencia base | Hilos, mutex, canales, atómicos + **modelo de memoria documentado**; 40 tests |
+| **S43** | `no_std` y *bare metal* | Objetivo RISC-V/ARM sin sistema; demo "parpadeo" en QEMU; prueba real del pilar hardware; 5 tests |
+| **S44** | **Cierre v0.5: memoria transitoria** | RC/GC temporal (ADR-07) integrado y documentado; ejemplos con heap funcionando; deuda registrada con fecha de pago (S52) |
+
+---
+
+### Fase 7 — Ownership y préstamos (S45–S52)
+
+**Entrada:** codegen + runtime. **Salida:** seguridad de memoria del nivel prometido; hito **v0.6 (lenguaje completo)**. *Es la fase más difícil: no se recorta.*
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S45** | Modelo de propiedad en MIR | Move vs copy, *drop flags*, flujo de inicialización; 60 tests |
+| **S46** | Verificación de movimientos | use-after-move, doble drop, ramas condicionales y bucles; 80 casos inválidos |
+| **S47** | Préstamos: análisis de regiones (NLL simplificado) | Basado en *liveness*; conflictos mutable/inmutable; 100 tests |
+| **S48** | Préstamos en llamadas y retornos | Reglas de elisión de *lifetimes*; 80 tests |
+| **S49** | *Lifetimes* explícitos | Sintaxis `'v`; verificación en funciones y estructuras; 60 tests |
+| **S50** | Propiedad + OOP + closures | Préstamo de campos, `este`, captura en closures; 60 tests |
+| **S51** | `Send`/`Sync` y *data races* | Rasgos marcadores; verificación en concurrencia; `ContadorRef` y atómicos correctos; 50 tests |
+| **S52** | **Cierre v0.6: corpus oráculo** | Adaptar los *UI tests* de Rust como oráculo; 500 válidos + 500 inválidos; **eliminar el GC temporal** (ADR-07 pagada) |
+
+---
+
+### Fase 8 — Herramientas (S53–S61)
+
+**Entrada:** lenguaje completo. **Salida:** toolchain usable por terceros; hito **v0.7**.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S53** | CLI `nooki` | Subcomandos, códigos de salida, `--help` en español, salida JSON; 50 tests |
+| **S54** | Gestor de paquetes | `nooki.toml`, semver, lockfile, caché, *workspaces*; 40 tests |
+| **S55** | Registro de paquetes (modo solitario: Git) | Índice en repositorio Git + archivos estáticos, semver y firma opcional; servidor propio **solo si aparecen usuarios** (D-15) |
+| **S56** | Formateador | Basado en AST, idempotente, `--check`, `.nooki-formato.toml`; 100 casos golden |
+| **S57** | Compilación incremental | Sistema de consultas, caché en disco, invalidación fina; recompilación 10× más rápida |
+| **S58** | LSP | Diagnósticos, hover, completado, ir a definición; 40 tests de integración |
+| **S59** | Linter y `nooki verificar` | 20 reglas con sugerencia y arreglo automático; marco de mocks y benchmarks |
+| **S60** | Documentación y `nooki doc` | Doc comments `///`; extracción; sitio HTML; 80 % de la std documentada |
+| **S61** | **Cierre v0.7: integración con editores** | Extensión VS Code (sintaxis + snippets + cliente LSP), Vim/Neovim, Sublime |
+
+---
+
+### Fase 9 — Librería estándar (S62–S70)
+
+**Entrada:** lenguaje + toolchain. **Salida:** stdlib completa y probada; hito **v0.8**.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S62** | io, archivos, rutas, consola | Lectura/escritura con buffers, errores tipados; 80 tests |
+| **S63** | Colecciones | Mapa, conjunto, cola, pila, deque, árbol, grafo + iteradores; 150 tests y benchmarks |
+| **S64** | Texto | Formato, regex, utilidades Unicode, plantillas; 100 tests |
+| **S65** | Matemáticas y aleatorio | Básicas, trigonometría, álgebra lineal, estadística, RNG (PCG); 100 tests |
+| **S66** | Serialización | JSON, CSV, TOML, YAML, binario, base64; *round-trip*; 100 tests |
+| **S67** | Red | TCP, UDP, HTTP cliente, TLS, URL; servidor HTTP básico; 60 tests |
+| **S68** | Tiempo y sistema | Fecha, hora, zonas, cronómetro; procesos, entorno, señales; 80 tests |
+| **S69** | Seguridad y base de datos | SHA-2, AES, CSPRNG; SQLite; 60 tests |
+| **S70** | **Cierre v0.8: pruebas integradas** | Atributo `@prueba`, mocks y benchmarks en el propio lenguaje; 100 % de la std con tests |
+
+---
+
+### Fase 10 — Framework de UI (S71–S78)
+
+**Decisión de arquitectura:** **un solo stack de renderizado** (capa de ventanas multiplataforma + Skia), no tres toolkits nativos. Tres backends nativos triplican el esfuerzo y garantizan inconsistencias visuales.
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S71** | Ventanas y bucle de eventos | Win32, Cocoa, X11/Wayland; eventos de teclado y ratón; 3 demos |
+| **S72** | Render 2D y texto | Skia, HarfBuzz/FreeType; texto con tildes y `ñ` correctos; benchmark de *frame* |
+| **S73** | Layout y estilos | Flex/Grid/Stack; temas claro/oscuro; 60 tests visuales |
+| **S74** | Widgets básicos | Ventana, Botón, Etiqueta, CampoTexto, Casilla, Combo, Deslizador, Progreso; 60 tests |
+| **S75** | Widgets avanzados | Tabla, Árbol, Pestañas, Diálogos, Selector de archivo, Canvas; 50 tests |
+| **S76** | Eventos y animaciones | Callbacks, gestos, transiciones; 40 tests |
+| **S77** | Accesibilidad e i18n de UI | Navegación por teclado, lectores de pantalla, textos traducibles; auditoría |
+| **S78** | **Cierre v0.9: herramientas de UI** | Vista previa/designer; ejemplos: calculadora y gestor de tareas |
+
+---
+
+### Fase 11 — Ecosistema de IA (S79–S88)
+
+**Estrategia:** FFI primero. Se envuelve lo que ya existe (OpenBLAS, ONNX Runtime, Arrow) y se expone una API en español. **No se reimplementa PyTorch.**
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S79** | Tensores | Tensor N-dimensional, *strides*, operaciones, broadcasting; backend BLAS; 100 tests |
+| **S80** | Autograd | Grafo computacional, retropropagación, gradientes; 40 tests |
+| **S81** | Redes neuronales | Capas (densa, convolucional, pooling, normalización, dropout, embedding), activaciones, pérdidas, optimizadores; 60 tests |
+| **S82** | Entrenamiento y checkpoints | Entrenador, validación, callbacks, guardar/cargar; MNIST de punta a punta |
+| **S83** | MarcoDatos (estilo pandas) | Columnar, CSV/JSON/Excel, filtrar/agrupar/unir/pivotar, describir; 80 tests + benchmark vs pandas |
+| **S84** | ML clásico | Regresión, árboles, bosques, KMeans, PCA, métricas, validación cruzada; 80 tests |
+| **S85** | ONNX Runtime | Carga e inferencia de modelos ONNX; GPU opcional; 30 tests |
+| **S86** | PLN | Tokenizadores (BPE/SentencePiece), embeddings, sentimiento, entidades, resumen; 50 tests |
+| **S87** | IA generativa | Cliente OpenAI/Anthropic/Ollama, generación local GGUF, RAG con base vectorial; 40 tests |
+| **S88** | **Cierre v0.95: visión y GPU** | Imágenes, clasificación y detección vía ONNX; CUDA/Metal/Vulkan si hay recursos |
+
+---
+
+### Fase 12 — Estabilización y v1.0 (S89–S96)
+
+| Sprint | Objetivo | Entregable verificable (DoD) |
+|---|---|---|
+| **S89** | Estabilidad de API | Congelar la API de la std; MSRV; ediciones; política de deprecación |
+| **S90** | Conformidad y regresión | 100 % del corpus; 0 regresiones; golden tests en 3 sistemas |
+| **S91** | Auditoría de seguridad | Revisión de `inseguro`, fuzzing de 72 h, sanitizers, modelo de amenazas del gestor de paquetes |
+| **S92** | Rendimiento final y "modo didáctico" | Optimización del compilador; benchmarks vs C/Rust/Go; mensajes de error pedagógicos para principiantes |
+| **S93** | Documentación completa | Especificación 1.0, libro en español, tutoriales, referencia de API, guía de contribución |
+| **S94** | Instaladores y distribución | MSI, DEB/RPM, Homebrew, WinGet; **PKG y notarización de macOS condicionados a un Mac o financiación** (D-17); firma de código; actualizador |
+| **S95** | *Release candidate* | RC congelado; pruebas en 3 sistemas; migración de proyectos piloto |
+| **S96** | **NOOKI v1.0** | Release pública, sitio, registro público; *spike* de autohospedaje (compilador escrito en Nooki) |
+
+---
+
+## 5. Duración real — escenario confirmado: 1 persona
+
+**Decisión tomada (2026-11-09): el proyecto lo desarrolla una sola persona.** Eso **no cambia el orden** de los sprints —la secuencia sigue siendo la correcta— pero fija el calendario:
+
+| Escenario | Personas | Semanas por sprint | 96 sprints | Lenguaje completo (S52) |
+|---|---|---|---|---|
+| **Real: desarrollador solo** | **1** | **3,5–4** | **~7–7,5 años** | **~4 años** |
+| Referencia: pareja | 2 | 3 | ~5,5 años | ~3 años |
+| Referencia: equipo pequeño | 3–4 | 2,5 | ~4,5–5 años | ~2,5 años |
+
+### 5.1 Modo solitario: qué se recorta
+
+El trabajo total no cambia; con una persona el único ajuste posible es **el alcance**. Se aplican cinco decisiones (registradas en [DECISIONES.md](DECISIONES.md) como D-13 a D-17):
+
+1. **La v1.0 no incluye UI ni IA.** Las fases 10 (UI, S71–S78) y 11 (IA, S79–S88) pasan a *post-1.0*. La v1.0 queda en **78 sprints** (S01–S70 + los 8 de estabilización) ≈ **5,5–6 años**. Razón: una UI multiplataforma y un stack de IA son dos carreras separadas; el lenguaje, su tooling y su stdlib no lo son.
+2. **Sprint nominal de 2 semanas, sprint real de 3,5–4.** No se renumeran los 96 sprints: se conserva la unidad de alcance y se ajusta el calendario.
+3. **Registro de paquetes por Git, no servidor propio.** S55 se reduce a un índice en un repositorio + archivos estáticos. Un servidor con autenticación, firma y moderación solo se justifica cuando haya usuarios.
+4. **Un solo binario `nooki`** (compilador + CLI + gestor de paquetes) hasta la v0.7. Separarlo en `nookic`/`nooki` es trabajo de equipo, no de una persona.
+5. **macOS se valida en CI** (runners gratuitos de GitHub Actions). La firma y notarización de S94 quedan condicionadas a disponer de un Mac o de financiación.
+
+**Calendario realista con una persona** (3,75 semanas por sprint):
+
+| Hito | Sprint | Acumulado |
+|---|---|---|
+| "Hola, Nooki" nativo en 3 sistemas (demo para conseguir ayuda) | S06 | **~5–6 meses** |
+| Parser completo del lenguaje | S19 | ~1,4 años |
+| Semántica y tipos completos | S28 | ~2 años |
+| Programas reales compilados a nativo | S36 | ~2,6 años |
+| Hardware, FFI y `core` | S44 | ~3,2 años |
+| **Ownership completo — lenguaje terminado** | **S52** | **~3,75–4 años** |
+| Tooling, LSP y paquetes | S61 | ~4,4 años |
+| Librería estándar completa | S70 | ~5 años |
+| **v1.0 (sin UI ni IA)** | 78 sprints | **~5,5–6 años** |
+| UI + IA (post-1.0) | +18 sprints | ~7–7,5 años |
+
+> **La consecuencia práctica:** la decisión "solo yo" convierte el proyecto en un compromiso de **cinco a siete años**. La demo de S06 en ~6 meses es lo que decide si esos años se recorren solo o con compañía.
+
+---
+
+## 6. Paralelización: mapa de dependencias
+
+> **Con una persona no hay paralelización**: las vías se recorren en serie. Esta tabla se conserva como **mapa de dependencias** (qué desbloquea qué) y como plan de incorporación el día que se sume alguien: la primera persona adicional entra por la vía C (tooling) o D (stdlib).
+
+Después de S36 el proyecto se abre en seis vías simultáneas:
+
+| Vía | Sprints | Depende de | Puede avanzar a la vez que |
+|---|---|---|---|
+| **A — Front-end** | S07–S28 | S06 | — |
+| **B — Backend / IR** | S29–S36 | S28 | A (parcial), C |
+| **C — Tooling** | S53–S61 | S36 | D, E, F |
+| **D — Stdlib** | S62–S70 | S44 | C, E, F |
+| **E — UI** | S71–S78 | S44 | C, D, F |
+| **F — IA** | S79–S88 | S70 | C, D, E |
+| **G — Ownership** | S45–S52 | S44 | **nada**: es crítico, serializado |
+
+> **Regla:** la vía G (ownership) nunca se paraleliza con otra cosa. Es donde los errores de diseño se pagan dos veces.
+
+---
+
+## 7. Riesgos por fase y mitigación
+
+| Riesgo | Fase | Probabilidad | Impacto | Mitigación |
+|---|---|---|---|---|
+| El borrow checker se vuelve inmanejable | 7 | Alta | Muy alto | Subconjunto primero (S45–S48 sin *lifetimes* explícitos); corpus de Rust como oráculo |
+| Integración con LLVM consume más de lo previsto | 5 | Media | Alto | Rebanada vertical en S06; versión de LLVM **fijada** exacta, no "17+" |
+| La UI se descontrola | 10 | Alta | Alto | Un solo stack (Skia); widgets en sprints cerrados; sin "pixel-perfect" nativo |
+| El ecosistema IA no arranca | 11 | Media | Medio | FFI desde el primer día; sin reimplementar motores |
+| Se pierde el rumbo por falta de equipo | Todas | **Muy alta** | **Muy alto** | Demo en S06; opensource temprano; RFC público desde S19 |
+| macOS requiere hardware Apple para firmar | 12 | Alta | Medio | CI en *runners* macOS; notarización en S94 con cuenta Apple Developer desde S03 |
+| Deriva de especificación | Todas | Media | Alto | Una sola fuente de verdad; cambios por RFC; conformance como contrato |
+| "Fácil como Python" no se cumple | 4, 7, 92 | Media | Alto | Modo didáctico (S92); mensajes con causa y arreglo; inferencia agresiva |
+
+---
+
+## 8. Métricas de seguimiento (tablero por sprint)
+
+| Métrica | Objetivo | Dónde se mide |
+|---|---|---|
+| Casos de conformidad que pasan | 100 % en cada cierre de fase | CI |
+| Cobertura del compilador (C++) | ≥ 85 % | CI |
+| Tiempo de compilación (1 000 LOC) | < 2 s | `nooki bench` |
+| Tiempo de compilación (10 000 LOC) | < 5 s | `nooki bench` |
+| Rendimiento del código generado | ≤ 110 % del tiempo de C equivalente | Benchmarks fib/nbody/matmul |
+| Horas de fuzzing sin crash | Acumulado creciente | Nightly |
+| Bugs abiertos por severidad | 0 críticos al cierre de fase | Gestor de incidencias |
+| Programas de ejemplo que compilan | 100 % | CI |
+
+---
+
+## 9. No-objetivos de la v1.0 (lo que **no** se hará)
+
+Declararlos por escrito evita el 80 % del *scope creep*:
+
+- ❌ Macros procedurales (solo declarativas).
+- ❌ `async/await` en el núcleo (diferido a v1.1).
+- ❌ Backend propio de CPU (solo LLVM).
+- ❌ UI móvil nativa (solo escritorio; web vía WASM en v1.2).
+- ❌ Reimplementar PyTorch, pandas o TensorFlow (solo FFI).
+- ❌ Compilador autohospedado en v1.0 (solo *spike* en S96).
+- ❌ Soporte de Windows 32 bits, ARM32 y sistemas exóticos.
+- ❌ Verificación formal del *borrow checker* (RustBelt) — aspiracional, no compromiso.
+
+---
+
+## 10. Detalle semana a semana de los 3 primeros sprints
+
+### S01 — Decisiones (2 semanas)
+
+| Semana | Actividad | Salida |
+|---|---|---|
+| 1 (días 1–2) | Redactar ADR-01 a ADR-06 | 6 documentos de 1 página |
+| 1 (días 3–4) | Redactar ADR-07 a ADR-12 | 6 documentos de 1 página |
+| 1 (día 5) | Revisión cruzada de las 12 ADR | Lista de objeciones |
+| 2 (días 1–2) | Resolver objeciones y firmar | ADR aprobadas |
+| 2 (día 3) | Archivar `Aurora1.txt` y declarar `Aurora2.txt` canónico | Repo ordenado |
+| 2 (días 4–5) | Demo + retrospectiva | Video de 5 min |
+
+### S02 — Especificación (2 semanas)
+
+| Semana | Actividad | Salida |
+|---|---|---|
+| 1 | Léxico: keywords definitivas, operadores, literales, comentarios | Sección de léxico |
+| 1 | Gramática EBNF de expresiones y tipos | `gramatica.ebnf` (parte 1) |
+| 2 | Gramática EBNF de declaraciones, OOP, patrones y módulos | `gramatica.ebnf` (parte 2) |
+| 2 | Semántica v0.1 + lista de no-objetivos | `especificacion-v0.1.md` |
+| 2 | Validación de la gramática con el 100 % de los ejemplos | Informe de validación |
+
+### S03 — Andamiaje (2 semanas)
+
+| Semana | Actividad | Salida |
+|---|---|---|
+| 1 (días 1–2) | Repositorio, licencia, `.gitignore`, estructura de carpetas | Repo inicial |
+| 1 (días 3–5) | `CMakeLists.txt` raíz + presets + vcpkg con LLVM fijado | Build local en las 3 plataformas |
+| 2 (días 1–2) | CI: matriz Windows/Linux/macOS, caché de LLVM, ASan/UBSan | Pipeline verde |
+| 2 (día 3) | CLI `nooki` que imprime versión y ayuda | `nooki --version` |
+| 2 (día 4) | clang-format, clang-tidy, hooks de pre-commit | Estilo aplicado en CI |
+| 2 (día 5) | Demo + retrospectiva | Video de 5 min |
+
+---
+
+## Anexo A — Correcciones aplicadas al plan original
+
+| # | Plan original (`Aurora2.txt`) | Este plan | Razón |
+|---|---|---|---|
+| A1 | FFI en Fase 5 (mes 18–22), después de la stdlib | FFI en S37, **antes** de toda la stdlib | Sin libc no hay archivos, red ni tiempo |
+| A2 | Incremental y paralelismo en Fase 9 (mes 42–48) | Arquitectura *query-based* en S30; incremental funcional en S57 | Condiciona AST, símbolos y LSP |
+| A3 | Programas ejecutables solo "cuando el ownership exista" | GC/RC temporal (S44) eliminado en S52 | Permite usar el lenguaje 2 años antes |
+| A4 | UI con tres toolkits nativos (Win32 + GTK4 + Cocoa) | Una capa de ventanas + Skia | Tres backends triplican el esfuerzo |
+| A5 | IA "desde cero" en 10 meses | FFI a ONNX/BLAS/Arrow con API en español | PyTorch son cientos de ingenieros-año |
+| A6 | OOP completa en Fase 5, después de la stdlib | Semántica de OOP en S26 y codegen en S33, antes de la stdlib | La stdlib usa clases, genéricos y traits |
+| A7 | 10 fases horizontales de 4 años | 12 fases y 96 sprints con DoD verificable | Sin criterio de terminado no hay control |
+| A8 | Dos documentos contradictorios | Una base canónica + 12 ADR | No se puede implementar dos especificaciones |
+| A9 | Sin `asm!` ni `no_std` | S40 y S43 | Sin esto no existe el "control de hardware como C" |
+| A10 | Sin `Send`/`Sync` ni modelo de memoria | S51 y S42 | Sin ellos la promesa "0 data races" es falsa |
+
+---
+
+## Anexo B — Aprobaciones (cerrado el 2026-11-09)
+
+| # | Pregunta | Respuesta | Consecuencia |
+|---|---|---|---|
+| 1 | ¿12 ADR por defecto? | ✅ **Sí** | Cerradas en `docs/adr/` (13 ADR con la derivada) |
+| 2 | ¿Sprints de 2 semanas o 1? | ✅ **2 semanas** | 96 sprints |
+| 3 | ¿Cuántas personas? | ✅ **3–4 devs** (línea base) | **4,5–5 años**; con 1 persona, 6,5–7,5 años |
+| 4 | ¿Recorte de alcance (IA/UI por FFI)? | ✅ **Sí** | Fases 10 y 11 sobre ONNX/Skia/BLAS |
+| 5 | ¿Nombre "Nooki" y extensión `.oki`? | ✅ **Sí** | Verificar marca y dominio antes de S03 (asunto A-01) |
+| 6 | ¿Licencia MIT/Apache-2.0? | ✅ **Sí** | + excepción de runtime (ADR-012) |
+
+**Artefactos producidos tras la aprobación:**
+
+- `docs/adr/ADR-001` … `ADR-013` — 13 decisiones cerradas (Sprint 1).
+- `DECISIONES.md` — índice, decisiones revisables y asuntos abiertos.
+- `spec/gramatica.ebnf` — gramática normativa completa (Sprint 2).
+- `spec/especificacion-v0.1.md` — especificación del lenguaje (Sprint 2).
+
+---
+
+*Documento de planificación — no contiene código. Versión 1.1 (aprobado).*

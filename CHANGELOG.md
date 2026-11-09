@@ -1,0 +1,29 @@
+# Historial de cambios
+
+El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
+[versionado semántico](https://semver.org/lang/es/).
+
+## [Sin publicar]
+
+### Sprint 3 — Andamiaje del repositorio (2026-11-09)
+
+- CMake 3.25+ con presets para MSVC 2022/2026, MinGW, GCC y Clang.
+- Objetivo `nooki_nucleo` (biblioteca) + ejecutable `nooki`.
+- Cabecera `nooki/version.hpp` generada desde CMake: única fuente de verdad de la versión.
+- CLI con `version`, `ayuda`, códigos de salida documentados y sugerencia ante errores de tecleo.
+- Pruebas de la CLI con `ctest` (9 casos, sin dependencias externas).
+- Integración continua en Windows, Linux y macOS; trabajos informativos de formato y análisis.
+- Enlace estático de la biblioteca estándar en MinGW: el binario es autocontenido.
+- Licencia dual MIT/Apache-2.0, guía de contribución y plantilla de RFC.
+
+### Sprint 2 — Especificación (2026-11-09)
+
+- `spec/gramatica.ebnf`: gramática normativa completa (125 reglas).
+- `spec/especificacion-v0.1.md`: léxico, tipos, OOP, memoria, errores, FFI y conformidad.
+- 63 palabras clave + 21 nombres de tipo, sin tildes; identificadores normalizados a NFC.
+
+### Sprint 1 — Decisiones (2026-11-09)
+
+- 13 ADR aprobadas en `docs/adr/`.
+- Renombrado del proyecto a **Nooki**, extensión `.oki`.
+- Plan recalculado para un solo desarrollador; UI e IA pasan a post-1.0.

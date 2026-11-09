@@ -1,0 +1,93 @@
+# NOOKI — Lenguaje de programación en español
+
+> **Estado: fase de diseño.** Todavía no hay código. Lo que existe es el plan de implementación, las decisiones de arquitectura y la especificación del lenguaje.
+
+**Nooki** es un lenguaje compilado, escrito en C++20 con backend LLVM, multiplataforma (Windows, macOS, Linux), con:
+poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python · OOP completa · y todo —tipos, palabras clave, errores y documentación— **en español**.
+
+| | |
+|---|---|
+| **Nombre** | Nooki |
+| **Extensión de fuentes** | `.oki` |
+| **CLI** | `nooki` |
+| **Implementación** | C++20 + LLVM |
+| **Licencia** | MIT OR Apache-2.0 + excepción de runtime |
+
+---
+
+## Mapa del proyecto
+
+| Documento | Qué contiene |
+|---|---|
+| **[PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md)** | Plan de 96 sprints en 12 fases, con criterio de terminado por sprint, riesgos y calendario real |
+| **[DECISIONES.md](DECISIONES.md)** | Las 13 ADR aprobadas + nomenclatura + decisiones de alcance + asuntos abiertos |
+| **[spec/especificacion-v0.1.md](spec/especificacion-v0.1.md)** | Especificación normativa: léxico, tipos, OOP, memoria, errores, FFI |
+| **[spec/gramatica.ebnf](spec/gramatica.ebnf)** | Gramática formal completa (EBNF), normativa |
+| **[docs/adr/](docs/adr/)** | 13 Architecture Decision Records: el *porqué* de cada decisión |
+
+### Documentos históricos
+
+| Archivo | Estado |
+|---|---|
+| [Aurora1.txt](Aurora1.txt) | Plan original v1 (28–36 meses). **Superado**: se conserva solo como histórico |
+| [Aurora2.txt](Aurora2.txt) | Plan original v2 (48 meses). **Superado por el plan de sprints**; sus ejemplos de sintaxis siguen siendo referencia de intención |
+
+---
+
+## Dónde estamos
+
+```
+Sprint 1  ✅  Decisiones: 13 ADR aprobadas
+Sprint 2  ✅  Especificación v0.1 + gramática EBNF
+Sprint 3  ⬜  Andamiaje del repositorio (CMake + CI 3 OS)
+Sprint 4  ⬜  Sistema de diagnósticos
+Sprint 5  ⬜  Harness de conformidad
+Sprint 6  ⬜  Rebanada vertical: "Hola, Nooki" nativo en 3 sistemas
+```
+
+---
+
+## Realidad del proyecto
+
+El proyecto lo desarrolla **una sola persona**. Eso no cambia el orden de los sprints, pero sí el calendario y el alcance:
+
+| Hito | Cuándo |
+|---|---|
+| Demo "Hola, Nooki" nativo en Windows, Linux y macOS | **~5–6 meses** |
+| Lenguaje completo (ownership incluido) | ~3,75–4 años |
+| **v1.0** (lenguaje + tooling + librería estándar, **sin UI ni IA**) | **~5,5–6 años** |
+| UI e IA (post-1.0) | ~7–7,5 años |
+
+- **UI e IA no son parte de la v1.0**: se entregan después como paquetes sobre FFI (Skia, ONNX, BLAS), no reimplementadas.
+- **Registro de paquetes por Git** en lugar de servidor propio, hasta que haya usuarios.
+- **macOS se valida en CI**; la notarización queda condicionada a un Mac o a financiación.
+
+Detalle completo en [PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md) §5.
+
+---
+
+## Principios innegociables
+
+1. **Todo en español**: palabras clave, mensajes de error, documentación y nombres de identificadores en el compilador.
+2. **La seguridad no se negocia**: sin `nulo` en referencias, desbordamiento comprobado, préstamos verificados en compilación.
+3. **El hardware es de primera clase**: `inseguro`, `asm!`, `@repr(C)`, `core` sin sistema operativo.
+4. **Los errores se explican**: todo diagnóstico lleva código, ubicación y sugerencia.
+5. **Nada se promete sin diseño**: si no hay ADR y caso de conformidad, no existe.
+
+---
+
+## Cómo revisar este repositorio
+
+Si vienes a **revisar el diseño**:
+
+1. Lee [DECISIONES.md](DECISIONES.md) y objeta cualquier decisión de la sección 3 (revisables hasta el Sprint 6).
+2. Lee [spec/especificacion-v0.1.md](spec/especificacion-v0.1.md) con la gramática al lado: un lenguaje se valida escribiendo programas, no leyendo documentos.
+3. Si algo no se puede expresar, abre un RFC.
+
+Si vienes a **implementar**: empieza por el Sprint 3 del plan. Cada sprint tiene su criterio de terminado.
+
+---
+
+## Licencia
+
+`MIT OR Apache-2.0` con excepción de runtime (ver [ADR-012](docs/adr/ADR-012-licencia-y-gobernanza.md)).

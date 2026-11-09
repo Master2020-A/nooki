@@ -1,0 +1,26 @@
+# Artefactos de compilación
+build/
+out/
+cmake-build-*/
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.a
+*.dll
+*.so
+*.dylib
+
+# Herramientas
+compile_commands.json
+.cache/
+.vs/
+.idea/
+.vscode/
+*.user
+
+# Sistema
+Thumbs.db
+.DS_Store

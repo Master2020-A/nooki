@@ -1,0 +1,487 @@
+(* ============================================================
+   NOOKI — Gramática normativa (EBNF) v0.1
+   Archivo: spec/gramatica.ebnf
+   Estado: normativo. Cualquier implementación que se declare
+           "Nooki 0.1" debe aceptar exactamente este lenguaje.
+   Fecha: 2026-11-09
+
+   NOTACIÓN (ISO/IEC 14977)
+   ----------------------------------------------------------
+     =         definición
+     ;         fin de regla
+     "x"       terminal (texto literal del programa fuente)
+     [ x ]     opcional
+     { x }     repetición (cero o más)
+     ( x )     agrupación
+     x | y     alternativa
+     (* ... *) comentario
+     -         excepción
+
+   PRECEDENCIA DE REGLAS
+   ----------------------------------------------------------
+   La precedencia de operadores NO se expresa aquí: se define
+   con niveles explícitos (expresion_1 .. expresion_13) y con la
+   tabla de la especificación §7. Los niveles más altos se unen
+   más fuerte.
+   ============================================================ *)
+
+
+(* ------------------------------------------------------------
+   1. PROGRAMA
+   ------------------------------------------------------------ *)
+
+programa            = { elemento_superior } ;
+
+elemento_superior   = atributos,
+                      ( decl_modulo
+                      | decl_importar
+                      | decl_exportar
+                      | decl_funcion
+                      | decl_clase
+                      | decl_estructura
+                      | decl_rasgo
+                      | decl_enumeracion
+                      | decl_tipo
+                      | decl_externo
+                      | decl_implementar
+                      | decl_variable
+                      | decl_constante
+                      | sentencia
+                      ) ;
+
+atributos           = { "@" , identificador , [ "(" , lista_atributos , ")" ] , fin_sentencia } ;
+lista_atributos     = argumento , { "," , argumento } , [ "," ] ;
+argumento           = ( identificador , [ "=" , expresion ] ) | literal | tipo ;
+
+visibilidad         = "publico" | "privado" | "protegido" | "interna" ;
+modificadores       = { visibilidad | "estatico" | "abstracta" } ;
+
+
+(* ------------------------------------------------------------
+   2. MÓDULOS E IMPORTACIONES
+   ------------------------------------------------------------ *)
+
+decl_modulo         = "modulo" , ruta_modulo , fin_sentencia ;
+
+ruta_modulo         = identificador , { "." , identificador } ;
+ruta_tipo           = ruta_modulo , [ genericos ] ;
+
+decl_importar       = "importar" , ruta_importacion ,
+                      [ "como" , identificador ] , fin_sentencia ;
+
+ruta_importacion    = identificador , { "." , identificador } ,
+                      [ "." , "{" , lista_importacion , "}" ] ;
+lista_importacion   = identificador , { "," , identificador } , [ "," ] ;
+
+decl_exportar       = "exportar" , ( declaracion_publica | ruta_importacion ) , fin_sentencia ;
+
+declaracion_publica = decl_funcion | decl_clase | decl_estructura
+                    | decl_rasgo | decl_enumeracion | decl_tipo | decl_constante ;
+
+
+(* ------------------------------------------------------------
+   3. DECLARACIONES DE DATOS
+   ------------------------------------------------------------ *)
+
+decl_variable       = modificadores , "variable" , patron ,
+                      [ ":" , tipo ] , "=" , expresion , fin_sentencia ;
+
+decl_constante      = "constante" , identificador ,
+                      [ ":" , tipo ] , "=" , expresion , fin_sentencia ;
+
+decl_tipo           = modificadores , "tipo" , identificador , [ genericos ] ,
+                      "=" , tipo , fin_sentencia ;
+
+
+(* ------------------------------------------------------------
+   4. FUNCIONES
+   ------------------------------------------------------------ *)
+
+decl_funcion        = modificadores , "funcion" , identificador , [ genericos ] ,
+                      "(" , [ lista_parametros ] , ")" ,
+                      [ "->" , tipo ] ,
+                      [ "donde" , restricciones ] ,
+                      ( bloque | fin_sentencia ) ;   (* sin cuerpo = abstracta *)
+
+lista_parametros    = parametro , { "," , parametro } , [ "," ] ;
+
+(* Dentro de una clase o de un bloque "implementar" toda funcion es
+   metodo y "este" esta disponible de forma implicita. Una funcion
+   asociada (sin instancia) se declara con el modificador "estatico". *)
+parametro           = identificador , ":" , tipo , [ "=" , expresion ] ;
+
+genericos           = "<" , parametro_generico , { "," , parametro_generico } , [ "," ] , ">" ;
+
+parametro_generico  = identificador , [ ":" , lista_restricciones , [ "=" , tipo ] ] ;
+
+lista_restricciones = restriccion , { "+" , restriccion } ;
+restriccion         = ruta_tipo | "Este" ;
+
+restricciones       = restriccion , { "," , restriccion } , [ "," ] ;
+
+
+(* ------------------------------------------------------------
+   5. CLASES
+   ------------------------------------------------------------ *)
+
+decl_clase          = modificadores , "clase" , identificador , [ genericos ] ,
+                      [ "hereda" , ruta_tipo ] ,
+                      [ "implementa" , lista_tipos ] ,
+                      [ "donde" , restricciones ] ,
+                      "{" , { miembro_clase } , "}" ;
+
+lista_tipos         = ruta_tipo , { "," , ruta_tipo } , [ "," ] ;
+
+miembro_clase       = atributos,
+                      ( campo
+                      | metodo
+                      | constructor
+                      | destructor
+                      | propiedad
+                      | decl_tipo
+                      | decl_constante
+                      ) ;
+
+campo               = modificadores , identificador , ":" , tipo ,
+                      [ "=" , expresion ] , fin_sentencia ;
+
+metodo              = modificadores , "funcion" , identificador , [ genericos ] ,
+                      "(" , [ lista_parametros ] , ")" ,
+                      [ "->" , tipo ] ,
+                      [ "donde" , restricciones ] ,
+                      ( bloque | fin_sentencia ) ;
+
+constructor         = "constructor" , [ "." , identificador ] ,
+                      "(" , [ lista_parametros ] , ")" , bloque ;
+
+destructor          = "destructor" , "(" , ")" , bloque ;
+
+propiedad           = "propiedad" , identificador , ":" , tipo ,
+                      "{" , { acceso_propiedad } , "}" ;
+
+acceso_propiedad    = ( "obtener" | "establecer" ) ,
+                      [ "(" , [ lista_parametros ] , ")" ] , bloque ;
+
+
+(* ------------------------------------------------------------
+   6. ESTRUCTURAS, RASGOS Y ENUMERACIONES
+   ------------------------------------------------------------ *)
+
+decl_estructura     = modificadores , "estructura" , identificador , [ genericos ] ,
+                      [ "donde" , restricciones ] ,
+                      "{" , { campo } , "}" ;
+
+decl_rasgo          = modificadores , ( "rasgo" | "interfaz" ) , identificador ,
+                      [ genericos ] ,
+                      [ ":" , lista_tipos ] ,          (* superrasgos *)
+                      "{" , { miembro_rasgo } , "}" ;
+
+miembro_rasgo       = atributos ,
+                      ( metodo
+                      | ( "tipo" , identificador , [ ":" , lista_restricciones ] , fin_sentencia )
+                      | decl_constante
+                      ) ;
+
+decl_enumeracion    = modificadores , "enumeracion" , identificador , [ genericos ] ,
+                      "{" , [ variante , { "," , variante } , [ "," ] ] , "}" ;
+
+variante            = identificador ,
+                      [ "(" , [ lista_tipos ] , ")" ]
+                    | identificador , "{" , { campo } , "}" ;
+
+
+(* ------------------------------------------------------------
+   7. IMPLEMENTACIONES
+   ------------------------------------------------------------ *)
+
+decl_implementar    = "implementar" , ruta_tipo , [ genericos ] ,
+                      [ "para" , ruta_tipo ] ,
+                      [ "donde" , restricciones ] ,
+                      "{" , { miembro_implementacion } , "}" ;
+
+miembro_implementacion = atributos ,
+                      ( metodo
+                      | ( "tipo" , identificador , "=" , tipo , fin_sentencia )
+                      | decl_constante
+                      ) ;
+
+
+(* ------------------------------------------------------------
+   8. EXTERNO (FFI) Y ENSAMBLADOR
+   ------------------------------------------------------------ *)
+
+decl_externo        = "externo" , literal_texto , "{" , { firma_externa } , "}" ;
+firma_externa       = "funcion" , identificador ,
+                      "(" , [ lista_parametros_externa ] , ")" ,
+                      [ "->" , tipo ] , fin_sentencia ;
+lista_parametros_externa
+                    = parametro_externa , { "," , parametro_externa }
+                      , [ "," , "..." ] ;
+parametro_externa   = identificador , ":" , tipo ;
+
+(* asm! es una forma sintáctica propia, no una macro general *)
+expresion_asm       = "asm" , "!" , "(" , literal_texto ,
+                      { "," , operando_asm } ,
+                      [ "," , "opciones" , "(" , lista_identificadores , ")" ] , ")" ;
+
+operando_asm        = ( "entrada" | "salida" | "entrada_salida" ) ,
+                      "(" , [ "reg" | "mem" | "inmediato" ] , identificador ,
+                      [ "=" , expresion ] , ")" ;
+
+lista_identificadores = identificador , { "," , identificador } ;
+
+
+(* ------------------------------------------------------------
+   9. TIPOS
+   ------------------------------------------------------------ *)
+
+tipo                = tipo_primitivo
+                    | tipo_referencia
+                    | tipo_puntero
+                    | tipo_tupla
+                    | tipo_arreglo
+                    | tipo_funcion
+                    | tipo_opcional
+                    | ruta_tipo ;
+
+tipo_primitivo      = "entero" | "entero8" | "entero16" | "entero32"
+                    | "entero64" | "entero128"
+                    | "natural" | "natural8" | "natural16" | "natural32"
+                    | "natural64" | "natural128"
+                    | "flotante" | "flotante32"
+                    | "booleano" | "caracter" | "texto" | "vacio"
+                    | "byte" | "tamano" | "tamano_signado" ;
+
+tipo_referencia     = "&" , [ "mutable" ] , [ vida ] , tipo_sin_referencia ;
+tipo_puntero        = "*" , [ "mutable" ] , tipo_sin_referencia ;
+tipo_sin_referencia = tipo_primitivo | tipo_tupla | tipo_arreglo
+                    | tipo_funcion | tipo_opcional | ruta_tipo ;
+
+vida                = "'" , identificador ;
+
+tipo_tupla          = "(" , tipo , "," , [ lista_tipos_tupla ] , ")" ;
+lista_tipos_tupla   = tipo , { "," , tipo } , [ "," ] ;
+
+tipo_arreglo        = "arreglo" , "<" , tipo , "," , expresion_constante , ">" ;
+
+(* Solo expresiones evaluables en compilación: literales, constantes
+   y operaciones entre ellas. *)
+expresion_constante = expresion ;
+
+tipo_funcion        = "funcion" , "(" , [ lista_tipos ] , ")" , [ "->" , tipo ] ;
+
+tipo_opcional       = tipo_sin_referencia , "?" ;
+
+
+(* ------------------------------------------------------------
+   10. SENTENCIAS
+   ------------------------------------------------------------ *)
+
+bloque              = "{" , { sentencia } , "}" ;
+
+sentencia           = atributos ,
+                      ( bloque
+                      | sent_mientras
+                      | sent_para
+                      | sent_hacer
+                      | sent_bucle
+                      | sent_coincide
+                      | sent_retornar
+                      | sent_romper
+                      | sent_continuar
+                      | sent_intentar
+                      | sent_inseguro
+                      | sent_variable
+                      | decl_funcion
+                      | decl_clase
+                      | decl_estructura
+                      | decl_enumeracion
+                      | decl_tipo
+                      | sent_expresion
+                      ) ;
+
+(* "si" es una EXPRESION (ver expresion_si): siempre lleva bloques.
+   La forma de sentencia es una expresion cuyo valor se descarta. *)
+expresion_si        = "si" , "(" , expresion , ")" , bloque ,
+                      { "sinosi" , "(" , expresion , ")" , bloque } ,
+                      [ "sino" , ( bloque | expresion_si ) ] ;
+
+sent_mientras       = "mientras" , "(" , expresion , ")" , bloque ;
+
+sent_para           = "para" , "(" , identificador , "en" , expresion ,
+                      [ "paso" , expresion ] , ")" , bloque ;
+
+sent_hacer          = "hacer" , bloque , "mientras" , "(" , expresion , ")" , fin_sentencia ;
+
+sent_bucle          = "bucle" , bloque ;
+
+sent_coincide       = "coincide" , "(" , expresion , ")" ,
+                      "{" , { rama_coincide } , "}" ;
+
+rama_coincide       = "caso" , patron , [ "si" , expresion ] , "=>" ,
+                      ( bloque | expresion ) , [ "," ] , fin_sentencia ;
+
+sent_retornar       = "retornar" , [ expresion ] , fin_sentencia ;
+sent_romper         = "romper" , fin_sentencia ;
+sent_continuar      = "continuar" , fin_sentencia ;
+
+sent_intentar       = "intentar" , bloque ,
+                      [ "atrapar" , "(" , patron , ")" , bloque ] ,
+                      [ "finalmente" , bloque ] ;
+
+sent_inseguro       = "inseguro" , bloque ;
+
+sent_variable       = "variable" , patron , [ ":" , tipo ] ,
+                      "=" , expresion , fin_sentencia ;
+
+sent_expresion      = expresion , fin_sentencia ;
+
+
+(* ------------------------------------------------------------
+   11. EXPRESIONES (por niveles de precedencia creciente)
+   ------------------------------------------------------------ *)
+
+expresion           = expresion_asignacion ;
+
+expresion_asignacion
+                    = expresion_13 ,
+                      [ ( "=" | "+=" | "-=" | "*=" | "/=" | "%="
+                        | "&=" | "|=" | "^=" | "<<=" | ">>=" ) ,
+                        expresion_asignacion ] ;
+
+expresion_13        = expresion_12 , [ "??" , expresion_13 ] ;          (* coalescencia *)
+expresion_12        = expresion_11 , { "||" , expresion_11 } ;
+expresion_11        = expresion_10 , { "&&" , expresion_10 } ;
+expresion_10        = expresion_9 ,
+                      [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) , expresion_9 ] ;
+expresion_9         = expresion_8 , { "|" , expresion_8 } ;              (* bit a bit *)
+expresion_8         = expresion_7 , { "^" , expresion_7 } ;
+expresion_7         = expresion_6 , { "&" , expresion_6 } ;
+expresion_6         = expresion_5 , { ( "<<" | ">>" ) , expresion_5 } ;
+expresion_5         = expresion_4 , [ ( ".." | "..=" ) , expresion_4 ] ;
+expresion_4         = expresion_3 , { ( "+" | "-" ) , expresion_3 } ;
+expresion_3         = expresion_2 , { ( "*" | "/" | "%" ) , expresion_2 } ;
+expresion_2         = expresion_1 , [ "**" , expresion_2 ] ;              (* asociativo a derecha *)
+expresion_1         = expresion_prefija , { "como" , tipo } ;
+
+expresion_prefija   = [ ( "!" | "-" | "+" | "*" | "&" , [ "mutable" ] ) ] ,
+                      expresion_postfija
+                    | "nuevo" , ruta_tipo , "(" , [ lista_argumentos ] , ")"
+                    | cierre
+                    | expresion_asm ;
+
+expresion_postfija  = primario , { ( "(" , [ lista_argumentos ] , ")" )
+                                 | ( "." , identificador )
+                                 | ( "?." , identificador )
+                                 | ( "[" , expresion , "]" )
+                                 | "?"
+                                 } ;
+
+primario            = literal
+                    | "verdadero"
+                    | "falso"
+                    | "nulo"
+                    | "este"
+                    | "super" , "." , identificador
+                    | expresion_si
+                    | ruta_tipo                                   (* nombre o variante *)
+                    | "(" , expresion , ")"
+                    | "[" , [ lista_argumentos ] , "]"             (* arreglo literal *)
+                    | tipo , "{" , [ campos_inicializacion ] , "}" (* estructura / variante *)
+                    | bloque                                      (* bloque como expresión *)
+                    ;
+
+campos_inicializacion
+                    = inicializacion , { "," , inicializacion } , [ "," ] ;
+inicializacion      = identificador , ":" , expresion
+                    | ".." , expresion ;                          (* actualización funcional *)
+
+lista_argumentos    = argumento_llamada , { "," , argumento_llamada } , [ "," ] ;
+argumento_llamada   = expresion | ( identificador , ":" , expresion ) ;
+
+cierre              = "|" , [ lista_parametros_cierre ] , "|" ,
+                      [ "->" , tipo ] ,
+                      ( expresion | bloque ) ;
+lista_parametros_cierre = parametro_cierre , { "," , parametro_cierre } ;
+parametro_cierre    = identificador , [ ":" , tipo ] ;
+
+
+(* ------------------------------------------------------------
+   12. PATRONES
+   ------------------------------------------------------------ *)
+
+patron              = patron_alternativa , [ "si" , expresion ] ;   (* guarda *)
+patron_alternativa  = patron_principal , { "|" , patron_principal } ;
+
+patron_principal    = "_"
+                    | literal
+                    | "nulo"
+                    | ruta_tipo , [ "(" , [ lista_patrones ] , ")" ]
+                    | ruta_tipo , "{" , [ lista_patron_campo ] , "}" , [ ".." ]
+                    | "(" , [ lista_patrones ] , ")"
+                    | "[" , [ lista_patrones ] , "]"
+                    | identificador                               (* enlace *)
+                    | ( "&" , [ "mutable" ] , patron_principal )
+                    | "(" , patron , ")" ;
+
+lista_patrones      = patron , { "," , patron } , [ "," ] ;
+lista_patron_campo  = patron_campo , { "," , patron_campo } , [ "," ] ;
+patron_campo        = identificador , [ ":" , patron ] ;
+
+
+(* ------------------------------------------------------------
+   13. LÉXICO
+   ------------------------------------------------------------ *)
+
+identificador       = letra , { letra | digito | "_" } ;
+letra               = "a".."z" | "A".."Z" | "á" | "é" | "í" | "ó" | "ú" | "ñ"
+                    | "Á" | "É" | "Í" | "Ó" | "Ú" | "Ñ" | "ü" | "Ü" ;
+digito              = "0".."9" ;
+
+literal             = literal_texto | literal_caracter
+                    | literal_entero | literal_flotante | "verdadero" | "falso" ;
+
+(* ? ... ? denota una secuencia especial: texto que describe el
+   conjunto de caracteres, no un terminal concreto. *)
+cualquier_caracter  = ? cualquier punto de código Unicode ? ;
+
+literal_texto       = '"' , { caracter_texto | interpolacion } , '"'
+                    | '"""' , { cualquier_caracter } , '"""' ;
+interpolacion       = "{" , expresion , "}" ;
+caracter_texto      = cualquier_caracter - ( '"' | "\\" | "{" | "}" )
+                    | "\\" , secuencia_escape
+                    | "{{" | "}}" ;                            (* llave literal *)
+
+secuencia_escape    = "n" | "r" | "t" | "\\" | '"' | "'" | "0"
+                    | "u{" , hex , "}" ;
+
+literal_caracter    = "'" , ( caracter_texto_simple
+                            | "\\" , secuencia_escape ) , "'" ;
+caracter_texto_simple = cualquier_caracter - ( "'" | "\\" | "\n" ) ;
+
+literal_entero      = decimal | "0x" , hex , { hex | "_" }
+                    | "0o" , octal , { octal | "_" }
+                    | "0b" , binario , { binario | "_" } ;
+decimal             = digito , { digito | "_" } ;
+hex                 = digito | "a".."f" | "A".."F" ;
+octal               = "0".."7" ;
+binario             = "0" | "1" ;
+
+literal_flotante    = decimal , "." , decimal , [ exponente ]
+                    | decimal , exponente ;
+exponente           = ( "e" | "E" ) , [ "+" | "-" ] , decimal ;
+
+comentario          = "//" , { cualquier_caracter - "\n" } , "\n"
+                    | "/*" , { cualquier_caracter } , "*/"          (* anidables *)
+                    | "///" , { cualquier_caracter - "\n" }         (* documentación *)
+                    | "//!" , { cualquier_caracter - "\n" }         (* documentación de módulo *)
+
+(* ------------------------------------------------------------
+   fin_sentencia: salto de línea o ";".
+   El salto de línea NO termina la sentencia si:
+     - la línea termina en operador binario o en ",";
+     - hay un delimitador "(", "[", "{" sin cerrar;
+     - la línea termina en un comentario de bloque sin cerrar.
+   Ver especificación §2.5.
+   ------------------------------------------------------------ *)
+fin_sentencia       = /* salto de línea */ | ";" ;

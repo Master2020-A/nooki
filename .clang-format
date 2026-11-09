@@ -1,0 +1,30 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+NamespaceIndentation: None
+SpacesBeforeTrailingComments: 2
+SpaceAfterTemplateKeyword: false
+Standard: c++20
+---
+Language: Json
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 120
+---
+Language: YAML
+BasedOnStyle: LLVM
+IndentWidth: 2
