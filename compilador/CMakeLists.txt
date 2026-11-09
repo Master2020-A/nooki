@@ -19,8 +19,11 @@ configure_file(
 
 add_library(nooki_nucleo STATIC
     fuente/utf8.cpp
+    fuente/entorno.cpp
+    fuente/proceso.cpp
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
+    fuente/cli/compilar.cpp
     fuente/diagnostico/gestor_fuentes.cpp
     fuente/diagnostico/catalogo.cpp
     fuente/diagnostico/diagnostico.cpp
@@ -30,6 +33,9 @@ add_library(nooki_nucleo STATIC
     fuente/diagnostico/terminal.cpp
     fuente/lexico/token.cpp
     fuente/lexico/lexer.cpp
+    fuente/sintactico/parser.cpp
+    fuente/generador/generador_c.cpp
+    fuente/conductor/compilar.cpp
 )
 
 target_include_directories(nooki_nucleo

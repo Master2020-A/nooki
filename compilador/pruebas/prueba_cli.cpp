@@ -97,9 +97,9 @@ int main() {
 
     caso("comando todavía no disponible");
     {
-        const Resultado resultado = invocar({"compilar", "hola.oki"});
+        const Resultado resultado = invocar({"formatear", "hola.oki"});
         comprobar(resultado.codigo == nooki::cli::NO_DISPONIBLE, "devuelve 69");
-        comprobar(contiene(resultado.error, "Sprint 6"), "indica en qué sprint llega");
+        comprobar(contiene(resultado.error, "Sprint 56"), "indica en qué sprint llega");
         comprobar(resultado.salida.empty(), "no escribe en la salida estándar");
     }
 

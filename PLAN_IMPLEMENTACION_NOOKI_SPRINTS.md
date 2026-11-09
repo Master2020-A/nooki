@@ -123,13 +123,18 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S03** | Andamiaje del repositorio | ✅ Git + CMake presets (MSVC 2022/2026, MinGW, GCC, Clang) + estructura de carpetas + CI en 3 OS + `nooki --version` + clang-format/tidy + ASan/UBSan configurado. *vcpkg y LLVM se incorporan en S06, cuando se necesiten de verdad* |
 | **S04** | Sistema de diagnósticos | ✅ `GestorFuentes` + `Span`, códigos `NOKxxxx`, catálogo es/en, render en texto con caretos y en JSON, color con `NO_COLOR`; 5 casos dorados + 11 comprobaciones |
 | **S05** | Arnés de conformidad y primer consumidor | ✅ `nooki_conformidad` + 22 casos (12 válidos / 10 inválidos) + **lexer completo** (se adelanta de S06: el arnés necesitaba algo real que probar) + línea base 26,7 MB/s |
-| **S06** | **Rebanada vertical: "Hola, Nooki" nativo** | Parser mínimo + HIR mínimo + emisión LLVM + enlace: binario ELF/PE/Mach-O que imprime "¡Hola, Nooki!" en los tres sistemas |
+| **S06** | **Rebanada vertical: "Hola, Nooki" nativo** | ✅ `.oki` → parser → C → binario nativo en las dos cadenas de Windows. `nooki compilar` y `nooki ejecutar`. Backend C en lugar de LLVM (ADR-014) |
 
 > **S06 es el sprint más importante del proyecto.** Demuestra que la cadena completa funciona antes de invertir años en semántica. Es también la demo que te permite conseguir colaboradores.
 
 ---
 
-### Fase 2 — Análisis léxico (S07–S11)
+### Fase 2 — Análisis léxico (S07–S11) — ⏭️ ABSORBIDA POR EL SPRINT 5
+
+> **Nota de re-corte (2026-11-09).** Esta fase se adelantó al Sprint 5: el arnés de conformidad
+> necesitaba un consumidor real y el lexer es la base de todo lo que sigue. Lo que queda de la fase
+> es el endurecimiento (`fuzzing` continuo, corpus de 500 casos, interning y rendimiento), que se
+> reparte entre los sprints S12–S19 y la fase de rendimiento (S92). **El siguiente sprint es S12.**
 
 **Entrada:** gramática v0.1. **Salida:** lexer completo, probado y fuzzeado.
 

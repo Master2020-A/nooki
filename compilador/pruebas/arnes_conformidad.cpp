@@ -1,12 +1,10 @@
 // Arnés de conformidad.
 //
-// Recorre `pruebas/conformidad/` y ejecuta cada caso contra el analizador léxico:
+// Recorre `pruebas/conformidad/` y ejecuta cada caso:
 //
-//   valido/<caso>/principal.oki     debe analizarse sin diagnósticos
-//   invalido/<caso>/principal.oki   debe producir exactamente los códigos de esperado.txt
-//
-// Cuando exista el compilador completo (S06 en adelante), los casos válidos además
-// se compilarán y se comparará la salida estándar con `esperado.txt`.
+//   valido/<caso>/principal.oki + esperado.txt   compila a nativo, ejecuta y compara la salida
+//   valido/<caso>/principal.oki                  solo comprueba que el léxico no da errores
+//   invalido/<caso>/principal.oki + esperado.txt debe producir exactamente esos códigos
 //
 // Uso:
 //   nooki_conformidad [--directorio=<ruta>] [--detalle] [--sin-medicion]
@@ -23,9 +21,11 @@
 #include <string_view>
 #include <vector>
 
+#include "nooki/conductor/compilar.hpp"
 #include "nooki/diagnostico/emisor.hpp"
 #include "nooki/diagnostico/gestor_fuentes.hpp"
 #include "nooki/lexico/lexer.hpp"
+#include "nooki/proceso.hpp"
 
 namespace fs = std::filesystem;
 
@@ -33,6 +33,12 @@ namespace {
 
 using nooki::diagnostico::Emisor;
 using nooki::diagnostico::GestorFuentes;
+
+#ifdef _WIN32
+constexpr const char* EXTENSION_BINARIO = ".exe";
+#else
+constexpr const char* EXTENSION_BINARIO = "";
+#endif
 
 struct Caso {
     fs::path directorio;
@@ -107,10 +113,7 @@ std::vector<Caso> descubrir(const fs::path& raiz) {
             continue;
         }
         for (const fs::directory_entry& entrada : fs::directory_iterator(directorio_grupo)) {
-            if (!entrada.is_directory()) {
-                continue;
-            }
-            if (!fs::exists(entrada.path() / "principal.oki")) {
+            if (!entrada.is_directory() || !fs::exists(entrada.path() / "principal.oki")) {
                 continue;
             }
             Caso caso;
@@ -126,10 +129,65 @@ std::vector<Caso> descubrir(const fs::path& raiz) {
     return casos;
 }
 
+/// Ejecuta un binario y devuelve su salida estándar.
+std::string ejecutar_binario(const fs::path& binario) {
+    const fs::path captura = fs::temp_directory_path() / "nooki_conformidad_salida.txt";
+    nooki::ejecutar_comando("\"" + binario.string() + "\" > \"" + captura.string() + "\" 2>&1");
+
+    const std::string salida = leer(captura);
+    std::error_code ignorado;
+    fs::remove(captura, ignorado);
+    return salida;
+}
+
+/// Compila un caso válido y compara su salida con `esperado.txt`.
+bool compilar_y_comparar(const Caso& caso, std::string& esperado, std::string& obtenido) {
+    const fs::path directorio = fs::temp_directory_path() / "nooki_conformidad";
+    fs::create_directories(directorio);
+
+    nooki::conductor::Opciones opciones;
+    opciones.fuente = caso.directorio / "principal.oki";
+    opciones.salida = directorio / (caso.directorio.filename().string() + EXTENSION_BINARIO);
+
+    GestorFuentes fuentes;
+    Emisor emisor;
+    std::ostringstream silencio;
+
+    const auto resultado = nooki::conductor::compilar(opciones, fuentes, emisor, silencio, silencio);
+
+    esperado = nooki::normalizar_saltos(leer(caso.directorio / "esperado.txt"));
+    if (resultado.codigo != 0) {
+        obtenido = "la compilación falló";
+        if (emisor.cantidad() > 0) {
+            obtenido += " (" + unir(codigos_de(emisor)) + ")";
+        }
+        return false;
+    }
+
+    obtenido = nooki::normalizar_saltos(ejecutar_binario(resultado.binario));
+    std::error_code ignorado;
+    fs::remove(resultado.binario, ignorado);
+    return obtenido == esperado;
+}
+
+/// Analiza el léxico del caso y compara los códigos con los esperados.
+bool analizar_codigos(const Caso& caso, std::vector<std::string>& esperados,
+                      std::vector<std::string>& obtenidos) {
+    const std::string contenido = leer(caso.directorio / "principal.oki");
+
+    GestorFuentes fuentes;
+    Emisor emisor;
+    const auto archivo = fuentes.anadir(caso.nombre + "/principal.oki", contenido);
+    nooki::lexico::Lexer lexer(fuentes, archivo, emisor);
+    lexer.todos();
+
+    obtenidos = codigos_de(emisor);
+    esperados = caso.invalido ? leer_codigos(caso.directorio / "esperado.txt")
+                              : std::vector<std::string>{};
+    return obtenidos == esperados;
+}
+
 /// Mide el rendimiento del lexer sobre un corpus representativo.
-///
-/// Los casos válidos son pequeños y densos en palabras clave, así que se repiten
-/// hasta ~128 KB: medir sobre 3 KB daría un número halagador y falso.
 void medir(const std::vector<Caso>& casos) {
     std::string base;
     for (const Caso& caso : casos) {
@@ -158,8 +216,7 @@ void medir(const std::vector<Caso>& casos) {
     for (int i = 0; i < repeticiones; ++i) {
         Emisor emisor;
         nooki::lexico::Lexer lexer(fuentes, archivo, emisor);
-        const auto tokens = lexer.todos();
-        tokens_totales = tokens.size();
+        tokens_totales = lexer.todos().size();
     }
     const auto fin = std::chrono::steady_clock::now();
 
@@ -204,24 +261,38 @@ int main(int argc, char* argv[]) {
         return 2;
     }
 
+    const bool hay_compilador_c = !nooki::conductor::compilador_c().empty();
+
     int correctos = 0;
+    int omitidos = 0;
     std::vector<std::string> fallidos;
 
     for (const Caso& caso : casos) {
-        const std::string contenido = leer(caso.directorio / "principal.oki");
+        const bool es_programa =
+            !caso.invalido && fs::exists(caso.directorio / "esperado.txt");
 
-        GestorFuentes fuentes;
-        Emisor emisor;
-        const auto archivo = fuentes.anadir(caso.nombre + "/principal.oki", contenido);
-        nooki::lexico::Lexer lexer(fuentes, archivo, emisor);
-        lexer.todos();
+        if (es_programa && !hay_compilador_c) {
+            ++omitidos;
+            if (detalle) {
+                std::cout << "  omitido " << caso.nombre << " (sin compilador de C)\n";
+            }
+            continue;
+        }
 
-        const std::vector<std::string> obtenidos = codigos_de(emisor);
-        const std::vector<std::string> esperados =
-            caso.invalido ? leer_codigos(caso.directorio / "esperado.txt")
-                          : std::vector<std::string>{};
+        std::string esperado_texto;
+        std::string obtenido_texto;
+        bool correcto = false;
 
-        const bool correcto = obtenidos == esperados;
+        if (es_programa) {
+            correcto = compilar_y_comparar(caso, esperado_texto, obtenido_texto);
+        } else {
+            std::vector<std::string> esperados;
+            std::vector<std::string> obtenidos;
+            correcto = analizar_codigos(caso, esperados, obtenidos);
+            esperado_texto = unir(esperados);
+            obtenido_texto = unir(obtenidos);
+        }
+
         if (correcto) {
             ++correctos;
             if (detalle) {
@@ -230,12 +301,17 @@ int main(int argc, char* argv[]) {
         } else {
             fallidos.push_back(caso.nombre);
             std::cout << "  FALLO " << caso.nombre << '\n'
-                      << "        esperado: " << unir(esperados) << '\n'
-                      << "        obtenido: " << unir(obtenidos) << '\n';
+                      << "        esperado: " << esperado_texto << '\n'
+                      << "        obtenido: " << obtenido_texto << '\n';
         }
     }
 
-    std::cout << "\n  conformidad: " << correctos << '/' << casos.size() << " casos correctos\n";
+    const int evaluados = static_cast<int>(casos.size()) - omitidos;
+    std::cout << "\n  conformidad: " << correctos << '/' << evaluados << " casos correctos";
+    if (omitidos > 0) {
+        std::cout << " (" << omitidos << " omitidos por falta de compilador de C)";
+    }
+    std::cout << '\n';
 
     if (medir_rendimiento) {
         medir(casos);

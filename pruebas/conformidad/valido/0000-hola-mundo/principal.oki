@@ -1,0 +1,5 @@
+// Rebanada vertical: el programa mínimo que debe compilar y ejecutarse.
+funcion principal() -> entero {
+    imprimir("¡Hola, Nooki!")
+    retornar 0
+}

@@ -17,6 +17,11 @@ target_link_libraries(prueba_lexico PRIVATE nooki_nucleo)
 nooki_aplicar_opciones(prueba_lexico)
 add_test(NAME lexico COMMAND prueba_lexico)
 
+add_executable(prueba_compilador prueba_compilador.cpp)
+target_link_libraries(prueba_compilador PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_compilador)
+add_test(NAME compilador COMMAND prueba_compilador)
+
 # Arnés de conformidad: ejecuta los programas .oki de pruebas/conformidad.
 add_executable(nooki_conformidad arnes_conformidad.cpp)
 target_link_libraries(nooki_conformidad PRIVATE nooki_nucleo)

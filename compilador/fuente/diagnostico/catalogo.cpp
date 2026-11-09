@@ -17,7 +17,10 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 13> MENSAJES{{
+constexpr std::array<EntradaMensaje, 19> MENSAJES{{
+    {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
+     "cannot read file “{archivo}”"},
+
     {codigos::PALABRA_RESERVADA_CON_TILDE,
      "«{palabra}» no es una palabra reservada: las palabras clave se escriben sin tilde",
      "“{palabra}” is not a reserved word: keywords are written without accents"},
@@ -41,6 +44,23 @@ constexpr std::array<EntradaMensaje, 13> MENSAJES{{
 
     {codigos::PARENTESIS_SIN_CERRAR, "falta cerrar «{apertura}»",
      "unclosed “{apertura}”"},
+
+    {codigos::TOKEN_INESPERADO, "se esperaba {esperado} y se encontró «{encontrado}»",
+     "expected {esperado} but found “{encontrado}”"},
+
+    {codigos::SIN_PRINCIPAL, "el programa no declara una función «principal»",
+     "the program does not declare a “principal” function"},
+
+    {codigos::NO_SOPORTADO, "«{construccion}» todavía no está soportado",
+     "“{construccion}” is not supported yet"},
+
+    {codigos::SIN_COMPILADOR_C,
+     "no se encontró un compilador de C; instale gcc, clang o MSVC, o indique uno con "
+     "la variable NOOKI_CC",
+     "no C compiler found; install gcc, clang or MSVC, or set the NOOKI_CC variable"},
+
+    {codigos::FALLO_COMPILADOR_C, "el compilador de C «{compilador}» terminó con el código {codigo}",
+     "the C compiler “{compilador}” exited with code {codigo}"},
 
     {codigos::NOMBRE_NO_DECLARADO, "no se ha declarado «{nombre}»",
      "cannot find “{nombre}” in this scope"},

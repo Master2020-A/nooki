@@ -34,6 +34,16 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
+      # El backend de la v0.1 genera C y lo entrega a un compilador del sistema
+      # (ADR-014). En los ejecutores Windows no viene instalado.
+      - name: Instalar compilador de C (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install mingw -y --no-progress
+          "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" |
+            Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
       - name: Configurar
         run: cmake --preset ${{ matrix.preset }}
 

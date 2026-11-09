@@ -5,6 +5,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 6 — Rebanada vertical: "Hola, Nooki" (2026-11-09)
+
+- **El primer programa Nooki compila y se ejecuta**: `.oki` → parser → C → binario nativo PE/ELF/Mach-O.
+- **Backend C** (ADR-014): se genera C y se invoca el compilador del sistema (`cc`, `gcc`, `clang`,
+  o `NOOKI_CC`). Decisión motivada porque no hay LLVM en la máquina y porque MSVC y MinGW no pueden
+  enlazar las librerías de LLVM entre sí.
+- **`nooki compilar`** (con `-o`, `--emitir-c`, `--conservar`) y **`nooki ejecutar`**.
+- Parser descendente recursivo mínimo: funciones, bloques, llamadas, literales y `retornar`.
+- Generador de C: runtime `imprimir`, traducción de tipos, nombres y separadores numéricos.
+- Caso de conformidad `0000-hola-mundo` que **compila y compara la salida real** del binario.
+- 13 comprobaciones del compilador; la suite completa queda en 5 pruebas.
+- Corrección de dos fallos de plataforma: `cmd` recortaba las comillas iniciales de los comandos, y
+  la redirección de Windows convertía `\n` en `\r\n` y hacía fallar toda comparación.
+
 ### Sprint 5 — Arnés de conformidad y analizador léxico (2026-11-09)
 
 - **Arnés de conformidad** (`nooki_conformidad`): recorre `pruebas/conformidad/`, ejecuta cada caso

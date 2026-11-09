@@ -21,8 +21,8 @@ struct Comando {
 inline constexpr std::array<Comando, 11> COMANDOS{{
     {"ayuda", "Muestra esta ayuda", 0},
     {"version", "Muestra la versión del compilador", 0},
-    {"compilar", "Compila un archivo .oki y genera un ejecutable", 6},
-    {"ejecutar", "Compila y ejecuta un archivo .oki", 6},
+    {"compilar", "Compila un archivo .oki y genera un ejecutable", 0},
+    {"ejecutar", "Compila y ejecuta un archivo .oki", 0},
     {"ast", "Muestra el árbol de sintaxis del archivo", 19},
     {"nuevo", "Crea un proyecto nuevo", 53},
     {"probar", "Ejecuta las pruebas del proyecto", 53},

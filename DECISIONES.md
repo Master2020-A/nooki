@@ -24,6 +24,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-011](docs/adr/ADR-011-ensamblador-e-intrinsecos.md) | `asm!` en `inseguro`, operandos nombrados, sintaxis Intel | ✅ Aprobada |
 | [ADR-012](docs/adr/ADR-012-licencia-y-gobernanza.md) | MIT OR Apache-2.0 + excepción de runtime; RFC, ediciones, semver | ✅ Aprobada |
 | [ADR-013](docs/adr/ADR-013-decisiones-sintacticas.md) | `interfaz`=`rasgo`; `nuevo` invariable; NL termina sentencia; sin turbofish | ✅ Aprobada |
+| [ADR-014](docs/adr/ADR-014-backend-c.md) | Backend C en la v0.1; LLVM más adelante detrás de la misma interfaz | ✅ Aprobada (S06) |
 
 ---
 

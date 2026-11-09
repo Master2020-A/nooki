@@ -6,6 +6,9 @@ namespace nooki::diagnostico::codigos {
 
 // Esquema definido en la especificación §11.1: NOK + 4 dígitos, estables para siempre.
 
+// --- Uso del compilador (NOK0xxx) ------------------------------------------
+inline constexpr std::string_view ARCHIVO_NO_ENCONTRADO = "NOK0001";
+
 // --- Léxico (NOK1xxx) -------------------------------------------------------
 inline constexpr std::string_view PALABRA_RESERVADA_CON_TILDE = "NOK1001";
 inline constexpr std::string_view TEXTO_SIN_CERRAR = "NOK1003";
@@ -18,6 +21,9 @@ inline constexpr std::string_view ESCAPE_DESCONOCIDO = "NOK1009";
 
 // --- Sintáctico (NOK2xxx) ---------------------------------------------------
 inline constexpr std::string_view PARENTESIS_SIN_CERRAR = "NOK2001";
+inline constexpr std::string_view TOKEN_INESPERADO = "NOK2002";
+inline constexpr std::string_view SIN_PRINCIPAL = "NOK2003";
+inline constexpr std::string_view NO_SOPORTADO = "NOK2004";
 
 // --- Semántico (NOK3xxx) ----------------------------------------------------
 inline constexpr std::string_view NOMBRE_NO_DECLARADO = "NOK3001";
@@ -30,5 +36,9 @@ inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";
 
 // --- Advertencias (NOK8xxx) -------------------------------------------------
 inline constexpr std::string_view VARIABLE_SIN_MUTAR = "NOK8001";
+
+// --- Generación y enlazado (NOK6xxx) ---------------------------------------
+inline constexpr std::string_view SIN_COMPILADOR_C = "NOK6001";
+inline constexpr std::string_view FALLO_COMPILADOR_C = "NOK6002";
 
 }  // namespace nooki::diagnostico::codigos
