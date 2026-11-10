@@ -1,0 +1,18 @@
+// Programa interactivo: lee pares (concepto, importe) hasta el final de la entrada.
+usar gastos
+
+funcion principal() -> entero {
+    variable libro = gastos.nuevo_libro()
+
+    mientras (verdadero) {
+        variable concepto = leer_linea()
+        si (concepto.largo() == 0) {
+            romper
+        }
+        variable importe = leer_entero()
+        gastos.anotar(&mutable libro, concepto, importe)
+    }
+
+    gastos.resumen(&libro)
+    retornar 0
+}

@@ -194,7 +194,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S31** | Consolidación y v0.3 | ✅ Especificación §18.8–18.12, ejemplo multifichero real, devolución con transferencia, literales para préstamos, sombreado de módulos y versión 0.3.0 |
 | **S32** | `Mapa`: rehash y `quitar` | ✅ Duplicación de cubetas al pasar de 3/4 de ocupación con recolocación de entradas, y `quitar` que libera la clave y devuelve si existía |
 | **S33** | Entrada estándar | ✅ `leer_linea()` y `leer_entero()` como integradas, con texto propio y comportamiento definido al final de la entrada |
-| **S34** | Enlazado y multiplataforma | MSVC / LLD / ld64; compilación cruzada a 6 objetivos; `-O0..-O3`, LTO; *smoke test* por objetivo |
+| **S34** | Programa interactivo y `claves()` | ✅ `mapa.claves()` como vistas, ejemplo `0025-gastos` con módulo y entrada, y dos correcciones de generación (liberaciones fuera de la función y prefijo de llamadas internas) |
 | **S35** | Información de depuración | DWARF + PDB, mapeo de líneas y variables; verificado con gdb, lldb y VS Code; 20 casos |
 | **S36** | **Cierre v0.4: programas reales** | 20 programas de ejemplo; benchmarks fib/nbody/matmul vs C y Rust; manifiesto `nooki.toml` mínimo con dependencias locales y Git |
 

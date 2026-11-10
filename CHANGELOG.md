@@ -9,6 +9,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 34 — Programa interactivo y `claves()` (2026-11-10)
+
+- **`mapa.claves() -> Vector<texto>`**: recorre las claves de un mapa. Las claves devueltas son
+  vistas (el mapa sigue siendo el dueño), así que el vector se libera sin tocar los textos.
+- **Ejemplo interactivo `0025-gastos`**: un módulo con un mapa, lectura de pares (concepto, importe)
+  hasta el final de la entrada, recorrido de claves y total. Compila y ejecuta en cada `ctest`.
+- **Corregido un error de orden en el C generado**: las liberaciones de un ámbito se emitían
+  *después* de la llave de cierre de la función, es decir, fuera de la función. Solo se veía cuando
+  una función declaraba una colección y no retornaba explícitamente.
+- **Corregido el prefijo de las llamadas internas de un módulo**: `total(libro)` dentro del módulo
+  `gastos` se emitía como `nooki_total` en lugar de `nooki_gastos_total`.
+
 ### Sprint 33 — Entrada estándar (2026-11-10)
 
 - **`leer_linea() -> texto`**: lee una línea de la entrada estándar sin el salto y devuelve un texto

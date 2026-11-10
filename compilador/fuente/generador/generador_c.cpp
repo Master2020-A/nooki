@@ -405,6 +405,8 @@ const char* PRELUDIO =
     "    m->capacidad = nueva;\n"
     "}\n"
     "\n"
+    "static nooki_vector_texto nooki_mapa_texto_entero_claves(nooki_mapa_texto_entero* m);\n"
+    "\n"
     "static int nooki_mapa_texto_entero_quitar(nooki_mapa_texto_entero* m, nooki_texto clave) {\n"
     "    if (m->cubetas == NULL) {\n"
     "        return 0;\n"
@@ -430,6 +432,21 @@ const char* PRELUDIO =
     "\n"
     "static long long nooki_mapa_texto_entero_largo(nooki_mapa_texto_entero* m) {\n"
     "    return m->largo;\n"
+    "}\n"
+    "\n"
+    "static nooki_vector_texto nooki_mapa_texto_entero_claves(nooki_mapa_texto_entero* m) {\n"
+    "    nooki_vector_texto claves = nooki_vector_texto_nuevo();\n"
+    "    if (m->cubetas == NULL) {\n"
+    "        return claves;\n"
+    "    }\n"
+    "    for (long long i = 0; i < m->capacidad; ++i) {\n"
+    "        for (nooki_mapa_entrada* e = m->cubetas[i]; e != NULL; e = e->siguiente) {\n"
+    "            nooki_texto vista = e->clave;\n"
+    "            vista.propio = 0;  /* el dueno sigue siendo el mapa */\n"
+    "            nooki_vector_texto_agregar(&claves, vista);\n"
+    "        }\n"
+    "    }\n"
+    "    return claves;\n"
     "}\n"
     "\n"
     "static void nooki_mapa_texto_entero_soltar(nooki_mapa_texto_entero* m) {\n"
@@ -950,6 +967,8 @@ private:
 
     void emitir_funcion(const sintactico::Funcion& funcion) {
         const bool principal = funcion.nombre == "principal";
+        const std::string_view anterior = modulo_actual_;
+        modulo_actual_ = funcion.modulo;
 
         if (principal) {
             if (!funcion.parametros.empty()) {
@@ -977,8 +996,9 @@ private:
             liberar_todo();
             salida_ << indentacion() << "return 0;\n";
         }
-        salida_ << "}\n";
         cerrar_ambito();
+        salida_ << "}\n";
+        modulo_actual_ = anterior;
     }
 
     // --- Sentencias --------------------------------------------------------
@@ -1330,7 +1350,13 @@ private:
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
-                        return acceso.anotacion == "insertar" ? "void" : "long long";
+                        if (acceso.anotacion == "insertar") {
+                            return "void";
+                        }
+                        if (acceso.anotacion == "claves") {
+                            return "nooki_vector_texto";
+                        }
+                        return "long long";
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
@@ -1750,7 +1776,17 @@ private:
             return std::string(funcion) + "(" + expresion(argumento) + ")";
         }
 
-        std::string salida = nombre_c(nombre_llamado) + "(";
+        // Dentro de un módulo, una llamada a otro símbolo suyo lleva su prefijo.
+        std::string nombre_para_c = nombre_c(nombre_llamado);
+        if (!modulo_actual_.empty()) {
+            const auto modulo = modulos_.find(modulo_actual_);
+            if (modulo != modulos_.end() &&
+                modulo->second.count(nombre_llamado) != 0) {
+                nombre_para_c = "nooki_" + std::string(modulo_actual_) + "_" +
+                                std::string(nombre_llamado);
+            }
+        }
+        std::string salida = nombre_para_c + "(";
         const auto declarados = parametros_.find(std::string(nombre_llamado));
         bool primero = true;
         for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
@@ -1939,6 +1975,7 @@ private:
     std::map<std::string, std::string> sustitucion_;
     std::vector<Ambito> ambitos_;
     std::string estructura_actual_c_;
+    std::string_view modulo_actual_;
     int contador_temporal_ = 0;
     int nivel_ = 0;
     bool soportado_ = true;

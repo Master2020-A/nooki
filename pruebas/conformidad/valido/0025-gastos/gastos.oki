@@ -1,0 +1,28 @@
+// Módulo de gastos: el libro es un mapa, y se recorre por sus claves.
+publico funcion nuevo_libro() -> Mapa<texto, entero> {
+    variable libro = Mapa<texto, entero>.nuevo()
+    retornar libro
+}
+
+publico funcion anotar(libro: &mutable Mapa<texto, entero>, concepto: texto, importe: entero) -> vacio {
+    libro.insertar(concepto, importe)
+}
+
+publico funcion total(libro: &Mapa<texto, entero>) -> entero {
+    variable suma = 0
+    variable conceptos = libro.claves()
+    para (c en conceptos) {
+        suma = suma + libro.obtener(c)
+    }
+    retornar suma
+}
+
+publico funcion resumen(libro: &Mapa<texto, entero>) -> vacio {
+    variable conceptos = libro.claves()
+    para (c en conceptos) {
+        imprimir(c)
+        imprimir(libro.obtener(c))
+    }
+    imprimir("total")
+    imprimir(total(libro))
+}
