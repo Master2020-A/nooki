@@ -67,7 +67,8 @@ Sprint 28 ✅  Una sola regla de propiedad en las llamadas
 Sprint 29 ✅  `Mapa<texto, entero>`: tabla hash con claves propias
 Sprint 30 ✅  Módulos e importaciones · varios archivos por programa
 Sprint 31 ✅  Consolidación documental · **v0.3.0**
-Sprint 32 ⬜  Espacios de nombres para tipos
+Sprint 32 ✅  `Mapa`: rehash automático y `quitar`
+Sprint 33 ⬜  Espacios de nombres para tipos
 ```
 
 **Ya compila y ejecuta:**

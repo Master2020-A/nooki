@@ -1,4 +1,4 @@
-// Mapa<texto, entero>: tabla hash con claves propias del mapa.
+// Mapa<texto, entero>: tabla hash con claves propias, rehash y eliminación.
 funcion principal() -> entero {
     variable edades = Mapa<texto, entero>.nuevo()
     edades.insertar("Ana", 30)
@@ -14,5 +14,10 @@ funcion principal() -> entero {
     } sino {
         imprimir(0)
     }
+
+    variable quitado = edades.quitar("Luis")
+    imprimir(quitado)
+    imprimir(edades.largo())
+    imprimir(edades.contiene("Luis"))
     retornar 0
 }

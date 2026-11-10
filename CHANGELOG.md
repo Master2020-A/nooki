@@ -9,6 +9,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 32 — `Mapa`: rehash y eliminación (2026-11-10)
+
+- **`quitar(clave)`**: elimina la entrada, libera su clave y devuelve 1 si existía, 0 si no.
+- **Rehash automático**: cuando el mapa pasa de tres cuartos de ocupación, duplica las cubetas y
+  recoloca las entradas. `obtener` vuelve a ser O(1) medio con muchas claves.
+- El caso de conformidad `0021-mapas` prueba inserción, reemplazo, consulta, eliminación y ausencia.
+
 ### Sprint 31 — Consolidación (2026-11-10)
 
 - **Especificación v0.3** con las secciones 18.8 a 18.12: colecciones, mapas, módulos, propiedad en
