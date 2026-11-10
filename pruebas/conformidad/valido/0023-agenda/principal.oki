@@ -1,0 +1,20 @@
+// Programa de ejemplo: agenda de contactos con un módulo, un mapa y textos.
+usar agenda
+
+funcion principal() -> entero {
+    variable contactos = agenda.nueva()
+
+    variable nombre = "Ana" + ""
+    agenda.alta(&mutable contactos, nombre, 5551234)
+    agenda.alta(&mutable contactos, "Luis", 5559876)
+
+    imprimir(agenda.total(&contactos))
+    imprimir(agenda.telefono_de(&contactos, "Ana"))
+
+    si (agenda.existe(&contactos, "Eva")) {
+        imprimir("Eva está")
+    } sino {
+        imprimir("Eva no está")
+    }
+    retornar 0
+}

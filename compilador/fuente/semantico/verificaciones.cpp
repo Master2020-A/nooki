@@ -98,6 +98,14 @@ private:
             ambitos_.back().prestamos[std::string(nombre)] = mutable_;
         }
     }
+    bool declarada(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->tipos.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
     bool es_prestamo_declarado(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->prestamos.count(std::string(nombre)) != 0) {
@@ -224,6 +232,16 @@ private:
             }
         }
         return false;
+    }
+
+    static bool es_llamada_mapa(const Expresion& expresion) {
+        if (expresion.tipo != TipoExpresion::Llamada || !expresion.izquierda) {
+            return false;
+        }
+        const Expresion& destino = *expresion.izquierda;
+        return destino.tipo == TipoExpresion::Miembro && destino.izquierda &&
+               destino.izquierda->tipo == TipoExpresion::Identificador &&
+               destino.izquierda->lexema == "Mapa";
     }
 
     static bool es_llamada_vector(const Expresion& expresion) {
@@ -396,8 +414,32 @@ private:
                 }
 
                 if (sentencia.tipo_declarado.rfind("Vector<", 0) == 0 ||
-                    es_llamada_vector(*sentencia.expresion)) {
+                    sentencia.tipo_declarado.rfind("Mapa<", 0) == 0 ||
+                    es_llamada_vector(*sentencia.expresion) ||
+                    es_llamada_mapa(*sentencia.expresion)) {
                     declarar_prestable(sentencia.nombre);
+                }
+                // Una llamada a un módulo que devuelve una colección también se presta.
+                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                    sentencia.expresion->izquierda &&
+                    sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro) {
+                    const Expresion& acceso = *sentencia.expresion->izquierda;
+                    if (acceso.izquierda &&
+                        acceso.izquierda->tipo == TipoExpresion::Identificador) {
+                        const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                        if (modulo != modulos_.end()) {
+                            const auto encontrada = modulo->second.find(acceso.anotacion);
+                            if (encontrada != modulo->second.end()) {
+                                const std::string_view devuelto =
+                                    encontrada->second->tipo_retorno;
+                                if (devuelto.rfind("Mapa<", 0) == 0 ||
+                                    devuelto.rfind("Vector<", 0) == 0 ||
+                                    devuelto.rfind("Caja<", 0) == 0) {
+                                    declarar_prestable(sentencia.nombre);
+                                }
+                            }
+                        }
+                    }
                 }
                 if (es_llamada_vector(*sentencia.expresion)) {
                     const Expresion& destino = *sentencia.expresion->izquierda;
@@ -771,7 +813,10 @@ private:
             const Expresion& acceso = *expresion.izquierda;
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == TipoExpresion::Identificador) {
-                const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                // Una variable local con el nombre del módulo tiene prioridad.
+                const auto modulo = declarada(acceso.izquierda->lexema)
+                                        ? modulos_.end()
+                                        : modulos_.find(acceso.izquierda->lexema);
                 if (modulo != modulos_.end()) {
                     const auto funcion = modulo->second.find(acceso.anotacion);
                     if (funcion == modulo->second.end()) {

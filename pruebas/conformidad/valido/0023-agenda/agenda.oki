@@ -1,0 +1,21 @@
+// Módulo de la agenda: el mapa pertenece a quien lo crea.
+publico funcion nueva() -> Mapa<texto, entero> {
+    variable agenda = Mapa<texto, entero>.nuevo()
+    retornar agenda
+}
+
+publico funcion alta(agenda: &mutable Mapa<texto, entero>, nombre: texto, telefono: entero) -> vacio {
+    agenda.insertar(nombre, telefono)
+}
+
+publico funcion telefono_de(agenda: &Mapa<texto, entero>, nombre: &texto) -> entero {
+    retornar agenda.obtener(nombre)
+}
+
+publico funcion existe(agenda: &Mapa<texto, entero>, nombre: &texto) -> booleano {
+    retornar agenda.contiene(nombre)
+}
+
+publico funcion total(agenda: &Mapa<texto, entero>) -> entero {
+    retornar agenda.largo()
+}

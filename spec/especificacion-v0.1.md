@@ -1,8 +1,8 @@
-# Especificación del lenguaje NOOKI v0.2
+# Especificación del lenguaje NOOKI v0.3
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Borrador normativo — v0.1 ampliada en la v0.2 (§18) |
+| **Estado** | Borrador normativo — v0.1 ampliada en la v0.3 (§18) |
 | **Fecha** | 2026-11-09 |
 | **Extensión de archivo** | `.oki` |
 | **Gramática** | [`gramatica.ebnf`](gramatica.ebnf) (normativa) |
@@ -769,3 +769,85 @@ imprimir(identidad<texto>("Nooki"))    // Nooki
 - Cada combinación de tipos produce una función distinta en el binario (instanciación), sin
   despacho en ejecución.
 - `T` se puede usar en parámetros, en el tipo de retorno y en declaraciones dentro del cuerpo.
+
+
+### 18.8 Colecciones
+
+```aura
+variable numeros = Vector<entero>.nuevo()
+numeros.agregar(3)
+numeros.agregar(7)
+imprimir(numeros.largo())        // 2
+imprimir(numeros.obtener(0))     // 3
+
+para (n en numeros) {
+    imprimir(n)
+}
+```
+
+- `Vector<T>` es una colección dinámica cuyo **dueño es la variable**.
+- `agregar`, `obtener` y `largo`. `obtener` comprueba el índice y devuelve el valor cero fuera de rango.
+- **`agregar` transfiere la propiedad del elemento**: usar el origen después es `NOK5001`.
+- `obtener` devuelve una **vista**: no libera ni duplica el elemento.
+- `para (n en coleccion)` recorre por índice con una variable interna que no se expone.
+- Pasar una colección a una función se hace con `&Vector<T>` (préstamo); pasarla por valor la mueve.
+
+### 18.9 `Mapa<texto, entero>`
+
+```aura
+variable edades = Mapa<texto, entero>.nuevo()
+edades.insertar("Ana", 30)
+imprimir(edades.obtener("Ana"))    // 30
+imprimir(edades.contiene("Eva"))   // 0 (falso)
+imprimir(edades.largo())           // 1
+```
+
+- `insertar`, `obtener`, `contiene` y `largo`.
+- **`insertar` transfiere la propiedad de la clave**; reemplazar un valor existente conserva la clave guardada y libera la nueva.
+- `obtener` devuelve `0` si la clave no está; use `contiene` para distinguir el cero de la ausencia.
+
+### 18.10 Módulos
+
+```aura
+// matematicas.oki
+publico funcion cuadrado(n: entero) -> entero {
+    retornar n * n
+}
+
+// principal.oki
+usar matematicas
+
+imprimir(matematicas.cuadrado(7))
+```
+
+- `usar modulo` carga `modulo.oki` desde el **directorio del archivo que lo importa**.
+- Los módulos pueden importar otros módulos; el orden no importa y los ciclos se cargan una sola vez.
+- **Solo lo marcado `publico` es accesible** desde otro módulo (`NOK3009` si no). Lo que no lleva
+  visibilidad es privado.
+- Un módulo que no existe es `NOK3008`, con la ruta buscada.
+- Las funciones de un módulo viven en su espacio de nombres. **Los tipos y enumeraciones todavía no**:
+  comparten un espacio global.
+
+### 18.11 Propiedad en las llamadas
+
+```aura
+funcion consumir(t: texto) -> entero {
+    retornar t.largo()
+}
+
+variable a = "uno" + "!"
+variable n = consumir(a)   // 'a' se mueve
+imprimir(a)                // NOK5001
+```
+
+- Pasar un valor con dueño (`Caja`, `texto`, `Vector`, `Mapa`) a un parámetro que **no es préstamo**
+  lo mueve.
+- Prestar con `&` o `&mutable` **no** mueve: la variable sigue siendo válida.
+- Esta regla es única para todos los tipos con dueño (ADR-020).
+
+### 18.12 Códigos nuevos de la v0.3
+
+| Código | Significado |
+|---|---|
+| `NOK3008` | Módulo no encontrado |
+| `NOK3009` | Símbolo privado de un módulo |

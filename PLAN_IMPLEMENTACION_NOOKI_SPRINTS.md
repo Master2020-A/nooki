@@ -191,7 +191,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 |---|---|---|
 | **S29** | `Mapa<texto, entero>` | ✅ Tabla hash con encadenamiento, FNV-1a, `insertar`/`obtener`/`contiene`/`largo`, claves propias y liberación determinista. *La eliminación de claves queda pendiente* |
 | **S30** | Módulos e importaciones | ✅ `usar`, `modulo.simbolo`, visibilidad `publico`/`privado`, carga recursiva con deduplicación de ciclos y traducción a nombres con prefijo. *Los tipos y enumeraciones de un módulo se comparten en un espacio global; falta delimitarlos* |
-| **S31** | Codegen LLVM: funciones y control | Aritmética, condicionales, bucles, llamadas, `imprimir` real; fib y ordenamiento funcionando |
+| **S31** | Consolidación y v0.3 | ✅ Especificación §18.8–18.12, ejemplo multifichero real, devolución con transferencia, literales para préstamos, sombreado de módulos y versión 0.3.0 |
 | **S32** | Codegen de tipos compuestos | Structs, tuplas, arreglos, punteros, `texto`, vector mínimo; layout y `@repr(C)`; 80 tests |
 | **S33** | Codegen de OOP | VTables, herencia, *dispatch* dinámico, constructores y destructores; 60 tests |
 | **S34** | Enlazado y multiplataforma | MSVC / LLD / ld64; compilación cruzada a 6 objetivos; `-O0..-O3`, LTO; *smoke test* por objetivo |

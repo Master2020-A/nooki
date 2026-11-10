@@ -3,7 +3,26 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.3.0] — 2026-11-10
+
+**Biblioteca básica completa.** El lenguaje ya tiene estructuras con métodos, enumeraciones y
+`coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
+visibilidad. Un programa puede repartirse en varios archivos.
+
+### Sprint 31 — Consolidación (2026-11-10)
+
+- **Especificación v0.3** con las secciones 18.8 a 18.12: colecciones, mapas, módulos, propiedad en
+  llamadas y los códigos nuevos. Ya no hay distancia entre lo que el compilador sabe y lo que está
+  escrito.
+- **Ejemplo real multifichero** (`0023-agenda`): un módulo con un mapa, préstamos mutables y textos,
+  compilado y ejecutado en cada `ctest`.
+- **Devuelto no es liberado**: devolver un valor con dueño de una función mueve la propiedad al
+  llamante; antes se liberaba al salir del ámbito y quedaba colgando.
+- **Un literal puede llegar a un parámetro prestado**: se le da dirección con un literal compuesto
+  de C, en lugar de obligar a crear una variable.
+- **Una variable local puede tapar el nombre de un módulo**, y se resuelve como método, no como
+  módulo.
+- v0.3.0.
 
 ### Sprint 30 — Módulos e importaciones (2026-11-10)
 

@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.2.0 |
+| **Versión** | 0.3.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -66,7 +66,8 @@ Sprint 27 ✅  `Vector<texto>`: el vector es dueño de los elementos
 Sprint 28 ✅  Una sola regla de propiedad en las llamadas
 Sprint 29 ✅  `Mapa<texto, entero>`: tabla hash con claves propias
 Sprint 30 ✅  Módulos e importaciones · varios archivos por programa
-Sprint 31 ⬜  Espacios de nombres para tipos
+Sprint 31 ✅  Consolidación documental · **v0.3.0**
+Sprint 32 ⬜  Espacios de nombres para tipos
 ```
 
 **Ya compila y ejecuta:**

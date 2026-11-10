@@ -618,6 +618,8 @@ private:
             parametros_[std::string(funcion.nombre)] = std::move(tipos);
             if (!funcion.modulo.empty()) {
                 modulos_[funcion.modulo].emplace(funcion.nombre, &funcion);
+            } else {
+                funciones_ast_[std::string(funcion.nombre)] = &funcion;
             }
         }
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
@@ -680,17 +682,20 @@ private:
     }
 
     /// Libera las cajas de un ámbito, de la última declarada a la primera.
-    void liberar_cajas(Ambito& ambito) {
+    void liberar_cajas(Ambito& ambito, std::string_view excluir = {}) {
         for (auto it = ambito.liberables.rbegin(); it != ambito.liberables.rend(); ++it) {
+            if (!excluir.empty() && it->first == excluir) {
+                continue;  // se devuelve: la propiedad pasa al llamante
+            }
             salida_ << indentacion() << it->second << "(&" << it->first << ");\n";
         }
         ambito.liberables.clear();
     }
 
     /// Antes de un `retornar` hay que liberar todas las cajas vivas.
-    void liberar_todo() {
+    void liberar_todo(std::string_view excluir = {}) {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            liberar_cajas(*it);
+            liberar_cajas(*it, excluir);
         }
     }
 
@@ -706,6 +711,38 @@ private:
         if (!ambitos_.empty()) {
             ambitos_.back().liberables.emplace_back(std::string(nombre), std::move(funcion));
         }
+    }
+
+    /// Prepara un argumento para un parámetro prestado. Un literal no tiene
+    /// dirección: se le da una con un literal compuesto de C.
+    std::string argumento_prestado(const sintactico::Expresion& argumento,
+                                   std::string_view declarado) {
+        std::string valor = expresion(argumento);
+        if (declarado.empty() || declarado.front() != '&') {
+            return valor;
+        }
+        std::string_view base = declarado.substr(1);
+        if (base.rfind("mutable ", 0) == 0) {
+            base = base.substr(8);
+        }
+        if (argumento.tipo == sintactico::TipoExpresion::Texto) {
+            const std::string contenido = "\"" + escapar_c(argumento.lexema) + "\"";
+            return "&(nooki_texto){(char*)" + contenido + ", (long long)strlen(" + contenido +
+                   "), 0}";
+        }
+        if (argumento.tipo == sintactico::TipoExpresion::Entero) {
+            return "&(" + tipo_declarado_c(base) + "){" + valor + "}";
+        }
+        return valor;
+    }
+
+    bool declarada(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->tipos.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     std::string buscar(std::string_view nombre) const {
@@ -870,7 +907,13 @@ private:
                 return;
 
             case TipoSentencia::Retornar:
-                liberar_todo();
+                // Devolver un valor con dueño lo mueve: no se libera aquí.
+                if (sentencia.expresion &&
+                    sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
+                    liberar_todo(sentencia.expresion->lexema);
+                } else {
+                    liberar_todo();
+                }
                 if (sentencia.expresion) {
                     salida_ << indentacion() << "return " << expresion(*sentencia.expresion)
                             << ";\n";
@@ -1484,14 +1527,37 @@ private:
             // Llamada a una función de otro módulo: `matematicas.cuadrado(7)`.
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+                !declarada(acceso.izquierda->lexema) &&
                 modulos_.count(acceso.izquierda->lexema) != 0) {
                 std::string salida = "nooki_" + std::string(acceso.izquierda->lexema) + "_" +
                                      std::string(acceso.anotacion) + "(";
+                const auto generico = modulos_.find(acceso.izquierda->lexema);
+                const sintactico::Funcion* modulo_funcion = nullptr;
+                if (generico != modulos_.end()) {
+                    const auto encontrada = generico->second.find(acceso.anotacion);
+                    if (encontrada != generico->second.end()) {
+                        modulo_funcion = encontrada->second;
+                    }
+                }
                 for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
                     if (i != 0) {
                         salida += ", ";
                     }
-                    salida += nodo.lista[i] ? expresion(*nodo.lista[i]) : "0";
+                    if (!nodo.lista[i]) {
+                        salida += "0";
+                        continue;
+                    }
+                    std::string valor = expresion(*nodo.lista[i]);
+                    // Un literal que llega a un parámetro prestado necesita dirección propia.
+                    if (modulo_funcion != nullptr && i < modulo_funcion->parametros.size()) {
+                        const std::string_view declarado = modulo_funcion->parametros[i].tipo;
+                        if (!declarado.empty() && declarado.front() == '&' &&
+                            (nodo.lista[i]->tipo == sintactico::TipoExpresion::Texto ||
+                             nodo.lista[i]->tipo == sintactico::TipoExpresion::Entero)) {
+                            valor = argumento_prestado(*nodo.lista[i], declarado);
+                        }
+                    }
+                    salida += valor;
                 }
                 salida += ')';
                 return salida;
@@ -1574,8 +1640,10 @@ private:
         }
 
         std::string salida = nombre_c(nombre_llamado) + "(";
+        const auto declarados = parametros_.find(std::string(nombre_llamado));
         bool primero = true;
-        for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+        for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
+            const sintactico::ExpresionPtr& argumento = nodo.lista[i];
             if (!argumento) {
                 continue;
             }
@@ -1583,7 +1651,18 @@ private:
                 salida += ", ";
             }
             primero = false;
-            salida += expresion(*argumento);
+
+            std::string valor = expresion(*argumento);
+            // Un literal que llega a un parámetro prestado necesita dirección propia.
+            if (declarados != parametros_.end() && i < declarados->second.size()) {
+                const std::string& declarado = declarados->second[i];
+                if (!declarado.empty() && declarado.front() == '&' &&
+                    (argumento->tipo == sintactico::TipoExpresion::Texto ||
+                     argumento->tipo == sintactico::TipoExpresion::Entero)) {
+                    valor = argumento_prestado(*argumento, declarado);
+                }
+            }
+            salida += valor;
         }
         salida += ')';
 
@@ -1596,27 +1675,37 @@ private:
         if (nodo.tipo != sintactico::TipoExpresion::Llamada || !nodo.izquierda) {
             return;
         }
-        if (nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
+        if (nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador) {
+            const auto funcion = funciones_ast_.find(std::string(nodo.izquierda->lexema));
+            if (funcion != funciones_ast_.end()) {
+                emitir_movimientos(nodo, funcion->second->parametros);
+            }
             return;
         }
-        emitir_movimientos(nodo, nodo.izquierda->lexema);
+        if (nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro) {
+            const sintactico::Expresion& acceso = *nodo.izquierda;
+            if (acceso.izquierda &&
+                acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador) {
+                const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                if (modulo != modulos_.end()) {
+                    const auto funcion = modulo->second.find(acceso.anotacion);
+                    if (funcion != modulo->second.end()) {
+                        emitir_movimientos(nodo, funcion->second->parametros);
+                    }
+                }
+            }
+        }
     }
 
     void emitir_movimientos(const sintactico::Expresion& nodo,
-                            std::string_view nombre_funcion) {
-        const auto declarados = parametros_.find(std::string(nombre_funcion));
-        if (declarados == parametros_.end()) {
-            return;
-        }
-
-        std::string extras;
-        for (std::size_t i = 0; i < nodo.lista.size() && i < declarados->second.size(); ++i) {
+                            const std::vector<sintactico::Parametro>& declarados) {
+        for (std::size_t i = 0; i < nodo.lista.size() && i < declarados.size(); ++i) {
             const sintactico::ExpresionPtr& argumento = nodo.lista[i];
             if (!argumento ||
                 argumento->tipo != sintactico::TipoExpresion::Identificador) {
                 continue;
             }
-            const std::string& declarado = declarados->second[i];
+            const std::string_view declarado = declarados[i].tipo;
             if (!declarado.empty() && (declarado.front() == '&' || declarado.front() == '*')) {
                 continue;  // préstamo: no mueve
             }
@@ -1646,14 +1735,26 @@ private:
 
         if (tipo_objeto.rfind("nooki_vector_", 0) == 0 ||
             tipo_objeto.rfind("nooki_mapa_", 0) == 0) {
-            std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(&" +
-                                 expresion(*acceso.izquierda);
+            // Si llega como préstamo (`&Vector<T>`), ya es un puntero.
+            std::string base = tipo_objeto;
+            const bool es_puntero = !base.empty() && base.back() == '*';
+            if (es_puntero) {
+                base.pop_back();
+            }
+            std::string salida = base + "_" + std::string(acceso.anotacion) + "(";
+            salida += es_puntero ? expresion(*acceso.izquierda)
+                                 : "&" + expresion(*acceso.izquierda);
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
                 if (!argumento) {
                     continue;
                 }
                 salida += ", ";
-                salida += expresion(*argumento);
+                // El runtime recibe el texto por valor, aunque llegue prestado.
+                if (tipo_de(*argumento) == "nooki_texto*") {
+                    salida += "(*" + expresion(*argumento) + ")";
+                } else {
+                    salida += expresion(*argumento);
+                }
             }
             salida += ')';
 
@@ -1719,6 +1820,7 @@ private:
     /// Tipos declarados de los parámetros, para saber cuáles son préstamos.
     std::map<std::string, std::vector<std::string>> parametros_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
+    std::map<std::string, const sintactico::Funcion*> funciones_ast_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string, const sintactico::Funcion*> genericos_;
