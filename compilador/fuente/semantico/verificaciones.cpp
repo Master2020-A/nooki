@@ -98,6 +98,7 @@ private:
         std::set<std::string> cajas;
         std::set<std::string> textos;
         std::set<std::string> prestables;
+        std::set<std::string> referencias;
         std::set<std::string> vectores_texto;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
@@ -198,6 +199,20 @@ private:
         return false;
     }
 
+    void declarar_referencia(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().referencias.insert(std::string(nombre));
+        }
+    }
+    bool es_referencia(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->referencias.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void declarar_prestable(std::string_view nombre) {
         if (!ambitos_.empty()) {
             ambitos_.back().prestables.insert(std::string(nombre));
@@ -229,7 +244,8 @@ private:
     void marcar_movida(std::string_view nombre) {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             const std::string clave(nombre);
-            if (it->cajas.count(clave) != 0 || it->textos.count(clave) != 0) {
+            if (it->cajas.count(clave) != 0 || it->textos.count(clave) != 0 ||
+                it->referencias.count(clave) != 0) {
                 it->movidas.insert(clave);
                 return;
             }
@@ -489,6 +505,23 @@ private:
                         marcar_movida(sentencia.expresion->lexema);
                     }
                     declarar_texto(sentencia.nombre);
+                    declarar_prestable(sentencia.nombre);
+                    declarar(sentencia.nombre, real);
+                    return;
+                }
+
+                // ¿Declara una clase por referencia?
+                if (sentencia.expresion->tipo == TipoExpresion::Construccion &&
+                    sentencia.expresion->monticulo) {
+                    declarar_referencia(sentencia.nombre);
+                    declarar_prestable(sentencia.nombre);
+                    declarar(sentencia.nombre, real);
+                    return;
+                }
+                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                    es_referencia(sentencia.expresion->lexema)) {
+                    marcar_movida(sentencia.expresion->lexema);
+                    declarar_referencia(sentencia.nombre);
                     declarar_prestable(sentencia.nombre);
                     declarar(sentencia.nombre, real);
                     return;

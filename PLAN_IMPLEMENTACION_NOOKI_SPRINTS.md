@@ -196,7 +196,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S33** | Entrada estándar | ✅ `leer_linea()` y `leer_entero()` como integradas, con texto propio y comportamiento definido al final de la entrada |
 | **S34** | Programa interactivo y `claves()` | ✅ `mapa.claves()` como vistas, ejemplo `0025-gastos` con módulo y entrada, y dos correcciones de generación (liberaciones fuera de la función y prefijo de llamadas internas) |
 | **S35** | Espacios de nombres para tipos | ✅ `modulo.tipo` en declaraciones, parámetros y campos, nombres de C con prefijo, visibilidad en tipos y enumeraciones, y comparación por definición |
-| **S36** | **Cierre v0.4: programas reales** | 20 programas de ejemplo; benchmarks fib/nbody/matmul vs C y Rust; manifiesto `nooki.toml` mínimo con dependencias locales y Git |
+| **S36** | `clase` por referencia | ✅ `nuevo Tipo { ... }` reserva en el montículo, la variable es dueña, mueve al asignar y libera al salir; accesos con puntero y liberación por tipo (ADR-021). *Reemplaza ADR-015* |
 
 ---
 

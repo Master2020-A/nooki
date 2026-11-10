@@ -937,6 +937,24 @@ ExpresionPtr Parser::prefijo() {
         if (token.lexema == "nulo") {
             return literal(TipoExpresion::Nulo);
         }
+        if (token.lexema == "nuevo") {
+            avanzar();
+            if (actual().es(TipoToken::Identificador) || actual().es(TipoToken::PalabraClave)) {
+                const std::string_view tipo = actual().lexema;
+                avanzar();
+                if (actual().lexema == "{") {
+                    ExpresionPtr nodo = analizar_construccion(tipo);
+                    if (nodo) {
+                        nodo->monticulo = true;
+                    }
+                    return nodo;
+                }
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«{»");
+                return nullptr;
+            }
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
+            return nullptr;
+        }
         if (token.lexema == "este") {
             const diagnostico::Span span = token.span;
             avanzar();

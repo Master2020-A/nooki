@@ -1,0 +1,22 @@
+// Clases por referencia: el objeto vive en el montículo y la variable es su dueña.
+clase contador {
+    publico valor: entero
+
+    publico funcion incrementar() -> vacio {
+        este.valor = este.valor + 1
+    }
+
+    publico funcion doble() -> entero {
+        retornar este.valor * 2
+    }
+}
+
+funcion principal() -> entero {
+    variable c = nuevo contador { valor: 10 }
+    c.incrementar()
+    c.incrementar()
+
+    imprimir(c.valor)
+    imprimir(c.doble())
+    retornar 0
+}

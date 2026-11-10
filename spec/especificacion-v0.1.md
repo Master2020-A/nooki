@@ -898,3 +898,27 @@ variable a: figuras.punto = figuras.crear(1, 2)
 - Dos módulos pueden declarar un tipo con el mismo nombre: no chocan.
 - `publico` en `estructura`, `clase` o `enumeracion` los hace visibles; sin ella son privados.
 - `punto` y `figuras.punto` designan la misma estructura: el compilador compara por definición.
+
+
+### 18.15 Clases por referencia
+
+```aura
+clase contador {
+    publico valor: entero
+
+    publico funcion incrementar() -> vacio {
+        este.valor = este.valor + 1
+    }
+}
+
+variable c = nuevo contador { valor: 10 }
+c.incrementar()
+imprimir(c.valor)     // 11
+```
+
+- Una `clase` se crea con `nuevo Tipo { ... }` y vive en el montículo.
+- La variable es **dueña** de la referencia: se libera al salir del ámbito.
+- Asignarla **mueve**; usar el origen después es `NOK5001`. Prestar con `&` no mueve.
+- `estructura` sigue siendo **por valor**: se copia al asignar y no tiene identidad.
+- La diferencia es observable: dos variables de estructura con los mismos campos son iguales; dos
+  referencias a la misma clase son el mismo objeto.

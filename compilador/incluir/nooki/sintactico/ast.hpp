@@ -61,6 +61,9 @@ struct Expresion {
     /// Argumentos de tipo en una llamada genérica: `identidad<entero>(42)`.
     std::vector<std::string_view> tipos_aplicados;
 
+    /// La construcción va al montículo (`nuevo persona { ... }`).
+    bool monticulo = false;
+
     diagnostico::Span span;
 };
 

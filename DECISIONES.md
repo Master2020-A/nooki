@@ -31,6 +31,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-018](docs/adr/ADR-018-texto-con-marca-de-propiedad.md) | `texto` con marca de propiedad (`propio`) en lugar de dos tipos | ✅ Aprobada (S23) |
 | [ADR-019](docs/adr/ADR-019-genericos-por-instanciacion.md) | Genéricos por instanciación explícita; sin inferencia todavía | ✅ Aprobada (S24) |
 | [ADR-020](docs/adr/ADR-020-regla-unica-de-propiedad.md) | Pasar un valor con dueño por valor lo mueve; prestar no mueve | ✅ Aprobada (S28) |
+| [ADR-021](docs/adr/ADR-021-clases-por-referencia.md) | `clase` por referencia con `nuevo`; reemplaza a ADR-015 | ✅ Aprobada (S36) |
 
 ---
 

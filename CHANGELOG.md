@@ -9,6 +9,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 36 — `clase` por referencia (2026-11-10)
+
+- **`nuevo Tipo { ... }`**: una clase se reserva en el montículo y la variable es su dueña.
+- **Misma regla de propiedad que el resto**: mover al asignar (`NOK5001`), prestar con `&` sin
+  mover, y liberación determinista al cerrar el ámbito.
+- **`estructura` sigue por valor**; ahora la diferencia es real y no una promesa.
+- **ADR-021** reemplaza a ADR-015 y documenta la decisión, sus costes y lo que desbloquea.
+- Programa de conformidad `0027-clases-referencia`, compilado y ejecutado.
+- Corregido el paso de receptores prestados en colecciones tras generalizar los punteros.
+
 ### Sprint 35 — Espacios de nombres para tipos (2026-11-10)
 
 - **`modulo.tipo`** en declaraciones, parámetros y campos: una estructura exportada por un módulo se

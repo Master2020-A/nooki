@@ -728,6 +728,11 @@ private:
         }
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             const std::string nombre_c = tipo_estructura(definicion);
+            tipo_ptr_[std::string(definicion.nombre)] = &definicion;
+            if (!definicion.modulo.empty()) {
+                tipo_ptr_[std::string(definicion.modulo) + "." +
+                          std::string(definicion.nombre)] = &definicion;
+            }
             tipo_c_de_[std::string(definicion.nombre)] = nombre_c;
             if (!definicion.modulo.empty()) {
                 tipo_c_de_[std::string(definicion.modulo) + "." +
@@ -794,15 +799,47 @@ private:
             for (const sintactico::Campo& campo : definicion.campos) {
                 salida_ << "    " << tipo_declarado_c(campo.tipo) << ' ' << campo.nombre << ";\n";
             }
-            salida_ << "} " << tipo_estructura(definicion) << ";\n\n";
+            const std::string nombre_c = tipo_estructura(definicion);
+            salida_ << "} " << nombre_c << ";\n\n";
+
+            if (definicion.es_clase) {
+                salida_ << "static " << nombre_c << "* " << nombre_c << "_nuevo(";
+                if (definicion.campos.empty()) {
+                    salida_ << "void";
+                } else {
+                    for (std::size_t i = 0; i < definicion.campos.size(); ++i) {
+                        if (i != 0) {
+                            salida_ << ", ";
+                        }
+                        salida_ << tipo_declarado_c(definicion.campos[i].tipo) << ' '
+                                << definicion.campos[i].nombre;
+                    }
+                }
+                salida_ << ") {\n";
+                salida_ << "    " << nombre_c << "* objeto = (" << nombre_c
+                        << "*)malloc(sizeof(" << nombre_c << "));\n";
+                salida_ << "    if (objeto == NULL) {\n        return NULL;\n    }\n";
+                for (const sintactico::Campo& campo : definicion.campos) {
+                    salida_ << "    objeto->" << campo.nombre << " = " << campo.nombre << ";\n";
+                }
+                salida_ << "    return objeto;\n}\n\n";
+                salida_ << "static void " << nombre_c << "_soltar(" << nombre_c
+                        << "* objeto) {\n    free(objeto);\n}\n\n";
+            }
         }
     }
 
     // --- Ámbito ------------------------------------------------------------
+    struct Liberable {
+        std::string nombre;
+        std::string funcion;
+        bool por_puntero = false;
+    };
+
     struct Ambito {
         std::map<std::string, std::string> tipos;
-        // nombre + función de liberación, en orden de declaración
-        std::vector<std::pair<std::string, std::string>> liberables;
+        // Qué liberar al salir, en orden de declaración.
+        std::vector<Liberable> liberables;
     };
 
     void abrir_ambito() { ambitos_.emplace_back(); }
@@ -817,10 +854,11 @@ private:
     /// Libera las cajas de un ámbito, de la última declarada a la primera.
     void liberar_cajas(Ambito& ambito, std::string_view excluir = {}) {
         for (auto it = ambito.liberables.rbegin(); it != ambito.liberables.rend(); ++it) {
-            if (!excluir.empty() && it->first == excluir) {
+            if (!excluir.empty() && it->nombre == excluir) {
                 continue;  // se devuelve: la propiedad pasa al llamante
             }
-            salida_ << indentacion() << it->second << "(&" << it->first << ");\n";
+            salida_ << indentacion() << it->funcion << "("
+                    << (it->por_puntero ? "" : "&") << it->nombre << ");\n";
         }
         ambito.liberables.clear();
     }
@@ -840,9 +878,11 @@ private:
         ambito.tipos[std::string(nombre)] = std::move(tipo);
     }
 
-    void registrar_liberable(std::string_view nombre, std::string funcion) {
+    void registrar_liberable(std::string_view nombre, std::string funcion,
+                             bool por_puntero = false) {
         if (!ambitos_.empty()) {
-            ambitos_.back().liberables.emplace_back(std::string(nombre), std::move(funcion));
+            ambitos_.back().liberables.push_back(
+                Liberable{std::string(nombre), std::move(funcion), por_puntero});
         }
     }
 
@@ -1133,24 +1173,32 @@ private:
 
         emitir_movimientos_de_llamada(*sentencia.expresion);
 
+        const bool referencia_de_clase = !tipo.empty() && tipo.back() == '*';
         if (tipo == "nooki_caja" || tipo == "nooki_texto" ||
-            tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0) {
+            tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0 ||
+            referencia_de_clase) {
             // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
                 const std::string& origen = std::string(sentencia.expresion->lexema);
-                salida_ << indentacion() << origen << ".datos = NULL;\n";
-                if (tipo == "nooki_texto") {
-                    salida_ << indentacion() << origen << ".propio = 0;\n";
+                if (referencia_de_clase) {
+                    salida_ << indentacion() << origen << " = NULL;\n";
+                } else {
+                    salida_ << indentacion() << origen << ".datos = NULL;\n";
+                    if (tipo == "nooki_texto") {
+                        salida_ << indentacion() << origen << ".propio = 0;\n";
+                    }
                 }
             }
             std::string liberar = "nooki_texto_soltar";
             if (tipo == "nooki_caja") {
                 liberar = "nooki_caja_soltar";
+            } else if (referencia_de_clase) {
+                liberar = tipo.substr(0, tipo.size() - 1) + "_soltar";
             } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
                        tipo.rfind("nooki_mapa_", 0) == 0) {
                 liberar = tipo + "_soltar";
             }
-            registrar_liberable(sentencia.nombre, std::move(liberar));
+            registrar_liberable(sentencia.nombre, std::move(liberar), referencia_de_clase);
         }
 
         declarar(sentencia.nombre, tipo);
@@ -1273,8 +1321,10 @@ private:
                 return buscar(expresion.lexema);
             case TipoExpresion::Construccion: {
                 const auto conocido = tipo_c_de_.find(std::string(expresion.anotacion));
-                return conocido != tipo_c_de_.end() ? conocido->second
-                                                    : tipo_estructura(expresion.anotacion);
+                const std::string tipo =
+                    conocido != tipo_c_de_.end() ? conocido->second
+                                                 : tipo_estructura(expresion.anotacion);
+                return expresion.monticulo ? tipo + "*" : tipo;
             }
             case TipoExpresion::Miembro: {
                 if (!expresion.izquierda) {
@@ -1385,8 +1435,11 @@ private:
                         tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
                         return acceso.anotacion == "agregar" ? "void" : "long long";
                     }
-                    const std::string tipo_objeto =
+                    std::string tipo_objeto =
                         acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
+                    if (!tipo_objeto.empty() && tipo_objeto.back() == '*') {
+                        tipo_objeto.pop_back();  // una clase por referencia
+                    }
                     constexpr std::string_view PREFIJO = "nooki_";
                     if (tipo_objeto.rfind(PREFIJO, 0) == 0) {
                         const auto metodos = metodos_.find(tipo_objeto);
@@ -1476,6 +1529,34 @@ private:
         const auto conocido = tipo_c_de_.find(std::string(nodo.anotacion));
         const std::string tipo =
             conocido != tipo_c_de_.end() ? conocido->second : tipo_estructura(nodo.anotacion);
+
+        // `nuevo persona { ... }`: se reserva y se rellenan los campos en orden de
+        // declaración, porque la función de reserva recibe todos los valores.
+        if (nodo.monticulo) {
+            std::string salida = tipo + "_nuevo(";
+            const auto definicion = tipo_ptr_.find(std::string(nodo.anotacion));
+            if (definicion != tipo_ptr_.end()) {
+                bool primero = true;
+                for (const sintactico::Campo& campo : definicion->second->campos) {
+                    if (!primero) {
+                        salida += ", ";
+                    }
+                    primero = false;
+                    std::string valor = "0";
+                    for (std::size_t i = 0; i < nodo.nombres_campo.size(); ++i) {
+                        if (nodo.nombres_campo[i] == campo.nombre && i < nodo.lista.size() &&
+                            nodo.lista[i]) {
+                            valor = expresion(*nodo.lista[i]);
+                            break;
+                        }
+                    }
+                    salida += valor;
+                }
+            }
+            salida += ')';
+            return salida;
+        }
+
         std::string salida = "(" + tipo + "){ ";
         for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
             if (i != 0) {
@@ -1571,6 +1652,10 @@ private:
         }
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Este) {
             return "este->" + nodo.anotacion;
+        }
+        const std::string objeto = tipo_de(*nodo.izquierda);
+        if (!objeto.empty() && objeto.back() == '*') {
+            return expresion(*nodo.izquierda) + "->" + nodo.anotacion;
         }
         return expresion(*nodo.izquierda) + "." + nodo.anotacion;
     }
@@ -1903,19 +1988,18 @@ private:
             return "0";
         }
 
-        const std::string tipo_objeto = tipo_de(*acceso.izquierda);
+        std::string tipo_objeto = tipo_de(*acceso.izquierda);
+        const bool objeto_puntero = !tipo_objeto.empty() && tipo_objeto.back() == '*';
+        if (objeto_puntero) {
+            tipo_objeto.pop_back();
+        }
 
         if (tipo_objeto.rfind("nooki_vector_", 0) == 0 ||
             tipo_objeto.rfind("nooki_mapa_", 0) == 0) {
             // Si llega como préstamo (`&Vector<T>`), ya es un puntero.
-            std::string base = tipo_objeto;
-            const bool es_puntero = !base.empty() && base.back() == '*';
-            if (es_puntero) {
-                base.pop_back();
-            }
-            std::string salida = base + "_" + std::string(acceso.anotacion) + "(";
-            salida += es_puntero ? expresion(*acceso.izquierda)
-                                 : "&" + expresion(*acceso.izquierda);
+            std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
+            salida += objeto_puntero ? expresion(*acceso.izquierda)
+                                     : "&" + expresion(*acceso.izquierda);
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
                 if (!argumento) {
                     continue;
@@ -1950,8 +2034,9 @@ private:
             return "0";
         }
 
-        std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(&" +
-                             expresion(*acceso.izquierda);
+        std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
+        salida += objeto_puntero ? expresion(*acceso.izquierda)
+                                 : "&" + expresion(*acceso.izquierda);
 
         for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
             if (!argumento) {
@@ -1988,6 +2073,7 @@ private:
 
     std::ostringstream salida_;
     std::map<std::string, std::string> tipo_c_de_;
+    std::map<std::string, const sintactico::DefinicionTipo*> tipo_ptr_;
     std::map<std::string, std::map<std::string, std::string>> campos_;
     std::map<std::string, std::string> retornos_;
     /// Tipos declarados de los parámetros, para saber cuáles son préstamos.
