@@ -750,3 +750,22 @@ si (saludo == "Hola, Nooki!") {
 - Asignar un texto lo **mueve**; usar el origen después es `NOK5001`.
 - Mezclar `texto` con `entero` en una operación es `NOK4001`.
 - `largo()` cuenta **bytes**, no caracteres.
+
+
+### 18.7 Genéricos
+
+```aura
+funcion identidad<T>(valor: T) -> T {
+    retornar valor
+}
+
+imprimir(identidad<entero>(42))        // 42
+imprimir(identidad<texto>("Nooki"))    // Nooki
+```
+
+- Una función puede declarar parámetros de tipo: `funcion nombre<T, U>(...)`.
+- **Los argumentos de tipo son explícitos** en cada llamada: `f<entero>(x)`. No hay inferencia
+  todavía.
+- Cada combinación de tipos produce una función distinta en el binario (instanciación), sin
+  despacho en ejecución.
+- `T` se puede usar en parámetros, en el tipo de retorno y en declaraciones dentro del cuerpo.

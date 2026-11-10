@@ -317,6 +317,29 @@ Funcion Parser::analizar_funcion() {
         error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de función");
     }
 
+    // Parámetros de tipo: `funcion identidad<T>(...)`.
+    if (actual().lexema == "<") {
+        avanzar();
+        while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ">") {
+            if (const Token& parametro = actual();
+                parametro.es(TipoToken::Identificador) ||
+                parametro.es(TipoToken::PalabraClave)) {
+                funcion.tipo_parametros.push_back(parametro.lexema);
+                avanzar();
+            } else {
+                error_en(parametro, diagnostico::codigos::TOKEN_INESPERADO,
+                         "un parámetro de tipo");
+                break;
+            }
+            if (!aceptar_lexema(",")) {
+                break;
+            }
+        }
+        if (!aceptar_lexema(">")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«>»");
+        }
+    }
+
     if (!aceptar_lexema("(")) {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
     }
@@ -758,6 +781,11 @@ ExpresionPtr Parser::expresion(int potencia_minima) {
         const Token& token = actual();
 
         // Postfijos: se unen más fuerte que cualquier operador.
+        if (token.lexema == "<" && izquierda->tipo == TipoExpresion::Identificador) {
+            if (intentar_tipos_aplicados(izquierda)) {
+                continue;
+            }
+        }
         if (token.lexema == "(") {
             izquierda = llamada(std::move(izquierda));
             continue;
@@ -931,6 +959,10 @@ ExpresionPtr Parser::llamada(ExpresionPtr destino) {
 
     auto nodo = std::make_unique<Expresion>();
     nodo->tipo = TipoExpresion::Llamada;
+    nodo->span = span;
+    // Los tipos genéricos se escriben en el destino (`f<entero>(...)`) y la
+    // llamada los hereda para que el resto del compilador los vea en un solo sitio.
+    nodo->tipos_aplicados = destino->tipos_aplicados;
     nodo->izquierda = std::move(destino);
 
     while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ")") {
@@ -950,6 +982,33 @@ ExpresionPtr Parser::llamada(ExpresionPtr destino) {
 
     nodo->span = span;
     return nodo;
+}
+
+bool Parser::intentar_tipos_aplicados(ExpresionPtr& nodo) {
+    const std::size_t inicio = indice_;
+    std::vector<std::string_view> tipos;
+
+    avanzar();  // "<"
+    for (;;) {
+        if (actual().es(TipoToken::Identificador) || actual().es(TipoToken::PalabraClave)) {
+            tipos.push_back(actual().lexema);
+            avanzar();
+        } else {
+            break;
+        }
+        if (aceptar_lexema(",")) {
+            continue;
+        }
+        break;
+    }
+
+    if (tipos.empty() || !aceptar_lexema(">") || actual().lexema != "(") {
+        indice_ = inicio;  // no era una aplicación de tipos: retroceder
+        return false;
+    }
+
+    nodo->tipos_aplicados = std::move(tipos);
+    return true;
 }
 
 ExpresionPtr Parser::indice(ExpresionPtr objeto) {

@@ -64,6 +64,10 @@ private:
     ExpresionPtr miembro(ExpresionPtr objeto, bool opcional);
     std::string analizar_tipo();
 
+    /// Si el objeto seguido de `<tipos>(` es una llamada genérica, consume los
+    /// tipos y los deja en el nodo. Devuelve verdadero si los consumió.
+    bool intentar_tipos_aplicados(ExpresionPtr& nodo);
+
     /// Analiza un tipo y devuelve su texto tal cual aparece en el fuente.
     /// Admite `&`, `&mutable`, `*` y genéricos `Caja<entero>`.
     std::string_view analizar_tipo_texto();

@@ -1,0 +1,19 @@
+// Genéricos: una función, varias instanciaciones.
+funcion identidad<T>(valor: T) -> T {
+    retornar valor
+}
+
+funcion mayor<T>(a: T, b: T) -> T {
+    si (a > b) {
+        retornar a
+    }
+    retornar b
+}
+
+funcion principal() -> entero {
+    imprimir(identidad<entero>(42))
+    imprimir(identidad<texto>("Nooki"))
+    imprimir(mayor<entero>(3, 7))
+    imprimir(mayor<texto>("abeja", "abejorro"))
+    retornar 0
+}

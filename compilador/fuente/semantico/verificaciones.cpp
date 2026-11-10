@@ -127,6 +127,9 @@ private:
         if (tipo.rfind("Caja<", 0) == 0) {
             return true;
         }
+        if (parametros_tipo_.count(std::string(tipo)) != 0) {
+            return true;
+        }
         if (es_prestamo(tipo)) {
             std::string_view resto = tipo.substr(1);
             if (resto.rfind("mutable ", 0) == 0) {
@@ -277,6 +280,11 @@ private:
 
     // --- Funciones ---------------------------------------------------------
     void revisar_funcion(const Funcion& funcion) {
+        const std::size_t previos = parametros_tipo_.size();
+        for (const std::string_view parametro : funcion.tipo_parametros) {
+            parametros_tipo_.insert(std::string(parametro));
+        }
+
         abrir_ambito();
         for (const sintactico::Parametro& parametro : funcion.parametros) {
             const Tipo tipo = desde_nombre(parametro.tipo);
@@ -297,6 +305,10 @@ private:
             revisar_sentencia(sentencia, funcion);
         }
         cerrar_ambito();
+
+        while (parametros_tipo_.size() > previos) {
+            parametros_tipo_.erase(*parametros_tipo_.begin());
+        }
     }
 
     void revisar_cuerpo(const std::vector<Sentencia>& cuerpo, const Funcion& funcion) {
@@ -903,6 +915,7 @@ private:
     std::map<std::string_view, const Funcion*> funciones_;
     std::map<std::string_view, const sintactico::DefinicionTipo*> tipos_;
     std::map<std::string_view, const sintactico::Enumeracion*> enumeraciones_;
+    std::set<std::string> parametros_tipo_;
     std::string_view estructura_actual_;
     std::vector<Ambito> ambitos_;
     int errores_ = 0;

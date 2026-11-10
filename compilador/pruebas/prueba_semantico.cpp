@@ -151,6 +151,12 @@ constexpr Caso VALIDOS[] = {
      "    imprimir(s)\n    imprimir(s.largo())\n    si (s == \"Hola, mundo\") {\n"
      "        imprimir(\"igual\")\n    }\n    retornar 0\n}",
      ""},
+
+    // --- Genéricos ---------------------------------------------------------
+    {"funcion identidad<T>(valor: T) -> T {\n    retornar valor\n}\n"
+     "funcion principal() -> entero {\n    variable a = identidad<entero>(7)\n"
+     "    variable b = identidad<texto>(\"x\")\n    retornar a\n}",
+     ""},
 };
 
 // Programas que deben producir exactamente el código indicado.

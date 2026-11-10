@@ -175,7 +175,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S21** | Préstamos de alcance de expresión | ✅ `&caja`, tipo `&Caja<entero>`, prestar sin mover, `&mutable` aceptado sin distinguirse todavía; guardar un préstamo es error (`NOK5002`), prestar algo que no es caja (`NOK4008`). ADR-017. *El `TypeId` internado ya existe en `semantico/tipos.hpp`* |
 | **S22** | Chequeo de expresiones y sentencias | Tipo de toda expresión; conversiones explícitas; errores con span; 150 tests |
 | **S23** | `texto` con operaciones | ✅ Tipo `texto` con longitud y marca de propiedad (ADR-018), concatenación con `+`, comparación por contenido, `.largo()` en O(1) y movimiento con `NOK5001`. *La iteración sobre texto y los caracteres UTF-8 llegan con el runtime completo* |
-| **S24** | Genéricos y monomorfización | Inferencia de argumentos, restricciones, `donde`; monomorfización lista para el IR; 100 tests |
+| **S24** | Genéricos por instanciación | ✅ Funciones genéricas `<T>` con argumentos de tipo explícitos, sustitución de tipos y una función de C por combinación (ADR-019). *La inferencia y los tipos genéricos llegan con las colecciones* |
 | **S25** | Rasgos e interfaces | Coherencia, regla de huérfanos, métodos por defecto, *dispatch* estático y dinámico; 100 tests |
 | **S26** | Clases: herencia, override y acceso | Jerarquías, `super`, abstractas y finales, visibilidad; errores de override; 120 tests |
 | **S27** | *Pattern matching*: exhaustividad | Chequeo de exhaustividad, tipos de patrones, bindings por referencia; 100 tests |

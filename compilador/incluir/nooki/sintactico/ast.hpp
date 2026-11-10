@@ -58,6 +58,9 @@ struct Expresion {
     /// Nombres de los campos en una construcción (`punto { x: 1, y: 2 }`).
     std::vector<std::string_view> nombres_campo;
 
+    /// Argumentos de tipo en una llamada genérica: `identidad<entero>(42)`.
+    std::vector<std::string_view> tipos_aplicados;
+
     diagnostico::Span span;
 };
 
@@ -133,6 +136,10 @@ struct Parametro {
 
 struct Funcion {
     std::string_view nombre;
+
+    /// Parámetros de tipo de una función genérica: `funcion identidad<T>(...)`.
+    std::vector<std::string_view> tipo_parametros;
+
     std::vector<Parametro> parametros;
     /// Tipo de retorno tal como se escribió (`vacio` si no se indicó).
     std::string_view tipo_retorno;

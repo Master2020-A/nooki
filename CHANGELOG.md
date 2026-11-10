@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 24 — Genéricos por instanciación (2026-11-10)
+
+- **Funciones genéricas**: `funcion identidad<T>(valor: T) -> T`, con instanciación explícita
+  `identidad<entero>(42)` e `identidad<texto>("Nooki")`.
+- **Una función de C por combinación de tipos**, con nombre mangleado (`nooki_identidad_texto`) y
+  emitida una sola vez. Sin despacho en ejecución.
+- **Descubrimiento diferido**: los cuerpos se generan primero en un búfer; las instanciaciones se
+  emiten después, hasta que no aparezcan nuevas.
+- **ADR-019** documenta el mecanismo, sus límites (sin inferencia) y el coste (una instancia por
+  combinación).
+- Programa de conformidad `0016-genericos`, compilado y ejecutado.
+
 ### Sprint 23 — `texto` de verdad (2026-11-10)
 - **Tipo `texto`** con longitud: `datos`, `largo` y marca `propio` (ADR-018). Los literales no se
   liberan; las concatenaciones sí.

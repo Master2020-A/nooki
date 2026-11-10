@@ -1,6 +1,7 @@
 #include "nooki/generador/generador_c.hpp"
 
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -204,6 +205,15 @@ const char* PRELUDIO =
     "    return resultado;\n"
     "}\n";
 
+std::string manglear(const std::string& nombre, const std::vector<std::string_view>& tipos) {
+    std::string salida = "nooki_" + nombre;
+    for (const std::string_view tipo : tipos) {
+        salida += "_";
+        salida += tipo;
+    }
+    return salida;
+}
+
 bool es_comparacion(std::string_view operador) {
     return operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
            operador == "<=" || operador == ">=";
@@ -214,12 +224,41 @@ public:
     std::string generar(const sintactico::Programa& programa) {
         registrar(programa);
 
+        // Los cuerpos se generan primero en un búfer aparte para descubrir las
+        // instanciaciones de funciones genéricas que aparecen en las llamadas.
+        std::string cuerpos = generar_cuerpos(programa);
+
+        // Instanciaciones, hasta que no aparezcan nuevas (una genérica puede
+        // llamar a otra).
+        std::set<std::string> emitidas;
+        for (int vuelta = 0; vuelta < 4; ++vuelta) {
+            std::vector<std::pair<std::string, std::pair<std::string, std::vector<std::string_view>>>>
+                pendientes;
+            for (const auto& [mangle, datos] : instancias_) {
+                if (emitidas.count(mangle) == 0) {
+                    pendientes.emplace_back(mangle, datos);
+                }
+            }
+            if (pendientes.empty()) {
+                break;
+            }
+
+            std::ostringstream original = std::move(salida_);
+            salida_ = std::ostringstream{};
+            for (const auto& [mangle, datos] : pendientes) {
+                emitir_instancia(mangle, datos.first, datos.second);
+                emitidas.insert(mangle);
+            }
+            cuerpos += salida_.str();
+            salida_ = std::move(original);
+        }
+
         salida_ << PRELUDIO;
         emitir_enumeraciones(programa);
         emitir_tipos(programa);
 
         for (const sintactico::Funcion& funcion : programa.funciones) {
-            if (funcion.nombre == "principal") {
+            if (funcion.nombre == "principal" || !funcion.tipo_parametros.empty()) {
                 continue;
             }
             salida_ << firma(funcion) << ";\n";
@@ -229,6 +268,24 @@ public:
                 salida_ << firma_metodo(definicion, metodo) << ";\n";
             }
         }
+        for (const auto& [mangle, datos] : instancias_) {
+            const auto generico = genericos_.find(datos.first);
+            if (generico == genericos_.end()) {
+                continue;
+            }
+            aplicar_sustitucion(*generico->second, datos.second);
+            salida_ << firma_con_nombre(*generico->second, mangle) << ";\n";
+            sustitucion_.clear();
+        }
+
+        salida_ << cuerpos;
+        return salida_.str();
+    }
+
+    /// Genera los cuerpos de funciones y métodos en un búfer propio.
+    std::string generar_cuerpos(const sintactico::Programa& programa) {
+        std::ostringstream original = std::move(salida_);
+        salida_ = std::ostringstream{};
 
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             for (const sintactico::Funcion& metodo : definicion.metodos) {
@@ -236,12 +293,70 @@ public:
                 emitir_metodo(definicion, metodo);
             }
         }
-
         for (const sintactico::Funcion& funcion : programa.funciones) {
+            if (!funcion.tipo_parametros.empty()) {
+                continue;
+            }
             salida_ << '\n';
             emitir_funcion(funcion);
         }
-        return salida_.str();
+
+        std::string texto = salida_.str();
+        salida_ = std::move(original);
+        return texto;
+    }
+
+    void aplicar_sustitucion(const sintactico::Funcion& funcion,
+                             const std::vector<std::string_view>& tipos) {
+        sustitucion_.clear();
+        for (std::size_t i = 0; i < funcion.tipo_parametros.size() && i < tipos.size(); ++i) {
+            sustitucion_[std::string(funcion.tipo_parametros[i])] = std::string(tipos[i]);
+        }
+    }
+
+    std::string firma_con_nombre(const sintactico::Funcion& funcion,
+                                 const std::string& nombre) const {
+        std::string salida = "static " + tipo_declarado_c(funcion.tipo_retorno) + " " + nombre + "(";
+        if (funcion.parametros.empty()) {
+            salida += "void";
+        } else {
+            for (std::size_t i = 0; i < funcion.parametros.size(); ++i) {
+                if (i != 0) {
+                    salida += ", ";
+                }
+                salida += tipo_declarado_c(funcion.parametros[i].tipo);
+                salida += ' ';
+                salida += funcion.parametros[i].nombre;
+            }
+        }
+        salida += ')';
+        return salida;
+    }
+
+    void emitir_instancia(const std::string& mangle, std::string_view nombre,
+                          const std::vector<std::string_view>& tipos) {
+        const auto generico = genericos_.find(std::string(nombre));
+        if (generico == genericos_.end()) {
+            no_soportado("una función genérica que no existe");
+            return;
+        }
+        const sintactico::Funcion& funcion = *generico->second;
+        aplicar_sustitucion(funcion, tipos);
+
+        salida_ << '\n' << firma_con_nombre(funcion, mangle) << " {\n";
+        abrir_ambito();
+        ++nivel_;
+        for (const sintactico::Parametro& parametro : funcion.parametros) {
+            declarar(parametro.nombre, tipo_declarado_c(parametro.tipo));
+        }
+        for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
+            emitir_sentencia(sentencia, false);
+        }
+        --nivel_;
+        cerrar_ambito();
+        salida_ << "}\n";
+
+        sustitucion_.clear();
     }
 
     [[nodiscard]] bool soportado() const noexcept { return soportado_; }
@@ -268,6 +383,11 @@ private:
         }
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
             enumeraciones_[std::string(enumeracion.nombre)] = &enumeracion;
+        }
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            if (!funcion.tipo_parametros.empty()) {
+                genericos_[std::string(funcion.nombre)] = &funcion;
+            }
         }
     }
 
@@ -363,6 +483,10 @@ private:
     /// Tipo de C de un tipo declarado: si el nombre corresponde a una estructura
     /// del programa, se usa su `typedef`; si no, el tipo primitivo.
     std::string tipo_declarado_c(std::string_view escrito) const {
+        const auto sustituido = sustitucion_.find(std::string(escrito));
+        if (sustituido != sustitucion_.end()) {
+            return tipo_declarado_c(sustituido->second);
+        }
         if (campos_.find(std::string(escrito)) != campos_.end()) {
             return tipo_estructura(escrito);
         }
@@ -707,6 +831,21 @@ private:
                 if (!expresion.izquierda) {
                     return "void";
                 }
+                if (expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                    !expresion.tipos_aplicados.empty()) {
+                    const auto generico =
+                        genericos_.find(std::string(expresion.izquierda->lexema));
+                    if (generico != genericos_.end()) {
+                        const sintactico::Funcion& funcion = *generico->second;
+                        for (std::size_t i = 0; i < funcion.tipo_parametros.size(); ++i) {
+                            if (i < expresion.tipos_aplicados.size() &&
+                                funcion.tipo_retorno == funcion.tipo_parametros[i]) {
+                                return tipo_declarado_c(expresion.tipos_aplicados[i]);
+                            }
+                        }
+                        return tipo_declarado_c(funcion.tipo_retorno);
+                    }
+                }
                 if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
                     const sintactico::Expresion& acceso = *expresion.izquierda;
                     if (acceso.izquierda && acceso.anotacion == "largo" &&
@@ -1023,6 +1162,23 @@ private:
             return "0";
         }
 
+        if (!nodo.tipos_aplicados.empty()) {
+            const std::string nombre_mangleado =
+                manglear(std::string(nodo.izquierda->lexema), nodo.tipos_aplicados);
+            instancias_[nombre_mangleado] = {std::string(nodo.izquierda->lexema),
+                                             nodo.tipos_aplicados};
+
+            std::string salida = nombre_mangleado + "(";
+            for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
+                if (i != 0) {
+                    salida += ", ";
+                }
+                salida += nodo.lista[i] ? expresion(*nodo.lista[i]) : "0";
+            }
+            salida += ')';
+            return salida;
+        }
+
         const std::string_view nombre_llamado = nodo.izquierda->lexema;
 
         if (nombre_llamado == "imprimir") {
@@ -1115,6 +1271,9 @@ private:
     std::map<std::string, std::string> retornos_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
+    std::map<std::string, const sintactico::Funcion*> genericos_;
+    std::map<std::string, std::pair<std::string, std::vector<std::string_view>>> instancias_;
+    std::map<std::string, std::string> sustitucion_;
     std::vector<Ambito> ambitos_;
     std::string estructura_actual_c_;
     int contador_temporal_ = 0;

@@ -59,7 +59,8 @@ Sprint 20 ✅  `Caja<T>`: propiedad única, movimiento y liberación determinist
 Sprint 21 ✅  Préstamos inmutables: prestar no mueve
 Sprint 22 ✅  Préstamos mutables y exclusividad · **v0.2.0**
 Sprint 23 ✅  `texto` con longitud, concatenación y comparación
-Sprint 24 ⬜  Genéricos y `Caja<T>` general
+Sprint 24 ✅  Genéricos por instanciación · una función, varios tipos
+Sprint 25 ⬜  Colecciones: `Vector<T>`
 ```
 
 **Ya compila y ejecuta:**
