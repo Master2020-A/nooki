@@ -1,0 +1,18 @@
+// Mapa<texto, entero>: tabla hash con claves propias del mapa.
+funcion principal() -> entero {
+    variable edades = Mapa<texto, entero>.nuevo()
+    edades.insertar("Ana", 30)
+    edades.insertar("Luis", 25)
+    edades.insertar("Ana", 31)
+
+    imprimir(edades.largo())
+    imprimir(edades.obtener("Ana"))
+    imprimir(edades.obtener("Luis"))
+
+    si (edades.contiene("Eva")) {
+        imprimir(1)
+    } sino {
+        imprimir(0)
+    }
+    retornar 0
+}

@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 29 — `Mapa<texto, entero>` (2026-11-10)
+
+- **Tabla hash con encadenamiento**: `Mapa<texto, entero>` con `insertar`, `obtener`, `contiene` y
+  `largo`.
+- **Hash FNV-1a** sobre los bytes de la clave; inserción al principio de la cubeta, O(1) medio.
+- **El mapa es dueño de las claves**: `insertar` transfiere el texto y anula el origen; al
+  reemplazar una clave existente se libera la nueva y se conserva la que ya estaba.
+- **Liberación determinista**: al cerrar el ámbito se sueltan todas las entradas, sus claves y el
+  arreglo de cubetas.
+- Programa de conformidad `0021-mapas`, compilado y ejecutado.
+
 ### Sprint 28 — Una sola regla de propiedad (2026-11-10)
 
 - **Pasar un valor con dueño por valor lo mueve**: `consumir(a)` deja `a` vacío y usarlo después

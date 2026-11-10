@@ -132,6 +132,9 @@ private:
         if (tipo.rfind("Vector<", 0) == 0) {
             return true;
         }
+        if (tipo.rfind("Mapa<", 0) == 0) {
+            return true;
+        }
         if (parametros_tipo_.count(std::string(tipo)) != 0) {
             return true;
         }
@@ -585,7 +588,8 @@ private:
             case TipoExpresion::Booleano:
                 return Tipo::Booleano;
             case TipoExpresion::Identificador: {
-                if (expresion.lexema == "Caja" || expresion.lexema == "Vector") {
+                if (expresion.lexema == "Caja" || expresion.lexema == "Vector" ||
+                    expresion.lexema == "Mapa") {
                     return Tipo::Desconocido;
                 }
                 if (esta_movida(expresion.lexema)) {
