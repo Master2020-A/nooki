@@ -172,6 +172,8 @@ struct DefinicionTipo {
     bool es_clase = false;
     /// Visibilidad para otros módulos.
     bool publico = false;
+    /// Clase base (`clase cuadrado hereda figura`), vacío si no hereda.
+    std::string_view base;
     std::vector<Campo> campos;
     std::vector<Funcion> metodos;
     diagnostico::Span span;

@@ -206,7 +206,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
-| **S37** | **FFI con C** | `externo "C"`, `@repr(C)`, funciones variádicas, enlace con libc; llamar a `printf` y `malloc`; 30 tests. *Va antes que la stdlib, a propósito* |
+| **S37** | Herencia y polimorfismo | ✅ `hereda`, campos aplanados, tabla virtual por jerarquía, despacho en las llamadas y reutilización de implementaciones (ADR-022) |
 | **S38** | Runtime: asignador y pánico | Asignador global + arena/pool; pánico con backtrace simbolizado; separación `core` / `no_std`; 20 tests |
 | **S39** | `core`: primitivos, Opcional, Resultado | Tipos fundamentales usables desde Nooki; vector mínimo; iteradores base; 100 tests en `.oki` |
 | **S40** | **Ensamblador e intrínsecos** | `asm!` en bloque `inseguro`; intrínsecos SIMD básicos; ejemplo de registro MMIO; 15 tests |

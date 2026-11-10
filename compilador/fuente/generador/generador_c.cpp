@@ -2,6 +2,7 @@
 
 #include <map>
 #include <set>
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -641,6 +642,8 @@ public:
         std::ostringstream original = std::move(salida_);
         salida_ = std::ostringstream{};
 
+        emitir_clases_runtime(programa);
+
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             for (const sintactico::Funcion& metodo : definicion.metodos) {
                 salida_ << '\n';
@@ -729,6 +732,7 @@ private:
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             const std::string nombre_c = tipo_estructura(definicion);
             tipo_ptr_[std::string(definicion.nombre)] = &definicion;
+            por_c_[tipo_estructura(definicion)] = &definicion;
             if (!definicion.modulo.empty()) {
                 tipo_ptr_[std::string(definicion.modulo) + "." +
                           std::string(definicion.nombre)] = &definicion;
@@ -740,9 +744,62 @@ private:
             }
         }
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
-            for (const sintactico::Campo& campo : definicion.campos) {
-                campos_[tipo_estructura(definicion)][std::string(campo.nombre)] =
-                    tipo_declarado_c(campo.tipo);
+            if (definicion.base.empty()) {
+                continue;
+            }
+            const auto padre = tipo_c_de_.find(std::string(definicion.base));
+            if (padre != tipo_c_de_.end()) {
+                base_de_[tipo_estructura(definicion)] = padre->second;
+            }
+        }
+        // Raíz de cada jerarquía y sus métodos virtuales.
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            const std::string nombre_c = tipo_estructura(definicion);
+            std::string raiz = nombre_c;
+            for (int guarda = 0; guarda < 32; ++guarda) {
+                const auto base = base_de_.find(raiz);
+                if (base == base_de_.end()) {
+                    break;
+                }
+                raiz = base->second;
+            }
+            const auto raiz_tipo = por_c_.find(raiz);
+            if (raiz_tipo != por_c_.end()) {
+                for (const sintactico::Funcion& metodo : raiz_tipo->second->metodos) {
+                    const std::string nombre_metodo(metodo.nombre);
+                    if (std::find(virtuales_de_[raiz].begin(), virtuales_de_[raiz].end(),
+                                  nombre_metodo) == virtuales_de_[raiz].end()) {
+                        virtuales_de_[raiz].push_back(nombre_metodo);
+                    }
+                }
+            }
+
+            // Campos heredados primero, después los propios.
+            std::vector<std::string> cadena;
+            for (std::string actual = nombre_c;;) {
+                cadena.insert(cadena.begin(), actual);
+                const auto base = base_de_.find(actual);
+                if (base == base_de_.end()) {
+                    break;
+                }
+                actual = base->second;
+            }
+            for (const std::string& clase : cadena) {
+                const auto tipo = por_c_.find(clase);
+                if (tipo == por_c_.end()) {
+                    continue;
+                }
+                for (const sintactico::Campo& campo : tipo->second->campos) {
+                    campos_planos_[nombre_c].emplace_back(std::string(campo.nombre),
+                                                          tipo_declarado_c(campo.tipo));
+                }
+            }
+        }
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            const std::string nombre_c = tipo_estructura(definicion);
+            // Los campos del mapa incluyen los heredados, para resolver accesos.
+            for (const auto& [campo, tipo_campo] : campos_planos_[nombre_c]) {
+                campos_[nombre_c][campo] = tipo_campo;
             }
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
@@ -794,39 +851,188 @@ private:
             return;
         }
         salida_ << '\n';
-        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
-            salida_ << "typedef struct " << tipo_estructura(definicion) << " {\n";
-            for (const sintactico::Campo& campo : definicion.campos) {
-                salida_ << "    " << tipo_declarado_c(campo.tipo) << ' ' << campo.nombre << ";\n";
-            }
-            const std::string nombre_c = tipo_estructura(definicion);
-            salida_ << "} " << nombre_c << ";\n\n";
 
-            if (definicion.es_clase) {
-                salida_ << "static " << nombre_c << "* " << nombre_c << "_nuevo(";
-                if (definicion.campos.empty()) {
-                    salida_ << "void";
-                } else {
-                    for (std::size_t i = 0; i < definicion.campos.size(); ++i) {
-                        if (i != 0) {
-                            salida_ << ", ";
-                        }
-                        salida_ << tipo_declarado_c(definicion.campos[i].tipo) << ' '
-                                << definicion.campos[i].nombre;
-                    }
-                }
-                salida_ << ") {\n";
-                salida_ << "    " << nombre_c << "* objeto = (" << nombre_c
-                        << "*)malloc(sizeof(" << nombre_c << "));\n";
-                salida_ << "    if (objeto == NULL) {\n        return NULL;\n    }\n";
-                for (const sintactico::Campo& campo : definicion.campos) {
-                    salida_ << "    objeto->" << campo.nombre << " = " << campo.nombre << ";\n";
-                }
-                salida_ << "    return objeto;\n}\n\n";
-                salida_ << "static void " << nombre_c << "_soltar(" << nombre_c
-                        << "* objeto) {\n    free(objeto);\n}\n\n";
+        // Tablas virtuales: una por raíz de jerarquía, con un hueco por método suyo.
+        // Se declaran antes de las estructuras (que solo guardan un puntero) y se
+        // definen después, porque sus firmas pueden nombrar tipos ya definidos.
+        for (const auto& [raiz, metodos] : virtuales_de_) {
+            if (!metodos.empty() && por_c_.count(raiz) != 0) {
+                salida_ << "typedef struct " << raiz << "_vtabla " << raiz << "_vtabla;\n";
             }
         }
+        salida_ << '\n';
+
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            const std::string nombre_c = tipo_estructura(definicion);
+            salida_ << "typedef struct " << nombre_c << " {\n";
+
+            // Las clases llevan la tabla virtual delante, para poder despachar.
+            if (definicion.es_clase && tiene_virtuales(nombre_c)) {
+                salida_ << "    const " << raiz_c(nombre_c) << "_vtabla* vtabla;\n";
+            }
+            for (const auto& [campo, tipo_campo] : campos_planos_[nombre_c]) {
+                salida_ << "    " << tipo_campo << ' ' << campo << ";\n";
+            }
+            salida_ << "} " << nombre_c << ";\n\n";
+        }
+
+        // Definición de las tablas virtuales, ya con todos los tipos disponibles.
+        for (const auto& [raiz, metodos] : virtuales_de_) {
+            if (metodos.empty()) {
+                continue;
+            }
+            const auto tipo = por_c_.find(raiz);
+            if (tipo == por_c_.end()) {
+                continue;
+            }
+            salida_ << "struct " << raiz << "_vtabla {\n";
+            for (const std::string& nombre : metodos) {
+                const sintactico::Funcion* metodo = nullptr;
+                for (const sintactico::Funcion& candidato : tipo->second->metodos) {
+                    if (candidato.nombre == nombre) {
+                        metodo = &candidato;
+                        break;
+                    }
+                }
+                if (metodo == nullptr) {
+                    continue;
+                }
+                salida_ << "    " << tipo_declarado_c(metodo->tipo_retorno) << " (*" << nombre
+                        << ")(void*";
+                for (const sintactico::Parametro& parametro : metodo->parametros) {
+                    salida_ << ", " << tipo_declarado_c(parametro.tipo);
+                }
+                salida_ << ");\n";
+            }
+            salida_ << "};\n\n";
+        }
+    }
+
+    bool es_virtual(const sintactico::DefinicionTipo& definicion,
+                    const sintactico::Funcion& metodo) const {
+        const auto virtuales = virtuales_de_.find(raiz_c(tipo_estructura(definicion)));
+        if (virtuales == virtuales_de_.end()) {
+            return false;
+        }
+        return std::find(virtuales->second.begin(), virtuales->second.end(),
+                         std::string(metodo.nombre)) != virtuales->second.end();
+    }
+
+    /// Raíz de la jerarquía de una clase (por nombre de C).
+    std::string raiz_c(const std::string& nombre) const {
+        std::string actual = nombre;
+        for (int guarda = 0; guarda < 32; ++guarda) {
+            const auto base = base_de_.find(actual);
+            if (base == base_de_.end()) {
+                break;
+            }
+            actual = base->second;
+        }
+        return actual;
+    }
+
+    bool tiene_virtuales(const std::string& nombre) const {
+        const auto virtuales = virtuales_de_.find(raiz_c(nombre));
+        return virtuales != virtuales_de_.end() && !virtuales->second.empty();
+    }
+
+    /// Reserva, libera y tabla virtual de cada clase. Va después de los prototipos,
+    /// porque la tabla necesita la dirección de los métodos.
+    void emitir_clases_runtime(const sintactico::Programa& programa) {
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            if (!definicion.es_clase) {
+                continue;
+            }
+            const std::string nombre_c = tipo_estructura(definicion);
+            const auto& campos = campos_planos_[nombre_c];
+
+            if (tiene_virtuales(nombre_c)) {
+                salida_ << "static const " << raiz_c(nombre_c) << "_vtabla " << nombre_c
+                        << "_tabla = {\n";
+                for (const std::string& metodo : virtuales_de_at(nombre_c)) {
+                    // Si la clase no lo redefine, hereda la implementación de su base.
+                    salida_ << "    " << implementacion_de(nombre_c, metodo) << "_" << metodo
+                            << ",\n";
+                }
+                salida_ << "};\n\n";
+            }
+
+            salida_ << "static " << nombre_c << "* " << nombre_c << "_nuevo(";
+            if (campos.empty()) {
+                salida_ << "void";
+            } else {
+                for (std::size_t i = 0; i < campos.size(); ++i) {
+                    if (i != 0) {
+                        salida_ << ", ";
+                    }
+                    salida_ << campos[i].second << ' ' << campos[i].first;
+                }
+            }
+            salida_ << ") {\n";
+            salida_ << "    " << nombre_c << "* objeto = (" << nombre_c
+                    << "*)malloc(sizeof(" << nombre_c << "));\n";
+            salida_ << "    if (objeto == NULL) {\n        return NULL;\n    }\n";
+            if (tiene_virtuales(nombre_c)) {
+                salida_ << "    objeto->vtabla = &" << nombre_c << "_tabla;\n";
+            }
+            for (const auto& [campo, tipo_campo] : campos) {
+                salida_ << "    objeto->" << campo << " = " << campo << ";\n";
+            }
+            salida_ << "    return objeto;\n}\n\n";
+            salida_ << "static void " << nombre_c << "_soltar(" << nombre_c
+                    << "* objeto) {\n    free(objeto);\n}\n\n";
+        }
+    }
+
+    /// Clase de la jerarquía que implementa el método (la más derivada que lo define).
+    std::string implementacion_de(const std::string& clase,
+                                  const std::string& metodo) const {
+        std::string actual = clase;
+        for (int guarda = 0; guarda < 32; ++guarda) {
+            const auto tipo = por_c_.find(actual);
+            if (tipo != por_c_.end()) {
+                for (const sintactico::Funcion& declarado : tipo->second->metodos) {
+                    if (declarado.nombre == metodo) {
+                        return actual;
+                    }
+                }
+            }
+            const auto base = base_de_.find(actual);
+            if (base == base_de_.end()) {
+                break;
+            }
+            actual = base->second;
+        }
+        return clase;
+    }
+
+    std::vector<std::string> virtuales_de_at(const std::string& nombre) const {
+        const auto virtuales = virtuales_de_.find(raiz_c(nombre));
+        return virtuales != virtuales_de_.end() ? virtuales->second
+                                                : std::vector<std::string>{};
+    }
+
+    std::string tipo_de_campo(const std::string& clase, const std::string& campo,
+                              const sintactico::Programa& programa) const {
+        std::string actual = clase;
+        for (int guarda = 0; guarda < 32; ++guarda) {
+            for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+                if (tipo_estructura(definicion) != actual) {
+                    continue;
+                }
+                for (const sintactico::Campo& declarado : definicion.campos) {
+                    if (declarado.nombre == campo) {
+                        return tipo_declarado_c(declarado.tipo);
+                    }
+                }
+            }
+            const auto base = base_de_.find(actual);
+            if (base == base_de_.end()) {
+                break;
+            }
+            actual = base->second;
+        }
+        return "long long";
     }
 
     // --- Ámbito ------------------------------------------------------------
@@ -990,7 +1196,7 @@ private:
         salida += ' ';
         salida += estructura + "_" + std::string(metodo.nombre);
         salida += '(';
-        salida += estructura + "* este";
+        salida += es_virtual(definicion, metodo) ? "void* este_v" : (estructura + "* este");
 
         for (const sintactico::Parametro& parametro : metodo.parametros) {
             salida += ", ";
@@ -1009,6 +1215,10 @@ private:
 
         const std::string anterior = estructura_actual_c_;
         estructura_actual_c_ = tipo_estructura(definicion);
+        if (es_virtual(definicion, metodo)) {
+            salida_ << "    " << estructura_actual_c_ << "* este = ("
+                    << estructura_actual_c_ << "*)este_v;\n";
+        }
 
         abrir_ambito();
         ++nivel_;
@@ -1337,7 +1547,10 @@ private:
                         return "nooki_" + std::string(expresion.izquierda->lexema);
                     }
                 }
-                const std::string objeto = tipo_de(*expresion.izquierda);
+                std::string objeto = tipo_de(*expresion.izquierda);
+                if (!objeto.empty() && objeto.back() == '*') {
+                    objeto.pop_back();  // una clase por referencia
+                }
                 constexpr std::string_view PREFIJO = "nooki_";
                 if (objeto.rfind(PREFIJO, 0) != 0) {
                     return "long long";
@@ -1442,12 +1655,21 @@ private:
                     }
                     constexpr std::string_view PREFIJO = "nooki_";
                     if (tipo_objeto.rfind(PREFIJO, 0) == 0) {
-                        const auto metodos = metodos_.find(tipo_objeto);
-                        if (metodos != metodos_.end()) {
-                            const auto metodo = metodos->second.find(acceso.anotacion);
-                            if (metodo != metodos->second.end()) {
-                                return tipo_declarado_c(metodo->second->tipo_retorno);
+                        // Un método puede venir de una clase base.
+                        std::string donde = tipo_objeto;
+                        for (int guarda = 0; guarda < 32; ++guarda) {
+                            const auto metodos = metodos_.find(donde);
+                            if (metodos != metodos_.end()) {
+                                const auto metodo = metodos->second.find(acceso.anotacion);
+                                if (metodo != metodos->second.end()) {
+                                    return tipo_declarado_c(metodo->second->tipo_retorno);
+                                }
                             }
+                            const auto base = base_de_.find(donde);
+                            if (base == base_de_.end()) {
+                                break;
+                            }
+                            donde = base->second;
                         }
                     }
                     return "void";
@@ -1534,17 +1756,17 @@ private:
         // declaración, porque la función de reserva recibe todos los valores.
         if (nodo.monticulo) {
             std::string salida = tipo + "_nuevo(";
-            const auto definicion = tipo_ptr_.find(std::string(nodo.anotacion));
-            if (definicion != tipo_ptr_.end()) {
+            const auto planos = campos_planos_.find(tipo);
+            if (planos != campos_planos_.end()) {
                 bool primero = true;
-                for (const sintactico::Campo& campo : definicion->second->campos) {
+                for (const auto& [campo, tipo_campo] : planos->second) {
                     if (!primero) {
                         salida += ", ";
                     }
                     primero = false;
                     std::string valor = "0";
                     for (std::size_t i = 0; i < nodo.nombres_campo.size(); ++i) {
-                        if (nodo.nombres_campo[i] == campo.nombre && i < nodo.lista.size() &&
+                        if (nodo.nombres_campo[i] == campo && i < nodo.lista.size() &&
                             nodo.lista[i]) {
                             valor = expresion(*nodo.lista[i]);
                             break;
@@ -2034,9 +2256,23 @@ private:
             return "0";
         }
 
-        std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
-        salida += objeto_puntero ? expresion(*acceso.izquierda)
-                                 : "&" + expresion(*acceso.izquierda);
+        const auto tipo_ptr = por_c_.find(tipo_objeto);
+        const std::vector<std::string> virtuales = virtuales_de_at(tipo_objeto);
+        const bool virtual_aqui =
+            objeto_puntero && tipo_ptr != por_c_.end() &&
+            std::find(virtuales.begin(), virtuales.end(), std::string(acceso.anotacion)) !=
+                virtuales.end();
+
+        std::string salida;
+        if (virtual_aqui) {
+            salida = "((const " + raiz_c(tipo_objeto) + "_vtabla*)" +
+                     expresion(*acceso.izquierda) + "->vtabla)->" + std::string(acceso.anotacion) +
+                     "((void*)" + expresion(*acceso.izquierda);
+        } else {
+            salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
+            salida += objeto_puntero ? expresion(*acceso.izquierda)
+                                     : "&" + expresion(*acceso.izquierda);
+        }
 
         for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
             if (!argumento) {
@@ -2074,6 +2310,13 @@ private:
     std::ostringstream salida_;
     std::map<std::string, std::string> tipo_c_de_;
     std::map<std::string, const sintactico::DefinicionTipo*> tipo_ptr_;
+    /// Nombre de C de la clase base de cada clase.
+    std::map<std::string, std::string> base_de_;
+    std::map<std::string, const sintactico::DefinicionTipo*> por_c_;
+    /// Campos de una clase en orden de C: primero los heredados.
+    std::map<std::string, std::vector<std::pair<std::string, std::string>>> campos_planos_;
+    /// Métodos virtuales (declarados en la raíz de la jerarquía).
+    std::map<std::string, std::vector<std::string>> virtuales_de_;
     std::map<std::string, std::map<std::string, std::string>> campos_;
     std::map<std::string, std::string> retornos_;
     /// Tipos declarados de los parámetros, para saber cuáles son préstamos.

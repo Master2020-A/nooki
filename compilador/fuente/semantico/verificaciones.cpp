@@ -1109,6 +1109,26 @@ private:
         return Tipo::Desconocido;
     }
 
+    /// Campos de una clase, incluidos los heredados (base primero).
+    std::vector<const sintactico::Campo*> campos_con_heredados(
+        const sintactico::DefinicionTipo& definicion) const {
+        std::vector<const sintactico::DefinicionTipo*> cadena;
+        const sintactico::DefinicionTipo* actual = &definicion;
+        for (int guarda = 0; guarda < 32 && actual != nullptr; ++guarda) {
+            cadena.insert(cadena.begin(), actual);
+            const auto base = tipos_.find(std::string(actual->base));
+            actual = base != tipos_.end() ? base->second : nullptr;
+        }
+
+        std::vector<const sintactico::Campo*> campos;
+        for (const sintactico::DefinicionTipo* tipo : cadena) {
+            for (const sintactico::Campo& campo : tipo->campos) {
+                campos.push_back(&campo);
+            }
+        }
+        return campos;
+    }
+
     Tipo tipo_construccion(const Expresion& expresion) {
         const auto encontrado = tipos_.find(std::string(expresion.anotacion));
         if (encontrado == tipos_.end()) {
@@ -1119,12 +1139,15 @@ private:
 
         const sintactico::DefinicionTipo& definicion = *encontrado->second;
 
-        for (std::size_t i = 0; i < expresion.lista.size(); ++i) {            const std::string_view nombre_campo =
+        const std::vector<const sintactico::Campo*> todos = campos_con_heredados(definicion);
+
+        for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
+            const std::string_view nombre_campo =
                 i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "";
             const sintactico::Campo* campo = nullptr;
-            for (const sintactico::Campo& declarado : definicion.campos) {
-                if (declarado.nombre == nombre_campo) {
-                    campo = &declarado;
+            for (const sintactico::Campo* declarado : todos) {
+                if (declarado->nombre == nombre_campo) {
+                    campo = declarado;
                     break;
                 }
             }
@@ -1140,10 +1163,10 @@ private:
             }
         }
 
-        for (const sintactico::Campo& campo : definicion.campos) {
+        for (const sintactico::Campo* declarado : todos) {
             bool presente = false;
             for (const std::string_view nombre_campo : expresion.nombres_campo) {
-                if (nombre_campo == campo.nombre) {
+                if (nombre_campo == declarado->nombre) {
                     presente = true;
                     break;
                 }
@@ -1151,7 +1174,7 @@ private:
             if (!presente) {
                 error(diagnostico::codigos::CAMPO_FALTANTE, expresion.span)
                     .parametro("tipo", std::string(definicion.nombre))
-                    .parametro("campo", std::string(campo.nombre));
+                    .parametro("campo", std::string(declarado->nombre));
             }
         }
 

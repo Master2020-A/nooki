@@ -226,6 +226,18 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
         return definicion;
     }
 
+    // Herencia simple: `clase cuadrado hereda figura`.
+    if (actual().lexema == "hereda") {
+        avanzar();
+        if (const Token& base = actual();
+            base.es(TipoToken::Identificador) || base.es(TipoToken::PalabraClave)) {
+            definicion.base = base.lexema;
+            avanzar();
+        } else {
+            error_en(base, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de clase");
+        }
+    }
+
     if (!aceptar_lexema("{")) {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«{»");
         return definicion;

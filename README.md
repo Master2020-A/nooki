@@ -72,7 +72,8 @@ Sprint 33 ✅  Entrada estándar · `leer_linea()` y `leer_entero()`
 Sprint 34 ✅  `mapa.claves()` y programa interactivo completo
 Sprint 35 ✅  Espacios de nombres para tipos · `modulo.tipo`
 Sprint 36 ✅  `clase` por referencia · `nuevo Tipo { ... }`
-Sprint 37 ⬜  Herencia y polimorfismo
+Sprint 37 ✅  Herencia y polimorfismo · tablas virtuales
+Sprint 38 ⬜  `super` y conversión a la base
 ```
 
 **Ya compila y ejecuta:**

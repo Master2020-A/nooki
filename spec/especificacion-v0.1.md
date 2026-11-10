@@ -922,3 +922,29 @@ imprimir(c.valor)     // 11
 - `estructura` sigue siendo **por valor**: se copia al asignar y no tiene identidad.
 - La diferencia es observable: dos variables de estructura con los mismos campos son iguales; dos
   referencias a la misma clase son el mismo objeto.
+
+
+### 18.16 Herencia y polimorfismo
+
+```aura
+clase figura {
+    publico nombre: texto
+    publico funcion area() -> entero { retornar 0 }
+}
+
+clase cuadrado hereda figura {
+    publico lado: entero
+    publico funcion area() -> entero { retornar este.lado * este.lado }
+}
+
+variable c = nuevo cuadrado { nombre: "c", lado: 4 }
+imprimir(c.area())    // 16
+```
+
+- `clase derivada hereda base` establece una jerarquía simple (una sola base).
+- La derivada **hereda los campos y los métodos** de la base; los campos heredados se nombran igual
+  en la construcción.
+- **Un método es virtual si lo declara la raíz de la jerarquía.** Se despacha por tabla, así que una
+  derivada que lo redefine responde con su versión.
+- Si la derivada no lo redefine, hereda la implementación de la base.
+- Los métodos propios de una derivada que no existen en la base no son virtuales.

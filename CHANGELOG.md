@@ -9,6 +9,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 37 — Herencia y polimorfismo (2026-11-10)
+
+- **`clase derivada hereda base`**: herencia simple con campos heredados primero y el puntero a la
+  tabla virtual al principio, de modo que un puntero a derivada sirve como puntero a base.
+- **Despacho por tabla virtual**: cada clase instala su tabla en `nuevo`, y una llamada a un método
+  virtual va por la tabla. Dos derivadas de la misma base responden distinto al mismo mensaje.
+- **Reutilización de implementaciones**: si una derivada no redefine un método, su tabla apunta a la
+  de la base.
+- **ADR-022** documenta la representación, el criterio de virtualidad y los límites (`super` y
+  conversión a la base quedan para el sprint siguiente).
+- Programa de conformidad `0028-herencia`, compilado y ejecutado.
+
 ### Sprint 36 — `clase` por referencia (2026-11-10)
 
 - **`nuevo Tipo { ... }`**: una clase se reserva en el montículo y la variable es su dueña.

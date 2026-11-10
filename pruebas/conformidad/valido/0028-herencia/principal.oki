@@ -1,0 +1,45 @@
+// Herencia y despacho: cada clase responde con su propia implementación.
+clase figura {
+    publico nombre: texto
+
+    publico funcion area() -> entero {
+        retornar 0
+    }
+
+    publico funcion describe() -> texto {
+        retornar este.nombre
+    }
+}
+
+clase cuadrado hereda figura {
+    publico lado: entero
+
+    publico funcion area() -> entero {
+        retornar este.lado * este.lado
+    }
+}
+
+clase rectangulo hereda figura {
+    publico ancho: entero
+    publico alto: entero
+
+    publico funcion area() -> entero {
+        retornar este.ancho * este.alto
+    }
+
+    publico funcion describe() -> texto {
+        retornar "rectangulo"
+    }
+}
+
+funcion principal() -> entero {
+    variable a = nuevo cuadrado { nombre: "cuadrado", lado: 4 }
+    variable b = nuevo rectangulo { nombre: "rectangulo", ancho: 3, alto: 5 }
+
+    imprimir(a.area())
+    imprimir(b.area())
+
+    imprimir(a.describe())
+    imprimir(b.describe())
+    retornar 0
+}
