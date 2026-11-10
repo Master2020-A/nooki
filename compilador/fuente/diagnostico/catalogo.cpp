@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 40> MENSAJES{{
+constexpr std::array<EntradaMensaje, 41> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -113,6 +113,10 @@ constexpr std::array<EntradaMensaje, 40> MENSAJES{{
     {codigos::FIRMA_INCOMPATIBLE,
      "«{metodo}» no coincide con la firma de «{base}.{metodo}»",
      "“{metodo}” does not match the signature of “{base}.{metodo}”"},
+
+    {codigos::PROPAGACION_SIN_RESULTADO,
+     "«?» solo se usa en una función que devuelve «Resultado»",
+     "“?” can only be used in a function returning “Resultado”"},
 
     {codigos::PRESTAMO_GUARDADO,
      "un préstamo no se puede guardar en una variable: solo vive durante la llamada",

@@ -3,6 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 40 — Errores como valores (2026-11-10)
+
+- **`Resultado`**: tipo del lenguaje que representa un entero o un error de texto. `Ok(valor)` y
+  `Error(mensaje)` lo construyen; se libera con su texto.
+- **Operador `?`**: propaga el error sin comprobarlo a mano. Si el resultado es un error, la función
+  devuelve ese mismo error.
+- **Verificación de contexto**: `?` fuera de una función que devuelve `Resultado` es `NOK4011`.
+- **`es_error()`, `valor()` y `mensaje()`** para tratar el resultado de forma explícita.
+- **ADR-023** documenta la decisión, el límite (un solo tipo de resultado hasta los genéricos de
+  tipos) y el coste (`?` solo en declaraciones).
+- Programa de conformidad `0031-resultados`, compilado y ejecutado con las dos ramas.
+
 ## [0.4.0] — 2026-11-10
 
 **La orientación a objetos está completa.** Clases por referencia, herencia simple, despacho por

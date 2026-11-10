@@ -1,0 +1,30 @@
+// Manejo de errores sin excepciones: `Resultado`, `Ok`/`Error` y `?`.
+funcion dividir(a: entero, b: entero) -> Resultado {
+    si (b == 0) {
+        retornar Error("no se puede dividir por cero")
+    }
+    retornar Ok(a / b)
+}
+
+// `?` propaga el error de la llamada sin comprobarlo a mano.
+funcion repartir(a: entero, divisor: entero) -> Resultado {
+    variable cociente = dividir(a, divisor)?
+    retornar Ok(cociente + 1)
+}
+
+funcion principal() -> entero {
+    variable bien = repartir(10, 2)
+    si (bien.es_error()) {
+        imprimir("error")
+    } sino {
+        imprimir(bien.valor())
+    }
+
+    variable mal = repartir(10, 0)
+    si (mal.es_error()) {
+        imprimir(mal.mensaje())
+    } sino {
+        imprimir(mal.valor())
+    }
+    retornar 0
+}

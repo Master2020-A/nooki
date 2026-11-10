@@ -967,3 +967,28 @@ imprimir(f.area())     // despacha a la implementación de cuadrado
 - Un puntero a una clase derivada se puede guardar en una variable de tipo base; la conversión es
   automática y segura porque la base ocupa el principio de la estructura.
 - Las llamadas a métodos virtuales a través de la variable base **despachan** a la clase concreta.
+
+
+### 18.18 Errores como valores
+
+```aura
+funcion dividir(a: entero, b: entero) -> Resultado {
+    si (b == 0) {
+        retornar Error("no se puede dividir por cero")
+    }
+    retornar Ok(a / b)
+}
+
+funcion repartir(a: entero, divisor: entero) -> Resultado {
+    variable cociente = dividir(a, divisor)?
+    retornar Ok(cociente + 1)
+}
+```
+
+- **No hay excepciones.** Un fallo es un valor de tipo `Resultado`.
+- `Ok(valor)` guarda un entero; `Error(mensaje)` guarda un texto.
+- **`?` propaga**: si el resultado es un error, la función devuelve ese mismo error; si no, la
+  expresión vale el entero.
+- `?` solo se permite en funciones que devuelven `Resultado` (`NOK4011`).
+- Para tratarlo explícitamente: `es_error()`, `valor()` y `mensaje()`.
+- El texto del error pertenece al resultado y se libera con él.

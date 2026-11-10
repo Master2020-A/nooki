@@ -209,7 +209,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S37** | Herencia y polimorfismo | ✅ `hereda`, campos aplanados, tabla virtual por jerarquía, despacho en las llamadas y reutilización de implementaciones (ADR-022) |
 | **S38** | `super` y conversión a la base | ✅ `super.metodo()`, puntero derivado en variable base con conversión, polimorfismo a través de la base y tipos de clase siempre por referencia. *La verificación de firmas al sobrescribir queda pendiente* |
 | **S39** | Cierre de la v0.4 | ✅ Verificación de firma al sobrescribir (`NOK4010`), ejemplo polimórfico entre módulos, especificación v0.4 y versión 0.4.0 |
-| **S40** | **Ensamblador e intrínsecos** | `asm!` en bloque `inseguro`; intrínsecos SIMD básicos; ejemplo de registro MMIO; 15 tests |
+| **S40** | Errores como valores | ✅ `Resultado` con `Ok`/`Error`, operador `?` que propaga en declaraciones, comprobación explícita por métodos y verificación de contexto (ADR-023) |
 | **S41** | RAII y *drops* | Inserción de drops en MIR, orden de destrucción, `destructor`; verificado con ASan/LSan; 40 tests |
 | **S42** | Concurrencia base | Hilos, mutex, canales, atómicos + **modelo de memoria documentado**; 40 tests |
 | **S43** | `no_std` y *bare metal* | Objetivo RISC-V/ARM sin sistema; demo "parpadeo" en QEMU; prueba real del pilar hardware; 5 tests |

@@ -160,6 +160,9 @@ private:
         if (tipo.rfind("Mapa<", 0) == 0) {
             return true;
         }
+        if (tipo == "Resultado") {
+            return true;
+        }
         if (parametros_tipo_.count(std::string(tipo)) != 0) {
             return true;
         }
@@ -458,6 +461,7 @@ private:
     }
 
     void revisar_funcion(const Funcion& funcion) {
+        funcion_actual_ = &funcion;
         const std::size_t previos = parametros_tipo_.size();
         for (const std::string_view parametro : funcion.tipo_parametros) {
             parametros_tipo_.insert(std::string(parametro));
@@ -791,6 +795,14 @@ private:
                 return tipo_llamada(expresion);
             case TipoExpresion::Construccion:
                 return tipo_construccion(expresion);
+            case TipoExpresion::Propagacion:
+                // `?` solo tiene sentido en una función que devuelve un resultado.
+                if (funcion_actual_ == nullptr ||
+                    funcion_actual_->tipo_retorno != "Resultado") {
+                    error(diagnostico::codigos::PROPAGACION_SIN_RESULTADO, expresion.span)
+                        .ayuda("devuelva «Resultado» desde esta función o trate el error");
+                }
+                return Tipo::Entero;
             case TipoExpresion::Miembro:
                 return tipo_miembro(expresion);
             case TipoExpresion::Este:
@@ -980,6 +992,21 @@ private:
         }
 
         const std::string_view nombre_llamado = expresion.izquierda->lexema;
+
+        if (nombre_llamado == "Ok" || nombre_llamado == "Error") {
+            if (expresion.lista.size() != 1) {
+                error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                    .parametro("funcion", std::string(nombre_llamado))
+                    .parametro("esperados", "1")
+                    .parametro("dados", std::to_string(expresion.lista.size()));
+            }
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            return Tipo::Desconocido;
+        }
 
         if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {
             if (!expresion.lista.empty()) {
@@ -1250,6 +1277,7 @@ private:
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
+    const Funcion* funcion_actual_ = nullptr;
     std::string_view estructura_actual_;
     std::vector<Ambito> ambitos_;
     int errores_ = 0;

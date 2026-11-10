@@ -1,0 +1,2 @@
+6
+no se puede dividir por cero

@@ -33,6 +33,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-020](docs/adr/ADR-020-regla-unica-de-propiedad.md) | Pasar un valor con dueño por valor lo mueve; prestar no mueve | ✅ Aprobada (S28) |
 | [ADR-021](docs/adr/ADR-021-clases-por-referencia.md) | `clase` por referencia con `nuevo`; reemplaza a ADR-015 | ✅ Aprobada (S36) |
 | [ADR-022](docs/adr/ADR-022-herencia-y-despacho.md) | Herencia simple con campos aplanados y despacho por tabla virtual | ✅ Aprobada (S37) |
+| [ADR-023](docs/adr/ADR-023-errores-como-valores.md) | Errores como valores: `Resultado`, `Ok`/`Error` y `?` | ✅ Aprobada (S40) |
 
 ---
 
