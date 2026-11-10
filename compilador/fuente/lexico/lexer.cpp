@@ -63,7 +63,7 @@ bool es_continuacion(char32_t c) noexcept {
 // Palabras reservadas (especificación §2.3: 63 palabras + 21 tipos)
 // ---------------------------------------------------------------------------
 
-constexpr std::array<std::string_view, 84> PALABRAS_RESERVADAS{{
+constexpr std::array<std::string_view, 85> PALABRAS_RESERVADAS{{
     "Este",
     "abstracta",
     "asincrono",
@@ -145,6 +145,7 @@ constexpr std::array<std::string_view, 84> PALABRAS_RESERVADAS{{
     "texto",
     "tipo",
     "union",
+    "usar",
     "vacio",
     "variable",
     "verdadero",

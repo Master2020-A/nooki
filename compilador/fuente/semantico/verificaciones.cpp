@@ -35,6 +35,11 @@ public:
         for (const sintactico::Enumeracion& enumeracion : programa_.enumeraciones) {
             enumeraciones_.emplace(enumeracion.nombre, &enumeracion);
         }
+        for (const sintactico::Funcion& funcion : programa_.funciones) {
+            if (!funcion.modulo.empty()) {
+                modulos_[funcion.modulo].emplace(funcion.nombre, &funcion);
+            }
+        }
         for (const Funcion& funcion : programa_.funciones) {
             revisar_funcion(funcion);
         }
@@ -763,6 +768,30 @@ private:
         comprobar_exclusividad(expresion);
 
         if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
+            const Expresion& acceso = *expresion.izquierda;
+            if (acceso.izquierda &&
+                acceso.izquierda->tipo == TipoExpresion::Identificador) {
+                const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                if (modulo != modulos_.end()) {
+                    const auto funcion = modulo->second.find(acceso.anotacion);
+                    if (funcion == modulo->second.end()) {
+                        error(diagnostico::codigos::FUNCION_NO_DECLARADA, expresion.span)
+                            .parametro("nombre", std::string(acceso.izquierda->lexema) + "." +
+                                                   std::string(acceso.anotacion));
+                        return Tipo::Desconocido;
+                    }
+                    if (!funcion->second->publico) {
+                        error(diagnostico::codigos::SIMBOLO_PRIVADO, expresion.span)
+                            .parametro("simbolo", std::string(acceso.anotacion))
+                            .parametro("modulo", std::string(acceso.izquierda->lexema));
+                        return Tipo::Desconocido;
+                    }
+                    return comprobar_argumentos(
+                        *funcion->second, expresion,
+                        std::string(acceso.izquierda->lexema) + "." +
+                            std::string(acceso.anotacion));
+                }
+            }
             return tipo_llamada_metodo(expresion);
         }
 
@@ -1000,6 +1029,7 @@ private:
     std::map<std::string_view, const Funcion*> funciones_;
     std::map<std::string_view, const sintactico::DefinicionTipo*> tipos_;
     std::map<std::string_view, const sintactico::Enumeracion*> enumeraciones_;
+    std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     std::string_view estructura_actual_;
     std::vector<Ambito> ambitos_;

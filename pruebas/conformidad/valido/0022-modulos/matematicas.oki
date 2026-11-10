@@ -1,0 +1,16 @@
+// Módulo de ejemplo: solo lo público se puede usar desde fuera.
+publico funcion cuadrado(n: entero) -> entero {
+    retornar n * n
+}
+
+publico funcion suma(a: entero, b: entero) -> entero {
+    retornar a + b
+}
+
+publico funcion saludo(nombre: texto) -> texto {
+    retornar "Hola, " + nombre
+}
+
+funcion auxiliar(n: entero) -> entero {
+    retornar n + 1
+}

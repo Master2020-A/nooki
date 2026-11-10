@@ -65,7 +65,8 @@ Sprint 26 ✅  Iteración sobre colecciones · `para (n en numeros)`
 Sprint 27 ✅  `Vector<texto>`: el vector es dueño de los elementos
 Sprint 28 ✅  Una sola regla de propiedad en las llamadas
 Sprint 29 ✅  `Mapa<texto, entero>`: tabla hash con claves propias
-Sprint 30 ⬜  Módulos e importaciones
+Sprint 30 ✅  Módulos e importaciones · varios archivos por programa
+Sprint 31 ⬜  Espacios de nombres para tipos
 ```
 
 **Ya compila y ejecuta:**

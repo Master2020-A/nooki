@@ -91,6 +91,20 @@ std::string nombre_c(std::string_view nombre) {
     return "nooki_" + std::string(nombre);
 }
 
+/// Nombre de C de una función, con el módulo por delante cuando lo tiene.
+std::string nombre_funcion_c(const sintactico::Funcion& funcion) {
+    if (funcion.nombre == "principal") {
+        return "main";
+    }
+    std::string salida = "nooki_";
+    if (!funcion.modulo.empty()) {
+        salida += funcion.modulo;
+        salida += "_";
+    }
+    salida += funcion.nombre;
+    return salida;
+}
+
 std::string mayusculas(std::string_view texto) {
     std::string salida;
     salida.reserve(texto.size());
@@ -602,6 +616,9 @@ private:
                 tipos.emplace_back(parametro.tipo);
             }
             parametros_[std::string(funcion.nombre)] = std::move(tipos);
+            if (!funcion.modulo.empty()) {
+                modulos_[funcion.modulo].emplace(funcion.nombre, &funcion);
+            }
         }
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
             enumeraciones_[std::string(enumeracion.nombre)] = &enumeracion;
@@ -731,7 +748,7 @@ private:
         std::string salida = "static ";
         salida += tipo_declarado_c(funcion.tipo_retorno);
         salida += ' ';
-        salida += nombre_c(funcion.nombre);
+        salida += nombre_funcion_c(funcion);
         salida += '(';
 
         if (funcion.parametros.empty()) {
@@ -1149,6 +1166,16 @@ private:
                         return "nooki_caja";
                     }
                     if (acceso.izquierda &&
+                        acceso.izquierda->tipo == TipoExpresion::Identificador) {
+                        const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                        if (modulo != modulos_.end()) {
+                            const auto funcion = modulo->second.find(acceso.anotacion);
+                            if (funcion != modulo->second.end()) {
+                                return tipo_declarado_c(funcion->second->tipo_retorno);
+                            }
+                        }
+                    }
+                    if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
                         acceso.izquierda->lexema == "Mapa") {
                         return "nooki_mapa_texto_entero";
@@ -1453,6 +1480,23 @@ private:
 
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro) {
             const sintactico::Expresion& acceso = *nodo.izquierda;
+
+            // Llamada a una función de otro módulo: `matematicas.cuadrado(7)`.
+            if (acceso.izquierda &&
+                acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+                modulos_.count(acceso.izquierda->lexema) != 0) {
+                std::string salida = "nooki_" + std::string(acceso.izquierda->lexema) + "_" +
+                                     std::string(acceso.anotacion) + "(";
+                for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
+                    if (i != 0) {
+                        salida += ", ";
+                    }
+                    salida += nodo.lista[i] ? expresion(*nodo.lista[i]) : "0";
+                }
+                salida += ')';
+                return salida;
+            }
+
             if (acceso.izquierda && acceso.anotacion == "largo") {
                 const std::string tipo = tipo_de(*acceso.izquierda);
                 if (tipo == "nooki_texto") {
@@ -1674,6 +1718,7 @@ private:
     std::map<std::string, std::string> retornos_;
     /// Tipos declarados de los parámetros, para saber cuáles son préstamos.
     std::map<std::string, std::vector<std::string>> parametros_;
+    std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string, const sintactico::Funcion*> genericos_;

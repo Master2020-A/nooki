@@ -190,7 +190,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
 | **S29** | `Mapa<texto, entero>` | ✅ Tabla hash con encadenamiento, FNV-1a, `insertar`/`obtener`/`contiene`/`largo`, claves propias y liberación determinista. *La eliminación de claves queda pendiente* |
-| **S30** | MIR: CFG y SSA | Bloques básicos, grafo de flujo, forma SSA; **arquitectura *query-based* (tipo salsa) desde aquí**; 50 tests |
+| **S30** | Módulos e importaciones | ✅ `usar`, `modulo.simbolo`, visibilidad `publico`/`privado`, carga recursiva con deduplicación de ciclos y traducción a nombres con prefijo. *Los tipos y enumeraciones de un módulo se comparten en un espacio global; falta delimitarlos* |
 | **S31** | Codegen LLVM: funciones y control | Aritmética, condicionales, bucles, llamadas, `imprimir` real; fib y ordenamiento funcionando |
 | **S32** | Codegen de tipos compuestos | Structs, tuplas, arreglos, punteros, `texto`, vector mínimo; layout y `@repr(C)`; 80 tests |
 | **S33** | Codegen de OOP | VTables, herencia, *dispatch* dinámico, constructores y destructores; 60 tests |

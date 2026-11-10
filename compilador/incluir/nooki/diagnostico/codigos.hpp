@@ -34,6 +34,8 @@ inline constexpr std::string_view CAMPO_DESCONOCIDO = "NOK3004";
 inline constexpr std::string_view CAMPO_FALTANTE = "NOK3005";
 inline constexpr std::string_view MIEMBRO_DESCONOCIDO = "NOK3006";
 inline constexpr std::string_view VARIANTE_DESCONOCIDA = "NOK3007";
+inline constexpr std::string_view MODULO_NO_ENCONTRADO = "NOK3008";
+inline constexpr std::string_view SIMBOLO_PRIVADO = "NOK3009";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";

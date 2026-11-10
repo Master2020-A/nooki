@@ -137,6 +137,12 @@ struct Parametro {
 struct Funcion {
     std::string_view nombre;
 
+    /// Módulo al que pertenece (vacío = archivo principal).
+    std::string_view modulo;
+
+    /// Visibilidad para otros módulos. Por defecto, privada.
+    bool publico = false;
+
     /// Parámetros de tipo de una función genérica: `funcion identidad<T>(...)`.
     std::vector<std::string_view> tipo_parametros;
 
@@ -175,6 +181,9 @@ struct Programa {
     std::vector<Funcion> funciones;
     std::vector<DefinicionTipo> tipos;
     std::vector<Enumeracion> enumeraciones;
+
+    /// Módulos que este archivo importa (`usar nombre`).
+    std::vector<std::string_view> usos;
 };
 
 }  // namespace nooki::sintactico

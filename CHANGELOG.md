@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 30 — Módulos e importaciones (2026-11-10)
+
+- **`usar modulo`** carga `modulo.oki` desde el directorio del archivo que lo importa, de forma
+  recursiva. Los ciclos se deduplican en lugar de repetirse.
+- **`modulo.simbolo`** para llamar a funciones de otro módulo; en C se traducen a
+  `nooki_<modulo>_<funcion>`.
+- **Visibilidad real**: solo `publico` es accesible desde fuera; usar un símbolo privado es
+  `NOK3009`, y un módulo que no existe es `NOK3008` con la ruta buscada.
+- Los módulos pueden importar a su vez otros módulos, y el orden no importa.
+- Programa de conformidad `0022-modulos` con dos archivos, compilado y ejecutado.
+
 ### Sprint 29 — `Mapa<texto, entero>` (2026-11-10)
 
 - **Tabla hash con encadenamiento**: `Mapa<texto, entero>` con `insertar`, `obtener`, `contiene` y

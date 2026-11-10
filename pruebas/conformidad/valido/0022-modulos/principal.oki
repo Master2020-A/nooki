@@ -1,0 +1,9 @@
+// Módulos: `usar` y acceso con `modulo.simbolo`.
+usar matematicas
+
+funcion principal() -> entero {
+    imprimir(matematicas.cuadrado(7))
+    imprimir(matematicas.suma(2, 3))
+    imprimir(matematicas.saludo("Nooki"))
+    retornar 0
+}

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <algorithm>
 #include <vector>
 
 #include "nooki/diagnostico/codigos.hpp"
@@ -26,6 +27,55 @@ constexpr const char* EXTENSION_BINARIO = ".exe";
 constexpr const char* NULO = "/dev/null";
 constexpr const char* EXTENSION_BINARIO = "";
 #endif
+
+std::string leer_archivo(const std::filesystem::path& ruta);
+
+/// Carga un módulo, marca sus funciones con su nombre y añade también los suyos.
+bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nombre,
+                   diagnostico::GestorFuentes& fuentes, diagnostico::Emisor& emisor,
+                   std::vector<std::string>& cargados, sintactico::Programa& destino) {
+    const std::string clave(nombre);
+    if (std::find(cargados.begin(), cargados.end(), clave) != cargados.end()) {
+        return true;  // ya cargado: un ciclo no duplica el módulo
+    }
+    cargados.push_back(clave);
+
+    const std::filesystem::path ruta = directorio / (clave + ".oki");
+    const std::string contenido = leer_archivo(ruta);
+    if (contenido.empty() && !std::filesystem::exists(ruta)) {
+        emisor.error(diagnostico::codigos::MODULO_NO_ENCONTRADO, diagnostico::Span{})
+            .parametro("modulo", clave)
+            .ayuda("se buscó «" + ruta.string() + "»");
+        return false;
+    }
+
+    const auto archivo = fuentes.anadir(ruta.string(), contenido);
+    lexico::Lexer lexer(fuentes, archivo, emisor);
+    const auto tokens = lexer.todos();
+    sintactico::Parser parser(fuentes, archivo, emisor, tokens);
+    sintactico::Programa sub = parser.analizar();
+    if (emisor.hay_errores()) {
+        return false;
+    }
+
+    for (const std::string_view uso : sub.usos) {
+        if (!cargar_modulo(directorio, uso, fuentes, emisor, cargados, destino)) {
+            return false;
+        }
+    }
+
+    for (sintactico::Funcion& funcion : sub.funciones) {
+        funcion.modulo = nombre;
+        destino.funciones.push_back(std::move(funcion));
+    }
+    for (sintactico::DefinicionTipo& tipo : sub.tipos) {
+        destino.tipos.push_back(std::move(tipo));
+    }
+    for (sintactico::Enumeracion& enumeracion : sub.enumeraciones) {
+        destino.enumeraciones.push_back(std::move(enumeracion));
+    }
+    return true;
+}
 
 bool existe_compilador(const std::string& candidato) {
     const std::string comando =
@@ -84,10 +134,19 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     const auto tokens = lexer.todos();
 
     sintactico::Parser parser(fuentes, archivo, emisor, tokens);
-    const sintactico::Programa programa = parser.analizar();
+    sintactico::Programa programa = parser.analizar();
 
     if (emisor.hay_errores()) {
         return Resultado{1, {}, {}};
+    }
+
+    // Módulos: se cargan los que el archivo principal importa, y los suyos.
+    std::vector<std::string> cargados;
+    const std::filesystem::path directorio = opciones.fuente.parent_path();
+    for (const std::string_view uso : programa.usos) {
+        if (!cargar_modulo(directorio, uso, fuentes, emisor, cargados, programa)) {
+            return Resultado{1, {}, {}};
+        }
     }
 
     // Verificación semántica: nombres, aridad, tipos, condiciones y retornos.

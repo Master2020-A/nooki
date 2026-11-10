@@ -163,6 +163,28 @@ Programa Parser::analizar() {
         if (token.es(TipoToken::FinDeArchivo)) {
             break;
         }
+        if (token.es(TipoToken::PalabraClave) && token.lexema == "usar") {
+            avanzar();
+            if (const Token& modulo = actual(); modulo.es(TipoToken::Identificador)) {
+                programa.usos.push_back(modulo.lexema);
+                avanzar();
+            } else {
+                error_en(modulo, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de módulo");
+            }
+            continue;
+        }
+        if (token.lexema == "publico" || token.lexema == "privado") {
+            const bool publico = token.lexema == "publico";
+            avanzar();
+            if (actual().lexema == "funcion") {
+                Funcion funcion = analizar_funcion();
+                funcion.publico = publico;
+                programa.funciones.push_back(std::move(funcion));
+            } else {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
+            }
+            continue;
+        }
         if (token.es(TipoToken::PalabraClave) && token.lexema == "funcion") {
             programa.funciones.push_back(analizar_funcion());
             continue;
