@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 27 — `Vector<texto>` y dueño de los elementos (2026-11-10)
+
+- **`Vector<texto>`**: colección de textos donde **el vector es el dueño** de cada elemento.
+- **`agregar` transfiere la propiedad**: usar la variable de origen después es `NOK5001`, igual que
+  con las cajas y los textos sueltos.
+- **`obtener` devuelve una vista** (`propio = 0`): leer el elemento no lo libera ni lo duplica.
+- `soltar` libera primero cada elemento y después el arreglo.
+- Programa de conformidad `0019-vectores-texto`, compilado y ejecutado.
+- **Corregido un fallo de corrupción de memoria**: la primera versión copiaba el texto al agregarlo
+  y ambos lados lo liberaban al salir del ámbito. Lo detectó el propio programa con una excepción
+  de montículo corrupto, no una prueba unitaria.
+
 ### Sprint 26 — Iteración sobre colecciones (2026-11-10)
 
 - **`para (n en numeros)`**: recorre una colección por índice con una variable interna oculta; el

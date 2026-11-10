@@ -62,7 +62,8 @@ Sprint 23 ✅  `texto` con longitud, concatenación y comparación
 Sprint 24 ✅  Genéricos por instanciación · una función, varios tipos
 Sprint 25 ✅  `Vector<T>`: colección dinámica con dueño
 Sprint 26 ✅  Iteración sobre colecciones · `para (n en numeros)`
-Sprint 27 ⬜  `Vector<texto>` y `Mapa<T>`
+Sprint 27 ✅  `Vector<texto>`: el vector es dueño de los elementos
+Sprint 28 ⬜  `Mapa<texto, entero>`
 ```
 
 **Ya compila y ejecuta:**

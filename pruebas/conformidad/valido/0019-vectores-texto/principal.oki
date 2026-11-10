@@ -1,0 +1,16 @@
+// Vector<texto>: el vector toma el dueño de cada elemento.
+funcion principal() -> entero {
+    variable textos = Vector<texto>.nuevo()
+
+    variable a = "uno" + "!"
+    textos.agregar(a)
+    textos.agregar("dos")
+
+    para (t en textos) {
+        imprimir(t)
+        imprimir(t.largo())
+    }
+
+    imprimir(textos.largo())
+    retornar 0
+}

@@ -83,6 +83,7 @@ private:
         std::set<std::string> cajas;
         std::set<std::string> textos;
         std::set<std::string> prestables;
+        std::set<std::string> vectores_texto;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
@@ -157,6 +158,20 @@ private:
         }
         return false;
     }
+    void declarar_vector_texto(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().vectores_texto.insert(std::string(nombre));
+        }
+    }
+    bool es_vector_texto(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->vectores_texto.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void declarar_prestable(std::string_view nombre) {
         if (!ambitos_.empty()) {
             ambitos_.back().prestables.insert(std::string(nombre));
@@ -375,6 +390,14 @@ private:
                 if (sentencia.tipo_declarado.rfind("Vector<", 0) == 0 ||
                     es_llamada_vector(*sentencia.expresion)) {
                     declarar_prestable(sentencia.nombre);
+                }
+                if (es_llamada_vector(*sentencia.expresion)) {
+                    const Expresion& destino = *sentencia.expresion->izquierda;
+                    if (destino.izquierda &&
+                        !destino.izquierda->tipos_aplicados.empty() &&
+                        destino.izquierda->tipos_aplicados.front() == "texto") {
+                        declarar_vector_texto(sentencia.nombre);
+                    }
                 }
                 if (real == Tipo::Texto && sentencia.tipo_declarado.empty()) {
                     if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
@@ -783,6 +806,14 @@ private:
             if (objeto == Tipo::Texto && acceso.anotacion == "largo") {
                 return Tipo::Entero;
             }
+        }
+
+        // `vector.agregar(texto)` toma el dueño del elemento.
+        if (acceso.anotacion == "agregar" && acceso.izquierda &&
+            acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            es_vector_texto(acceso.izquierda->lexema) && expresion.lista.size() == 1 &&
+            expresion.lista.front() && expresion.lista.front()->tipo == TipoExpresion::Identificador) {
+            marcar_movida(expresion.lista.front()->lexema);
         }
 
         const sintactico::DefinicionTipo* definicion = tipo_por_nombre(
