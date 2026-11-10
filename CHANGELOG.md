@@ -3,6 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [0.4.0] — 2026-11-10
+
+**La orientación a objetos está completa.** Clases por referencia, herencia simple, despacho por
+tabla virtual, `super` y variables de tipo base con polimorfismo. Es el último pilar del lenguaje
+tal como se concibió en los planes originales.
+
+### Sprint 39 — Cierre de la v0.4 (2026-11-10)
+
+- **Verificación de firma al sobrescribir**: una derivada que redefine un método virtual con otros
+  parámetros o retorno recibe `NOK4010` en Nooki, en lugar de fallar en el C generado.
+- **Ejemplo polimórfico entre módulos** (`0030-formas`): un módulo exporta la jerarquía y fábricas,
+  y el programa principal guarda derivadas en variables de tipo base y las describe.
+- **Especificación v0.4** y versión 0.4.0.
+
 ## [0.3.0] — 2026-11-10
 
 **Biblioteca básica completa.** El lenguaje ya tiene estructuras con métodos, enumeraciones y

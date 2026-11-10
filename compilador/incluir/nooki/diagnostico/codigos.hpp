@@ -47,6 +47,7 @@ inline constexpr std::string_view COINCIDE_NO_EXHAUSTIVO = "NOK4006";
 inline constexpr std::string_view DEREFERENCIA_INVALIDA = "NOK4007";
 inline constexpr std::string_view PRESTAMO_INVALIDO = "NOK4008";
 inline constexpr std::string_view ESCRITURA_EN_PRESTAMO_INMUTABLE = "NOK4009";
+inline constexpr std::string_view FIRMA_INCOMPATIBLE = "NOK4010";
 
 // --- Propiedad y préstamos (NOK5xxx) ---------------------------------------
 inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";

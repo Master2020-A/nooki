@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.3.0 |
+| **Versión** | 0.4.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -74,7 +74,8 @@ Sprint 35 ✅  Espacios de nombres para tipos · `modulo.tipo`
 Sprint 36 ✅  `clase` por referencia · `nuevo Tipo { ... }`
 Sprint 37 ✅  Herencia y polimorfismo · tablas virtuales
 Sprint 38 ✅  `super` y polimorfismo a través de la base
-Sprint 39 ⬜  Cierres de la v0.4: firma al sobrescribir
+Sprint 39 ✅  Cierre de la v0.4 · firma al sobrescribir y ejemplo polimórfico
+Sprint 40 ⬜  Genéricos de tipos
 ```
 
 **Ya compila y ejecuta:**

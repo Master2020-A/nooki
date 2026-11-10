@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 39> MENSAJES{{
+constexpr std::array<EntradaMensaje, 40> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -109,6 +109,10 @@ constexpr std::array<EntradaMensaje, 39> MENSAJES{{
     {codigos::ESCRITURA_EN_PRESTAMO_INMUTABLE,
      "no se puede escribir a través de un préstamo inmutable: use «&mutable»",
      "cannot write through an immutable borrow: use “&mutable”"},
+
+    {codigos::FIRMA_INCOMPATIBLE,
+     "«{metodo}» no coincide con la firma de «{base}.{metodo}»",
+     "“{metodo}” does not match the signature of “{base}.{metodo}”"},
 
     {codigos::PRESTAMO_GUARDADO,
      "un préstamo no se puede guardar en una variable: solo vive durante la llamada",

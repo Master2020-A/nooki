@@ -1,0 +1,13 @@
+// Polimorfismo entre módulos: variables de tipo base que despachan.
+usar formas
+
+funcion principal() -> entero {
+    variable a: formas.figura = formas.nuevo_cuadrado("c", 4)
+    variable b: formas.figura = formas.nuevo_rectangulo("r", 3, 5)
+
+    imprimir(a.area())
+    imprimir(b.area())
+    imprimir(a.describe())
+    imprimir(b.describe())
+    retornar 0
+}

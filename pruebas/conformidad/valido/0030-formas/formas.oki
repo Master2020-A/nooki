@@ -1,0 +1,43 @@
+// Módulo de formas: una jerarquía con despacho y fábricas.
+publico clase figura {
+    publico nombre: texto
+
+    publico funcion area() -> entero {
+        retornar 0
+    }
+
+    publico funcion describe() -> texto {
+        retornar este.nombre
+    }
+}
+
+publico clase cuadrado hereda figura {
+    publico lado: entero
+
+    publico funcion area() -> entero {
+        retornar este.lado * este.lado
+    }
+
+    publico funcion describe() -> texto {
+        retornar super.describe() + " cuadrado"
+    }
+}
+
+publico clase rectangulo hereda figura {
+    publico ancho: entero
+    publico alto: entero
+
+    publico funcion area() -> entero {
+        retornar este.ancho * este.alto
+    }
+}
+
+publico funcion nuevo_cuadrado(nombre: texto, lado: entero) -> cuadrado {
+    variable c = nuevo cuadrado { nombre: nombre, lado: lado }
+    retornar c
+}
+
+publico funcion nuevo_rectangulo(nombre: texto, ancho: entero, alto: entero) -> rectangulo {
+    variable r = nuevo rectangulo { nombre: nombre, ancho: ancho, alto: alto }
+    retornar r
+}

@@ -1,8 +1,8 @@
-# Especificación del lenguaje NOOKI v0.3
+# Especificación del lenguaje NOOKI v0.4
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Borrador normativo — v0.1 ampliada en la v0.3 (§18) |
+| **Estado** | Borrador normativo — v0.1 ampliada en la v0.4 (§18) |
 | **Fecha** | 2026-11-09 |
 | **Extensión de archivo** | `.oki` |
 | **Gramática** | [`gramatica.ebnf`](gramatica.ebnf) (normativa) |

@@ -53,6 +53,7 @@ public:
         for (const Funcion& funcion : programa_.funciones) {
             revisar_funcion(funcion);
         }
+        revisar_sobrescrituras();
         for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
             const std::string_view anterior = estructura_actual_;
             estructura_actual_ = definicion.nombre;
@@ -399,6 +400,63 @@ private:
     }
 
     // --- Funciones ---------------------------------------------------------
+    /// Busca un método por nombre en la jerarquía de una clase.
+    const sintactico::Funcion* metodo_en_jerarquia(const sintactico::DefinicionTipo& definicion,
+                                                    std::string_view nombre) const {
+        const sintactico::DefinicionTipo* actual = &definicion;
+        for (int guarda = 0; guarda < 32 && actual != nullptr; ++guarda) {
+            for (const sintactico::Funcion& metodo : actual->metodos) {
+                if (metodo.nombre == nombre) {
+                    return &metodo;
+                }
+            }
+            const auto base = tipos_.find(std::string(actual->base));
+            actual = base != tipos_.end() ? base->second : nullptr;
+        }
+        return nullptr;
+    }
+
+    /// ¿Respeta `sobrescrito` la firma de `base`?
+    static bool firma_compatible(const Funcion& sobrescrito, const Funcion& base) {
+        if (sobrescrito.parametros.size() != base.parametros.size()) {
+            return false;
+        }
+        if (sobrescrito.tipo_retorno != base.tipo_retorno) {
+            return false;
+        }
+        for (std::size_t i = 0; i < base.parametros.size(); ++i) {
+            if (sobrescrito.parametros[i].tipo != base.parametros[i].tipo) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void revisar_sobrescrituras() {
+        for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
+            if (definicion.base.empty()) {
+                continue;
+            }
+            const auto padre = tipos_.find(std::string(definicion.base));
+            if (padre == tipos_.end()) {
+                continue;
+            }
+            for (const sintactico::Funcion& metodo : definicion.metodos) {
+                const sintactico::Funcion* heredado =
+                    metodo_en_jerarquia(*padre->second, metodo.nombre);
+                if (heredado == nullptr) {
+                    continue;
+                }
+                if (!firma_compatible(metodo, *heredado)) {
+                    error(diagnostico::codigos::FIRMA_INCOMPATIBLE, metodo.span)
+                        .parametro("metodo", std::string(metodo.nombre))
+                        .parametro("base", std::string(definicion.base))
+                        .ayuda("la firma debe coincidir con la del método heredado");
+                }
+            }
+        }
+    }
+
     void revisar_funcion(const Funcion& funcion) {
         const std::size_t previos = parametros_tipo_.size();
         for (const std::string_view parametro : funcion.tipo_parametros) {
