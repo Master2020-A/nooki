@@ -475,6 +475,54 @@ const char* PRELUDIO =
     "    printf(\"%lld\\n\", valor);\n"
     "}\n"
     "\n"
+    "/* Entrada estándar: la línea llega sin el salto y con dueño. */\n"
+    "static nooki_texto nooki_leer_linea(void) {\n"
+    "    nooki_texto t;\n"
+    "    long long capacidad = 64;\n"
+    "    t.largo = 0;\n"
+    "    t.propio = 1;\n"
+    "    t.datos = (char*)malloc((size_t)capacidad);\n"
+    "    if (t.datos == NULL) {\n"
+    "        t.propio = 0;\n"
+    "        return t;\n"
+    "    }\n"
+    "    int c;\n"
+    "    while ((c = fgetc(stdin)) != EOF && c != '\\n') {\n"
+    "        if (t.largo + 1 >= capacidad) {\n"
+    "            capacidad *= 2;\n"
+    "            char* datos = (char*)realloc(t.datos, (size_t)capacidad);\n"
+    "            if (datos == NULL) {\n"
+    "                break;\n"
+    "            }\n"
+    "            t.datos = datos;\n"
+    "        }\n"
+    "        t.datos[t.largo] = (char)c;\n"
+    "        t.largo += 1;\n"
+    "    }\n"
+    "    t.datos[t.largo] = 0;\n"
+    "    return t;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_leer_entero(void) {\n"
+    "    nooki_texto linea = nooki_leer_linea();\n"
+    "    long long valor = 0;\n"
+    "    long long signo = 1;\n"
+    "    long long i = 0;\n"
+    "    if (linea.largo > 0 && linea.datos[0] == '-') {\n"
+    "        signo = -1;\n"
+    "        i = 1;\n"
+    "    }\n"
+    "    for (; i < linea.largo; ++i) {\n"
+    "        const char d = linea.datos[i];\n"
+    "        if (d < '0' || d > '9') {\n"
+    "            break;\n"
+    "        }\n"
+    "        valor = valor * 10 + (d - '0');\n"
+    "    }\n"
+    "    nooki_texto_soltar(&linea);\n"
+    "    return signo * valor;\n"
+    "}\n"
+    "\n"
     "static long long nooki_potencia(long long base, long long exponente) {\n"
     "    long long resultado = 1;\n"
     "    for (long long i = 0; i < exponente; ++i) {\n"
@@ -1303,6 +1351,12 @@ private:
                     return "void";
                 }
                 if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
+                    if (expresion.izquierda->lexema == "leer_linea") {
+                        return "nooki_texto";
+                    }
+                    if (expresion.izquierda->lexema == "leer_entero") {
+                        return "long long";
+                    }
                     const auto encontrada =
                         retornos_.find(std::string(expresion.izquierda->lexema));
                     if (encontrada != retornos_.end()) {
@@ -1669,6 +1723,14 @@ private:
         }
 
         const std::string_view nombre_llamado = nodo.izquierda->lexema;
+
+        if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {
+            if (!nodo.lista.empty()) {
+                no_soportado("«" + std::string(nombre_llamado) + "» sin argumentos");
+                return "0";
+            }
+            return "nooki_" + std::string(nombre_llamado) + "()";
+        }
 
         if (nombre_llamado == "imprimir") {
             if (nodo.lista.size() != 1 || !nodo.lista.front()) {

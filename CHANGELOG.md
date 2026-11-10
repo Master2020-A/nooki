@@ -9,6 +9,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 33 — Entrada estándar (2026-11-10)
+
+- **`leer_linea() -> texto`**: lee una línea de la entrada estándar sin el salto y devuelve un texto
+  con dueño. Al final de la entrada devuelve un texto vacío.
+- **`leer_entero() -> entero`**: lee una línea y la interpreta como entero con signo; si no hay
+  dígitos, devuelve 0.
+- Ambas son integradas del lenguaje (no funciones de módulo) y respetan la propiedad: el texto que
+  devuelven se libera al cerrar el ámbito.
+- Un programa ya puede conversar: pide datos, los procesa y responde.
+- Programa de conformidad `0024-entrada`, que compila y ejecuta en cada `ctest` con la entrada
+  cerrada.
+
 ### Sprint 32 — `Mapa`: rehash y eliminación (2026-11-10)
 
 - **`quitar(clave)`**: elimina la entrada, libera su clave y devuelve 1 si existía, 0 si no.

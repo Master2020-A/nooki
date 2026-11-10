@@ -846,6 +846,16 @@ private:
 
         const std::string_view nombre_llamado = expresion.izquierda->lexema;
 
+        if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {
+            if (!expresion.lista.empty()) {
+                error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                    .parametro("funcion", std::string(nombre_llamado))
+                    .parametro("esperados", "0")
+                    .parametro("dados", std::to_string(expresion.lista.size()));
+            }
+            return nombre_llamado == "leer_linea" ? Tipo::Texto : Tipo::Entero;
+        }
+
         if (nombre_llamado == "imprimir") {
             if (expresion.lista.size() != 1) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)

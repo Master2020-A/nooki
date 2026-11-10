@@ -851,3 +851,22 @@ imprimir(a)                // NOK5001
 |---|---|
 | `NOK3008` | Módulo no encontrado |
 | `NOK3009` | Símbolo privado de un módulo |
+
+
+### 18.13 Entrada estándar
+
+```aura
+imprimir("¿Cómo te llamas?")
+variable nombre = leer_linea()
+imprimir("Hola, " + nombre)
+
+variable n = leer_entero()
+imprimir(n * 2)
+```
+
+- `leer_linea() -> texto` lee una línea **sin el salto** y devuelve un texto con dueño.
+- `leer_entero() -> entero` lee una línea y la interpreta como entero con signo; si no contiene
+  dígitos, devuelve `0`.
+- Al final de la entrada, `leer_linea` devuelve un texto vacío y `leer_entero` devuelve `0`: un
+  programa nunca se queda bloqueado ni recibe valores indefinidos.
+- Ambas son **integrales del lenguaje**: no se declaran ni se importan.

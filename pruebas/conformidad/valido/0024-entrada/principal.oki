@@ -1,0 +1,12 @@
+// Entrada estándar: sin entrada disponible, ambas lecturas devuelven vacío/cero.
+funcion principal() -> entero {
+    variable linea = leer_linea()
+    imprimir(linea.largo())
+
+    variable n = leer_entero()
+    imprimir(n)
+
+    variable saludo = "Hola, " + linea
+    imprimir(saludo)
+    retornar 0
+}
