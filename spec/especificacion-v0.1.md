@@ -992,3 +992,26 @@ funcion repartir(a: entero, divisor: entero) -> Resultado {
 - `?` solo se permite en funciones que devuelven `Resultado` (`NOK4011`).
 - Para tratarlo explícitamente: `es_error()`, `valor()` y `mensaje()`.
 - El texto del error pertenece al resultado y se libera con él.
+
+
+### 18.19 Operaciones de texto
+
+```aura
+variable linea = "nombre:Ana"
+variable corte = linea.buscar(":")          // 6
+variable clave = linea.subtexto(0, corte)   // "nombre"
+variable valor = linea.subtexto(corte + 1, 100)  // "Ana"
+```
+
+| Llamada | Devuelve |
+|---|---|
+| `t.largo()` | bytes del texto |
+| `t.buscar(otro)` | posición de la primera aparición, o `-1` |
+| `t.subtexto(desde, cuantos)` | texto nuevo, recortado al final si se pide de más |
+| `t.contiene(otro)` | booleano |
+| `t.empieza_con(prefijo)` | booleano |
+| `t.caracter(indice)` | byte en esa posición, o `-1` |
+| `t.a_entero()` | dígitos iniciales con signo; `0` si no hay |
+
+- `subtexto` devuelve un texto **con dueño**: se libera al cerrar el ámbito.
+- `buscar`, `caracter` y `a_entero` comprueban sus límites y nunca leen fuera del texto.

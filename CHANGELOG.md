@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 41 — Operaciones de texto (2026-11-10)
+
+- **`buscar(otro)`**: posición de la primera aparición, o `-1` si no está.
+- **`subtexto(desde, cuantos)`**: copia con dueño, recortada al final del texto si se pide de más.
+- **`contiene(otro)`** y **`empieza_con(prefijo)`**: comprobaciones sin extraer copia.
+- **`caracter(indice)`**: byte en esa posición, o `-1` fuera de rango.
+- **`a_entero()`**: interpreta los dígitos iniciales con signo; 0 si no hay.
+- Con esto un programa puede **trocear y analizar** lo que lee de la entrada.
+- Programa de conformidad `0032-texto-operaciones`, compilado y ejecutado.
+
 ### Sprint 40 — Errores como valores (2026-11-10)
 
 - **`Resultado`**: tipo del lenguaje que representa un entero o un error de texto. `Ok(valor)` y

@@ -1,0 +1,30 @@
+// Operaciones de texto: buscar, cortar, comprobar y convertir.
+funcion principal() -> entero {
+    variable linea = "nombre:Ana"
+
+    variable corte = linea.buscar(":")
+    imprimir(corte)
+
+    variable clave = linea.subtexto(0, corte)
+    variable valor = linea.subtexto(corte + 1, 100)
+
+    imprimir(clave)
+    imprimir(valor)
+    imprimir(valor.largo())
+
+    si (linea.empieza_con("nombre")) {
+        imprimir("empieza por nombre")
+    }
+    si (linea.contiene("Ana")) {
+        imprimir("contiene Ana")
+    }
+    si (linea.contiene("Pedro")) {
+        imprimir("contiene Pedro")
+    } sino {
+        imprimir("no contiene Pedro")
+    }
+
+    variable edad = "42".a_entero()
+    imprimir(edad + 1)
+    retornar 0
+}

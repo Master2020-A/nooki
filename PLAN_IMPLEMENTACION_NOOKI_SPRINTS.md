@@ -210,7 +210,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S38** | `super` y conversión a la base | ✅ `super.metodo()`, puntero derivado en variable base con conversión, polimorfismo a través de la base y tipos de clase siempre por referencia. *La verificación de firmas al sobrescribir queda pendiente* |
 | **S39** | Cierre de la v0.4 | ✅ Verificación de firma al sobrescribir (`NOK4010`), ejemplo polimórfico entre módulos, especificación v0.4 y versión 0.4.0 |
 | **S40** | Errores como valores | ✅ `Resultado` con `Ok`/`Error`, operador `?` que propaga en declaraciones, comprobación explícita por métodos y verificación de contexto (ADR-023) |
-| **S41** | RAII y *drops* | Inserción de drops en MIR, orden de destrucción, `destructor`; verificado con ASan/LSan; 40 tests |
+| **S41** | Operaciones de texto | ✅ `buscar`, `subtexto`, `contiene`, `empieza_con`, `caracter` y `a_entero`, con copia propia en `subtexto` y comprobación de índices. *Las variantes con datos quedan para el sprint siguiente* |
 | **S42** | Concurrencia base | Hilos, mutex, canales, atómicos + **modelo de memoria documentado**; 40 tests |
 | **S43** | `no_std` y *bare metal* | Objetivo RISC-V/ARM sin sistema; demo "parpadeo" en QEMU; prueba real del pilar hardware; 5 tests |
 | **S44** | **Cierre v0.5: memoria transitoria** | RC/GC temporal (ADR-07) integrado y documentado; ejemplos con heap funcionando; deuda registrada con fecha de pago (S52) |

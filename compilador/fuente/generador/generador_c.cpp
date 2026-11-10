@@ -192,6 +192,76 @@ const char* PRELUDIO =
     "    return t.largo;\n"
     "}\n"
     "\n"
+    "/* Operaciones de texto: cortar, buscar y convertir. */\n"
+    "static nooki_texto nooki_texto_subtexto(nooki_texto t, long long desde, long long cuantos) {\n"
+    "    nooki_texto r;\n"
+    "    r.propio = 1;\n"
+    "    r.largo = 0;\n"
+    "    r.datos = NULL;\n"
+    "    if (desde < 0 || desde >= t.largo || cuantos <= 0) {\n"
+    "        r.propio = 0;\n"
+    "        return r;\n"
+    "    }\n"
+    "    r.largo = (desde + cuantos > t.largo) ? (t.largo - desde) : cuantos;\n"
+    "    r.datos = (char*)malloc((size_t)r.largo + 1);\n"
+    "    if (r.datos == NULL) {\n"
+    "        r.largo = 0;\n"
+    "        r.propio = 0;\n"
+    "        return r;\n"
+    "    }\n"
+    "    memcpy(r.datos, t.datos + desde, (size_t)r.largo);\n"
+    "    r.datos[r.largo] = 0;\n"
+    "    return r;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_texto_caracter(nooki_texto t, long long indice) {\n"
+    "    if (indice < 0 || indice >= t.largo) {\n"
+    "        return -1;\n"
+    "    }\n"
+    "    return (long long)(unsigned char)t.datos[indice];\n"
+    "}\n"
+    "\n"
+    "static long long nooki_texto_buscar(nooki_texto t, nooki_texto aguja) {\n"
+    "    if (aguja.largo == 0 || aguja.largo > t.largo) {\n"
+    "        return -1;\n"
+    "    }\n"
+    "    for (long long i = 0; i + aguja.largo <= t.largo; ++i) {\n"
+    "        if (memcmp(t.datos + i, aguja.datos, (size_t)aguja.largo) == 0) {\n"
+    "            return i;\n"
+    "        }\n"
+    "    }\n"
+    "    return -1;\n"
+    "}\n"
+    "\n"
+    "static int nooki_texto_contiene(nooki_texto t, nooki_texto aguja) {\n"
+    "    return nooki_texto_buscar(t, aguja) >= 0;\n"
+    "}\n"
+    "\n"
+    "static int nooki_texto_empieza_con(nooki_texto t, nooki_texto prefijo) {\n"
+    "    if (prefijo.largo > t.largo) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    return memcmp(t.datos, prefijo.datos, (size_t)prefijo.largo) == 0;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_texto_a_entero(nooki_texto t) {\n"
+    "    long long valor = 0;\n"
+    "    long long signo = 1;\n"
+    "    long long i = 0;\n"
+    "    if (t.largo > 0 && t.datos[0] == '-') {\n"
+    "        signo = -1;\n"
+    "        i = 1;\n"
+    "    }\n"
+    "    for (; i < t.largo; ++i) {\n"
+    "        const char d = t.datos[i];\n"
+    "        if (d < '0' || d > '9') {\n"
+    "            break;\n"
+    "        }\n"
+    "        valor = valor * 10 + (d - '0');\n"
+    "    }\n"
+    "    return signo * valor;\n"
+    "}\n"
+    "\n"
     "static void nooki_texto_soltar(nooki_texto* t) {\n"
     "    if (t->propio && t->datos != NULL) {\n"
     "        free(t->datos);\n"
@@ -1702,9 +1772,16 @@ private:
                         }
                         return "long long";
                     }
-                    if (acceso.izquierda && acceso.anotacion == "largo" &&
+                    if (acceso.izquierda &&
                         (tipo_de(*acceso.izquierda) == "nooki_texto" ||
                          tipo_de(*acceso.izquierda) == "nooki_texto*")) {
+                        const std::string& metodo = acceso.anotacion;
+                        if (metodo == "subtexto") {
+                            return "nooki_texto";
+                        }
+                        if (metodo == "contiene" || metodo == "empieza_con") {
+                            return "int";
+                        }
                         return "long long";
                     }
                     if (acceso.izquierda &&
@@ -2133,13 +2210,29 @@ private:
                 return salida;
             }
 
-            if (acceso.izquierda && acceso.anotacion == "largo") {
+            if (acceso.izquierda) {
                 const std::string tipo = tipo_de(*acceso.izquierda);
-                if (tipo == "nooki_texto") {
-                    return "nooki_texto_largo(" + expresion(*acceso.izquierda) + ")";
-                }
-                if (tipo == "nooki_texto*") {
-                    return "nooki_texto_largo(*" + expresion(*acceso.izquierda) + ")";
+                const bool prestado = tipo == "nooki_texto*";
+                if (tipo == "nooki_texto" || prestado) {
+                    const std::string objeto =
+                        prestado ? "(*" + expresion(*acceso.izquierda) + ")"
+                                 : expresion(*acceso.izquierda);
+                    static const std::set<std::string> METODOS_TEXTO = {
+                        "largo", "subtexto", "caracter", "buscar",
+                        "contiene", "empieza_con", "a_entero"};
+                    if (METODOS_TEXTO.count(std::string(acceso.anotacion)) != 0) {
+                        std::string llamada =
+                            "nooki_texto_" + std::string(acceso.anotacion) + "(" + objeto;
+                        for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                            if (!argumento) {
+                                continue;
+                            }
+                            llamada += ", ";
+                            llamada += expresion(*argumento);
+                        }
+                        llamada += ')';
+                        return llamada;
+                    }
                 }
             }
             if (acceso.izquierda &&

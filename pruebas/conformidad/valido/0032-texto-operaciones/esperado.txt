@@ -1,0 +1,8 @@
+6
+nombre
+Ana
+3
+empieza por nombre
+contiene Ana
+no contiene Pedro
+43

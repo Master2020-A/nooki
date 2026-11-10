@@ -76,7 +76,8 @@ Sprint 37 ✅  Herencia y polimorfismo · tablas virtuales
 Sprint 38 ✅  `super` y polimorfismo a través de la base
 Sprint 39 ✅  Cierre de la v0.4 · firma al sobrescribir y ejemplo polimórfico
 Sprint 40 ✅  Errores como valores · `Resultado` y `?`
-Sprint 41 ⬜  Variantes con datos y `Resultado<T, E>`
+Sprint 41 ✅  Operaciones de texto · cortar, buscar y convertir
+Sprint 42 ⬜  Variantes con datos y `Resultado<T, E>`
 ```
 
 **Ya compila y ejecuta:**
