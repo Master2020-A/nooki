@@ -32,6 +32,7 @@ enum class TipoExpresion : unsigned char {
     Asignacion,
     Construccion,
     Este,
+    Super,
 };
 
 struct Expresion;

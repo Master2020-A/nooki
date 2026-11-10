@@ -948,3 +948,22 @@ imprimir(c.area())    // 16
   derivada que lo redefine responde con su versión.
 - Si la derivada no lo redefine, hereda la implementación de la base.
 - Los métodos propios de una derivada que no existen en la base no son virtuales.
+
+
+### 18.17 `super` y variables de tipo base
+
+```aura
+clase cuadrado hereda figura {
+    publico funcion describe() -> texto {
+        retornar super.describe() + " cuadrada"
+    }
+}
+
+variable f: figura = nuevo cuadrado { nombre: "c", lado: 4 }
+imprimir(f.area())     // despacha a la implementación de cuadrado
+```
+
+- `super.metodo(args)` llama a la implementación de la clase base **sin despacho**.
+- Un puntero a una clase derivada se puede guardar en una variable de tipo base; la conversión es
+  automática y segura porque la base ocupa el principio de la estructura.
+- Las llamadas a métodos virtuales a través de la variable base **despachan** a la clase concreta.

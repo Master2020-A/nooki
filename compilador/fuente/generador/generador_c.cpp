@@ -1144,7 +1144,11 @@ private:
         }
         const auto conocido = tipo_c_de_.find(std::string(escrito));
         if (conocido != tipo_c_de_.end()) {
-            return conocido->second;
+            // Una clase es siempre una referencia: el tipo declarado lleva el puntero.
+            const auto definicion = tipo_ptr_.find(std::string(escrito));
+            const bool es_clase =
+                definicion != tipo_ptr_.end() && definicion->second->es_clase;
+            return conocido->second + (es_clase ? "*" : "");
         }
         return tipo_c(escrito);
     }
@@ -1378,8 +1382,16 @@ private:
             salida_ << indentacion();
         }
 
-        salida_ << tipo << ' ' << sentencia.nombre << " = " << expresion(*sentencia.expresion)
-                << ";\n";
+        // Un puntero derivado puede guardarse en una variable de tipo base: se
+        // convierte explícitamente, porque la estructura base está al principio.
+        std::string valor = expresion(*sentencia.expresion);
+        const std::string tipo_expresion = tipo_de(*sentencia.expresion);
+        if (tipo != tipo_expresion && !tipo.empty() && tipo.back() == '*' &&
+            !tipo_expresion.empty() && tipo_expresion.back() == '*') {
+            valor = "(" + tipo + ")" + valor;
+        }
+
+        salida_ << tipo << ' ' << sentencia.nombre << " = " << valor << ";\n";
 
         emitir_movimientos_de_llamada(*sentencia.expresion);
 
@@ -1597,6 +1609,27 @@ private:
                 }
                 if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
                     const sintactico::Expresion& acceso = *expresion.izquierda;
+
+                    // `super.metodo(...)`: el tipo lo da la clase base.
+                    if (acceso.izquierda &&
+                        acceso.izquierda->tipo == TipoExpresion::Super) {
+                        std::string donde = estructura_actual_c_;
+                        for (int guarda = 0; guarda < 32; ++guarda) {
+                            const auto base = base_de_.find(donde);
+                            if (base == base_de_.end()) {
+                                break;
+                            }
+                            donde = base->second;
+                            const auto metodos = metodos_.find(donde);
+                            if (metodos != metodos_.end()) {
+                                const auto metodo = metodos->second.find(acceso.anotacion);
+                                if (metodo != metodos->second.end()) {
+                                    return tipo_declarado_c(metodo->second->tipo_retorno);
+                                }
+                            }
+                        }
+                    }
+
                     if (acceso.izquierda && acceso.anotacion == "largo" &&
                         (tipo_de(*acceso.izquierda) == "nooki_texto" ||
                          tipo_de(*acceso.izquierda) == "nooki_texto*")) {
@@ -2208,6 +2241,25 @@ private:
         if (!acceso.izquierda) {
             no_soportado("una llamada a un método sin objeto");
             return "0";
+        }
+
+        // `super.metodo(...)`: la implementación de la clase base, sin despacho.
+        if (acceso.izquierda->tipo == sintactico::TipoExpresion::Super) {
+            const auto base = base_de_.find(estructura_actual_c_);
+            if (base == base_de_.end()) {
+                no_soportado("«super» en una clase sin base");
+                return "0";
+            }
+            std::string salida = base->second + "_" + std::string(acceso.anotacion) + "(este";
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                salida += ", ";
+                salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
         }
 
         std::string tipo_objeto = tipo_de(*acceso.izquierda);

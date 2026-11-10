@@ -1,0 +1,44 @@
+// `super` y polimorfismo a través de una variable de tipo base.
+clase figura {
+    publico nombre: texto
+
+    publico funcion area() -> entero {
+        retornar 0
+    }
+
+    publico funcion describe() -> texto {
+        retornar "figura " + este.nombre
+    }
+}
+
+clase cuadrado hereda figura {
+    publico lado: entero
+
+    publico funcion area() -> entero {
+        retornar este.lado * este.lado
+    }
+
+    publico funcion describe() -> texto {
+        retornar super.describe() + " cuadrada"
+    }
+}
+
+clase rectangulo hereda figura {
+    publico ancho: entero
+    publico alto: entero
+
+    publico funcion area() -> entero {
+        retornar este.ancho * este.alto
+    }
+}
+
+funcion principal() -> entero {
+    variable f: figura = nuevo cuadrado { nombre: "c", lado: 4 }
+    variable g: figura = nuevo rectangulo { nombre: "r", ancho: 3, alto: 5 }
+
+    imprimir(f.area())
+    imprimir(g.area())
+    imprimir(f.describe())
+    imprimir(g.describe())
+    retornar 0
+}

@@ -9,6 +9,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 38 — `super` y conversión a la base (2026-11-10)
+
+- **`super.metodo(...)`**: una clase derivada invoca la implementación de su base sin despacho.
+  `super.describe() + " cuadrada"` compone el comportamiento heredado con el propio.
+- **Conversión a la base**: `variable f: figura = nuevo cuadrado { ... }` guarda un puntero derivado
+  en una variable de tipo base, con conversión explícita en el C generado (la base está al
+  principio de la estructura).
+- **Polimorfismo real a través de la base**: `f.area()` despacha a la implementación de la clase
+  concreta; `f.describe()` usa la heredada si la derivada no la redefine.
+- **Un tipo de clase declarado siempre es una referencia**: el `*` lo pone el compilador.
+- Programa de conformidad `0029-super`, compilado y ejecutado.
+
 ### Sprint 37 — Herencia y polimorfismo (2026-11-10)
 
 - **`clase derivada hereda base`**: herencia simple con campos heredados primero y el puntero a la

@@ -364,6 +364,7 @@ private:
             case TipoExpresion::Identificador:
                 return buscar_estructura(expresion.lexema);
             case TipoExpresion::Este:
+            case TipoExpresion::Super:
                 return estructura_actual_;
             case TipoExpresion::Miembro: {
                 if (!expresion.izquierda) {
@@ -735,6 +736,7 @@ private:
             case TipoExpresion::Miembro:
                 return tipo_miembro(expresion);
             case TipoExpresion::Este:
+            case TipoExpresion::Super:
                 return Tipo::Desconocido;
             default:
                 // Caracteres, flotantes, índices y conversiones: el generador los

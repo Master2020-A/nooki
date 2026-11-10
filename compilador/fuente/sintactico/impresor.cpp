@@ -105,6 +105,9 @@ std::string imprimir(const Expresion& expresion) {
 
         case TipoExpresion::Este:
             return "este";
+
+        case TipoExpresion::Super:
+            return "super";
     }
     return "?";
 }

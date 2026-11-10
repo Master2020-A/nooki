@@ -645,7 +645,7 @@ Sentencia Parser::analizar_sentencia() {
             return analizar_coincide();
         }
         if (palabra != "verdadero" && palabra != "falso" && palabra != "nulo" &&
-            palabra != "este") {
+            palabra != "este" && palabra != "super") {
             auto& diagnostico = emisor_.error(diagnostico::codigos::NO_SOPORTADO, actual().span);
             diagnostico.parametro("construccion", std::string(palabra))
                 .ayuda("esta construcción todavía no se analiza");
@@ -966,6 +966,14 @@ ExpresionPtr Parser::prefijo() {
             }
             error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
             return nullptr;
+        }
+        if (token.lexema == "super") {
+            const diagnostico::Span span = token.span;
+            avanzar();
+            auto nodo = std::make_unique<Expresion>();
+            nodo->tipo = TipoExpresion::Super;
+            nodo->span = span;
+            return nodo;
         }
         if (token.lexema == "este") {
             const diagnostico::Span span = token.span;

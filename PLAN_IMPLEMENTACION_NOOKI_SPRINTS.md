@@ -207,7 +207,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
 | **S37** | Herencia y polimorfismo | ✅ `hereda`, campos aplanados, tabla virtual por jerarquía, despacho en las llamadas y reutilización de implementaciones (ADR-022) |
-| **S38** | Runtime: asignador y pánico | Asignador global + arena/pool; pánico con backtrace simbolizado; separación `core` / `no_std`; 20 tests |
+| **S38** | `super` y conversión a la base | ✅ `super.metodo()`, puntero derivado en variable base con conversión, polimorfismo a través de la base y tipos de clase siempre por referencia. *La verificación de firmas al sobrescribir queda pendiente* |
 | **S39** | `core`: primitivos, Opcional, Resultado | Tipos fundamentales usables desde Nooki; vector mínimo; iteradores base; 100 tests en `.oki` |
 | **S40** | **Ensamblador e intrínsecos** | `asm!` en bloque `inseguro`; intrínsecos SIMD básicos; ejemplo de registro MMIO; 15 tests |
 | **S41** | RAII y *drops* | Inserción de drops en MIR, orden de destrucción, `destructor`; verificado con ASan/LSan; 40 tests |
