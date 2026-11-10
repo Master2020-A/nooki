@@ -28,6 +28,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-015](docs/adr/ADR-015-clases-por-valor-en-v01.md) | En la v0.1, `clase` y `estructura` se compilan igual, por valor | ✅ Aprobada (S17) |
 | [ADR-016](docs/adr/ADR-016-caja-y-movimiento.md) | `Caja<T>`: dueño único, movimiento y liberación determinista | ✅ Aprobada (S20) |
 | [ADR-017](docs/adr/ADR-017-prestamos-de-expresion.md) | Préstamos `&` de alcance de expresión; no se pueden guardar | ✅ Aprobada (S21) |
+| [ADR-018](docs/adr/ADR-018-texto-con-marca-de-propiedad.md) | `texto` con marca de propiedad (`propio`) en lugar de dos tipos | ✅ Aprobada (S23) |
 
 ---
 

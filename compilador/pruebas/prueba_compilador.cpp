@@ -92,7 +92,7 @@ int main() {
         const std::string& c = generado.codigo;
         comprobar(generado.soportado, "el backend soporta este programa");
         comprobar(contiene(c, "int main(void)"), "principal se convierte en main");
-        comprobar(contiene(c, "nooki_imprimir_texto(\"¡Hola, Nooki!\")"),
+        comprobar(contiene(c, "nooki_imprimir_texto(nooki_texto_literal(\"¡Hola, Nooki!\"))"),
                   "la llamada se traduce al runtime");
         comprobar(contiene(c, "return 0;"), "el retorno se traduce");
         comprobar(contiene(c, "#include <stdio.h>"), "incluye la cabecera de C");

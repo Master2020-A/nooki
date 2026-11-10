@@ -81,6 +81,7 @@ private:
         std::map<std::string, Tipo> tipos;
         std::map<std::string, std::string_view> estructuras;
         std::set<std::string> cajas;
+        std::set<std::string> textos;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
@@ -149,10 +150,25 @@ private:
         }
         return false;
     }
+    void declarar_texto(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().textos.insert(std::string(nombre));
+        }
+    }
+    bool es_texto(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->textos.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void marcar_movida(std::string_view nombre) {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            if (it->cajas.count(std::string(nombre)) != 0) {
-                it->movidas.insert(std::string(nombre));
+            const std::string clave(nombre);
+            if (it->cajas.count(clave) != 0 || it->textos.count(clave) != 0) {
+                it->movidas.insert(clave);
                 return;
             }
         }
@@ -316,14 +332,24 @@ private:
                     return;
                 }
 
+                if (real == Tipo::Texto && sentencia.tipo_declarado.empty()) {
+                    if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                        es_texto(sentencia.expresion->lexema)) {
+                        marcar_movida(sentencia.expresion->lexema);
+                    }
+                    declarar_texto(sentencia.nombre);
+                    declarar(sentencia.nombre, real);
+                    return;
+                }
+
                 // ¿Declara una caja nueva, o mueve una que ya existía?
-                if (es_llamada_caja(*sentencia.expresion)) {
+                if (es_llamada_caja(*sentencia.expresion) && sentencia.tipo_declarado.empty()) {
                     declarar_caja(sentencia.nombre);
                     declarar(sentencia.nombre, real);
                     return;
                 }
                 if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                    es_caja(sentencia.expresion->lexema)) {
+                    es_caja(sentencia.expresion->lexema) && sentencia.tipo_declarado.empty()) {
                     marcar_movida(sentencia.expresion->lexema);
                     declarar_caja(sentencia.nombre);
                     declarar(sentencia.nombre, real);
@@ -565,6 +591,17 @@ private:
         const Tipo derecha = expresion.derecha ? tipo_de(*expresion.derecha) : Tipo::Desconocido;
         const std::string_view operador = expresion.lexema;
 
+        // Textos: concatenación con «+» y comparación por contenido.
+        if (izquierda == Tipo::Texto && derecha == Tipo::Texto) {
+            if (operador == "+") {
+                return Tipo::Texto;
+            }
+            if (operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
+                operador == "<=" || operador == ">=") {
+                return Tipo::Booleano;
+            }
+        }
+
         if (operador == "+" || operador == "-" || operador == "*" || operador == "/" ||
             operador == "%" || operador == "**") {
             exigir(Tipo::Entero, izquierda, expresion.span);
@@ -697,7 +734,10 @@ private:
         const Expresion& acceso = *expresion.izquierda;
 
         if (acceso.izquierda) {
-            tipo_de(*acceso.izquierda);
+            const Tipo objeto = tipo_de(*acceso.izquierda);
+            if (objeto == Tipo::Texto && acceso.anotacion == "largo") {
+                return Tipo::Entero;
+            }
         }
 
         const sintactico::DefinicionTipo* definicion = tipo_por_nombre(

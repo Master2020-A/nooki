@@ -3,14 +3,26 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [0.2.0] — 2026-11-09
+## [Sin publicar]
+
+### Sprint 23 — `texto` de verdad (2026-11-10)
+- **Tipo `texto`** con longitud: `datos`, `largo` y marca `propio` (ADR-018). Los literales no se
+  liberan; las concatenaciones sí.
+- **Concatenación** con `+` y **comparación por contenido** con `==`, `!=`, `<`, `>`, `<=`, `>=`.
+- **`.largo()`** en bytes, en tiempo constante.
+- **Propiedad**: asignar un texto lo mueve y usar el origen después es `NOK5001`. Liberación
+  determinista al cerrar ámbito y antes de cada `retornar`.
+- **Mezclar texto y entero** en una operación sigue siendo error (`NOK4001`).
+- `imprimir` acepta `texto` en cualquier posición: literal, variable, parámetro o resultado de una
+  función.
+- Programa de conformidad `0015-textos`, compilado y ejecutado.
+
+### Sprint 22 — Préstamos mutables y exclusividad (2026-11-09)
 
 **Primera versión con memoria determinista.** El compilador ya escribe programas con
 estructuras, objetos con métodos, enumeraciones, emparejamiento de patrones, cajas con dueño
 único y préstamos que no mueven. Compila a binario nativo en Windows, Linux y macOS con
 GCC/Clang/MSVC como cadenas de compilación.
-
-### Sprint 22 — Préstamos mutables y exclusividad (2026-11-09)
 
 - **`&mutable caja`** y parámetros `&mutable Caja<entero>`: escribir a través del préstamo sin
   mover la caja.
@@ -37,7 +49,6 @@ GCC/Clang/MSVC como cadenas de compilación.
 - Programa de conformidad `0012-prestamos`, compilado y ejecutado.
 
 ### Sprint 20 — `Caja<T>`: propiedad única y movimiento (2026-11-09)
-
 - **`Caja<T>`**: valor en el montículo con **un único dueño**. `Caja.nuevo(41)` asigna; `*c` lee y
   escribe; al salir del ámbito el dueño libera.
 - **Movimiento**: `variable d = c` transfiere la propiedad y anula el origen. Usar `c` después es

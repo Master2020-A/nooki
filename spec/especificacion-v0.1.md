@@ -730,3 +730,23 @@ funcion leer(p: &Caja<entero>) -> entero {
 | `NOK5001` | Uso después de mover |
 | `NOK5002` | Préstamo guardado en una variable |
 | `NOK5003` | Préstamo mutable y compartido en la misma llamada |
+
+
+### 18.6 Texto
+
+```aura
+variable saludo = "Hola, " + nombre + "!"
+imprimir(saludo)
+imprimir(saludo.largo())
+
+si (saludo == "Hola, Nooki!") {
+    imprimir("igual")
+}
+```
+
+- `texto` lleva su longitud; `largo()` es constante.
+- `+` concatena dos textos; comparar con `==`, `!=`, `<`, `>`, `<=`, `>=` es **por contenido**, no por dirección.
+- Los literales no se liberan; las concatenaciones sí. La marca `propio` del runtime (ADR-018) distingue ambos casos.
+- Asignar un texto lo **mueve**; usar el origen después es `NOK5001`.
+- Mezclar `texto` con `entero` en una operación es `NOK4001`.
+- `largo()` cuenta **bytes**, no caracteres.

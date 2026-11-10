@@ -58,7 +58,8 @@ Sprint 19 ✅  Enumeraciones y `coincide` · emparejamiento de patrones
 Sprint 20 ✅  `Caja<T>`: propiedad única, movimiento y liberación determinista
 Sprint 21 ✅  Préstamos inmutables: prestar no mueve
 Sprint 22 ✅  Préstamos mutables y exclusividad · **v0.2.0**
-Sprint 23 ⬜  `texto` con operaciones (concatenar, comparar)
+Sprint 23 ✅  `texto` con longitud, concatenación y comparación
+Sprint 24 ⬜  Genéricos y `Caja<T>` general
 ```
 
 **Ya compila y ejecuta:**

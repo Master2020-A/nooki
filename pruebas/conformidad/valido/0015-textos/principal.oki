@@ -1,0 +1,24 @@
+// Texto: concatenación, longitud y comparación por contenido.
+funcion saludar(nombre: texto) -> texto {
+    retornar "Hola, " + nombre + "!"
+}
+
+funcion principal() -> entero {
+    variable saludo = saludar("Nooki")
+    imprimir(saludo)
+    imprimir(saludo.largo())
+
+    si (saludo == "Hola, Nooki!") {
+        imprimir("igual")
+    }
+
+    variable a = "abc"
+    variable b = "abd"
+    si (a < b) {
+        imprimir("abc va antes")
+    }
+
+    variable otro = b
+    imprimir(otro)
+    retornar 0
+}

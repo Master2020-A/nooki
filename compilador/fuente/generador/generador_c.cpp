@@ -25,7 +25,7 @@ std::string tipo_c(std::string_view escrito) {
     }
     switch (nooki::semantico::desde_nombre(escrito)) {
         case nooki::semantico::Tipo::Texto:
-            return "const char*";
+            return "nooki_texto";
         case nooki::semantico::Tipo::Booleano:
             return "int";
         case nooki::semantico::Tipo::Vacio:
@@ -106,6 +106,70 @@ const char* PRELUDIO =
     "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
     "#include <stdio.h>\n"
     "#include <stdlib.h>\n"
+    "#include <string.h>\n"
+    "\n"
+    "/* texto: cadena con dueno opcional (propio = 1 cuando hay que liberarla). */\n"
+    "typedef struct {\n"
+    "    char* datos;\n"
+    "    long long largo;\n"
+    "    int propio;\n"
+    "} nooki_texto;\n"
+    "\n"
+    "static nooki_texto nooki_texto_literal(const char* datos) {\n"
+    "    nooki_texto t;\n"
+    "    t.datos = (char*)datos;\n"
+    "    t.largo = (long long)strlen(datos);\n"
+    "    t.propio = 0;\n"
+    "    return t;\n"
+    "}\n"
+    "\n"
+    "static nooki_texto nooki_texto_concatenar(nooki_texto a, nooki_texto b) {\n"
+    "    nooki_texto t;\n"
+    "    t.largo = a.largo + b.largo;\n"
+    "    t.propio = 1;\n"
+    "    t.datos = (char*)malloc((size_t)t.largo + 1);\n"
+    "    if (t.datos != NULL) {\n"
+    "        memcpy(t.datos, a.datos, (size_t)a.largo);\n"
+    "        memcpy(t.datos + a.largo, b.datos, (size_t)b.largo);\n"
+    "        t.datos[t.largo] = 0;\n"
+    "    } else {\n"
+    "        t.largo = 0;\n"
+    "        t.propio = 0;\n"
+    "    }\n"
+    "    return t;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_texto_comparar(nooki_texto a, nooki_texto b) {\n"
+    "    long long minimo = a.largo < b.largo ? a.largo : b.largo;\n"
+    "    int resultado = memcmp(a.datos, b.datos, (size_t)minimo);\n"
+    "    if (resultado != 0) {\n"
+    "        return resultado < 0 ? -1 : 1;\n"
+    "    }\n"
+    "    if (a.largo == b.largo) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    return a.largo < b.largo ? -1 : 1;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_texto_largo(nooki_texto t) {\n"
+    "    return t.largo;\n"
+    "}\n"
+    "\n"
+    "static void nooki_texto_soltar(nooki_texto* t) {\n"
+    "    if (t->propio && t->datos != NULL) {\n"
+    "        free(t->datos);\n"
+    "    }\n"
+    "    t->datos = NULL;\n"
+    "    t->largo = 0;\n"
+    "    t->propio = 0;\n"
+    "}\n"
+    "\n"
+    "static void nooki_imprimir_texto(nooki_texto t) {\n"
+    "    if (t.datos != NULL) {\n"
+    "        fwrite(t.datos, 1, (size_t)t.largo, stdout);\n"
+    "    }\n"
+    "    fputc(10, stdout);\n"
+    "}\n"
     "\n"
     "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
     "typedef struct {\n"
@@ -128,11 +192,6 @@ const char* PRELUDIO =
     "    }\n"
     "}\n"
     "\n"
-    "static void nooki_imprimir_texto(const char* texto) {\n"
-    "    fputs(texto, stdout);\n"
-    "    fputc('\\n', stdout);\n"
-    "}\n"
-    "\n"
     "static void nooki_imprimir_entero(long long valor) {\n"
     "    printf(\"%lld\\n\", valor);\n"
     "}\n"
@@ -144,6 +203,11 @@ const char* PRELUDIO =
     "    }\n"
     "    return resultado;\n"
     "}\n";
+
+bool es_comparacion(std::string_view operador) {
+    return operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
+           operador == "<=" || operador == ">=";
+}
 
 class EmisorC {
 public:
@@ -243,7 +307,8 @@ private:
     // --- Ámbito ------------------------------------------------------------
     struct Ambito {
         std::map<std::string, std::string> tipos;
-        std::vector<std::string> cajas;  // en orden de declaración
+        // nombre + función de liberación, en orden de declaración
+        std::vector<std::pair<std::string, std::string>> liberables;
     };
 
     void abrir_ambito() { ambitos_.emplace_back(); }
@@ -257,10 +322,10 @@ private:
 
     /// Libera las cajas de un ámbito, de la última declarada a la primera.
     void liberar_cajas(Ambito& ambito) {
-        for (auto it = ambito.cajas.rbegin(); it != ambito.cajas.rend(); ++it) {
-            salida_ << indentacion() << "nooki_caja_soltar(&" << *it << ");\n";
+        for (auto it = ambito.liberables.rbegin(); it != ambito.liberables.rend(); ++it) {
+            salida_ << indentacion() << it->second << "(&" << it->first << ");\n";
         }
-        ambito.cajas.clear();
+        ambito.liberables.clear();
     }
 
     /// Antes de un `retornar` hay que liberar todas las cajas vivas.
@@ -278,9 +343,9 @@ private:
         ambito.tipos[std::string(nombre)] = std::move(tipo);
     }
 
-    void registrar_caja(std::string_view nombre) {
+    void registrar_liberable(std::string_view nombre, std::string funcion) {
         if (!ambitos_.empty()) {
-            ambitos_.back().cajas.emplace_back(nombre);
+            ambitos_.back().liberables.emplace_back(std::string(nombre), std::move(funcion));
         }
     }
 
@@ -522,13 +587,17 @@ private:
         salida_ << tipo << ' ' << sentencia.nombre << " = " << expresion(*sentencia.expresion)
                 << ";\n";
 
-        const bool es_caja = tipo == "nooki_caja";
-        if (es_caja) {
-            // Asignar una caja transfiere la propiedad: el origen queda vacío.
+        if (tipo == "nooki_caja" || tipo == "nooki_texto") {
+            // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
-                salida_ << indentacion() << sentencia.expresion->lexema << ".datos = NULL;\n";
+                const std::string& origen = std::string(sentencia.expresion->lexema);
+                salida_ << indentacion() << origen << ".datos = NULL;\n";
+                if (tipo == "nooki_texto") {
+                    salida_ << indentacion() << origen << ".propio = 0;\n";
+                }
             }
-            registrar_caja(sentencia.nombre);
+            registrar_liberable(sentencia.nombre,
+                                tipo == "nooki_caja" ? "nooki_caja_soltar" : "nooki_texto_soltar");
         }
 
         declarar(sentencia.nombre, tipo);
@@ -588,7 +657,7 @@ private:
 
         switch (expresion.tipo) {
             case TipoExpresion::Texto:
-                return "const char*";
+                return "nooki_texto";
             case TipoExpresion::Entero:
                 return "long long";
             case TipoExpresion::Booleano:
@@ -640,6 +709,10 @@ private:
                 }
                 if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
                     const sintactico::Expresion& acceso = *expresion.izquierda;
+                    if (acceso.izquierda && acceso.anotacion == "largo" &&
+                        tipo_de(*acceso.izquierda) == "nooki_texto") {
+                        return "long long";
+                    }
                     if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
                         acceso.izquierda->lexema == "Caja") {
@@ -676,6 +749,12 @@ private:
                                          operador == "<" || operador == ">" ||
                                          operador == "<=" || operador == ">=" ||
                                          operador == "&&" || operador == "||";
+                if (!comparacion && expresion.izquierda && expresion.derecha &&
+                    expresion.lexema == "+" &&
+                    tipo_de(*expresion.izquierda) == "nooki_texto" &&
+                    tipo_de(*expresion.derecha) == "nooki_texto") {
+                    return "nooki_texto";
+                }
                 return comparacion ? "int" : "long long";
             }
             case TipoExpresion::Asignacion:
@@ -691,7 +770,7 @@ private:
 
         switch (nodo.tipo) {
             case TipoExpresion::Texto:
-                return "\"" + escapar_c(nodo.lexema) + "\"";
+                return "nooki_texto_literal(\"" + escapar_c(nodo.lexema) + "\")";
             case TipoExpresion::Entero:
                 return limpiar_separadores(nodo.lexema);
             case TipoExpresion::Booleano:
@@ -859,6 +938,19 @@ private:
         }
 
         const std::string_view operador = nodo.lexema;
+        const std::string tipo_izquierda = tipo_de(*nodo.izquierda);
+        const std::string tipo_derecha = tipo_de(*nodo.derecha);
+        const bool ambos_texto =
+            tipo_izquierda == "nooki_texto" && tipo_derecha == "nooki_texto";
+
+        if (ambos_texto && operador == "+") {
+            return "nooki_texto_concatenar(" + expresion(*nodo.izquierda) + ", " +
+                   expresion(*nodo.derecha) + ")";
+        }
+        if (ambos_texto && es_comparacion(operador)) {
+            return "(nooki_texto_comparar(" + expresion(*nodo.izquierda) + ", " +
+                   expresion(*nodo.derecha) + ") " + std::string(operador) + " 0)";
+        }
 
         if (operador == "**") {
             return "nooki_potencia(" + expresion(*nodo.izquierda) + ", " +
@@ -910,6 +1002,10 @@ private:
 
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro) {
             const sintactico::Expresion& acceso = *nodo.izquierda;
+            if (acceso.izquierda && acceso.anotacion == "largo" &&
+                tipo_de(*acceso.izquierda) == "nooki_texto") {
+                return "nooki_texto_largo(" + expresion(*acceso.izquierda) + ")";
+            }
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
                 acceso.izquierda->lexema == "Caja") {
@@ -936,7 +1032,7 @@ private:
             }
             const sintactico::Expresion& argumento = *nodo.lista.front();
             const std::string tipo = tipo_de(argumento);
-            const char* funcion = tipo == "const char*" ? "nooki_imprimir_texto"
+            const char* funcion = tipo == "nooki_texto" ? "nooki_imprimir_texto"
                                   : (tipo == "long long" || tipo == "int")
                                       ? "nooki_imprimir_entero"
                                       : nullptr;
