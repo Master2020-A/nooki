@@ -70,7 +70,8 @@ Sprint 31 ✅  Consolidación documental · **v0.3.0**
 Sprint 32 ✅  `Mapa`: rehash automático y `quitar`
 Sprint 33 ✅  Entrada estándar · `leer_linea()` y `leer_entero()`
 Sprint 34 ✅  `mapa.claves()` y programa interactivo completo
-Sprint 35 ⬜  Espacios de nombres para tipos
+Sprint 35 ✅  Espacios de nombres para tipos · `modulo.tipo`
+Sprint 36 ⬜  Herencia y polimorfismo
 ```
 
 **Ya compila y ejecuta:**

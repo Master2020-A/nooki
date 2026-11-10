@@ -1,0 +1,24 @@
+// Módulo de figuras: exporta una estructura y una forma de crearla.
+publico estructura punto {
+    publico x: entero
+    publico y: entero
+
+    publico funcion suma(otro: punto) -> entero {
+        retornar este.x + este.y + otro.x + otro.y
+    }
+
+    publico funcion mover(dx: entero, dy: entero) -> vacio {
+        este.x = este.x + dx
+        este.y = este.y + dy
+    }
+}
+
+publico funcion crear(x: entero, y: entero) -> punto {
+    variable p = punto { x: x, y: y }
+    retornar p
+}
+
+// Tipo privado del módulo: no se puede nombrar desde fuera.
+estructura detalle {
+    publico secreto: entero
+}

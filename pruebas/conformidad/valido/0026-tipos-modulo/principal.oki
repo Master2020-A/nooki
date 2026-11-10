@@ -1,0 +1,27 @@
+// Tipos de un módulo: `modulo.tipo` en declaraciones y parámetros.
+usar figuras
+
+funcion distancia_manhattan(a: figuras.punto, b: figuras.punto) -> entero {
+    variable dx = a.x - b.x
+    variable dy = a.y - b.y
+    si (dx < 0) {
+        dx = 0 - dx
+    }
+    si (dy < 0) {
+        dy = 0 - dy
+    }
+    retornar dx + dy
+}
+
+funcion principal() -> entero {
+    variable a: figuras.punto = figuras.crear(1, 2)
+    variable b = figuras.crear(10, 20)
+
+    imprimir(a.suma(b))
+    imprimir(distancia_manhattan(a, b))
+
+    a.mover(10, 20)
+    imprimir(a.x)
+    imprimir(a.y)
+    retornar 0
+}

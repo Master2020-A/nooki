@@ -164,7 +164,11 @@ struct Campo {
 /// `estructura` o `clase`. En la v0.1 comparten representación (ADR-015).
 struct DefinicionTipo {
     std::string_view nombre;
+    /// Módulo al que pertenece (vacío = archivo principal).
+    std::string_view modulo;
     bool es_clase = false;
+    /// Visibilidad para otros módulos.
+    bool publico = false;
     std::vector<Campo> campos;
     std::vector<Funcion> metodos;
     diagnostico::Span span;
@@ -173,6 +177,8 @@ struct DefinicionTipo {
 /// `enumeracion color { rojo, verde, azul }`.
 struct Enumeracion {
     std::string_view nombre;
+    std::string_view modulo;
+    bool publico = false;
     std::vector<std::string_view> variantes;
     diagnostico::Span span;
 };

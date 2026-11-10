@@ -180,8 +180,15 @@ Programa Parser::analizar() {
                 Funcion funcion = analizar_funcion();
                 funcion.publico = publico;
                 programa.funciones.push_back(std::move(funcion));
+            } else if (actual().lexema == "estructura" || actual().lexema == "clase") {
+                programa.tipos.push_back(analizar_definicion_tipo(actual().lexema == "clase"));
+                programa.tipos.back().publico = publico;
+            } else if (actual().lexema == "enumeracion") {
+                programa.enumeraciones.push_back(analizar_enumeracion());
+                programa.enumeraciones.back().publico = publico;
             } else {
-                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO,
+                         "«funcion», «estructura», «clase» o «enumeracion»");
             }
             continue;
         }
@@ -1090,6 +1097,17 @@ std::string_view Parser::analizar_tipo_texto() {
 
     fin = actual().span.fin;
     avanzar();
+
+    // Nombres cualificados: `modulo.tipo`.
+    if (actual().lexema == ".") {
+        avanzar();
+        if (actual().es(TipoToken::Identificador) || actual().es(TipoToken::PalabraClave)) {
+            fin = actual().span.fin;
+            avanzar();
+        } else {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un nombre de tipo");
+        }
+    }
 
     // Genéricos: `Caja<entero>`.
     if (actual().lexema == "<") {

@@ -124,6 +124,17 @@ std::string constante_enum(std::string_view enumeracion, std::string_view varian
 
 std::string tipo_estructura(std::string_view nombre) { return "nooki_" + std::string(nombre); }
 
+/// Nombre de C de una estructura, con el módulo por delante cuando lo tiene.
+std::string tipo_estructura(const sintactico::DefinicionTipo& definicion) {
+    std::string salida = "nooki_";
+    if (!definicion.modulo.empty()) {
+        salida += definicion.modulo;
+        salida += "_";
+    }
+    salida += definicion.nombre;
+    return salida;
+}
+
 const char* PRELUDIO =
     "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
     "#include <stdio.h>\n"
@@ -710,14 +721,22 @@ private:
     void registrar(const sintactico::Programa& programa) {
         // Primera pasada: nombres, para que un tipo pueda referirse a otro declarado después.
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
-            campos_[std::string(definicion.nombre)];
+            campos_[tipo_estructura(definicion)];
             for (const sintactico::Funcion& metodo : definicion.metodos) {
-                metodos_[std::string(definicion.nombre)][std::string(metodo.nombre)] = &metodo;
+                metodos_[tipo_estructura(definicion)][std::string(metodo.nombre)] = &metodo;
+            }
+        }
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            const std::string nombre_c = tipo_estructura(definicion);
+            tipo_c_de_[std::string(definicion.nombre)] = nombre_c;
+            if (!definicion.modulo.empty()) {
+                tipo_c_de_[std::string(definicion.modulo) + "." +
+                          std::string(definicion.nombre)] = nombre_c;
             }
         }
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             for (const sintactico::Campo& campo : definicion.campos) {
-                campos_[std::string(definicion.nombre)][std::string(campo.nombre)] =
+                campos_[tipo_estructura(definicion)][std::string(campo.nombre)] =
                     tipo_declarado_c(campo.tipo);
             }
         }
@@ -771,11 +790,11 @@ private:
         }
         salida_ << '\n';
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
-            salida_ << "typedef struct " << tipo_estructura(definicion.nombre) << " {\n";
+            salida_ << "typedef struct " << tipo_estructura(definicion) << " {\n";
             for (const sintactico::Campo& campo : definicion.campos) {
                 salida_ << "    " << tipo_declarado_c(campo.tipo) << ' ' << campo.nombre << ";\n";
             }
-            salida_ << "} " << tipo_estructura(definicion.nombre) << ";\n\n";
+            salida_ << "} " << tipo_estructura(definicion) << ";\n\n";
         }
     }
 
@@ -877,8 +896,9 @@ private:
         if (sustituido != sustitucion_.end()) {
             return tipo_declarado_c(sustituido->second);
         }
-        if (campos_.find(std::string(escrito)) != campos_.end()) {
-            return tipo_estructura(escrito);
+        const auto conocido = tipo_c_de_.find(std::string(escrito));
+        if (conocido != tipo_c_de_.end()) {
+            return conocido->second;
         }
         return tipo_c(escrito);
     }
@@ -924,7 +944,7 @@ private:
     /// Firma de C de un método: el objeto va primero, como puntero.
     std::string firma_metodo(const sintactico::DefinicionTipo& definicion,
                              const sintactico::Funcion& metodo) const {
-        const std::string estructura = tipo_estructura(definicion.nombre);
+        const std::string estructura = tipo_estructura(definicion);
         std::string salida = "static ";
         salida += tipo_declarado_c(metodo.tipo_retorno);
         salida += ' ';
@@ -948,7 +968,7 @@ private:
         salida_ << firma_metodo(definicion, metodo) << " {\n";
 
         const std::string anterior = estructura_actual_c_;
-        estructura_actual_c_ = tipo_estructura(definicion.nombre);
+        estructura_actual_c_ = tipo_estructura(definicion);
 
         abrir_ambito();
         ++nivel_;
@@ -1251,8 +1271,11 @@ private:
                 return "int";
             case TipoExpresion::Identificador:
                 return buscar(expresion.lexema);
-            case TipoExpresion::Construccion:
-                return tipo_estructura(expresion.anotacion);
+            case TipoExpresion::Construccion: {
+                const auto conocido = tipo_c_de_.find(std::string(expresion.anotacion));
+                return conocido != tipo_c_de_.end() ? conocido->second
+                                                    : tipo_estructura(expresion.anotacion);
+            }
             case TipoExpresion::Miembro: {
                 if (!expresion.izquierda) {
                     return "long long";
@@ -1269,7 +1292,7 @@ private:
                 if (objeto.rfind(PREFIJO, 0) != 0) {
                     return "long long";
                 }
-                const std::string nombre_estructura = objeto.substr(PREFIJO.size());
+                const std::string nombre_estructura = objeto;
 
                 const auto tipo = campos_.find(nombre_estructura);
                 if (tipo != campos_.end()) {
@@ -1366,7 +1389,7 @@ private:
                         acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
                     constexpr std::string_view PREFIJO = "nooki_";
                     if (tipo_objeto.rfind(PREFIJO, 0) == 0) {
-                        const auto metodos = metodos_.find(tipo_objeto.substr(PREFIJO.size()));
+                        const auto metodos = metodos_.find(tipo_objeto);
                         if (metodos != metodos_.end()) {
                             const auto metodo = metodos->second.find(acceso.anotacion);
                             if (metodo != metodos->second.end()) {
@@ -1450,7 +1473,9 @@ private:
     }
 
     std::string construccion(const sintactico::Expresion& nodo) {
-        const std::string tipo = tipo_estructura(nodo.anotacion);
+        const auto conocido = tipo_c_de_.find(std::string(nodo.anotacion));
+        const std::string tipo =
+            conocido != tipo_c_de_.end() ? conocido->second : tipo_estructura(nodo.anotacion);
         std::string salida = "(" + tipo + "){ ";
         for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
             if (i != 0) {
@@ -1962,6 +1987,7 @@ private:
     }
 
     std::ostringstream salida_;
+    std::map<std::string, std::string> tipo_c_de_;
     std::map<std::string, std::map<std::string, std::string>> campos_;
     std::map<std::string, std::string> retornos_;
     /// Tipos declarados de los parámetros, para saber cuáles son préstamos.

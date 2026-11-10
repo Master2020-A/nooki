@@ -9,6 +9,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 `coincide`, propiedad determinista, textos, colecciones (`Vector`, `Mapa`), genéricos y módulos con
 visibilidad. Un programa puede repartirse en varios archivos.
 
+### Sprint 35 — Espacios de nombres para tipos (2026-11-10)
+
+- **`modulo.tipo`** en declaraciones, parámetros y campos: una estructura exportada por un módulo se
+  usa desde fuera con su nombre cualificado (`figuras.punto`).
+- **Nombres de C con prefijo**: `nooki_figuras_punto`, de modo que dos módulos pueden declarar
+  `punto` sin chocar.
+- **Visibilidad en tipos y enumeraciones**: `publico estructura`, `publico clase` y
+  `publico enumeracion` en la cabecera de un archivo.
+- **Estructuras devueltas por funciones**: una variable inicializada con una llamada cuyo tipo de
+  retorno es una estructura recuerda ese tipo, así que sus métodos y campos se resuelven.
+- **Comparación de tipos por definición**: `punto` y `figuras.punto` son la misma estructura aunque
+  se escriban distinto.
+- Programa de conformidad `0026-tipos-modulo`, con dos archivos, compilado y ejecutado.
+
 ### Sprint 34 — Programa interactivo y `claves()` (2026-11-10)
 
 - **`mapa.claves() -> Vector<texto>`**: recorre las claves de un mapa. Las claves devueltas son

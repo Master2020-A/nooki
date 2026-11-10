@@ -30,10 +30,20 @@ public:
             funciones_.emplace(funcion.nombre, &funcion);
         }
         for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
-            tipos_.emplace(definicion.nombre, &definicion);
+            tipos_.emplace(std::string(definicion.nombre), &definicion);
+            if (!definicion.modulo.empty()) {
+                tipos_.emplace(std::string(definicion.modulo) + "." +
+                                   std::string(definicion.nombre),
+                               &definicion);
+            }
         }
         for (const sintactico::Enumeracion& enumeracion : programa_.enumeraciones) {
-            enumeraciones_.emplace(enumeracion.nombre, &enumeracion);
+            enumeraciones_.emplace(std::string(enumeracion.nombre), &enumeracion);
+            if (!enumeracion.modulo.empty()) {
+                enumeraciones_.emplace(std::string(enumeracion.modulo) + "." +
+                                           std::string(enumeracion.nombre),
+                                       &enumeracion);
+            }
         }
         for (const sintactico::Funcion& funcion : programa_.funciones) {
             if (!funcion.modulo.empty()) {
@@ -136,7 +146,7 @@ private:
         if (desde_nombre(tipo) != Tipo::Desconocido) {
             return true;
         }
-        if (tipo_por_nombre(tipo) != nullptr || enumeraciones_.count(tipo) != 0) {
+        if (tipo_por_nombre(tipo) != nullptr || enumeraciones_.count(std::string(tipo)) != 0) {
             return true;
         }
         if (tipo.rfind("Caja<", 0) == 0) {
@@ -234,6 +244,30 @@ private:
         return false;
     }
 
+    /// Tipo de retorno declarado de una llamada, si se puede saber.
+    std::string_view retorno_de_llamada(const Expresion& expresion) const {
+        if (expresion.tipo != TipoExpresion::Llamada || !expresion.izquierda) {
+            return {};
+        }
+        const Expresion& destino = *expresion.izquierda;
+        if (destino.tipo == TipoExpresion::Identificador) {
+            const auto funcion = funciones_.find(destino.lexema);
+            return funcion != funciones_.end() ? funcion->second->tipo_retorno
+                                               : std::string_view{};
+        }
+        if (destino.tipo == TipoExpresion::Miembro && destino.izquierda &&
+            destino.izquierda->tipo == TipoExpresion::Identificador) {
+            const auto modulo = modulos_.find(destino.izquierda->lexema);
+            if (modulo != modulos_.end()) {
+                const auto funcion = modulo->second.find(destino.anotacion);
+                if (funcion != modulo->second.end()) {
+                    return funcion->second->tipo_retorno;
+                }
+            }
+        }
+        return {};
+    }
+
     static bool es_llamada_mapa(const Expresion& expresion) {
         if (expresion.tipo != TipoExpresion::Llamada || !expresion.izquierda) {
             return false;
@@ -304,7 +338,7 @@ private:
     }
 
     const sintactico::DefinicionTipo* tipo_por_nombre(std::string_view nombre) const {
-        const auto encontrada = tipos_.find(nombre);
+        const auto encontrada = tipos_.find(std::string(nombre));
         return encontrada == tipos_.end() ? nullptr : encontrada->second;
     }
 
@@ -476,9 +510,17 @@ private:
 
                 const bool es_construccion =
                     sentencia.expresion->tipo == TipoExpresion::Construccion;
+                std::string_view estructura;
+                if (es_construccion) {
+                    estructura = sentencia.expresion->anotacion;
+                } else {
+                    const std::string_view devuelto = retorno_de_llamada(*sentencia.expresion);
+                    if (!devuelto.empty() && tipo_por_nombre(devuelto) != nullptr) {
+                        estructura = devuelto;
+                    }
+                }
                 if (sentencia.tipo_declarado.empty()) {
-                    declarar(sentencia.nombre, real,
-                             es_construccion ? sentencia.expresion->anotacion : std::string_view{});
+                    declarar(sentencia.nombre, real, estructura);
                     return;
                 }
                 const Tipo declarado = desde_nombre(sentencia.tipo_declarado);
@@ -566,7 +608,7 @@ private:
             if (rama.patron.clase == Patron::Clase::Comodin) {
                 hay_comodin = true;
             } else if (rama.patron.clase == Patron::Clase::Variante) {
-                const auto enumeracion = enumeraciones_.find(rama.patron.enumeracion);
+                const auto enumeracion = enumeraciones_.find(std::string(rama.patron.enumeracion));
                 if (enumeracion == enumeraciones_.end()) {
                     error(diagnostico::codigos::TIPO_DESCONOCIDO, rama.patron.span)
                         .parametro("nombre", std::string(rama.patron.enumeracion));
@@ -954,7 +996,13 @@ private:
             // Un parámetro cuyo tipo es una estructura se compara por nombre de tipo.
             if (tipo_por_nombre(funcion.parametros[i].tipo) != nullptr) {
                 const std::string_view real = estructura_de(*llamada.lista[i]);
-                if (real != funcion.parametros[i].tipo) {
+                // `punto` y `figuras.punto` pueden ser la misma estructura: se compara
+                // por definición, no por el texto con que se escribió.
+                const bool mismo_tipo =
+                    real == funcion.parametros[i].tipo ||
+                    (tipo_por_nombre(real) != nullptr &&
+                     tipo_por_nombre(real) == tipo_por_nombre(funcion.parametros[i].tipo));
+                if (!mismo_tipo) {
                     error(diagnostico::codigos::ARGUMENTO_INCOMPATIBLE, llamada.lista[i]->span)
                         .parametro("parametro", std::string(funcion.parametros[i].nombre))
                         .parametro("funcion", nombre_visible)
@@ -991,7 +1039,7 @@ private:
 
         // ¿Es una variante de enumeración? `color.rojo`.
         if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
-            const auto enumeracion = enumeraciones_.find(expresion.izquierda->lexema);
+            const auto enumeracion = enumeraciones_.find(std::string(expresion.izquierda->lexema));
             if (enumeracion != enumeraciones_.end()) {
                 for (const std::string_view variante : enumeracion->second->variantes) {
                     if (variante == expresion.anotacion) {
@@ -1029,7 +1077,7 @@ private:
     }
 
     Tipo tipo_construccion(const Expresion& expresion) {
-        const auto encontrado = tipos_.find(expresion.anotacion);
+        const auto encontrado = tipos_.find(std::string(expresion.anotacion));
         if (encontrado == tipos_.end()) {
             error(diagnostico::codigos::TIPO_DESCONOCIDO, expresion.span)
                 .parametro("nombre", expresion.anotacion);
@@ -1082,8 +1130,8 @@ private:
     const sintactico::Programa& programa_;
     diagnostico::Emisor& emisor_;
     std::map<std::string_view, const Funcion*> funciones_;
-    std::map<std::string_view, const sintactico::DefinicionTipo*> tipos_;
-    std::map<std::string_view, const sintactico::Enumeracion*> enumeraciones_;
+    std::map<std::string, const sintactico::DefinicionTipo*> tipos_;
+    std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     std::string_view estructura_actual_;

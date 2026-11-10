@@ -69,9 +69,11 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
         destino.funciones.push_back(std::move(funcion));
     }
     for (sintactico::DefinicionTipo& tipo : sub.tipos) {
+        tipo.modulo = nombre;
         destino.tipos.push_back(std::move(tipo));
     }
     for (sintactico::Enumeracion& enumeracion : sub.enumeraciones) {
+        enumeracion.modulo = nombre;
         destino.enumeraciones.push_back(std::move(enumeracion));
     }
     return true;

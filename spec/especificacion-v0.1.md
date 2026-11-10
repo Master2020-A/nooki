@@ -870,3 +870,31 @@ imprimir(n * 2)
 - Al final de la entrada, `leer_linea` devuelve un texto vacío y `leer_entero` devuelve `0`: un
   programa nunca se queda bloqueado ni recibe valores indefinidos.
 - Ambas son **integrales del lenguaje**: no se declaran ni se importan.
+
+
+### 18.14 Tipos de un módulo
+
+```aura
+// figuras.oki
+publico estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+publico funcion crear(x: entero, y: entero) -> punto {
+    variable p = punto { x: x, y: y }
+    retornar p
+}
+```
+
+```aura
+usar figuras
+
+variable a: figuras.punto = figuras.crear(1, 2)
+```
+
+- Un tipo exportado se nombra desde fuera como `modulo.tipo`.
+- Dentro de su módulo se sigue usando el nombre corto.
+- Dos módulos pueden declarar un tipo con el mismo nombre: no chocan.
+- `publico` en `estructura`, `clase` o `enumeracion` los hace visibles; sin ella son privados.
+- `punto` y `figuras.punto` designan la misma estructura: el compilador compara por definición.
