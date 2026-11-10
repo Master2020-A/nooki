@@ -257,6 +257,12 @@ constexpr Caso INVALIDOS[] = {
     {"funcion principal() -> entero {\n    variable s = \"texto\"\n"
      "    variable n = s + 1\n    retornar 0\n}",
      "NOK4001"},
+
+    // --- Propiedad en parámetros -------------------------------------------
+    {"funcion consumir(t: texto) -> entero {\n    retornar t.largo()\n}\n"
+     "funcion principal() -> entero {\n    variable a = \"uno\" + \"!\"\n"
+     "    variable n = consumir(a)\n    imprimir(a)\n    retornar n\n}",
+     "NOK5001"},
 };
 
 }  // namespace

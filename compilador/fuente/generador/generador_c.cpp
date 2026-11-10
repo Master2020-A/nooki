@@ -487,6 +487,13 @@ private:
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
             retornos_[std::string(funcion.nombre)] = tipo_c(funcion.tipo_retorno);
+
+            std::vector<std::string> tipos;
+            tipos.reserve(funcion.parametros.size());
+            for (const sintactico::Parametro& parametro : funcion.parametros) {
+                tipos.emplace_back(parametro.tipo);
+            }
+            parametros_[std::string(funcion.nombre)] = std::move(tipos);
         }
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
             enumeraciones_[std::string(enumeracion.nombre)] = &enumeracion;
@@ -733,6 +740,7 @@ private:
             case TipoSentencia::Expresion:
                 if (sentencia.expresion) {
                     salida_ << indentacion() << expresion(*sentencia.expresion) << ";\n";
+                    emitir_movimientos_de_llamada(*sentencia.expresion);
                 }
                 return;
 
@@ -817,6 +825,8 @@ private:
 
         salida_ << tipo << ' ' << sentencia.nombre << " = " << expresion(*sentencia.expresion)
                 << ";\n";
+
+        emitir_movimientos_de_llamada(*sentencia.expresion);
 
         if (tipo == "nooki_caja" || tipo == "nooki_texto" ||
             tipo.rfind("nooki_vector_", 0) == 0) {
@@ -1016,7 +1026,8 @@ private:
                 if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
                     const sintactico::Expresion& acceso = *expresion.izquierda;
                     if (acceso.izquierda && acceso.anotacion == "largo" &&
-                        tipo_de(*acceso.izquierda) == "nooki_texto") {
+                        (tipo_de(*acceso.izquierda) == "nooki_texto" ||
+                         tipo_de(*acceso.izquierda) == "nooki_texto*")) {
                         return "long long";
                     }
                     if (acceso.izquierda &&
@@ -1320,9 +1331,14 @@ private:
 
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro) {
             const sintactico::Expresion& acceso = *nodo.izquierda;
-            if (acceso.izquierda && acceso.anotacion == "largo" &&
-                tipo_de(*acceso.izquierda) == "nooki_texto") {
-                return "nooki_texto_largo(" + expresion(*acceso.izquierda) + ")";
+            if (acceso.izquierda && acceso.anotacion == "largo") {
+                const std::string tipo = tipo_de(*acceso.izquierda);
+                if (tipo == "nooki_texto") {
+                    return "nooki_texto_largo(" + expresion(*acceso.izquierda) + ")";
+                }
+                if (tipo == "nooki_texto*") {
+                    return "nooki_texto_largo(*" + expresion(*acceso.izquierda) + ")";
+                }
             }
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
@@ -1399,10 +1415,55 @@ private:
             salida += expresion(*argumento);
         }
         salida += ')';
+
         return salida;
     }
 
-    /// `p.metodo(a, b)` → `nooki_punto_metodo(&p, a, b)`.
+    /// Pasar un valor con dueño por valor (a un parámetro que no es préstamo) lo mueve:
+    /// el origen queda vacío para que nadie lo libere dos veces.
+    void emitir_movimientos_de_llamada(const sintactico::Expresion& nodo) {
+        if (nodo.tipo != sintactico::TipoExpresion::Llamada || !nodo.izquierda) {
+            return;
+        }
+        if (nodo.izquierda->tipo != sintactico::TipoExpresion::Identificador) {
+            return;
+        }
+        emitir_movimientos(nodo, nodo.izquierda->lexema);
+    }
+
+    void emitir_movimientos(const sintactico::Expresion& nodo,
+                            std::string_view nombre_funcion) {
+        const auto declarados = parametros_.find(std::string(nombre_funcion));
+        if (declarados == parametros_.end()) {
+            return;
+        }
+
+        std::string extras;
+        for (std::size_t i = 0; i < nodo.lista.size() && i < declarados->second.size(); ++i) {
+            const sintactico::ExpresionPtr& argumento = nodo.lista[i];
+            if (!argumento ||
+                argumento->tipo != sintactico::TipoExpresion::Identificador) {
+                continue;
+            }
+            const std::string& declarado = declarados->second[i];
+            if (!declarado.empty() && (declarado.front() == '&' || declarado.front() == '*')) {
+                continue;  // préstamo: no mueve
+            }
+
+            const std::string tipo = tipo_de(*argumento);
+            const std::string nombre(argumento->lexema);
+            if (tipo == "nooki_caja") {
+                salida_ << indentacion() << nombre << ".datos = NULL;\n";
+            } else if (tipo == "nooki_texto") {
+                salida_ << indentacion() << nombre << ".datos = NULL;\n";
+                salida_ << indentacion() << nombre << ".propio = 0;\n";
+            } else if (tipo.rfind("nooki_vector_", 0) == 0) {
+                salida_ << indentacion() << nombre << ".datos = NULL;\n";
+                salida_ << indentacion() << nombre << ".largo = 0;\n";
+                salida_ << indentacion() << nombre << ".capacidad = 0;\n";
+            }
+        }
+    }
     std::string llamada_metodo(const sintactico::Expresion& nodo) {
         const sintactico::Expresion& acceso = *nodo.izquierda;
         if (!acceso.izquierda) {
@@ -1480,6 +1541,8 @@ private:
     std::ostringstream salida_;
     std::map<std::string, std::map<std::string, std::string>> campos_;
     std::map<std::string, std::string> retornos_;
+    /// Tipos declarados de los parámetros, para saber cuáles son préstamos.
+    std::map<std::string, std::vector<std::string>> parametros_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string, const sintactico::Funcion*> genericos_;

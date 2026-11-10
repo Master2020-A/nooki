@@ -179,7 +179,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S25** | `Vector<T>` | ✅ `Vector<entero>` con `agregar`, `obtener` y `largo`, crecimiento por duplicación, comprobación de índice y liberación determinista. *La iteración en `para` y los elementos que no son enteros llegan en el sprint siguiente* |
 | **S26** | Iteración sobre colecciones | ✅ `para (n en vector)` como recorrido por índice con variable interna, y `&Vector<T>` como parámetro prestado. *`Vector<texto>` y `quitar`/`insertar` quedan pendientes* |
 | **S27** | `Vector<texto>` | ✅ Colección de textos con dueño: `agregar` mueve el elemento (`NOK5001`), `obtener` devuelve una vista y la liberación suelta elementos y arreglo. *`Mapa<K, V>` queda pendiente* |
-| **S28** | **Módulos, imports y cierre v0.3** | Resolución de rutas, ciclos, visibilidad; 300 casos válidos + 300 inválidos; fuzz semántico |
+| **S28** | Regla única de propiedad en llamadas | ✅ Pasar un valor con dueño por valor lo mueve (`NOK5001`); prestar no mueve; una sola implementación en verificador y generador (ADR-020). *Las llamadas anidadas quedan pendientes* |
 
 ---
 

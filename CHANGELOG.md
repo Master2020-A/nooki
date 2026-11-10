@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 28 — Una sola regla de propiedad (2026-11-10)
+
+- **Pasar un valor con dueño por valor lo mueve**: `consumir(a)` deja `a` vacío y usarlo después
+  es `NOK5001`, con la sugerencia de prestarlo.
+- **Prestar no mueve**: `prestado(&a)` deja `a` intacto.
+- La regla vive **una sola vez** en el verificador y otra en el generador, mirando el tipo del
+  parámetro; desaparece la lógica por tipo de dato que provocó el fallo de S27.
+- **`&texto`** funciona como préstamo, también en `.largo()`.
+- **ADR-020** documenta la decisión, el coste (la variable se invalida al pasarla) y el límite
+  conocido (una llamada anidada todavía no mueve).
+- Programa de conformidad `0020-propiedad-parametros`, compilado y ejecutado.
+
 ### Sprint 27 — `Vector<texto>` y dueño de los elementos (2026-11-10)
 
 - **`Vector<texto>`**: colección de textos donde **el vector es el dueño** de cada elemento.

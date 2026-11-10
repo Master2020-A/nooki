@@ -405,6 +405,7 @@ private:
                         marcar_movida(sentencia.expresion->lexema);
                     }
                     declarar_texto(sentencia.nombre);
+                    declarar_prestable(sentencia.nombre);
                     declarar(sentencia.nombre, real);
                     return;
                 }
@@ -590,7 +591,7 @@ private:
                 if (esta_movida(expresion.lexema)) {
                     error(diagnostico::codigos::USO_TRAS_MOVER, expresion.span)
                         .parametro("nombre", std::string(expresion.lexema))
-                        .ayuda("el valor se movió al asignarlo a otra variable");
+                        .ayuda("se movió a otro sitio: use «&» para prestarlo sin transferirlo");
                     return Tipo::Desconocido;
                 }
                 return buscar(expresion.lexema, expresion.span);
@@ -837,6 +838,8 @@ private:
 
     Tipo comprobar_argumentos(const Funcion& funcion, const Expresion& llamada,
                               const std::string& nombre_visible) {
+        std::vector<std::string_view> a_mover;
+
         if (llamada.lista.size() != funcion.parametros.size()) {
             error(diagnostico::codigos::ARIDAD_INCORRECTA, llamada.span)
                 .parametro("funcion", nombre_visible)
@@ -848,6 +851,16 @@ private:
         for (std::size_t i = 0; i < llamada.lista.size(); ++i) {
             if (!llamada.lista[i]) {
                 continue;
+            }
+
+            // Pasar un valor con dueño por valor lo mueve: se marca al final, cuando ya
+            // se comprobó el tipo de este argumento.
+            if (!es_prestamo(funcion.parametros[i].tipo) &&
+                llamada.lista[i]->tipo == TipoExpresion::Identificador) {
+                const std::string_view origen = llamada.lista[i]->lexema;
+                if (es_caja(origen) || es_texto(origen) || es_prestable(origen)) {
+                    a_mover.push_back(origen);
+                }
             }
 
             // Un parámetro cuyo tipo es una estructura se compara por nombre de tipo.
@@ -874,6 +887,10 @@ private:
                 .parametro("funcion", nombre_visible)
                 .parametro("esperado", nombre(esperado))
                 .parametro("encontrado", nombre(real));
+        }
+
+        for (const std::string_view origen : a_mover) {
+            marcar_movida(origen);
         }
 
         return desde_nombre(funcion.tipo_retorno);

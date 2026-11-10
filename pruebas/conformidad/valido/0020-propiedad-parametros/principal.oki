@@ -1,0 +1,21 @@
+// Regla única de propiedad: pasar un valor con dueño por valor lo mueve.
+funcion consumir(texto_entrante: texto) -> entero {
+    retornar texto_entrante.largo()
+}
+
+funcion prestado(texto_entrante: &texto) -> entero {
+    retornar texto_entrante.largo()
+}
+
+funcion principal() -> entero {
+    variable a = "uno" + "!"
+    variable b = a
+
+    imprimir(b)             // uno!
+    imprimir(prestado(&b))  // 4  — prestar no mueve
+    imprimir(b)             // uno! — sigue siendo válido
+
+    variable c = "adios"
+    imprimir(consumir(c))   // 5  — aquí «c» se mueve
+    retornar 0
+}
