@@ -529,7 +529,7 @@ private:
             case TipoExpresion::Booleano:
                 return Tipo::Booleano;
             case TipoExpresion::Identificador: {
-                if (expresion.lexema == "Caja") {
+                if (expresion.lexema == "Caja" || expresion.lexema == "Vector") {
                     return Tipo::Desconocido;
                 }
                 if (esta_movida(expresion.lexema)) {

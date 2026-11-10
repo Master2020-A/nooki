@@ -24,6 +24,9 @@ std::string tipo_c(std::string_view escrito) {
     if (escrito.rfind("Caja<", 0) == 0) {
         return "nooki_caja";
     }
+    if (escrito.rfind("Vector<", 0) == 0) {
+        return "nooki_vector_entero";
+    }
     switch (nooki::semantico::desde_nombre(escrito)) {
         case nooki::semantico::Tipo::Texto:
             return "nooki_texto";
@@ -170,6 +173,53 @@ const char* PRELUDIO =
     "        fwrite(t.datos, 1, (size_t)t.largo, stdout);\n"
     "    }\n"
     "    fputc(10, stdout);\n"
+    "}\n"
+    "\n"
+    "/* Vector<T>: arreglo dinámico con dueño (S25). */\n"
+    "typedef struct {\n"
+    "    long long* datos;\n"
+    "    long long largo;\n"
+    "    long long capacidad;\n"
+    "} nooki_vector_entero;\n"
+    "\n"
+    "static nooki_vector_entero nooki_vector_entero_nuevo(void) {\n"
+    "    nooki_vector_entero v;\n"
+    "    v.datos = NULL;\n"
+    "    v.largo = 0;\n"
+    "    v.capacidad = 0;\n"
+    "    return v;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_entero_agregar(nooki_vector_entero* v, long long valor) {\n"
+    "    if (v->largo == v->capacidad) {\n"
+    "        long long nueva = v->capacidad == 0 ? 4 : v->capacidad * 2;\n"
+    "        long long* datos = (long long*)realloc(v->datos, sizeof(long long) * (size_t)nueva);\n"
+    "        if (datos == NULL) {\n"
+    "            return;\n"
+    "        }\n"
+    "        v->datos = datos;\n"
+    "        v->capacidad = nueva;\n"
+    "    }\n"
+    "    v->datos[v->largo] = valor;\n"
+    "    v->largo += 1;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_vector_entero_obtener(nooki_vector_entero* v, long long indice) {\n"
+    "    if (indice < 0 || indice >= v->largo) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    return v->datos[indice];\n"
+    "}\n"
+    "\n"
+    "static long long nooki_vector_entero_largo(nooki_vector_entero* v) {\n"
+    "    return v->largo;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_entero_soltar(nooki_vector_entero* v) {\n"
+    "    free(v->datos);\n"
+    "    v->datos = NULL;\n"
+    "    v->largo = 0;\n"
+    "    v->capacidad = 0;\n"
     "}\n"
     "\n"
     "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
@@ -711,7 +761,8 @@ private:
         salida_ << tipo << ' ' << sentencia.nombre << " = " << expresion(*sentencia.expresion)
                 << ";\n";
 
-        if (tipo == "nooki_caja" || tipo == "nooki_texto") {
+        if (tipo == "nooki_caja" || tipo == "nooki_texto" ||
+            tipo.rfind("nooki_vector_", 0) == 0) {
             // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
                 const std::string& origen = std::string(sentencia.expresion->lexema);
@@ -720,8 +771,13 @@ private:
                     salida_ << indentacion() << origen << ".propio = 0;\n";
                 }
             }
-            registrar_liberable(sentencia.nombre,
-                                tipo == "nooki_caja" ? "nooki_caja_soltar" : "nooki_texto_soltar");
+            std::string liberar = "nooki_texto_soltar";
+            if (tipo == "nooki_caja") {
+                liberar = "nooki_caja_soltar";
+            } else if (tipo.rfind("nooki_vector_", 0) == 0) {
+                liberar = tipo + "_soltar";
+            }
+            registrar_liberable(sentencia.nombre, std::move(liberar));
         }
 
         declarar(sentencia.nombre, tipo);
@@ -853,9 +909,18 @@ private:
                         return "long long";
                     }
                     if (acceso.izquierda &&
+                        tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
+                        return acceso.anotacion == "agregar" ? "void" : "long long";
+                    }
+                    if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
                         acceso.izquierda->lexema == "Caja") {
                         return "nooki_caja";
+                    }
+                    if (acceso.izquierda &&
+                        acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                        acceso.izquierda->lexema == "Vector") {
+                        return "nooki_vector_entero";
                     }
                     const std::string tipo_objeto =
                         acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
@@ -1147,6 +1212,11 @@ private:
             }
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+                acceso.izquierda->lexema == "Vector" && acceso.anotacion == "nuevo") {
+                return "nooki_vector_entero_nuevo()";
+            }
+            if (acceso.izquierda &&
+                acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
                 acceso.izquierda->lexema == "Caja") {
                 if (nodo.lista.size() != 1 || !nodo.lista.front()) {
                     no_soportado("«Caja.nuevo» con un número de argumentos distinto de uno");
@@ -1224,6 +1294,21 @@ private:
         }
 
         const std::string tipo_objeto = tipo_de(*acceso.izquierda);
+
+        if (tipo_objeto.rfind("nooki_vector_", 0) == 0) {
+            std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(&" +
+                                 expresion(*acceso.izquierda);
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                salida += ", ";
+                salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
+        }
+
         constexpr std::string_view PREFIJO = "nooki_";
         if (tipo_objeto.rfind(PREFIJO, 0) != 0) {
             no_soportado("una llamada a un método sobre algo que no es una estructura");

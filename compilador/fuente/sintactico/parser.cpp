@@ -1002,7 +1002,8 @@ bool Parser::intentar_tipos_aplicados(ExpresionPtr& nodo) {
         break;
     }
 
-    if (tipos.empty() || !aceptar_lexema(">") || actual().lexema != "(") {
+    if (tipos.empty() || !aceptar_lexema(">") ||
+        (actual().lexema != "(" && actual().lexema != ".")) {
         indice_ = inicio;  // no era una aplicación de tipos: retroceder
         return false;
     }

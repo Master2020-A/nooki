@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 25 — `Vector<T>` (2026-11-10)
+
+- **`Vector<entero>`**: arreglo dinámico en el montículo con `agregar`, `obtener`, `largo` y
+  liberación determinista al cerrar el ámbito.
+- **Crece multiplicando la capacidad** por dos, con `realloc`; `obtener` comprueba el índice y
+  devuelve 0 fuera de rango en lugar de leer memoria ajena.
+- **Misma propiedad que las cajas y los textos**: asignar mueve, y el liberador se elige por tipo.
+- El parser admite tipos aplicados seguidos de `.` (`Vector<entero>.nuevo()`), no solo de `(`.
+- Programa de conformidad `0017-vectores`, compilado y ejecutado.
+
 ### Sprint 24 — Genéricos por instanciación (2026-11-10)
 
 - **Funciones genéricas**: `funcion identidad<T>(valor: T) -> T`, con instanciación explícita

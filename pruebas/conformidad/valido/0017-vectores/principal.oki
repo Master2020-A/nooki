@@ -1,0 +1,18 @@
+// Vector<T>: colección con dueño, longitud y acceso por índice.
+funcion principal() -> entero {
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(3)
+    numeros.agregar(7)
+    numeros.agregar(11)
+
+    imprimir(numeros.largo())
+
+    variable suma = 0
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        suma = suma + numeros.obtener(i)
+        i = i + 1
+    }
+    imprimir(suma)
+    retornar 0
+}
