@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Aprobada |
+| **Estado** | Reemplazada por [ADR-021](ADR-021-clases-por-referencia.md) (S36) |
 | **Fecha** | 2026-11-09 |
 | **Sprint** | S17 |
 | **Ámbito** | Generación de código · modelo de objetos |

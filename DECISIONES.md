@@ -25,7 +25,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-012](docs/adr/ADR-012-licencia-y-gobernanza.md) | MIT OR Apache-2.0 + excepción de runtime; RFC, ediciones, semver | ✅ Aprobada |
 | [ADR-013](docs/adr/ADR-013-decisiones-sintacticas.md) | `interfaz`=`rasgo`; `nuevo` invariable; NL termina sentencia; sin turbofish | ✅ Aprobada |
 | [ADR-014](docs/adr/ADR-014-backend-c.md) | Backend C en la v0.1; LLVM más adelante detrás de la misma interfaz | ✅ Aprobada (S06) |
-| [ADR-015](docs/adr/ADR-015-clases-por-valor-en-v01.md) | En la v0.1, `clase` y `estructura` se compilan igual, por valor | ✅ Aprobada (S17) |
+| [ADR-015](docs/adr/ADR-015-clases-por-valor-en-v01.md) | En la v0.1, `clase` y `estructura` se compilan igual, por valor | 🔁 Reemplazada por ADR-021 (S36) |
 | [ADR-016](docs/adr/ADR-016-caja-y-movimiento.md) | `Caja<T>`: dueño único, movimiento y liberación determinista | ✅ Aprobada (S20) |
 | [ADR-017](docs/adr/ADR-017-prestamos-de-expresion.md) | Préstamos `&` de alcance de expresión; no se pueden guardar | ✅ Aprobada (S21) |
 | [ADR-018](docs/adr/ADR-018-texto-con-marca-de-propiedad.md) | `texto` con marca de propiedad (`propio`) en lugar de dos tipos | ✅ Aprobada (S23) |
