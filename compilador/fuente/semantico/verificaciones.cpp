@@ -50,6 +50,11 @@ public:
                 modulos_[funcion.modulo].emplace(funcion.nombre, &funcion);
             }
         }
+        for (const sintactico::Enumeracion& enumeracion : programa_.enumeraciones) {
+            for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
+                variantes_.emplace(enumeracion.variantes[i].nombre, std::make_pair(&enumeracion, i));
+            }
+        }
         for (const Funcion& funcion : programa_.funciones) {
             revisar_funcion(funcion);
         }
@@ -703,15 +708,47 @@ private:
         for (const Rama& rama : sentencia.ramas) {
             if (rama.patron.clase == Patron::Clase::Comodin) {
                 hay_comodin = true;
-            } else if (rama.patron.clase == Patron::Clase::Variante) {
+                revisar_cuerpo(rama.cuerpo, funcion);
+                continue;
+            }
+
+            if (rama.patron.clase == Patron::Clase::Variante &&
+                rama.patron.enumeracion == rama.patron.valor) {
+                // Variante con datos: `caso Bien(v)`. Las ligaduras viven en la rama.
+                const auto variante = variantes_.find(std::string(rama.patron.valor));
+                if (variante == variantes_.end()) {
+                    error(diagnostico::codigos::TIPO_DESCONOCIDO, rama.patron.span)
+                        .parametro("nombre", std::string(rama.patron.valor));
+                    revisar_cuerpo(rama.cuerpo, funcion);
+                    continue;
+                }
+                const sintactico::Variante& datos =
+                    variante->second.first->variantes[variante->second.second];
+                if (rama.patron.ligaduras.size() != datos.campos.size()) {
+                    error(diagnostico::codigos::ARIDAD_INCORRECTA, rama.patron.span)
+                        .parametro("funcion", std::string(rama.patron.valor))
+                        .parametro("esperados", std::to_string(datos.campos.size()))
+                        .parametro("dados", std::to_string(rama.patron.ligaduras.size()));
+                }
+                abrir_ambito();
+                for (std::size_t i = 0;
+                     i < datos.campos.size() && i < rama.patron.ligaduras.size(); ++i) {
+                    declarar(rama.patron.ligaduras[i], desde_nombre(datos.campos[i].tipo));
+                }
+                revisar_cuerpo(rama.cuerpo, funcion);
+                cerrar_ambito();
+                continue;
+            }
+
+            if (rama.patron.clase == Patron::Clase::Variante) {
                 const auto enumeracion = enumeraciones_.find(std::string(rama.patron.enumeracion));
                 if (enumeracion == enumeraciones_.end()) {
                     error(diagnostico::codigos::TIPO_DESCONOCIDO, rama.patron.span)
                         .parametro("nombre", std::string(rama.patron.enumeracion));
                 } else {
                     bool existe = false;
-                    for (const std::string_view variante : enumeracion->second->variantes) {
-                        if (variante == rama.patron.valor) {
+                    for (const sintactico::Variante& variante : enumeracion->second->variantes) {
+                        if (variante.nombre == rama.patron.valor) {
                             existe = true;
                             break;
                         }
@@ -728,9 +765,28 @@ private:
             revisar_cuerpo(rama.cuerpo, funcion);
         }
 
+        // Cubrir todas las variantes de una enumeración con datos también es exhaustivo.
         if (!hay_comodin) {
-            error(diagnostico::codigos::COINCIDE_NO_EXHAUSTIVO, sentencia.span)
-                .ayuda("añada «caso _ => ...» para los casos que falten");
+            const sintactico::Enumeracion* con_datos = nullptr;
+            std::set<std::string> cubiertas;
+            for (const Rama& rama : sentencia.ramas) {
+                if (rama.patron.clase != Patron::Clase::Variante ||
+                    rama.patron.enumeracion != rama.patron.valor) {
+                    continue;
+                }
+                const auto variante = variantes_.find(std::string(rama.patron.valor));
+                if (variante == variantes_.end()) {
+                    continue;
+                }
+                con_datos = variante->second.first;
+                cubiertas.insert(std::string(rama.patron.valor));
+            }
+            const bool completo =
+                con_datos != nullptr && cubiertas.size() >= con_datos->variantes.size();
+            if (!completo) {
+                error(diagnostico::codigos::COINCIDE_NO_EXHAUSTIVO, sentencia.span)
+                    .ayuda("añada «caso _ => ...» para los casos que falten");
+            }
         }
     }
 
@@ -993,6 +1049,30 @@ private:
 
         const std::string_view nombre_llamado = expresion.izquierda->lexema;
 
+        // Constructor de una variante con datos: `Bien(5)`.
+        if (const auto variante = variantes_.find(std::string(nombre_llamado));
+            variante != variantes_.end()) {
+            const sintactico::Variante& datos =
+                variante->second.first->variantes[variante->second.second];
+            if (!datos.campos.empty()) {
+                if (expresion.lista.size() != datos.campos.size()) {
+                    error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                        .parametro("funcion", std::string(nombre_llamado))
+                        .parametro("esperados", std::to_string(datos.campos.size()))
+                        .parametro("dados", std::to_string(expresion.lista.size()));
+                }
+                for (std::size_t i = 0; i < expresion.lista.size() && i < datos.campos.size();
+                     ++i) {
+                    if (expresion.lista[i]) {
+                        const Tipo real = tipo_de(*expresion.lista[i]);
+                        exigir(desde_nombre(datos.campos[i].tipo), real,
+                               expresion.lista[i]->span);
+                    }
+                }
+                return Tipo::Desconocido;
+            }
+        }
+
         if (nombre_llamado == "Ok" || nombre_llamado == "Error") {
             if (expresion.lista.size() != 1) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
@@ -1161,8 +1241,8 @@ private:
         if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
             const auto enumeracion = enumeraciones_.find(std::string(expresion.izquierda->lexema));
             if (enumeracion != enumeraciones_.end()) {
-                for (const std::string_view variante : enumeracion->second->variantes) {
-                    if (variante == expresion.anotacion) {
+                for (const sintactico::Variante& variante : enumeracion->second->variantes) {
+                    if (variante.nombre == expresion.anotacion) {
                         return Tipo::Desconocido;
                     }
                 }
@@ -1275,6 +1355,8 @@ private:
     std::map<std::string_view, const Funcion*> funciones_;
     std::map<std::string, const sintactico::DefinicionTipo*> tipos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
+    std::map<std::string,
+             std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     const Funcion* funcion_actual_ = nullptr;

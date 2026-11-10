@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 42 — Variantes con datos (2026-11-10)
+
+- **Variantes con campos**: `enumeracion respuesta { Bien(valor: entero) Mal(mensaje: texto) }`.
+- **Representación**: unión etiquetada en C cuando alguna variante lleva datos; entero con constantes
+  cuando no, así que nada anterior cambia.
+- **Construcción por variante**: `Bien(10)` y `Mal("mensaje")`.
+- **Patrones que ligan**: `caso Bien(v)` declara `v` con el tipo del campo dentro de la rama.
+- **Cobertura completa**: si están todas las variantes, no hace falta `_`.
+- **Liberación**: las variantes con texto sueltan su campo al salir del ámbito.
+- **ADR-024** documenta la decisión y sus costes.
+- Programa de conformidad `0033-variantes`, compilado y ejecutado con las dos ramas.
+
 ### Sprint 41 — Operaciones de texto (2026-11-10)
 
 - **`buscar(otro)`**: posición de la primera aparición, o `-1` si no está.

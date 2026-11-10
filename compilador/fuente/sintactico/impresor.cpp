@@ -205,9 +205,21 @@ std::string imprimir(const Sentencia& sentencia) {
                         salida += "_";
                         break;
                     case Patron::Clase::Variante:
-                        salida += rama.patron.enumeracion;
-                        salida += '.';
-                        salida += rama.patron.valor;
+                        if (rama.patron.enumeracion == rama.patron.valor) {
+                            salida += rama.patron.valor;
+                            salida += '(';
+                            for (std::size_t i = 0; i < rama.patron.ligaduras.size(); ++i) {
+                                if (i != 0) {
+                                    salida += ", ";
+                                }
+                                salida += rama.patron.ligaduras[i];
+                            }
+                            salida += ')';
+                        } else {
+                            salida += rama.patron.enumeracion;
+                            salida += '.';
+                            salida += rama.patron.valor;
+                        }
                         break;
                     case Patron::Clase::Literal:
                         salida += rama.patron.valor;
@@ -277,9 +289,23 @@ std::string imprimir(const Programa& programa) {
     for (const Enumeracion& enumeracion : programa.enumeraciones) {
         salida += " (enumeracion ";
         salida += enumeracion.nombre;
-        for (const std::string_view variante : enumeracion.variantes) {
+        for (const Variante& variante : enumeracion.variantes) {
             salida += ' ';
-            salida += variante;
+            salida += variante.nombre;
+            if (!variante.campos.empty()) {
+                salida += '(';
+                bool primero = true;
+                for (const Campo& campo : variante.campos) {
+                    if (!primero) {
+                        salida += ", ";
+                    }
+                    primero = false;
+                    salida += campo.nombre;
+                    salida += ": ";
+                    salida += campo.tipo;
+                }
+                salida += ')';
+            }
         }
         salida += ')';
     }

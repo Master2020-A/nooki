@@ -94,6 +94,8 @@ struct Patron {
     std::string_view valor;
     /// Nombre de la enumeración cuando el patrón es una variante.
     std::string_view enumeracion;
+    /// Nombres ligados a los campos de la variante: `caso Bien(v)`.
+    std::vector<std::string_view> ligaduras;
     diagnostico::Span span;
 };
 
@@ -180,12 +182,19 @@ struct DefinicionTipo {
     diagnostico::Span span;
 };
 
+/// Una variante de enumeración, con o sin datos: `Bien(valor: entero)`.
+struct Variante {
+    std::string_view nombre;
+    std::vector<Campo> campos;
+    diagnostico::Span span;
+};
+
 /// `enumeracion color { rojo, verde, azul }`.
 struct Enumeracion {
     std::string_view nombre;
     std::string_view modulo;
     bool publico = false;
-    std::vector<std::string_view> variantes;
+    std::vector<Variante> variantes;
     diagnostico::Span span;
 };
 

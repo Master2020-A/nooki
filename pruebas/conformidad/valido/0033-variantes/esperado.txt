@@ -1,0 +1,3 @@
+10
+no puede ser negativo
+cero no vale

@@ -916,8 +916,18 @@ private:
                 campos_[nombre_c][campo] = tipo_campo;
             }
         }
+        // Los nombres de enumeración también son tipos resolubles.
+        for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
+            tipo_c_de_[std::string(enumeracion.nombre)] =
+                "nooki_" + std::string(enumeracion.nombre);
+            if (!enumeracion.modulo.empty()) {
+                tipo_c_de_[std::string(enumeracion.modulo) + "." +
+                          std::string(enumeracion.nombre)] =
+                    "nooki_" + std::string(enumeracion.nombre);
+            }
+        }
         for (const sintactico::Funcion& funcion : programa.funciones) {
-            retornos_[std::string(funcion.nombre)] = tipo_c(funcion.tipo_retorno);
+            retornos_[std::string(funcion.nombre)] = tipo_declarado_c(funcion.tipo_retorno);
 
             std::vector<std::string> tipos;
             tipos.reserve(funcion.parametros.size());
@@ -933,6 +943,16 @@ private:
         }
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
             enumeraciones_[std::string(enumeracion.nombre)] = &enumeracion;
+            // El nombre del tipo de una enumeración se resuelve a su nombre de C.
+            tipo_c_de_[std::string(enumeracion.nombre)] = "nooki_" + std::string(enumeracion.nombre);
+            if (!enumeracion.modulo.empty()) {
+                tipo_c_de_[std::string(enumeracion.modulo) + "." +
+                          std::string(enumeracion.nombre)] =
+                    "nooki_" + std::string(enumeracion.nombre);
+            }
+            for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
+                variantes_[std::string(enumeracion.variantes[i].nombre)] = {&enumeracion, i};
+            }
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
             if (!funcion.tipo_parametros.empty()) {
@@ -947,16 +967,87 @@ private:
         }
         salida_ << '\n';
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
-            salida_ << "typedef int nooki_" << enumeracion.nombre << ";\n";
+            bool con_datos = false;
+            for (const sintactico::Variante& variante : enumeracion.variantes) {
+                if (!variante.campos.empty()) {
+                    con_datos = true;
+                }
+            }
+
+            if (!con_datos) {
+                salida_ << "typedef int nooki_" << enumeracion.nombre << ";\n";
+                salida_ << "enum {";
+                for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
+                    if (i != 0) {
+                        salida_ << ", ";
+                    }
+                    salida_ << constante_enum(enumeracion.nombre,
+                                              enumeracion.variantes[i].nombre)
+                            << " = " << i;
+                }
+                salida_ << "};\n\n";
+                continue;
+            }
+
+            // Variantes con datos: unión etiquetada.
+            const std::string nombre_c = "nooki_" + std::string(enumeracion.nombre);
+            salida_ << "typedef struct " << nombre_c << " " << nombre_c << ";\n";
+            salida_ << "struct " << nombre_c << " {\n";
+            salida_ << "    int etiqueta;\n";
+            salida_ << "    union {\n";
+            for (const sintactico::Variante& variante : enumeracion.variantes) {
+                for (const sintactico::Campo& campo : variante.campos) {
+                    salida_ << "        " << tipo_declarado_c(campo.tipo) << ' '
+                            << variante.nombre << "_" << campo.nombre << ";\n";
+                }
+            }
+            salida_ << "    } datos;\n";
+            salida_ << "};\n\n";
+
             salida_ << "enum {";
             for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
                 if (i != 0) {
                     salida_ << ", ";
                 }
-                salida_ << constante_enum(enumeracion.nombre, enumeracion.variantes[i]) << " = "
-                        << i;
+                salida_ << constante_enum(enumeracion.nombre, enumeracion.variantes[i].nombre)
+                        << " = " << i;
             }
             salida_ << "};\n\n";
+
+            // Liberación de las variantes que llevan texto.
+            bool lleva_texto = false;
+            for (const sintactico::Variante& variante : enumeracion.variantes) {
+                for (const sintactico::Campo& campo : variante.campos) {
+                    if (campo.tipo == "texto") {
+                        lleva_texto = true;
+                    }
+                }
+            }
+            if (lleva_texto) {
+                salida_ << "static void " << nombre_c << "_soltar(" << nombre_c
+                        << "* valor) {\n";
+                for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
+                    const sintactico::Variante& variante = enumeracion.variantes[i];
+                    bool texto = false;
+                    for (const sintactico::Campo& campo : variante.campos) {
+                        if (campo.tipo == "texto") {
+                            texto = true;
+                        }
+                    }
+                    if (!texto) {
+                        continue;
+                    }
+                    salida_ << "    if (valor->etiqueta == " << i << ") {\n";
+                    for (const sintactico::Campo& campo : variante.campos) {
+                        if (campo.tipo == "texto") {
+                            salida_ << "        nooki_texto_soltar(&valor->datos."
+                                    << variante.nombre << "_" << campo.nombre << ");\n";
+                        }
+                    }
+                    salida_ << "    }\n";
+                }
+                salida_ << "}\n\n";
+            }
         }
     }
 
@@ -1861,6 +1952,11 @@ private:
                         expresion.izquierda->lexema == "Error") {
                         return "nooki_resultado";
                     }
+                    if (const auto variante =
+                            variantes_.find(std::string(expresion.izquierda->lexema));
+                        variante != variantes_.end()) {
+                        return "nooki_" + std::string(variante->second.first->nombre);
+                    }
                     if (expresion.izquierda->lexema == "leer_linea") {
                         return "nooki_texto";
                     }
@@ -1979,10 +2075,88 @@ private:
         return salida;
     }
 
+    /// `coincide` sobre una enumeración con datos: se compara la etiqueta y se
+    /// extraen los campos ligados por el patrón.
+    void emitir_coincide_datos(const sintactico::Sentencia& sentencia,
+                               const sintactico::Enumeracion& enumeracion) {
+        const std::string tipo = "nooki_" + std::string(enumeracion.nombre);
+        const std::string temporal = "__nooki_v" + std::to_string(contador_temporal_++);
+
+        salida_ << indentacion() << "{\n";
+        ++nivel_;
+        salida_ << indentacion() << tipo << " " << temporal << " = "
+                << expresion(*sentencia.expresion) << ";\n";
+
+        bool primero = true;
+        for (const sintactico::Rama& rama : sentencia.ramas) {
+            const sintactico::Variante* variante = nullptr;
+            std::size_t indice = 0;
+            if (rama.patron.clase == sintactico::Patron::Clase::Comodin) {
+                salida_ << indentacion() << (primero ? "{" : "else {") << "\n";
+            } else {
+                for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
+                    if (enumeracion.variantes[i].nombre == rama.patron.valor) {
+                        variante = &enumeracion.variantes[i];
+                        indice = i;
+                        break;
+                    }
+                }
+                if (variante == nullptr) {
+                    no_soportado("un patrón que no es variante de la enumeración");
+                    break;
+                }
+                salida_ << indentacion() << (primero ? "if" : "else if") << " (" << temporal
+                        << ".etiqueta == " << indice << ") {\n";
+            }
+            primero = false;
+
+            ++nivel_;
+            abrir_ambito();
+            if (variante != nullptr) {
+                for (std::size_t i = 0;
+                     i < variante->campos.size() && i < rama.patron.ligaduras.size(); ++i) {
+                    const std::string campo_c = tipo_declarado_c(variante->campos[i].tipo);
+                    salida_ << indentacion() << campo_c << " " << rama.patron.ligaduras[i]
+                            << " = " << temporal << ".datos." << variante->nombre << "_"
+                            << variante->campos[i].nombre << ";\n";
+                    declarar(rama.patron.ligaduras[i], campo_c);
+                }
+            }
+            for (const sintactico::Sentencia& hija : rama.cuerpo) {
+                emitir_sentencia(hija, false);
+            }
+            cerrar_ambito();
+            --nivel_;
+            salida_ << indentacion() << "}\n";
+        }
+
+        --nivel_;
+        salida_ << indentacion() << "}\n";
+    }
+
     void emitir_coincide(const sintactico::Sentencia& sentencia) {
         if (!sentencia.expresion) {
             no_soportado("un «coincide» sin valor que examinar");
             return;
+        }
+
+        // ¿Es una enumeración con datos?
+        const std::string tipo_examinado = tipo_de(*sentencia.expresion);
+        if (tipo_examinado.rfind("nooki_", 0) == 0) {
+            const auto enumeracion =
+                enumeraciones_.find(tipo_examinado.substr(std::string("nooki_").size()));
+            if (enumeracion != enumeraciones_.end()) {
+                bool con_datos = false;
+                for (const sintactico::Variante& variante : enumeracion->second->variantes) {
+                    if (!variante.campos.empty()) {
+                        con_datos = true;
+                    }
+                }
+                if (con_datos) {
+                    emitir_coincide_datos(sentencia, *enumeracion->second);
+                    return;
+                }
+            }
         }
 
         const std::string temporal =
@@ -2284,6 +2458,31 @@ private:
 
         const std::string_view nombre_llamado = nodo.izquierda->lexema;
 
+        // `Bien(5)`: construcción de una variante con datos.
+        if (const auto variante = variantes_.find(std::string(nombre_llamado));
+            variante != variantes_.end()) {
+            const sintactico::Enumeracion& enumeracion = *variante->second.first;
+            const std::size_t indice = variante->second.second;
+            const sintactico::Variante& datos = enumeracion.variantes[indice];
+            if (!datos.campos.empty()) {
+                std::string salida = "(nooki_" + std::string(enumeracion.nombre) +
+                                     "){ .etiqueta = " + std::to_string(indice) +
+                                     ", .datos = {";
+                for (std::size_t i = 0;
+                     i < datos.campos.size() && i < nodo.lista.size(); ++i) {
+                    salida += " .";
+                    salida += datos.nombre;
+                    salida += "_";
+                    salida += datos.campos[i].nombre;
+                    salida += " = ";
+                    salida += nodo.lista[i] ? expresion(*nodo.lista[i]) : "0";
+                    salida += ",";
+                }
+                salida += " } }";
+                return salida;
+            }
+        }
+
         if (nombre_llamado == "Ok" || nombre_llamado == "Error") {
             if (nodo.lista.size() != 1 || !nodo.lista.front()) {
                 no_soportado("«" + std::string(nombre_llamado) + "» con un argumento");
@@ -2560,6 +2759,8 @@ private:
     std::map<std::string, const sintactico::Funcion*> funciones_ast_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
+    std::map<std::string,
+             std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
     std::map<std::string, const sintactico::Funcion*> genericos_;
     std::map<std::string, std::pair<std::string, std::vector<std::string_view>>> instancias_;
     std::map<std::string, std::string> sustitucion_;

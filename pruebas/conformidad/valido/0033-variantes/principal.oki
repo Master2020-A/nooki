@@ -1,0 +1,30 @@
+// Variantes con datos y emparejamiento que liga variables.
+enumeracion respuesta {
+    Bien(valor: entero)
+    Mal(mensaje: texto)
+}
+
+funcion comprobar(n: entero) -> respuesta {
+    si (n < 0) {
+        retornar Mal("no puede ser negativo")
+    }
+    si (n == 0) {
+        retornar Mal("cero no vale")
+    }
+    retornar Bien(n * 2)
+}
+
+funcion principal() -> entero {
+    variable casos = Vector<entero>.nuevo()
+    casos.agregar(5)
+    casos.agregar(0 - 3)
+    casos.agregar(0)
+
+    para (n en casos) {
+        coincide (comprobar(n)) {
+            caso Bien(v) => imprimir(v)
+            caso Mal(m) => imprimir(m)
+        }
+    }
+    retornar 0
+}

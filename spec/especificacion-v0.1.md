@@ -1015,3 +1015,25 @@ variable valor = linea.subtexto(corte + 1, 100)  // "Ana"
 
 - `subtexto` devuelve un texto **con dueño**: se libera al cerrar el ámbito.
 - `buscar`, `caracter` y `a_entero` comprueban sus límites y nunca leen fuera del texto.
+
+
+### 18.20 Variantes con datos
+
+```aura
+enumeracion respuesta {
+    Bien(valor: entero)
+    Mal(mensaje: texto)
+}
+
+coincide (comprobar(5)) {
+    caso Bien(v) => imprimir(v)
+    caso Mal(m)  => imprimir(m)
+}
+```
+
+- Una variante puede declarar campos: `Bien(valor: entero)`.
+- Se construye con su nombre: `Bien(10)`, `Mal("mensaje")`.
+- El patrón `caso Bien(v)` **liga** `v` con el valor del campo, y su tipo es el del campo.
+- Si están todas las variantes, el `coincide` es exhaustivo sin `caso _`.
+- Las enumeraciones **sin datos** siguen siendo enteros con constantes: nada anterior cambia.
+- Los campos de texto de una variante se liberan al salir del ámbito.

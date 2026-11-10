@@ -471,14 +471,52 @@ Enumeracion Parser::analizar_enumeracion() {
     }
 
     while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
-        if (const Token& variante = actual(); variante.es(TipoToken::Identificador)) {
-            enumeracion.variantes.push_back(variante.lexema);
+        if (const Token& token_variante = actual();
+            token_variante.es(TipoToken::Identificador)) {
+            Variante variante;
+            variante.nombre = token_variante.lexema;
+            variante.span = token_variante.span;
             avanzar();
+
+            // Campos de la variante: `Bien(valor: entero)`.
+            if (aceptar_lexema("(")) {
+                while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ")") {
+                    Campo campo;
+                    campo.span = actual().span;
+                    if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+                        campo.nombre = nombre.lexema;
+                        avanzar();
+                    } else {
+                        error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO,
+                                 "un nombre de campo");
+                        break;
+                    }
+                    if (!aceptar_lexema(":")) {
+                        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
+                        break;
+                    }
+                    campo.tipo = analizar_tipo_texto();
+                    if (campo.tipo.empty()) {
+                        break;
+                    }
+                    variante.campos.push_back(std::move(campo));
+                    if (!aceptar_lexema(",")) {
+                        break;
+                    }
+                }
+                if (!aceptar_lexema(")")) {
+                    error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
+                }
+            }
+
+            enumeracion.variantes.push_back(std::move(variante));
         } else {
-            error_en(variante, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de variante");
+            error_en(token_variante, diagnostico::codigos::TOKEN_INESPERADO,
+                     "un nombre de variante");
             break;
         }
-        if (!aceptar_lexema(",")) {
+        // La coma es opcional: también vale una variante por línea.
+        if (!aceptar_lexema(",") && !actual().es(TipoToken::Identificador)) {
             break;
         }
     }
@@ -512,6 +550,30 @@ Patron Parser::analizar_patron() {
     if (actual().es(TipoToken::Identificador)) {
         const std::string_view nombre = actual().lexema;
         avanzar();
+
+        if (aceptar_lexema("(")) {
+            // Ligaduras de una variante con datos: `caso Bien(v)`.
+            patron.clase = Patron::Clase::Variante;
+            patron.enumeracion = nombre;
+            patron.valor = nombre;
+            while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ")") {
+                if (const Token& ligadura = actual(); ligadura.es(TipoToken::Identificador)) {
+                    patron.ligaduras.push_back(ligadura.lexema);
+                    avanzar();
+                } else {
+                    error_en(ligadura, diagnostico::codigos::TOKEN_INESPERADO,
+                             "un nombre de variable");
+                    break;
+                }
+                if (!aceptar_lexema(",")) {
+                    break;
+                }
+            }
+            if (!aceptar_lexema(")")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
+            }
+            return patron;
+        }
 
         if (aceptar_lexema(".")) {
             if (const Token& variante = actual(); variante.es(TipoToken::Identificador)) {
