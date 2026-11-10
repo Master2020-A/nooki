@@ -1,0 +1,22 @@
+// Iteración sobre una colección: `para (n en numeros)`.
+funcion suma_de(numeros: &Vector<entero>) -> entero {
+    variable total = 0
+    para (n en numeros) {
+        total = total + n
+    }
+    retornar total
+}
+
+funcion principal() -> entero {
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(3)
+    numeros.agregar(7)
+    numeros.agregar(11)
+
+    para (n en numeros) {
+        imprimir(n)
+    }
+
+    imprimir(suma_de(&numeros))
+    retornar 0
+}

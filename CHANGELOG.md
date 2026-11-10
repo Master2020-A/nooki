@@ -5,6 +5,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 26 — Iteración sobre colecciones (2026-11-10)
+
+- **`para (n en numeros)`**: recorre una colección por índice con una variable interna oculta; el
+  cuerpo solo ve el elemento.
+- **`Vector<T>` como parámetro prestado**: `&Vector<entero>` se traduce a puntero y el préstamo
+  evita duplicar el dueño del arreglo.
+- La verificación acepta `Vector<...>` como tipo válido y permite prestar variables que lo sean.
+- Programa de conformidad `0018-iteracion`, compilado y ejecutado.
+
 ### Sprint 25 — `Vector<T>` (2026-11-10)
 
 - **`Vector<entero>`**: arreglo dinámico en el montículo con `agregar`, `obtener`, `largo` y

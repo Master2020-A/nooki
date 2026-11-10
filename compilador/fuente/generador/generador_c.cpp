@@ -798,9 +798,23 @@ private:
 
     void emitir_para(const sintactico::Sentencia& sentencia) {
         const sintactico::Expresion* rango = sentencia.expresion.get();
-        if (rango == nullptr || rango->tipo != sintactico::TipoExpresion::Binaria ||
+        if (rango == nullptr) {
+            no_soportado("un «para» sin nada que recorrer");
+            return;
+        }
+
+        // ¿Recorre una colección? `para (n en numeros)`.
+        if (rango->tipo == sintactico::TipoExpresion::Identificador) {
+            const std::string tipo = tipo_de(*rango);
+            if (tipo.rfind("nooki_vector_", 0) == 0) {
+                emitir_para_coleccion(sentencia, tipo);
+                return;
+            }
+        }
+
+        if (rango->tipo != sintactico::TipoExpresion::Binaria ||
             (rango->lexema != ".." && rango->lexema != "..=")) {
-            no_soportado("un «para» que no recorre un rango");
+            no_soportado("un «para» que no recorre un rango ni una colección");
             return;
         }
 
@@ -820,6 +834,45 @@ private:
         }
         --nivel_;
         cerrar_ambito();
+        salida_ << indentacion() << "}\n";
+    }
+
+    /// `para (n en numeros)` → recorrido por índice con una variable interna.
+    void emitir_para_coleccion(const sintactico::Sentencia& sentencia,
+                               const std::string& tipo) {
+        const std::string nombre(sentencia.nombre);
+        const std::string elemento = "long long";
+        const std::string indice = "__nooki_i" + std::to_string(contador_temporal_++);
+        const std::string coleccion = expresion(*sentencia.expresion);
+
+        // Si la colección llega como préstamo (`&Vector<T>`), ya es un puntero.
+        const bool es_puntero = tipo.back() == '*';
+        const std::string tipo_base = es_puntero ? tipo.substr(0, tipo.size() - 1) : tipo;
+
+        salida_ << indentacion() << "{\n";
+        ++nivel_;
+        if (es_puntero) {
+            salida_ << indentacion() << tipo << " __nooki_col = " << coleccion << ";\n";
+        } else {
+            salida_ << indentacion() << tipo << "* __nooki_col = &" << coleccion << ";\n";
+        }
+        salida_ << indentacion() << "for (long long " << indice << " = 0; " << indice << " < "
+                << tipo_base << "_largo(__nooki_col); ++" << indice << ") {\n";
+        ++nivel_;
+
+        salida_ << indentacion() << elemento << " " << nombre << " = " << tipo_base
+                << "_obtener(__nooki_col, " << indice << ");\n";
+
+        abrir_ambito();
+        declarar(sentencia.nombre, elemento);
+        for (const sintactico::Sentencia& hija : sentencia.cuerpo) {
+            emitir_sentencia(hija, false);
+        }
+        cerrar_ambito();
+
+        --nivel_;
+        salida_ << indentacion() << "}\n";
+        --nivel_;
         salida_ << indentacion() << "}\n";
     }
 

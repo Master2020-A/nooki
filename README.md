@@ -61,7 +61,8 @@ Sprint 22 ✅  Préstamos mutables y exclusividad · **v0.2.0**
 Sprint 23 ✅  `texto` con longitud, concatenación y comparación
 Sprint 24 ✅  Genéricos por instanciación · una función, varios tipos
 Sprint 25 ✅  `Vector<T>`: colección dinámica con dueño
-Sprint 26 ⬜  Iteración y `Mapa<T>`
+Sprint 26 ✅  Iteración sobre colecciones · `para (n en numeros)`
+Sprint 27 ⬜  `Vector<texto>` y `Mapa<T>`
 ```
 
 **Ya compila y ejecuta:**

@@ -177,7 +177,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S23** | `texto` con operaciones | ✅ Tipo `texto` con longitud y marca de propiedad (ADR-018), concatenación con `+`, comparación por contenido, `.largo()` en O(1) y movimiento con `NOK5001`. *La iteración sobre texto y los caracteres UTF-8 llegan con el runtime completo* |
 | **S24** | Genéricos por instanciación | ✅ Funciones genéricas `<T>` con argumentos de tipo explícitos, sustitución de tipos y una función de C por combinación (ADR-019). *La inferencia y los tipos genéricos llegan con las colecciones* |
 | **S25** | `Vector<T>` | ✅ `Vector<entero>` con `agregar`, `obtener` y `largo`, crecimiento por duplicación, comprobación de índice y liberación determinista. *La iteración en `para` y los elementos que no son enteros llegan en el sprint siguiente* |
-| **S26** | Clases: herencia, override y acceso | Jerarquías, `super`, abstractas y finales, visibilidad; errores de override; 120 tests |
+| **S26** | Iteración sobre colecciones | ✅ `para (n en vector)` como recorrido por índice con variable interna, y `&Vector<T>` como parámetro prestado. *`Vector<texto>` y `quitar`/`insertar` quedan pendientes* |
 | **S27** | *Pattern matching*: exhaustividad | Chequeo de exhaustividad, tipos de patrones, bindings por referencia; 100 tests |
 | **S28** | **Módulos, imports y cierre v0.3** | Resolución de rutas, ciclos, visibilidad; 300 casos válidos + 300 inválidos; fuzz semántico |
 

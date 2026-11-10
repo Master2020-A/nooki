@@ -82,6 +82,7 @@ private:
         std::map<std::string, std::string_view> estructuras;
         std::set<std::string> cajas;
         std::set<std::string> textos;
+        std::set<std::string> prestables;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
@@ -127,6 +128,9 @@ private:
         if (tipo.rfind("Caja<", 0) == 0) {
             return true;
         }
+        if (tipo.rfind("Vector<", 0) == 0) {
+            return true;
+        }
         if (parametros_tipo_.count(std::string(tipo)) != 0) {
             return true;
         }
@@ -153,6 +157,20 @@ private:
         }
         return false;
     }
+    void declarar_prestable(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().prestables.insert(std::string(nombre));
+        }
+    }
+    bool es_prestable(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->prestables.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void declarar_texto(std::string_view nombre) {
         if (!ambitos_.empty()) {
             ambitos_.back().textos.insert(std::string(nombre));
@@ -183,6 +201,16 @@ private:
             }
         }
         return false;
+    }
+
+    static bool es_llamada_vector(const Expresion& expresion) {
+        if (expresion.tipo != TipoExpresion::Llamada || !expresion.izquierda) {
+            return false;
+        }
+        const Expresion& destino = *expresion.izquierda;
+        return destino.tipo == TipoExpresion::Miembro && destino.izquierda &&
+               destino.izquierda->tipo == TipoExpresion::Identificador &&
+               destino.izquierda->lexema == "Vector";
     }
 
     static bool es_llamada_caja(const Expresion& expresion) {
@@ -344,6 +372,10 @@ private:
                     return;
                 }
 
+                if (sentencia.tipo_declarado.rfind("Vector<", 0) == 0 ||
+                    es_llamada_vector(*sentencia.expresion)) {
+                    declarar_prestable(sentencia.nombre);
+                }
                 if (real == Tipo::Texto && sentencia.tipo_declarado.empty()) {
                     if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
                         es_texto(sentencia.expresion->lexema)) {
@@ -588,7 +620,8 @@ private:
         if (expresion.lexema == "&" || expresion.lexema == "&mutable") {
             const bool caja = expresion.izquierda &&
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
-                              es_caja(expresion.izquierda->lexema);
+                              (es_caja(expresion.izquierda->lexema) ||
+                               es_prestable(expresion.izquierda->lexema));
             if (!caja) {
                 error(diagnostico::codigos::PRESTAMO_INVALIDO, expresion.span);
             }
