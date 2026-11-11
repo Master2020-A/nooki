@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 50 — Cerrar los huecos de propiedad (2026-11-10)
+
+- **Copiar un compuesto con campos con dueño es error** (`NOK5004`): compartiría las cadenas y se
+  liberarían dos veces. El mensaje sugiere prestarlo o construir otro.
+- **`romper` y `continuar` liberan lo que abandonan**: antes se saltaban la liberación de las
+  variables con dueño declaradas dentro del bucle.
+- **`para` y `mientras` registran su profundidad de ámbito**, de modo que la liberación al saltar
+  sabe hasta dónde deshacer.
+- **Hueco restante declarado**: una llamada que mueve un valor con dueño dentro de otra expresión
+  (`f(g(a))`) sigue sin moverlo. Es una fuga, no corrupción, y está anotada.
+- Programas de conformidad `0040-propiedad-saltos`, `0039-compuestos-dueno` y `0038-propiedad-retorno`.
+
 ### Sprint 49 — Los compuestos liberan sus campos (2026-11-10)
 
 - **Destructor por instanciación**: un compuesto genérico cuyos campos tienen dueño genera su

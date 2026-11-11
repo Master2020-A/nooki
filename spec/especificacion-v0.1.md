@@ -1101,3 +1101,12 @@ variable textos = par<texto> { primero: "hola", segundo: " mundo" }
   ejecución, igual que en las funciones genéricas.
 - Los campos cuyo tipo es un parámetro se sustituyen por el argumento correspondiente.
 - Los métodos de un tipo genérico todavía no se instancian.
+
+
+### 18.24 Reglas de propiedad en compuestos y saltos
+
+- **Un compuesto con campos con dueño no se puede copiar** (`NOK5004`). Se construye otro o se pasa
+  con `&`. Copiarlo compartiría las cadenas y se liberarían dos veces.
+- **`romper` y `continuar` liberan** los valores con dueño declarados en el ámbito que abandonan.
+- Los compuestos construidos en el sitio o devueltos por una llamada **liberan sus campos** al salir
+  del ámbito.

@@ -1520,6 +1520,14 @@ private:
         ambito.liberables.clear();
     }
 
+    /// Libera los ámbitos abiertos por encima de `profundidad` (sin cerrarlos:
+    /// el cierre normal ya no emitirá nada porque las listas quedan vacías).
+    void liberar_desde(std::size_t profundidad) {
+        for (std::size_t i = ambitos_.size(); i > profundidad; --i) {
+            liberar_cajas(ambitos_[i - 1]);
+        }
+    }
+
     /// Antes de un `retornar` hay que liberar todas las cajas vivas.
     void liberar_todo(const std::set<std::string>& conservar = {}) {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
@@ -1797,7 +1805,9 @@ private:
             case TipoSentencia::Mientras:
                 salida_ << indentacion() << "while (" << condicion(sentencia.expresion.get())
                         << ") {\n";
+                bucles_.push_back(ambitos_.size());
                 emitir_cuerpo(sentencia.cuerpo);
+                bucles_.pop_back();
                 salida_ << indentacion() << "}\n";
                 return;
 
@@ -1807,7 +1817,9 @@ private:
 
             case TipoSentencia::Hacer:
                 salida_ << indentacion() << "do {\n";
+                bucles_.push_back(ambitos_.size());
                 emitir_cuerpo(sentencia.cuerpo);
+                bucles_.pop_back();
                 salida_ << indentacion() << "} while (" << condicion(sentencia.paso.get())
                         << ");\n";
                 return;
@@ -1819,10 +1831,16 @@ private:
                 return;
 
             case TipoSentencia::Romper:
+                if (!bucles_.empty()) {
+                    liberar_desde(bucles_.back());
+                }
                 salida_ << indentacion() << "break;\n";
                 return;
 
             case TipoSentencia::Continuar:
+                if (!bucles_.empty()) {
+                    liberar_desde(bucles_.back());
+                }
                 salida_ << indentacion() << "continue;\n";
                 return;
 
@@ -1989,9 +2007,11 @@ private:
         abrir_ambito();
         declarar(sentencia.nombre, "long long");
         ++nivel_;
+        bucles_.push_back(ambitos_.size());
         for (const sintactico::Sentencia& hija : sentencia.cuerpo) {
             emitir_sentencia(hija, false);
         }
+        bucles_.pop_back();
         --nivel_;
         cerrar_ambito();
         salida_ << indentacion() << "}\n";
@@ -3055,6 +3075,7 @@ private:
     std::map<std::string, const sintactico::DefinicionTipo*> genericos_tipo_;
     std::set<std::string> instancias_tipo_;
     std::set<std::string> compuestos_con_dueno_;
+    std::vector<std::size_t> bucles_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string,

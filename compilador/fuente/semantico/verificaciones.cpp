@@ -105,6 +105,7 @@ private:
         std::set<std::string> textos;
         std::set<std::string> prestables;
         std::set<std::string> referencias;
+        std::set<std::string> compuestos;
         std::set<std::string> vectores_texto;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
@@ -200,6 +201,20 @@ private:
     bool es_vector_texto(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->vectores_texto.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void declarar_compuesto(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().compuestos.insert(std::string(nombre));
+        }
+    }
+    bool es_compuesto(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->compuestos.count(std::string(nombre)) != 0) {
                 return true;
             }
         }
@@ -574,6 +589,20 @@ private:
                     declarar_prestable(sentencia.nombre);
                     declarar(sentencia.nombre, real);
                     return;
+                }
+
+                // Un compuesto genérico con campos con dueño no se puede copiar.
+                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                    es_compuesto(sentencia.expresion->lexema)) {
+                    error(diagnostico::codigos::COPIA_COMPUESTO, sentencia.expresion->span)
+                        .parametro("nombre", std::string(sentencia.expresion->lexema))
+                        .ayuda("construya otro o páselo con «&»");
+                }
+
+                // Se construye un compuesto: puede tener campos con dueño.
+                if (sentencia.expresion->tipo == TipoExpresion::Construccion &&
+                    sentencia.expresion->anotacion.find('<') != std::string::npos) {
+                    declarar_compuesto(sentencia.nombre);
                 }
 
                 // ¿Declara una clase por referencia?

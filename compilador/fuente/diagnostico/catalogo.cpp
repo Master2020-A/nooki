@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 41> MENSAJES{{
+constexpr std::array<EntradaMensaje, 42> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -121,6 +121,10 @@ constexpr std::array<EntradaMensaje, 41> MENSAJES{{
     {codigos::PRESTAMO_GUARDADO,
      "un préstamo no se puede guardar en una variable: solo vive durante la llamada",
      "a borrow cannot be stored in a variable: it only lives during the call"},
+
+    {codigos::COPIA_COMPUESTO,
+     "«{nombre}» tiene campos con dueño y no se puede copiar: páselo con «&» o construya otro",
+     "“{nombre}” has owned fields and cannot be copied: pass it with “&” or build another"},
 
     {codigos::PRESTAMO_EXCLUSIVO,
      "«{nombre}» no puede prestarse mutable y compartido a la vez en la misma llamada",

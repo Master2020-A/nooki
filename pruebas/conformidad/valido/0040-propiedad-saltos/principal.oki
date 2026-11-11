@@ -1,0 +1,28 @@
+// `romper` y `continuar` liberan los valores con dueño del ámbito que abandonan.
+funcion principal() -> entero {
+    variable total = 0
+
+    variable j = 0
+    mientras (j < 4) {
+        j = j + 1
+        variable dentro = "y" + ""
+        si (j == 2) {
+            continuar
+        }
+        total = total + dentro.largo()
+    }
+    imprimir(total)
+
+    variable i = 0
+    mientras (i < 5) {
+        variable letras = "xx" + ""
+        si (i == 2) {
+            romper
+        }
+        total = total + letras.largo()
+        i = i + 1
+    }
+    imprimir(i)
+    imprimir(total)
+    retornar 0
+}

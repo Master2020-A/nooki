@@ -53,6 +53,7 @@ inline constexpr std::string_view PROPAGACION_SIN_RESULTADO = "NOK4011";
 // --- Propiedad y préstamos (NOK5xxx) ---------------------------------------
 inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";
 inline constexpr std::string_view PRESTAMO_GUARDADO = "NOK5002";
+inline constexpr std::string_view COPIA_COMPUESTO = "NOK5004";
 inline constexpr std::string_view PRESTAMO_EXCLUSIVO = "NOK5003";
 
 // --- Advertencias (NOK8xxx) -------------------------------------------------
