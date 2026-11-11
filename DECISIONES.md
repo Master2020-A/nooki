@@ -140,3 +140,21 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 4. Si el cambio afecta al lenguaje, sube la **edición** (ADR-012) o se marca como ruptura en la versión mayor.
 
 > Regla de oro: *un ADR no se edita, se reemplaza.* El historial de decisiones es parte del activo del proyecto.
+
+## 7. Inventario de pendientes para después de la 1.0
+
+Lo que la 1.0 **no** incluye, con su tamaño y lo que desbloquea. Nada de esto es un defecto: son
+características planificadas.
+
+| Pendiente | Tamaño | Qué desbloquea |
+|---|---|---|
+| **Tiempos de vida completos**: duración de un préstamo entre sentencias del mismo ámbito | medio | cierra el último rincón teórico del modelo de memoria |
+| **Paquetes con manifiesto** (`nooki.toml`) y dependencias | medio | compartir código entre proyectos |
+| **Biblioteca estándar amplia**: `archivo`, `texto` avanzado, `fecha` con aritmética | medio | programas sin escribir lo básico |
+| **Casos para los 10 códigos de integración** (A-12) | pequeño | confianza en las rutas de la CLI y del backend |
+| **Interfaz gráfica nativa** | grande | aplicaciones de escritorio |
+| **Bibliotecas de IA** (equivalente a pandas y PyTorch) | grande | análisis de datos y modelos |
+| **`inseguro` y `asm!`** | grande | control de hardware y sistemas |
+| **Conectar el repositorio a GitHub y ejecutar la CI** (A-07) | pequeño | que el proyecto exista fuera de una máquina |
+
+El orden recomendado es el de la tabla: primero lo pequeño que cierra huecos, después lo grande.

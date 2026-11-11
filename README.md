@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.9.0 |
+| **Versión** | 1.0.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -102,6 +102,7 @@ Sprint 63 ✅  Biblioteca: `listas` y `fechas`
 Sprint 64 ✅  Cierre de la v0.9 · prueba de coherencia documental
 Sprint 65 ✅  Todas las vías del movimiento
 Sprint 66 ✅  A-14 cerrado: mover un campo lo deja vacío y válido
+Sprint 67 ✅  Cierre de la 1.0
 ```
 
 **Ya compila y ejecuta:**

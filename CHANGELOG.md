@@ -3,7 +3,16 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.0.0] — 2026-11-11
+
+**Nooki 1.0: todo lo que la especificación describe está implementado y probado, sin defectos
+conocidos.** Las notas completas de la versión están en [NOTAS_DE_VERSION.md](NOTAS_DE_VERSION.md).
+
+### Sprint 67 — Cierre de la 1.0 (2026-11-11)
+
+- **Notas de versión** con lo que incluye, lo que no, para quién es y cómo empezar.
+- **Inventario de pendientes** en `DECISIONES.md`, cada uno con su tamaño.
+- Versión 1.0.0 en el compilador, la especificación y la documentación.
 
 ### Sprint 66 — A-14: mover un campo (2026-11-11)
 

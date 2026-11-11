@@ -35,7 +35,7 @@ $ nooki ejecutar hola.oki
 | Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
-**Versión actual: 0.9.0.** Biblioteca: `resultado`, `matematicas`, `textos`, `listas` y `fechas`, escritos en Nooki. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
+**Versión actual: 1.0.0.** Biblioteca: `resultado`, `matematicas`, `textos`, `listas` y `fechas`, escritos en Nooki. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Empezar en tres comandos
@@ -98,16 +98,18 @@ docs/adr/              decisiones de arquitectura
 - **[Decisiones](DECISIONES.md)** — índice de los 25 ADR y de los asuntos abiertos.
 - **[Plan de sprints](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md)** — qué está hecho y qué falta.
 - **[Cambios](CHANGELOG.md)** — qué entró en cada versión.
+- **[Notas de la 1.0](NOTAS_DE_VERSION.md)** — qué incluye, qué no y para quién es.
 
 ## Cómo se prueba
 
 Cada cambio pasa por tres filtros:
 
 1. **Ocho suites unitarias** del compilador (léxico, parser, semántica, diagnósticos, CLI, expresión).
-2. **65 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
+2. **74 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
    la esperada; los inválidos pasan por léxico, parser y verificación y deben emitir exactamente los
    códigos que declaran.
-3. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos.
+3. **Nueve suites**, entre ellas la que comprueba que la documentación no se desincronice.
+4. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos.
 
 Los diagnósticos también se prueban: cada código `NOK` tiene un caso que lo provoca.
 

@@ -1,4 +1,4 @@
-# Especificación del lenguaje NOOKI v0.9
+# Especificación del lenguaje NOOKI v1.0
 
 | Campo | Valor |
 |---|---|
