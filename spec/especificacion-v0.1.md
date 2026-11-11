@@ -1128,3 +1128,19 @@ imprimir(consumir(c))        // error: no hay dónde vaciar c
   vaciado del origen, así que lo rechaza en lugar de dejar una fuga silenciosa.
 - La alternativa es siempre la misma: guardar el resultado en una variable, o prestar el valor con
   `&` si la función lo acepta.
+
+
+### 18.26 Herramientas del proyecto
+
+```bash
+$ nooki nuevo demo          # crea demo/principal.oki y demo/biblioteca/herramientas.oki
+$ cd demo
+$ nooki construir           # compila el proyecto a un binario
+$ nooki probar              # ejecuta pruebas/*.oki y compara con su .esperado
+$ nooki limpiar             # borra binarios y artefactos
+```
+
+- `nooki probar` considera cada `pruebas/<nombre>.oki` una prueba: lo compila, lo ejecuta y compara
+  su salida con `pruebas/<nombre>.oki.esperado`. Sin archivo esperado, basta con que termine bien.
+- La comparación ignora los saltos de línea de Windows.
+- `nooki limpiar` no toca el código fuente: solo `build/`, `artefactos/` y binarios sueltos.

@@ -83,8 +83,10 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
 
     // Se busca junto al archivo que importa, en su carpeta «biblioteca» y
     // subiendo por los directorios padre hasta encontrar una.
-    std::filesystem::path ruta = directorio / (clave + ".oki");
-    for (std::filesystem::path actual = directorio; !std::filesystem::exists(ruta);) {
+    // Se parte de una ruta absoluta para poder subir por los directorios padre.
+    const std::filesystem::path base = std::filesystem::absolute(directorio);
+    std::filesystem::path ruta = base / (clave + ".oki");
+    for (std::filesystem::path actual = base; !std::filesystem::exists(ruta);) {
         const std::filesystem::path candidato = actual / "biblioteca" / (clave + ".oki");
         if (std::filesystem::exists(candidato)) {
             ruta = candidato;

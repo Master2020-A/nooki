@@ -230,7 +230,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S49** | Compuestos que liberan | ✅ `soltar` por instanciación para compuestos con campos con dueño, liberación solo de los frescos y movimiento de campos insertados en colecciones |
 | **S50** | Cerrar los huecos de propiedad | ✅ Copia de compuestos con dueño rechazada (`NOK5004`), `romper`/`continuar` liberan lo que abandonan. *Queda la llamada anidada que mueve* |
 | **S51** | Cerrar A-11 y v0.6 | ✅ La llamada anidada que movería un valor con dueño es error de compilación; caso `0020` migrado; versión 0.6.0 sin defectos conocidos |
-| **S52** | **Cierre v0.6: corpus oráculo** | Adaptar los *UI tests* de Rust como oráculo; 500 válidos + 500 inválidos; **eliminar el GC temporal** (ADR-07 pagada) |
+| **S52** | Herramientas del proyecto | ✅ `nooki nuevo` crea un proyecto que compila, `nooki probar` ejecuta y compara con `.esperado`, y `nooki limpiar` borra artefactos. Búsqueda de módulos desde rutas absolutas |
 
 ---
 

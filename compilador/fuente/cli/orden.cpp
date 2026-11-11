@@ -118,6 +118,15 @@ int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
     if (comando->nombre == "construir") {
         return comando_construir(argumentos.subspan(1), salida, error);
     }
+    if (comando->nombre == "nuevo") {
+        return comando_nuevo(argumentos.subspan(1), salida, error);
+    }
+    if (comando->nombre == "probar") {
+        return comando_probar(argumentos.subspan(1), salida, error);
+    }
+    if (comando->nombre == "limpiar") {
+        return comando_limpiar(argumentos.subspan(1), salida, error);
+    }
     if (comando->nombre == "ejecutar") {
         return comando_ejecutar(argumentos.subspan(1), salida, error);
     }
