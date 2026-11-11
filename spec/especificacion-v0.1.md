@@ -1205,3 +1205,18 @@ funcion malo() -> &texto {
 - Los préstamos pasados como **argumento** no escapan: solo duran la llamada.
 - Esto cubre el caso en que una referencia quedaría colgando al volver. La duración de un préstamo
   entre variables del mismo ámbito todavía no se verifica.
+
+
+### 18.30 Duración del préstamo
+
+```aura
+variable p = nuevo persona { nombre: "Ana" }
+variable d: &Saluda = &p
+p = nuevo persona { nombre: "Eva" }   // error NOK5007
+```
+
+- **Mientras un valor está prestado, su dueño no se puede mover ni reasignar** (`NOK5007`).
+- **Prestar una clase es prestar el objeto**: `&persona` conserva una sola referencia; no hay puntero
+  doble.
+- La duración de un préstamo temporal (tomado y usado entre sentencias del mismo ámbito) todavía no
+  se verifica.

@@ -57,6 +57,7 @@ inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";
 inline constexpr std::string_view PRESTAMO_GUARDADO = "NOK5002";
 inline constexpr std::string_view COPIA_COMPUESTO = "NOK5004";
 inline constexpr std::string_view PRESTAMO_QUE_ESCAPA = "NOK5006";
+inline constexpr std::string_view MOVER_CON_PRESTAMO = "NOK5007";
 inline constexpr std::string_view PRESTAMO_EXCLUSIVO = "NOK5003";
 
 // --- Advertencias (NOK8xxx) -------------------------------------------------

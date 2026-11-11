@@ -1,0 +1,30 @@
+// Prestar una clase presta el objeto; el dueño sigue siendo el mismo.
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase persona implementa Saluda {
+    publico nombre: texto
+
+    publico funcion saludar() -> texto {
+        retornar este.nombre
+    }
+}
+
+funcion nombre_de(quien: &persona) -> texto {
+    retornar quien.nombre
+}
+
+funcion largo_de(quien: &persona) -> entero {
+    retornar quien.nombre.largo()
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    variable d: &Saluda = &p
+
+    imprimir(nombre_de(&p))
+    imprimir(largo_de(&p))
+    imprimir(d.saludar())
+    retornar 0
+}

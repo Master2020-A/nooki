@@ -17,6 +17,14 @@ namespace {
 /// Nombres de los rasgos del programa, para resolver `&Rasgo` en los tipos.
 inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
 
+/// Nombres de las clases del programa: prestar una referencia es prestar el objeto.
+inline std::set<std::string>* CLASES_DEL_PROGRAMA = nullptr;
+
+bool es_clase_c(std::string_view nombre) {
+    return CLASES_DEL_PROGRAMA != nullptr &&
+           CLASES_DEL_PROGRAMA->count(std::string(nombre)) != 0;
+}
+
 bool es_rasgo_c(std::string_view nombre) {
     return RASGOS_DEL_PROGRAMA != nullptr &&
            RASGOS_DEL_PROGRAMA->count(std::string(nombre)) != 0;
@@ -32,6 +40,7 @@ std::string tipo_c(std::string_view escrito) {
         if (escrito.front() == '&' && es_rasgo_c(resto)) {
             return "nooki_ref_" + std::string(resto);
         }
+
         return tipo_c(resto) + "*";
     }
     if (escrito.rfind("Caja<", 0) == 0) {
@@ -877,6 +886,12 @@ private:
             rasgos_def_[std::string(rasgo.nombre)] = &rasgo;
         }
         RASGOS_DEL_PROGRAMA = &rasgos_;
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            if (definicion.es_clase) {
+                clases_.insert(std::string(definicion.nombre));
+            }
+        }
+        CLASES_DEL_PROGRAMA = &clases_;
         recoger_instancias(programa);
         for (const std::string& instancia : instancias_tipo_) {
             tipo_c_de_[instancia] = nombre_de_instancia(instancia);
@@ -1715,6 +1730,24 @@ private:
     /// Tipo de C de un tipo declarado: si el nombre corresponde a una estructura
     /// del programa, se usa su `typedef`; si no, el tipo primitivo.
     std::string tipo_declarado_c(std::string_view escrito) const {
+        // Un préstamo o un puntero se resuelve sobre el tipo que envuelve, para
+        // que una clase conserve su referencia (`&persona` → `nooki_persona*`).
+        if (!escrito.empty() && (escrito.front() == '&' || escrito.front() == '*')) {
+            std::string_view resto = escrito.substr(1);
+            if (resto.rfind("mutable ", 0) == 0) {
+                resto = resto.substr(8);
+            }
+            if (escrito.front() == '&' && es_rasgo_c(resto)) {
+                return "nooki_ref_" + std::string(resto);
+            }
+            // Prestar una clase es prestar el objeto: ya es una referencia.
+            const auto definicion = tipo_ptr_.find(std::string(resto));
+            if (definicion != tipo_ptr_.end() && definicion->second->es_clase) {
+                return tipo_declarado_c(resto);
+            }
+            return tipo_declarado_c(resto) + "*";
+        }
+
         const auto sustituido = sustitucion_.find(std::string(escrito));
         if (sustituido != sustitucion_.end()) {
             return tipo_declarado_c(sustituido->second);
@@ -2816,7 +2849,8 @@ private:
                         continue;
                     }
                     std::string valor = expresion(*nodo.lista[i]);
-                    // Un literal que llega a un parámetro prestado necesita dirección propia.
+        
+            // Un literal que llega a un parámetro prestado necesita dirección propia.
                     if (modulo_funcion != nullptr && i < modulo_funcion->parametros.size()) {
                         const std::string_view declarado = modulo_funcion->parametros[i].tipo;
                         if (!declarado.empty() && declarado.front() == '&' &&
@@ -3017,6 +3051,17 @@ private:
 
             std::string valor = expresion(*argumento);
 
+            // `&p` donde `p` ya es una referencia (una clase): se pasa tal cual.
+            if (declarados != parametros_.end() && i < declarados->second.size() &&
+                !declarados->second[i].empty() && declarados->second[i].front() == '&' &&
+                argumento->tipo == sintactico::TipoExpresion::Unaria &&
+                argumento->lexema == "&" && argumento->izquierda) {
+                const std::string tipo_interno = tipo_de(*argumento->izquierda);
+                if (!tipo_interno.empty() && tipo_interno.back() == '*') {
+                    valor = expresion(*argumento->izquierda);
+                }
+            }
+
             // `f(&objeto)` donde el parámetro es `&Rasgo`: se envuelve objeto y tabla.
             if (declarados != parametros_.end() && i < declarados->second.size()) {
                 const std::string& declarado = declarados->second[i];
@@ -3038,6 +3083,7 @@ private:
                             std::string(declarado).substr(1) + "_tabla }";
                 }
             }
+
 
             // Un literal que llega a un parámetro prestado necesita dirección propia.
             if (declarados != parametros_.end() && i < declarados->second.size()) {
@@ -3289,6 +3335,7 @@ private:
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::map<std::string, const sintactico::Rasgo*> rasgos_def_;
+    std::set<std::string> clases_;
     std::vector<std::size_t> bucles_;
     int profundidad_expresion_ = 0;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;

@@ -1,0 +1,17 @@
+// Reasignar el dueño mientras otro lo está prestando.
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase persona implementa Saluda {
+    publico nombre: texto
+    publico funcion saludar() -> texto { retornar este.nombre }
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    variable d: &Saluda = &p
+    p = nuevo persona { nombre: "Eva" }
+    imprimir(d.saludar())
+    retornar 0
+}

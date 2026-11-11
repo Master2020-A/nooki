@@ -572,6 +572,19 @@ private:
         switch (sentencia.tipo) {
             case TipoSentencia::Expresion:
                 if (sentencia.expresion) {
+                    // Asignar a un dueño prestado lo movería: el préstamo quedaría colgando.
+                    if (sentencia.expresion->tipo == TipoExpresion::Asignacion &&
+                        sentencia.expresion->izquierda &&
+                        sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
+                        const auto prestamo = prestamos_.find(
+                            std::string(sentencia.expresion->izquierda->lexema));
+                        if (prestamo != prestamos_.end()) {
+                            error(diagnostico::codigos::MOVER_CON_PRESTAMO, sentencia.span)
+                                .parametro("nombre",
+                                           std::string(sentencia.expresion->izquierda->lexema))
+                                .parametro("prestamo", prestamo->second);
+                        }
+                    }
                     tipo_de(*sentencia.expresion);
                 }
                 return;
@@ -587,6 +600,12 @@ private:
                 const bool referencia_a_rasgo =
                     sentencia.tipo_declarado.rfind("&", 0) == 0 &&
                     rasgos_.count(std::string(sentencia.tipo_declarado.substr(1))) != 0;
+                if (referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
+                    sentencia.expresion->izquierda &&
+                    sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
+                    prestamos_[std::string(sentencia.expresion->izquierda->lexema)] =
+                        std::string(sentencia.nombre);
+                }
                 if (!referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
                     (sentencia.expresion->lexema == "&" ||
                      sentencia.expresion->lexema == "&mutable")) {
@@ -1474,6 +1493,8 @@ private:
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     std::set<std::string> parametros_actuales_;
+    /// Dueño prestado → variable que guarda el préstamo.
+    std::map<std::string, std::string> prestamos_;
     const Funcion* funcion_actual_ = nullptr;
     std::string_view estructura_actual_;
     std::vector<Ambito> ambitos_;

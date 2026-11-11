@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 45> MENSAJES{{
+constexpr std::array<EntradaMensaje, 46> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -137,6 +137,10 @@ constexpr std::array<EntradaMensaje, 45> MENSAJES{{
     {codigos::PRESTAMO_QUE_ESCAPA,
      "no se puede devolver un préstamo a «{nombre}»: es local y muere al salir de la función",
      "cannot return a borrow of “{nombre}”: it is local and dies when the function returns"},
+
+    {codigos::MOVER_CON_PRESTAMO,
+     "no se puede mover ni reasignar «{nombre}»: «{prestamo}» lo está prestando",
+     "cannot move or reassign “{nombre}”: “{prestamo}” is borrowing it"},
 
     {codigos::PRESTAMO_EXCLUSIVO,
      "«{nombre}» no puede prestarse mutable y compartido a la vez en la misma llamada",
