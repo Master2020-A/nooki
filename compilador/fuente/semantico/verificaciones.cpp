@@ -164,6 +164,10 @@ private:
         if (tipo.rfind("Caja<", 0) == 0) {
             return true;
         }
+        if (!tipo.empty() && tipo.front() == '&' &&
+            rasgos_.count(std::string(tipo.substr(1))) != 0) {
+            return true;
+        }
         if (tipo.rfind("Vector<", 0) == 0) {
             return true;
         }
@@ -574,8 +578,11 @@ private:
                 }
                 const Tipo real = tipo_de(*sentencia.expresion);
 
-                // Un préstamo no se puede guardar: solo vive durante la llamada.
-                if (sentencia.expresion->tipo == TipoExpresion::Unaria &&
+                // Un préstamo no se puede guardar, salvo como referencia a un rasgo.
+                const bool referencia_a_rasgo =
+                    sentencia.tipo_declarado.rfind("&", 0) == 0 &&
+                    rasgos_.count(std::string(sentencia.tipo_declarado.substr(1))) != 0;
+                if (!referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
                     (sentencia.expresion->lexema == "&" ||
                      sentencia.expresion->lexema == "&mutable")) {
                     error(diagnostico::codigos::PRESTAMO_GUARDADO, sentencia.expresion->span)

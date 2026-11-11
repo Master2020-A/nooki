@@ -1167,3 +1167,25 @@ clase persona implementa Describible {
 - El compilador exige que **estén todos** (`NOK3011`) y que la **firma coincida** (`NOK4012`).
 - Los rasgos no generan código: son una comprobación de tiempo de compilación.
 - Todavía no hay despacho por rasgo (`&Rasgo`): los métodos se llaman sobre el tipo concreto.
+
+
+### 18.28 `&Rasgo`: despacho por rasgo
+
+```aura
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+funcion presentar(quien: &Saluda) -> vacio {
+    imprimir(quien.saludar())
+}
+
+variable p = nuevo persona { nombre: "Ana" }
+presentar(&p)          // despacha a persona.saludar
+```
+
+- `&Rasgo` es un tipo: una referencia que lleva el **objeto** y su **tabla de métodos**.
+- Se crea con `&objeto` cuando el tipo declara `implementa` ese rasgo.
+- La llamada despacha a la implementación del tipo concreto, aunque el tipo no herede de nadie.
+- Cada par (tipo, rasgo) genera su tabla y un adaptador por método.
+- Sirve para tratar igual a tipos **no emparentados**, que es lo que la herencia no puede dar.

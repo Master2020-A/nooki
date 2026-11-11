@@ -1,0 +1,36 @@
+// `&Rasgo`: un tipo que lleva el objeto y su tabla, y despacha al concreto.
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase persona implementa Saluda {
+    publico nombre: texto
+
+    publico funcion saludar() -> texto {
+        retornar "Hola, soy " + este.nombre
+    }
+}
+
+clase robot implementa Saluda {
+    publico modelo: texto
+
+    publico funcion saludar() -> texto {
+        retornar "Bip. Unidad " + este.modelo
+    }
+}
+
+funcion presentar(quien: &Saluda) -> vacio {
+    imprimir(quien.saludar())
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    variable r = nuevo robot { modelo: "R2" }
+
+    variable d: &Saluda = &p
+    imprimir(d.saludar())
+
+    presentar(&r)
+    presentar(&p)
+    retornar 0
+}

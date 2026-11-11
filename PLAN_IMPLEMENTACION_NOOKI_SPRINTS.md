@@ -242,7 +242,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 |---|---|---|
 | **S53** | Guía en español | ✅ `GUIA.md` en diez pasos con la salida real de cada ejemplo, `LEEME.md` de presentación e instalación, y verificación de todos los fragmentos ejecutándolos |
 | **S54** | Rasgos | ✅ `rasgo` con firmas y `implementa` en tipos; verificación de método faltante (`NOK3011`) y firma incompatible (`NOK4012`), sin coste en ejecución |
-| **S55** | Registro de paquetes (modo solitario: Git) | Índice en repositorio Git + archivos estáticos, semver y firma opcional; servidor propio **solo si aparecen usuarios** (D-15) |
+| **S55** | `&Rasgo` | ✅ Referencia a rasgo con objeto y tabla, tabla por (tipo, rasgo) con adaptadores, despacho dinámico y conversión en variables y argumentos |
 | **S56** | Formateador | Basado en AST, idempotente, `--check`, `.nooki-formato.toml`; 100 casos golden |
 | **S57** | Compilación incremental | Sistema de consultas, caché en disco, invalidación fina; recompilación 10× más rápida |
 | **S58** | LSP | Diagnósticos, hover, completado, ir a definición; 40 tests de integración |

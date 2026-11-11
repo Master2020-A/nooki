@@ -14,11 +14,23 @@ namespace nooki::generador {
 namespace {
 
 /// Tipo de C de un tipo escrito en Nooki.
+/// Nombres de los rasgos del programa, para resolver `&Rasgo` en los tipos.
+inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
+
+bool es_rasgo_c(std::string_view nombre) {
+    return RASGOS_DEL_PROGRAMA != nullptr &&
+           RASGOS_DEL_PROGRAMA->count(std::string(nombre)) != 0;
+}
+
 std::string tipo_c(std::string_view escrito) {
     if (!escrito.empty() && (escrito.front() == '&' || escrito.front() == '*')) {
         std::string_view resto = escrito.substr(1);
         if (resto.rfind("mutable ", 0) == 0) {
             resto = resto.substr(8);
+        }
+        // Una referencia a un rasgo lleva el objeto y su tabla.
+        if (escrito.front() == '&' && es_rasgo_c(resto)) {
+            return "nooki_ref_" + std::string(resto);
         }
         return tipo_c(resto) + "*";
     }
@@ -699,6 +711,7 @@ std::string manglear(const std::string& nombre, const std::vector<std::string_vi
     return salida;
 }
 
+
 bool es_comparacion(std::string_view operador) {
     return operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
            operador == "<=" || operador == ">=";
@@ -773,6 +786,7 @@ public:
         salida_ = std::ostringstream{};
 
         emitir_clases_runtime(programa);
+        emitir_tablas_de_rasgo(programa);
 
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             for (const sintactico::Funcion& metodo : definicion.metodos) {
@@ -858,6 +872,11 @@ private:
                 genericos_tipo_[std::string(definicion.nombre)] = &definicion;
             }
         }
+        for (const sintactico::Rasgo& rasgo : programa.rasgos) {
+            rasgos_.insert(std::string(rasgo.nombre));
+            rasgos_def_[std::string(rasgo.nombre)] = &rasgo;
+        }
+        RASGOS_DEL_PROGRAMA = &rasgos_;
         recoger_instancias(programa);
         for (const std::string& instancia : instancias_tipo_) {
             tipo_c_de_[instancia] = nombre_de_instancia(instancia);
@@ -1140,6 +1159,26 @@ private:
             salida_ << "} " << nombre_c << ";\n\n";
         }
 
+        // Rasgos: tabla de métodos por rasgo y referencia (objeto + tabla).
+        if (!programa.rasgos.empty()) {
+            for (const sintactico::Rasgo& rasgo : programa.rasgos) {
+                salida_ << "typedef struct nooki_" << rasgo.nombre << "_vtabla {\n";
+                for (const sintactico::Funcion& metodo : rasgo.metodos) {
+                    salida_ << "    " << tipo_declarado_c(metodo.tipo_retorno) << " (*"
+                            << metodo.nombre << ")(void*";
+                    for (const sintactico::Parametro& parametro : metodo.parametros) {
+                        salida_ << ", " << tipo_declarado_c(parametro.tipo);
+                    }
+                    salida_ << ");\n";
+                }
+                salida_ << "} nooki_" << rasgo.nombre << "_vtabla;\n\n";
+                salida_ << "typedef struct {\n"
+                        << "    void* objeto;\n"
+                        << "    const nooki_" << rasgo.nombre << "_vtabla* tabla;\n"
+                        << "} nooki_ref_" << rasgo.nombre << ";\n\n";
+            }
+        }
+
         // Instanciaciones de tipos genéricos: una estructura por combinación.
         for (const std::string& instancia : instancias_tipo_) {
             const std::size_t abre = instancia.find('<');
@@ -1385,6 +1424,52 @@ private:
     bool tiene_virtuales(const std::string& nombre) const {
         const auto virtuales = virtuales_de_.find(raiz_c(nombre));
         return virtuales != virtuales_de_.end() && !virtuales->second.empty();
+    }
+
+    /// Tablas de rasgo para cada tipo que los implementa, con un adaptador por
+    /// método para que la firma sea la del rasgo y no la del tipo.
+    void emitir_tablas_de_rasgo(const sintactico::Programa& programa) {
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            for (const std::string_view nombre_rasgo : definicion.rasgos) {
+                const sintactico::Rasgo* rasgo = nullptr;
+                for (const sintactico::Rasgo& candidato : programa.rasgos) {
+                    if (candidato.nombre == nombre_rasgo) {
+                        rasgo = &candidato;
+                        break;
+                    }
+                }
+                if (rasgo == nullptr) {
+                    continue;
+                }
+
+                const std::string tipo_c = tipo_estructura(definicion);
+                const std::string tabla_c =
+                    tipo_c + "_" + std::string(nombre_rasgo) + "_tabla";
+
+                for (const sintactico::Funcion& exigido : rasgo->metodos) {
+                    salida_ << "static " << tipo_declarado_c(exigido.tipo_retorno) << " "
+                            << tabla_c << "_" << exigido.nombre << "(void* objeto";
+                    for (const sintactico::Parametro& parametro : exigido.parametros) {
+                        salida_ << ", " << tipo_declarado_c(parametro.tipo) << ' '
+                                << parametro.nombre;
+                    }
+                    salida_ << ") {\n";
+                    salida_ << "    return " << tipo_c << "_" << exigido.nombre << "(("
+                            << tipo_c << "*)objeto";
+                    for (const sintactico::Parametro& parametro : exigido.parametros) {
+                        salida_ << ", " << parametro.nombre;
+                    }
+                    salida_ << ");\n}\n\n";
+                }
+
+                salida_ << "static const nooki_" << nombre_rasgo << "_vtabla " << tabla_c
+                        << " = {\n";
+                for (const sintactico::Funcion& exigido : rasgo->metodos) {
+                    salida_ << "    " << tabla_c << "_" << exigido.nombre << ",\n";
+                }
+                salida_ << "};\n\n";
+            }
+        }
     }
 
     /// Reserva, libera y tabla virtual de cada clase. Va después de los prototipos,
@@ -1916,6 +2001,7 @@ private:
             salida_ << indentacion();
         }
 
+
         // Un puntero derivado puede guardarse en una variable de tipo base: se
         // convierte explícitamente, porque la estructura base está al principio.
         std::string valor = expresion(*sentencia.expresion);
@@ -1923,6 +2009,27 @@ private:
         if (tipo != tipo_expresion && !tipo.empty() && tipo.back() == '*' &&
             !tipo_expresion.empty() && tipo_expresion.back() == '*') {
             valor = "(" + tipo + ")" + valor;
+        }
+
+        // `variable d: &Rasgo = &objeto`: se guarda el objeto y su tabla.
+        if (tipo.rfind("nooki_ref_", 0) == 0 && sentencia.expresion->tipo ==
+                sintactico::TipoExpresion::Unaria &&
+            sentencia.expresion->lexema == "&" && sentencia.expresion->izquierda) {
+            const std::string tipo_interno = tipo_de(*sentencia.expresion->izquierda);
+            std::string tipo_objeto = tipo_interno;
+            const bool ya_es_puntero =
+                !tipo_objeto.empty() && tipo_objeto.back() == '*';
+            if (ya_es_puntero) {
+                tipo_objeto.pop_back();
+            }
+            // Una clase ya es una referencia: se guarda tal cual. Algo por valor
+            // necesita que se tome su dirección.
+            const std::string objeto =
+                ya_es_puntero ? expresion(*sentencia.expresion->izquierda)
+                              : "&" + expresion(*sentencia.expresion->izquierda);
+            const std::string rasgo = tipo.substr(std::string("nooki_ref_").size());
+            valor = "(" + tipo + "){ .objeto = (void*)" + objeto + ", .tabla = &" +
+                    tipo_objeto + "_" + rasgo + "_tabla }";
         }
 
         salida_ << tipo << ' ' << sentencia.nombre << " = " << valor << ";\n";
@@ -2161,6 +2268,24 @@ private:
                 }
                 if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
                     const sintactico::Expresion& acceso = *expresion.izquierda;
+
+                    // `&Rasgo`: el tipo del resultado lo da el rasgo.
+                    if (acceso.izquierda) {
+                        const std::string tipo_ref = tipo_de(*acceso.izquierda);
+                        if (tipo_ref.rfind("nooki_ref_", 0) == 0) {
+                            const auto rasgo = rasgos_def_.find(
+                                tipo_ref.substr(std::string("nooki_ref_").size()));
+                            if (rasgo != rasgos_def_.end()) {
+                                for (const sintactico::Funcion& metodo :
+                                     rasgo->second->metodos) {
+                                    if (metodo.nombre == acceso.anotacion) {
+                                        return tipo_declarado_c(metodo.tipo_retorno);
+                                    }
+                                }
+                            }
+                            return "long long";
+                        }
+                    }
 
                     // `super.metodo(...)`: el tipo lo da la clase base.
                     if (acceso.izquierda &&
@@ -2886,6 +3011,29 @@ private:
             primero = false;
 
             std::string valor = expresion(*argumento);
+
+            // `f(&objeto)` donde el parámetro es `&Rasgo`: se envuelve objeto y tabla.
+            if (declarados != parametros_.end() && i < declarados->second.size()) {
+                const std::string& declarado = declarados->second[i];
+                if (declarado.size() > 1 && declarado.front() == '&' &&
+                    es_rasgo_c(std::string_view(declarado).substr(1)) &&
+                    argumento->tipo == sintactico::TipoExpresion::Unaria &&
+                    argumento->lexema == "&" && argumento->izquierda) {
+                    const std::string tipo_interno = tipo_de(*argumento->izquierda);
+                    std::string base = tipo_interno;
+                    const bool puntero = !base.empty() && base.back() == '*';
+                    if (puntero) {
+                        base.pop_back();
+                    }
+                    const std::string objeto =
+                        puntero ? expresion(*argumento->izquierda)
+                                : "&" + expresion(*argumento->izquierda);
+                    valor = "(nooki_ref_" + std::string(declarado).substr(1) +
+                            "){ .objeto = (void*)" + objeto + ", .tabla = &" + base + "_" +
+                            std::string(declarado).substr(1) + "_tabla }";
+                }
+            }
+
             // Un literal que llega a un parámetro prestado necesita dirección propia.
             if (declarados != parametros_.end() && i < declarados->second.size()) {
                 const std::string& declarado = declarados->second[i];
@@ -2978,6 +3126,22 @@ private:
         if (!acceso.izquierda) {
             no_soportado("una llamada a un método sin objeto");
             return "0";
+        }
+
+        // `&Rasgo`: la referencia lleva el objeto y su tabla.
+        if (tipo_de(*acceso.izquierda).rfind("nooki_ref_", 0) == 0) {
+            std::string salida = expresion(*acceso.izquierda) + ".tabla->" +
+                                 std::string(acceso.anotacion) + "(" +
+                                 expresion(*acceso.izquierda) + ".objeto";
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                salida += ", ";
+                salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
         }
 
         // `super.metodo(...)`: la implementación de la clase base, sin despacho.
@@ -3118,6 +3282,8 @@ private:
     std::map<std::string, const sintactico::DefinicionTipo*> genericos_tipo_;
     std::set<std::string> instancias_tipo_;
     std::set<std::string> compuestos_con_dueno_;
+    std::set<std::string> rasgos_;
+    std::map<std::string, const sintactico::Rasgo*> rasgos_def_;
     std::vector<std::size_t> bucles_;
     int profundidad_expresion_ = 0;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
