@@ -88,6 +88,7 @@ Sprint 49 ✅  Los compuestos liberan sus campos
 Sprint 50 ✅  Copia de compuestos rechazada y saltos que liberan
 Sprint 51 ✅  Cierre de la v0.6 · sin defectos conocidos
 Sprint 52 ✅  Herramientas: `nuevo`, `probar` y `limpiar`
+Sprint 53 ✅  Guía y presentación en español
 ```
 
 **Ya compila y ejecuta:**
