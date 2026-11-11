@@ -1,0 +1,17 @@
+// Mover el dueño a otra variable mientras está prestado.
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase persona implementa Saluda {
+    publico nombre: texto
+    publico funcion saludar() -> texto { retornar este.nombre }
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    variable d: &Saluda = &p
+    variable q = p
+    imprimir(d.saludar())
+    retornar 0
+}

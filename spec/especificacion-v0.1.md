@@ -1263,3 +1263,14 @@ Los módulos viajan dentro del compilador: se usan con «usar» sin copiar ning�
 | `fechas` | `bisiesto(anio)`, `dias_del_mes(mes, anio)`, `dias_del_anio(anio)` |
 
 Todos están escritos en Nooki y se compilan con el mismo compilador: no hay runtime en C detrás de ellos.
+
+
+### 18.34 Las vías del movimiento
+
+Un dueño no puede moverse ni reasignarse mientras alguien lo presta. Se comprueba en todas las
+vías: la reasignación (`p = ...`), la declaración que mueve (`variable q = p`) y el argumento por
+valor (`f(p)`).
+
+- **Reasignar no marca el valor como movido**: sustituye el valor, y la variable sigue siendo válida.
+- Prestar un parámetro que es una clase se rechaza: solo se prestan variables locales.
+- Mover un campo a una colección todavía no se reconoce como movimiento (A-14).

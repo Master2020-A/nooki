@@ -3,6 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 65 — Todas las vías del movimiento (2026-11-11)
+
+- **La comprobación de préstamo vive en un solo sitio** (`comprobar_prestamo`), al que llaman todas
+  las vías que mueven un valor: reasignación, declaración y argumento por valor. Antes solo la
+  reasignación miraba la tabla de préstamos.
+- **Reasignar ya no marca el valor como movido**: era un error del arreglo anterior y rompía
+  programas válidos que reasignan un `texto`.
+- Caso `0017-mover-por-declaracion`.
+- **Dos límites encontrados y anotados**: prestar un parámetro que es una clase se rechaza con
+  `NOK4008` (solo se prestan variables locales), y mover un *campo* a una colección
+  (`vector.agregar(p.nombre)`) no se reconoce como movimiento (A-14).
+
 ## [0.9.0] — 2026-11-11
 
 **La biblioteca estándar tiene cinco módulos, todos escritos en Nooki**, y la documentación ya no

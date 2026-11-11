@@ -271,9 +271,23 @@ private:
         return false;
     }
 
-    void marcar_movida(std::string_view nombre) {
+    /// Avisa si el valor está prestado: moverlo o reasignarlo dejaría la
+    /// referencia colgando.
+    void comprobar_prestamo(std::string_view nombre, diagnostico::Span span) {
+        const auto prestamo = prestamos_.find(std::string(nombre));
+        if (prestamo != prestamos_.end()) {
+            error(diagnostico::codigos::MOVER_CON_PRESTAMO, span)
+                .parametro("nombre", std::string(nombre))
+                .parametro("prestamo", prestamo->second);
+        }
+    }
+
+    /// Marca un valor como movido. Si estaba prestado, el movimiento lo dejaría
+    /// colgando y se informa.
+    void marcar_movida(std::string_view nombre, diagnostico::Span span = {}) {
+        const std::string clave(nombre);
+        comprobar_prestamo(nombre, span);
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            const std::string clave(nombre);
             if (it->cajas.count(clave) != 0 || it->textos.count(clave) != 0 ||
                 it->referencias.count(clave) != 0) {
                 it->movidas.insert(clave);
@@ -579,18 +593,12 @@ private:
         switch (sentencia.tipo) {
             case TipoSentencia::Expresion:
                 if (sentencia.expresion) {
-                    // Asignar a un dueño prestado lo movería: el préstamo quedaría colgando.
+                    // Reasignar es mover: el dueño no puede estar prestado.
                     if (sentencia.expresion->tipo == TipoExpresion::Asignacion &&
                         sentencia.expresion->izquierda &&
                         sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
-                        const auto prestamo = prestamos_.find(
-                            std::string(sentencia.expresion->izquierda->lexema));
-                        if (prestamo != prestamos_.end()) {
-                            error(diagnostico::codigos::MOVER_CON_PRESTAMO, sentencia.span)
-                                .parametro("nombre",
-                                           std::string(sentencia.expresion->izquierda->lexema))
-                                .parametro("prestamo", prestamo->second);
-                        }
+                        comprobar_prestamo(sentencia.expresion->izquierda->lexema,
+                                           sentencia.expresion->span);
                     }
                     tipo_de(*sentencia.expresion);
                 }
@@ -660,7 +668,7 @@ private:
                 if (real == Tipo::Texto && sentencia.tipo_declarado.empty()) {
                     if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
                         es_texto(sentencia.expresion->lexema)) {
-                        marcar_movida(sentencia.expresion->lexema);
+                        marcar_movida(sentencia.expresion->lexema, sentencia.span);
                     }
                     declarar_texto(sentencia.nombre);
                     declarar_prestable(sentencia.nombre);
@@ -692,7 +700,7 @@ private:
                 }
                 if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
                     es_referencia(sentencia.expresion->lexema)) {
-                    marcar_movida(sentencia.expresion->lexema);
+                    marcar_movida(sentencia.expresion->lexema, sentencia.span);
                     declarar_referencia(sentencia.nombre);
                     declarar_prestable(sentencia.nombre);
                     declarar(sentencia.nombre, real);
@@ -707,7 +715,7 @@ private:
                 }
                 if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
                     es_caja(sentencia.expresion->lexema) && sentencia.tipo_declarado.empty()) {
-                    marcar_movida(sentencia.expresion->lexema);
+                    marcar_movida(sentencia.expresion->lexema, sentencia.span);
                     declarar_caja(sentencia.nombre);
                     declarar(sentencia.nombre, real);
                     return;
@@ -1118,7 +1126,7 @@ private:
         const Tipo valor = expresion.derecha ? tipo_de(*expresion.derecha) : Tipo::Desconocido;
         if (expresion.derecha && expresion.derecha->tipo == TipoExpresion::Identificador &&
             es_caja(expresion.derecha->lexema)) {
-            marcar_movida(expresion.derecha->lexema);
+            marcar_movida(expresion.derecha->lexema, expresion.span);
         }
         exigir(destino, valor, expresion.span);
         return destino;
@@ -1296,7 +1304,7 @@ private:
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
             es_vector_texto(acceso.izquierda->lexema) && expresion.lista.size() == 1 &&
             expresion.lista.front() && expresion.lista.front()->tipo == TipoExpresion::Identificador) {
-            marcar_movida(expresion.lista.front()->lexema);
+            marcar_movida(expresion.lista.front()->lexema, expresion.span);
         }
 
         const sintactico::DefinicionTipo* definicion = tipo_por_nombre(
