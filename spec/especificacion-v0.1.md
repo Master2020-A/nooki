@@ -972,26 +972,29 @@ imprimir(f.area())     // despacha a la implementación de cuadrado
 ### 18.18 Errores como valores
 
 ```aura
-funcion dividir(a: entero, b: entero) -> Resultado {
+usar resultado
+
+funcion dividir(a: entero, b: entero) -> resultado {
     si (b == 0) {
         retornar Error("no se puede dividir por cero")
     }
     retornar Ok(a / b)
 }
 
-funcion repartir(a: entero, divisor: entero) -> Resultado {
+funcion repartir(a: entero, divisor: entero) -> resultado {
     variable cociente = dividir(a, divisor)?
     retornar Ok(cociente + 1)
 }
 ```
 
-- **No hay excepciones.** Un fallo es un valor de tipo `Resultado`.
-- `Ok(valor)` guarda un entero; `Error(mensaje)` guarda un texto.
-- **`?` propaga**: si el resultado es un error, la función devuelve ese mismo error; si no, la
-  expresión vale el entero.
-- `?` solo se permite en funciones que devuelven `Resultado` (`NOK4011`).
-- Para tratarlo explícitamente: `es_error()`, `valor()` y `mensaje()`.
-- El texto del error pertenece al resultado y se libera con él.
+- **No hay excepciones.** Un fallo es un valor de una enumeración.
+- `resultado` es un **módulo de la biblioteca** escrito en Nooki: `Ok(valor: entero)` y
+  `Error(mensaje: texto)`.
+- **`?` propaga**: si la variante no es la primera, la función devuelve ese mismo valor; si lo es, la
+  expresión vale el contenido de su campo.
+- `?` exige que la función devuelva una enumeración **con forma de resultado**: al menos dos
+  variantes y la primera con un único campo (`NOK4011`).
+- El tratamiento explícito es con `coincide`, ligando el contenido en cada rama.
 
 
 ### 18.19 Operaciones de texto

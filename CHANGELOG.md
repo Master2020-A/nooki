@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 43 — La biblioteca estándar se escribe en Nooki (2026-11-10)
+
+- **Módulo `resultado` escrito en Nooki**: `usar resultado` trae la enumeración con `Ok(valor)` y
+  `Error(mensaje)`. El módulo viaja dentro del compilador, sin archivos ni rutas de búsqueda.
+- **`?` es estructural**: funciona con cualquier enumeración que tenga forma de resultado (dos
+  variantes y la primera con un campo), no con un tipo concreto del compilador.
+- **El compilador adelgaza**: se retira `nooki_resultado` del runtime, los `Ok`/`Error` integrados y
+  el caso especial de la verificación.
+- **Migrado `0031-resultados`** a la biblioteca: el mismo programa, ahora sin magia en el compilador.
+- **ADR-025** documenta la decisión y sus costes.
+
 ### Sprint 42 — Variantes con datos (2026-11-10)
 
 - **Variantes con campos**: `enumeracion respuesta { Bien(valor: entero) Mal(mensaje: texto) }`.

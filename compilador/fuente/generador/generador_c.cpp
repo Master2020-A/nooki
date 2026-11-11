@@ -28,9 +28,7 @@ std::string tipo_c(std::string_view escrito) {
     if (escrito.rfind("Mapa<", 0) == 0) {
         return "nooki_mapa_texto_entero";
     }
-    if (escrito == "Resultado") {
-        return "nooki_resultado";
-    }
+
     if (escrito.rfind("Vector<", 0) == 0) {
         return escrito.find("texto") != std::string_view::npos ? "nooki_vector_texto"
                                                               : "nooki_vector_entero";
@@ -575,47 +573,6 @@ const char* PRELUDIO =
     "\n"
     "static void nooki_imprimir_entero(long long valor) {\n"
     "    printf(\"%lld\\n\", valor);\n"
-    "}\n"
-    "\n"
-    "/* Resultado: o un entero o un error de texto. No hay excepciones. */\n"
-    "typedef struct {\n"
-    "    int es_error;\n"
-    "    long long valor;\n"
-    "    nooki_texto error;\n"
-    "} nooki_resultado;\n"
-    "\n"
-    "static nooki_resultado nooki_ok(long long valor) {\n"
-    "    nooki_resultado r;\n"
-    "    r.es_error = 0;\n"
-    "    r.valor = valor;\n"
-    "    r.error.datos = NULL;\n"
-    "    r.error.largo = 0;\n"
-    "    r.error.propio = 0;\n"
-    "    return r;\n"
-    "}\n"
-    "\n"
-    "static nooki_resultado nooki_error_de(nooki_texto mensaje) {\n"
-    "    nooki_resultado r;\n"
-    "    r.es_error = 1;\n"
-    "    r.valor = 0;\n"
-    "    r.error = mensaje;\n"
-    "    return r;\n"
-    "}\n"
-    "\n"
-    "static int nooki_resultado_es_error(nooki_resultado r) {\n"
-    "    return r.es_error;\n"
-    "}\n"
-    "\n"
-    "static long long nooki_resultado_valor(nooki_resultado r) {\n"
-    "    return r.valor;\n"
-    "}\n"
-    "\n"
-    "static nooki_texto nooki_resultado_mensaje(nooki_resultado r) {\n"
-    "    return r.error;\n"
-    "}\n"
-    "\n"
-    "static void nooki_resultado_soltar(nooki_resultado* r) {\n"
-    "    nooki_texto_soltar(&r->error);\n"
     "}\n"
     "\n"
     "/* Entrada estándar: la línea llega sin el salto y con dueño. */\n"
@@ -1577,19 +1534,34 @@ private:
             return;
         }
 
-        // `variable x = f()?`: si el resultado es un error, se propaga.
+        // `variable x = f()?`: si la variante no es la del valor, se propaga.
         if (sentencia.expresion->tipo == sintactico::TipoExpresion::Propagacion &&
             sentencia.expresion->izquierda) {
+            const std::string tipo_resultado = tipo_de(*sentencia.expresion->izquierda);
+            const auto enumeracion = enumeraciones_.find(
+                tipo_resultado.rfind("nooki_", 0) == 0
+                    ? tipo_resultado.substr(std::string("nooki_").size())
+                    : tipo_resultado);
+            if (enumeracion == enumeraciones_.end() ||
+                enumeracion->second->variantes.size() < 2 ||
+                enumeracion->second->variantes[0].campos.size() != 1) {
+                no_soportado("«?» sobre un valor que no tiene forma de resultado");
+                return;
+            }
+            const sintactico::Variante& exito = enumeracion->second->variantes[0];
+            const std::string campo_exito = tipo_declarado_c(exito.campos[0].tipo);
             const std::string temporal =
                 "__nooki_r" + std::to_string(contador_temporal_++);
-            salida_ << indentacion() << "nooki_resultado " << temporal << " = "
+
+            salida_ << indentacion() << tipo_resultado << " " << temporal << " = "
                     << expresion(*sentencia.expresion->izquierda) << ";\n";
-            salida_ << indentacion() << "if (" << temporal << ".es_error) {\n";
+            salida_ << indentacion() << "if (" << temporal << ".etiqueta != 0) {\n";
             salida_ << indentacion() << "    return " << temporal << ";\n";
             salida_ << indentacion() << "}\n";
-            salida_ << indentacion() << "long long " << sentencia.nombre << " = " << temporal
-                    << ".valor;\n";
-            declarar(sentencia.nombre, "long long");
+            salida_ << indentacion() << campo_exito << " " << sentencia.nombre << " = "
+                    << temporal << ".datos." << exito.nombre << "_" << exito.campos[0].nombre
+                    << ";\n";
+            declarar(sentencia.nombre, campo_exito);
             return;
         }
 
@@ -1619,7 +1591,7 @@ private:
         const bool referencia_de_clase = !tipo.empty() && tipo.back() == '*';
         if (tipo == "nooki_caja" || tipo == "nooki_texto" ||
             tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0 ||
-            tipo == "nooki_resultado" || referencia_de_clase) {
+            referencia_de_clase) {
             // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
                 const std::string& origen = std::string(sentencia.expresion->lexema);
@@ -1638,8 +1610,7 @@ private:
             } else if (referencia_de_clase) {
                 liberar = tipo.substr(0, tipo.size() - 1) + "_soltar";
             } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
-                       tipo.rfind("nooki_mapa_", 0) == 0 ||
-                       tipo == "nooki_resultado") {
+                       tipo.rfind("nooki_mapa_", 0) == 0) {
                 liberar = tipo + "_soltar";
             }
             registrar_liberable(sentencia.nombre, std::move(liberar), referencia_de_clase);
@@ -1854,15 +1825,7 @@ private:
                         }
                     }
 
-                    if (acceso.izquierda && tipo_de(*acceso.izquierda) == "nooki_resultado") {
-                        if (acceso.anotacion == "es_error") {
-                            return "int";
-                        }
-                        if (acceso.anotacion == "mensaje") {
-                            return "nooki_texto";
-                        }
-                        return "long long";
-                    }
+
                     if (acceso.izquierda &&
                         (tipo_de(*acceso.izquierda) == "nooki_texto" ||
                          tipo_de(*acceso.izquierda) == "nooki_texto*")) {
@@ -1948,10 +1911,7 @@ private:
                     return "void";
                 }
                 if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
-                    if (expresion.izquierda->lexema == "Ok" ||
-                        expresion.izquierda->lexema == "Error") {
-                        return "nooki_resultado";
-                    }
+
                     if (const auto variante =
                             variantes_.find(std::string(expresion.izquierda->lexema));
                         variante != variantes_.end()) {
@@ -2483,14 +2443,6 @@ private:
             }
         }
 
-        if (nombre_llamado == "Ok" || nombre_llamado == "Error") {
-            if (nodo.lista.size() != 1 || !nodo.lista.front()) {
-                no_soportado("«" + std::string(nombre_llamado) + "» con un argumento");
-                return "0";
-            }
-            return (nombre_llamado == "Ok" ? "nooki_ok(" : "nooki_error_de(") +
-                   expresion(*nodo.lista.front()) + ")";
-        }
 
         if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {
             if (!nodo.lista.empty()) {
@@ -2645,10 +2597,6 @@ private:
             tipo_objeto.pop_back();
         }
 
-        if (tipo_objeto == "nooki_resultado") {
-            return "nooki_resultado_" + std::string(acceso.anotacion) + "(" +
-                   expresion(*acceso.izquierda) + ")";
-        }
 
         if (tipo_objeto.rfind("nooki_vector_", 0) == 0 ||
             tipo_objeto.rfind("nooki_mapa_", 0) == 0) {

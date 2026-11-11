@@ -30,6 +30,19 @@ constexpr const char* EXTENSION_BINARIO = "";
 
 std::string leer_archivo(const std::filesystem::path& ruta);
 
+/// Biblioteca estándar mínima, escrita en Nooki y empaquetada con el compilador.
+std::string_view fuente_biblioteca(std::string_view modulo) {
+    if (modulo == "resultado") {
+        return R"(// Biblioteca estándar: el resultado de una operación que puede fallar.
+publico enumeracion resultado {
+    Ok(valor: entero)
+    Error(mensaje: texto)
+}
+)";
+    }
+    return {};
+}
+
 /// Carga un módulo, marca sus funciones con su nombre y añade también los suyos.
 bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nombre,
                    diagnostico::GestorFuentes& fuentes, diagnostico::Emisor& emisor,
@@ -41,12 +54,17 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     cargados.push_back(clave);
 
     const std::filesystem::path ruta = directorio / (clave + ".oki");
-    const std::string contenido = leer_archivo(ruta);
+    std::string contenido = leer_archivo(ruta);
     if (contenido.empty() && !std::filesystem::exists(ruta)) {
-        emisor.error(diagnostico::codigos::MODULO_NO_ENCONTRADO, diagnostico::Span{})
-            .parametro("modulo", clave)
-            .ayuda("se buscó «" + ruta.string() + "»");
-        return false;
+        // Los módulos de la biblioteca viajan dentro del compilador.
+        const std::string_view integrado = fuente_biblioteca(clave);
+        if (integrado.empty()) {
+            emisor.error(diagnostico::codigos::MODULO_NO_ENCONTRADO, diagnostico::Span{})
+                .parametro("modulo", clave)
+                .ayuda("se buscó «" + ruta.string() + "»");
+            return false;
+        }
+        contenido = std::string(integrado);
     }
 
     const auto archivo = fuentes.anadir(ruta.string(), contenido);

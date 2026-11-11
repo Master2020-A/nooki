@@ -78,7 +78,8 @@ Sprint 39 ✅  Cierre de la v0.4 · firma al sobrescribir y ejemplo polimórfico
 Sprint 40 ✅  Errores como valores · `Resultado` y `?`
 Sprint 41 ✅  Operaciones de texto · cortar, buscar y convertir
 Sprint 42 ✅  Variantes con datos · `caso Bien(v)`
-Sprint 43 ⬜  `Resultado` escrito en Nooki
+Sprint 43 ✅  `resultado` escrito en Nooki · la biblioteca crece
+Sprint 44 ⬜  Más biblioteca y paquetes
 ```
 
 **Ya compila y ejecuta:**

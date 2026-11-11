@@ -1,5 +1,7 @@
-// Manejo de errores sin excepciones: `Resultado`, `Ok`/`Error` y `?`.
-funcion dividir(a: entero, b: entero) -> Resultado {
+// Manejo de errores con la biblioteca: `resultado` está escrito en Nooki.
+usar resultado
+
+funcion dividir(a: entero, b: entero) -> resultado {
     si (b == 0) {
         retornar Error("no se puede dividir por cero")
     }
@@ -7,24 +9,20 @@ funcion dividir(a: entero, b: entero) -> Resultado {
 }
 
 // `?` propaga el error de la llamada sin comprobarlo a mano.
-funcion repartir(a: entero, divisor: entero) -> Resultado {
+funcion repartir(a: entero, divisor: entero) -> resultado {
     variable cociente = dividir(a, divisor)?
     retornar Ok(cociente + 1)
 }
 
 funcion principal() -> entero {
-    variable bien = repartir(10, 2)
-    si (bien.es_error()) {
-        imprimir("error")
-    } sino {
-        imprimir(bien.valor())
+    coincide (repartir(10, 2)) {
+        caso Ok(v) => imprimir(v)
+        caso Error(m) => imprimir(m)
     }
 
-    variable mal = repartir(10, 0)
-    si (mal.es_error()) {
-        imprimir(mal.mensaje())
-    } sino {
-        imprimir(mal.valor())
+    coincide (repartir(10, 0)) {
+        caso Ok(v) => imprimir(v)
+        caso Error(m) => imprimir(m)
     }
     retornar 0
 }
