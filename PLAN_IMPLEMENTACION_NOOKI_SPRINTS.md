@@ -224,7 +224,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
 | **S45** | Paquetes: proyectos | ✅ `usar` busca junto al importador y en `biblioteca/` subiendo por los padres, y `nooki construir` compila el proyecto tomando su punto de entrada |
-| **S46** | Verificación de movimientos | use-after-move, doble drop, ramas condicionales y bucles; 80 casos inválidos |
+| **S46** | Genéricos de tipos | ✅ `estructura par<T>` con instanciación explícita (`par<entero>`), monomorficación por combinación y registro previo de campos para resolver accesos |
 | **S47** | Préstamos: análisis de regiones (NLL simplificado) | Basado en *liveness*; conflictos mutable/inmutable; 100 tests |
 | **S48** | Préstamos en llamadas y retornos | Reglas de elisión de *lifetimes*; 80 tests |
 | **S49** | *Lifetimes* explícitos | Sintaxis `'v`; verificación en funciones y estructuras; 60 tests |

@@ -81,7 +81,8 @@ Sprint 42 ✅  Variantes con datos · `caso Bien(v)`
 Sprint 43 ✅  `resultado` escrito en Nooki · la biblioteca crece
 Sprint 44 ✅  `texto.dividir`, `matematicas` y más biblioteca
 Sprint 45 ✅  Proyectos · `nooki construir` y búsqueda en `biblioteca/`
-Sprint 46 ⬜  Genéricos de tipos
+Sprint 46 ✅  Genéricos de tipos · `estructura par<T>`
+Sprint 47 ⬜  Cierres y documentación
 ```
 
 **Ya compila y ejecuta:**

@@ -1291,7 +1291,14 @@ private:
     }
 
     Tipo tipo_construccion(const Expresion& expresion) {
-        const auto encontrado = tipos_.find(std::string(expresion.anotacion));
+        auto encontrado = tipos_.find(std::string(expresion.anotacion));
+        if (encontrado == tipos_.end()) {
+            // `par<entero>` se valida con la definición de `par`.
+            const std::size_t abre = expresion.anotacion.find('<');
+            if (abre != std::string_view::npos) {
+                encontrado = tipos_.find(std::string(expresion.anotacion.substr(0, abre)));
+            }
+        }
         if (encontrado == tipos_.end()) {
             error(diagnostico::codigos::TIPO_DESCONOCIDO, expresion.span)
                 .parametro("nombre", expresion.anotacion);

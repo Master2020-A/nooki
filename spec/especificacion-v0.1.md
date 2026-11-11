@@ -1081,3 +1081,23 @@ $ nooki construir
   puede sustituirlos con su propia versión en `biblioteca/`.
 - `nooki construir` compila el proyecto del directorio actual usando `principal.oki` o
   `fuente/principal.oki` como punto de entrada.
+
+
+### 18.23 Genéricos de tipos
+
+```aura
+estructura par<T> {
+    publico primero: T
+    publico segundo: T
+}
+
+variable numeros = par<entero> { primero: 1, segundo: 2 }
+variable textos = par<texto> { primero: "hola", segundo: " mundo" }
+```
+
+- Una `estructura` o `clase` puede declarar parámetros de tipo: `<T, U>`.
+- Se instancia **explícitamente** al construirla: `par<entero> { ... }`.
+- Cada combinación de tipos produce una estructura propia en el binario, sin despacho en
+  ejecución, igual que en las funciones genéricas.
+- Los campos cuyo tipo es un parámetro se sustituyen por el argumento correspondiente.
+- Los métodos de un tipo genérico todavía no se instancian.

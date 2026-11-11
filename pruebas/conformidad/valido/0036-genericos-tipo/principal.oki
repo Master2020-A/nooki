@@ -1,0 +1,18 @@
+// Genéricos de tipos: una estructura, varias instanciaciones.
+estructura par<T> {
+    publico primero: T
+    publico segundo: T
+}
+
+funcion principal() -> entero {
+    variable numeros = par<entero> { primero: 1, segundo: 2 }
+    imprimir(numeros.primero + numeros.segundo)
+
+    variable textos = par<texto> { primero: "hola", segundo: " mundo" }
+    imprimir(textos.primero + textos.segundo)
+
+    variable letras = par<texto> { primero: "a", segundo: "b" }
+    imprimir(letras.primero)
+    imprimir(letras.segundo)
+    retornar 0
+}

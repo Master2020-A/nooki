@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 46 — Genéricos de tipos (2026-11-10)
+
+- **Tipos con parámetros**: `estructura par<T> { publico primero: T }`.
+- **Instanciación explícita**: `par<entero> { primero: 1, segundo: 2 }` y `par<texto> { ... }`.
+  Cada combinación genera su propia estructura en C (`nooki_par_entero`, `nooki_par_texto`),
+  siguiendo el mismo criterio que las funciones genéricas.
+- **Descubrimiento por recorrido**: el generador registra las instanciaciones que aparecen en
+  declaraciones, parámetros, campos y construcciones antes de emitir nada.
+- Programa de conformidad `0036-genericos-tipo`, compilado y ejecutado.
+
 ### Sprint 45 — Paquetes: proyectos (2026-11-10)
 
 - **Búsqueda de módulos**: junto al archivo que importa, en su carpeta `biblioteca/` y subiendo por

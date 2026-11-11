@@ -170,6 +170,9 @@ struct Campo {
 /// `estructura` o `clase`. En la v0.1 comparten representación (ADR-015).
 struct DefinicionTipo {
     std::string_view nombre;
+
+    /// Parámetros de tipo de un tipo genérico: `estructura par<T>`.
+    std::vector<std::string_view> tipo_parametros;
     /// Módulo al que pertenece (vacío = archivo principal).
     std::string_view modulo;
     bool es_clase = false;

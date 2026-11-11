@@ -852,6 +852,35 @@ public:
 private:
     // --- Registro ----------------------------------------------------------
     void registrar(const sintactico::Programa& programa) {
+        // Tipos genéricos e instanciaciones que el programa usa.
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            if (!definicion.tipo_parametros.empty()) {
+                genericos_tipo_[std::string(definicion.nombre)] = &definicion;
+            }
+        }
+        recoger_instancias(programa);
+        for (const std::string& instancia : instancias_tipo_) {
+            tipo_c_de_[instancia] = nombre_de_instancia(instancia);
+
+            // Los campos se registran ya, porque los cuerpos se generan antes
+            // de emitir las estructuras.
+            const std::size_t abre = instancia.find('<');
+            if (abre == std::string::npos) {
+                continue;
+            }
+            const auto generico = genericos_tipo_.find(instancia.substr(0, abre));
+            if (generico == genericos_tipo_.end()) {
+                continue;
+            }
+            const std::string nombre_c = nombre_de_instancia(instancia);
+            const std::vector<std::string> argumentos = argumentos_de_instancia(instancia);
+            for (const sintactico::Campo& campo : generico->second->campos) {
+                campos_[nombre_c][std::string(campo.nombre)] =
+                    tipo_declarado_c(sustituir_tipo(campo.tipo, *generico->second,
+                                                    argumentos));
+            }
+        }
+
         // Primera pasada: nombres, para que un tipo pueda referirse a otro declarado después.
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             campos_[tipo_estructura(definicion)];
@@ -968,6 +997,11 @@ private:
             }
             for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
                 variantes_[std::string(enumeracion.variantes[i].nombre)] = {&enumeracion, i};
+            }
+        }
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            if (!definicion.tipo_parametros.empty()) {
+                genericos_tipo_[std::string(definicion.nombre)] = &definicion;
             }
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
@@ -1097,6 +1131,56 @@ private:
             salida_ << "} " << nombre_c << ";\n\n";
         }
 
+        // Instanciaciones de tipos genéricos: una estructura por combinación.
+        for (const std::string& instancia : instancias_tipo_) {
+            const std::size_t abre = instancia.find('<');
+            if (abre == std::string::npos) {
+                continue;
+            }
+            const std::string base = instancia.substr(0, abre);
+            const auto generico = genericos_tipo_.find(base);
+            if (generico == genericos_tipo_.end()) {
+                continue;
+            }
+
+            // Argumentos separados por comas.
+            std::vector<std::string> argumentos;
+            std::string actual;
+            for (std::size_t i = abre + 1; i < instancia.size(); ++i) {
+                const char caracter = instancia[i];
+                if (caracter == ',' || caracter == '>') {
+                    if (!actual.empty()) {
+                        argumentos.push_back(actual);
+                        actual.clear();
+                    }
+                    if (caracter == '>') {
+                        break;
+                    }
+                    continue;
+                }
+                if (caracter != ' ') {
+                    actual += caracter;
+                }
+            }
+
+            const std::string nombre_c = nombre_de_instancia(instancia);
+            salida_ << "typedef struct " << nombre_c << " {\n";
+            for (const sintactico::Campo& campo : generico->second->campos) {
+                std::string tipo_campo(campo.tipo);
+                for (std::size_t i = 0; i < generico->second->tipo_parametros.size(); ++i) {
+                    if (tipo_campo == generico->second->tipo_parametros[i] &&
+                        i < argumentos.size()) {
+                        tipo_campo = argumentos[i];
+                        break;
+                    }
+                }
+                campos_[nombre_c][std::string(campo.nombre)] = tipo_declarado_c(tipo_campo);
+                salida_ << "    " << tipo_declarado_c(tipo_campo) << ' ' << campo.nombre
+                        << ";\n";
+            }
+            salida_ << "} " << nombre_c << ";\n\n";
+        }
+
         // Definición de las tablas virtuales, ya con todos los tipos disponibles.
         for (const auto& [raiz, metodos] : virtuales_de_) {
             if (metodos.empty()) {
@@ -1137,6 +1221,119 @@ private:
         }
         return std::find(virtuales->second.begin(), virtuales->second.end(),
                          std::string(metodo.nombre)) != virtuales->second.end();
+    }
+
+    /// Registra una instanciación de tipo genérico si el texto lo es.
+    void recoger_tipo(std::string_view texto) {
+        const std::size_t abre = texto.find('<');
+        if (abre == std::string_view::npos) {
+            return;
+        }
+        const std::string base(texto.substr(0, abre));
+        if (genericos_tipo_.count(base) != 0) {
+            instancias_tipo_.insert(std::string(texto));
+        }
+    }
+
+    void recoger_tipos_de(const std::vector<sintactico::Sentencia>& cuerpo) {
+        for (const sintactico::Sentencia& sentencia : cuerpo) {
+            recoger_tipo(sentencia.tipo_declarado);
+            if (sentencia.expresion) {
+                recoger_tipo_de_expresion(*sentencia.expresion);
+            }
+            recoger_tipos_de(sentencia.cuerpo);
+            recoger_tipos_de(sentencia.sino);
+            for (const sintactico::Rama& rama : sentencia.ramas) {
+                recoger_tipos_de(rama.cuerpo);
+            }
+        }
+    }
+
+    void recoger_tipo_de_expresion(const sintactico::Expresion& expresion) {
+        if (expresion.tipo == sintactico::TipoExpresion::Construccion) {
+            recoger_tipo(expresion.anotacion);
+        }
+        for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+            if (argumento) {
+                recoger_tipo_de_expresion(*argumento);
+            }
+        }
+        if (expresion.izquierda) {
+            recoger_tipo_de_expresion(*expresion.izquierda);
+        }
+        if (expresion.derecha) {
+            recoger_tipo_de_expresion(*expresion.derecha);
+        }
+    }
+
+    void recoger_instancias(const sintactico::Programa& programa) {
+        for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+            for (const sintactico::Campo& campo : definicion.campos) {
+                recoger_tipo(campo.tipo);
+            }
+        }
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            recoger_tipo(funcion.tipo_retorno);
+            for (const sintactico::Parametro& parametro : funcion.parametros) {
+                recoger_tipo(parametro.tipo);
+            }
+            recoger_tipos_de(funcion.cuerpo);
+        }
+    }
+
+    /// Argumentos de una instanciación: `par<entero, texto>` → {"entero", "texto"}.
+    static std::vector<std::string> argumentos_de_instancia(std::string_view texto) {
+        std::vector<std::string> argumentos;
+        std::string actual;
+        const std::size_t abre = texto.find('<');
+        if (abre == std::string_view::npos) {
+            return argumentos;
+        }
+        for (std::size_t i = abre + 1; i < texto.size(); ++i) {
+            const char caracter = texto[i];
+            if (caracter == ',' || caracter == '>') {
+                if (!actual.empty()) {
+                    argumentos.push_back(actual);
+                    actual.clear();
+                }
+                if (caracter == '>') {
+                    break;
+                }
+                continue;
+            }
+            if (caracter != ' ') {
+                actual += caracter;
+            }
+        }
+        return argumentos;
+    }
+
+    /// Sustituye los parámetros de tipo de un campo por sus argumentos.
+    static std::string sustituir_tipo(std::string_view tipo,
+                                      const sintactico::DefinicionTipo& generico,
+                                      const std::vector<std::string>& argumentos) {
+        for (std::size_t i = 0; i < generico.tipo_parametros.size() && i < argumentos.size();
+             ++i) {
+            if (tipo == generico.tipo_parametros[i]) {
+                return argumentos[i];
+            }
+        }
+        return std::string(tipo);
+    }
+
+    /// Nombre de C de una instanciación: `par<entero>` → `nooki_par_entero`.
+    static std::string nombre_de_instancia(std::string_view texto) {
+        std::string salida = "nooki_";
+        for (const char caracter : texto) {
+            if (caracter == '<' || caracter == '>' || caracter == ',' || caracter == ' ') {
+                if (caracter == ',') {
+                    salida += "_";
+                }
+                continue;
+            }
+            salida += caracter;
+        }
+        return salida;
     }
 
     /// Raíz de la jerarquía de una clase (por nombre de C).
@@ -2769,6 +2966,8 @@ private:
     std::map<std::string, std::vector<std::string>> parametros_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::map<std::string, const sintactico::Funcion*> funciones_ast_;
+    std::map<std::string, const sintactico::DefinicionTipo*> genericos_tipo_;
+    std::set<std::string> instancias_tipo_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string,

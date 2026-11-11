@@ -226,6 +226,29 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
         return definicion;
     }
 
+    // Parámetros de tipo: `estructura par<T>`.
+    if (actual().lexema == "<") {
+        avanzar();
+        while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ">") {
+            if (const Token& parametro = actual();
+                parametro.es(TipoToken::Identificador) ||
+                parametro.es(TipoToken::PalabraClave)) {
+                definicion.tipo_parametros.push_back(parametro.lexema);
+                avanzar();
+            } else {
+                error_en(parametro, diagnostico::codigos::TOKEN_INESPERADO,
+                         "un parámetro de tipo");
+                break;
+            }
+            if (!aceptar_lexema(",")) {
+                break;
+            }
+        }
+        if (!aceptar_lexema(">")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«>»");
+        }
+    }
+
     // Herencia simple: `clase cuadrado hereda figura`.
     if (actual().lexema == "hereda") {
         avanzar();
@@ -997,6 +1020,31 @@ ExpresionPtr Parser::prefijo() {
             auto nodo = literal(TipoExpresion::Identificador);
             if (actual().lexema == "{" && viene_construccion()) {
                 return analizar_construccion(nodo->lexema);
+            }
+            // Construcción de un tipo genérico: `par<entero> { ... }`.
+            if (actual().lexema == "<") {
+                const std::size_t inicio_tipo = nodo->span.inicio;
+                const std::size_t guardado = indice_;
+                avanzar();
+                int profundidad = 1;
+                std::size_t fin_tipo = 0;
+                while (!actual().es(TipoToken::FinDeArchivo) && profundidad > 0) {
+                    if (actual().lexema == "<") {
+                        ++profundidad;
+                    } else if (actual().lexema == ">") {
+                        --profundidad;
+                        if (profundidad == 0) {
+                            fin_tipo = actual().span.fin;
+                        }
+                    }
+                    avanzar();
+                }
+                if (fin_tipo != 0 && actual().lexema == "{") {
+                    const std::string_view contenido = fuentes_.contenido(archivo_);
+                    return analizar_construccion(
+                        contenido.substr(inicio_tipo, fin_tipo - inicio_tipo));
+                }
+                indice_ = guardado;
             }
             return nodo;
         }
