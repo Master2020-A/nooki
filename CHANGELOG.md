@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 45 — Paquetes: proyectos (2026-11-10)
+
+- **Búsqueda de módulos**: junto al archivo que importa, en su carpeta `biblioteca/` y subiendo por
+  los directorios padre. Un proyecto deja de necesitar rutas ni copias de sus módulos.
+- **`nooki construir`**: compila el proyecto del directorio actual, tomando `principal.oki` o
+  `fuente/principal.oki` como punto de entrada.
+- **La biblioteca integrada sigue disponible**: los módulos del compilador (`resultado`,
+  `matematicas`) se usan sin archivo, y un proyecto puede sobrescribirlos con los suyos.
+- Programa de conformidad `0035-proyecto`, con un módulo en `biblioteca/`.
+
 ### Sprint 44 — La biblioteca crece (2026-11-10)
 
 - **`texto.dividir(separador)`**: parte un texto y devuelve un `Vector<texto>` cuyos elementos son

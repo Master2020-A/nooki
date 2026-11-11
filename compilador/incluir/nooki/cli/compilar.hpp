@@ -7,6 +7,9 @@
 namespace nooki::cli {
 
 /// Implementa `nooki compilar`.
+int comando_construir(std::span<const std::string_view> argumentos, std::ostream& salida,
+                      std::ostream& error);
+
 int comando_compilar(std::span<const std::string_view> argumentos, std::ostream& salida,
                      std::ostream& error);
 

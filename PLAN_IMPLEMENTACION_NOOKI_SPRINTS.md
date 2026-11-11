@@ -223,7 +223,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
-| **S45** | Modelo de propiedad en MIR | Move vs copy, *drop flags*, flujo de inicialización; 60 tests |
+| **S45** | Paquetes: proyectos | ✅ `usar` busca junto al importador y en `biblioteca/` subiendo por los padres, y `nooki construir` compila el proyecto tomando su punto de entrada |
 | **S46** | Verificación de movimientos | use-after-move, doble drop, ramas condicionales y bucles; 80 casos inválidos |
 | **S47** | Préstamos: análisis de regiones (NLL simplificado) | Basado en *liveness*; conflictos mutable/inmutable; 100 tests |
 | **S48** | Préstamos en llamadas y retornos | Reglas de elisión de *lifetimes*; 80 tests |

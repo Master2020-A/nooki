@@ -115,6 +115,9 @@ int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
     if (comando->nombre == "compilar") {
         return comando_compilar(argumentos.subspan(1), salida, error);
     }
+    if (comando->nombre == "construir") {
+        return comando_construir(argumentos.subspan(1), salida, error);
+    }
     if (comando->nombre == "ejecutar") {
         return comando_ejecutar(argumentos.subspan(1), salida, error);
     }

@@ -80,7 +80,8 @@ Sprint 41 ✅  Operaciones de texto · cortar, buscar y convertir
 Sprint 42 ✅  Variantes con datos · `caso Bien(v)`
 Sprint 43 ✅  `resultado` escrito en Nooki · la biblioteca crece
 Sprint 44 ✅  `texto.dividir`, `matematicas` y más biblioteca
-Sprint 45 ⬜  Sistema de paquetes
+Sprint 45 ✅  Proyectos · `nooki construir` y búsqueda en `biblioteca/`
+Sprint 46 ⬜  Genéricos de tipos
 ```
 
 **Ya compila y ejecuta:**

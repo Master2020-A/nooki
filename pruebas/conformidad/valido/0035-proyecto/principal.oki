@@ -1,0 +1,10 @@
+// Un proyecto encuentra sus módulos en «biblioteca/», sin rutas ni copias.
+usar utilidades
+usar matematicas
+
+funcion principal() -> entero {
+    imprimir(utilidades.saludar("Nooki"))
+    imprimir(utilidades.doblar(21))
+    imprimir(matematicas.maximo(4, 8))
+    retornar 0
+}

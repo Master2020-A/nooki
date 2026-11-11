@@ -18,12 +18,13 @@ struct Comando {
 
 /// Tabla única de comandos: la usan el despachador y la ayuda.
 /// Añadir un comando aquí lo hace aparecer en `nooki ayuda`.
-inline constexpr std::array<Comando, 11> COMANDOS{{
+inline constexpr std::array<Comando, 12> COMANDOS{{
     {"ayuda", "Muestra esta ayuda", 0},
     {"version", "Muestra la versión del compilador", 0},
     {"compilar", "Compila un archivo .oki y genera un ejecutable", 0},
     {"ejecutar", "Compila y ejecuta un archivo .oki", 0},
     {"ast", "Muestra el árbol de sintaxis del archivo", 0},
+    {"construir", "Compila el proyecto del directorio actual", 0},
     {"nuevo", "Crea un proyecto nuevo", 53},
     {"probar", "Ejecuta las pruebas del proyecto", 53},
     {"limpiar", "Borra los artefactos de compilación", 53},

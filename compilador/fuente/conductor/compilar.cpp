@@ -81,7 +81,21 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     }
     cargados.push_back(clave);
 
-    const std::filesystem::path ruta = directorio / (clave + ".oki");
+    // Se busca junto al archivo que importa, en su carpeta «biblioteca» y
+    // subiendo por los directorios padre hasta encontrar una.
+    std::filesystem::path ruta = directorio / (clave + ".oki");
+    for (std::filesystem::path actual = directorio; !std::filesystem::exists(ruta);) {
+        const std::filesystem::path candidato = actual / "biblioteca" / (clave + ".oki");
+        if (std::filesystem::exists(candidato)) {
+            ruta = candidato;
+            break;
+        }
+        if (!actual.has_parent_path() || actual.parent_path() == actual) {
+            break;
+        }
+        actual = actual.parent_path();
+    }
+
     std::string contenido = leer_archivo(ruta);
     if (contenido.empty() && !std::filesystem::exists(ruta)) {
         // Los módulos de la biblioteca viajan dentro del compilador.

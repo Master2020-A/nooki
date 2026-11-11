@@ -82,6 +82,28 @@ int comando_compilar(std::span<const std::string_view> argumentos, std::ostream&
     return compilar_archivo(argumentos, salida, error, false);
 }
 
+/// `nooki construir`: compila el proyecto del directorio actual.
+int comando_construir(std::span<const std::string_view> argumentos, std::ostream& salida,
+                      std::ostream& error) {
+    // Entrada: `principal.oki` junto al manifiesto, o dentro de `fuente/`.
+    const std::string fuente =
+        std::filesystem::exists("principal.oki")
+            ? std::string("principal.oki")
+            : std::string("fuente/principal.oki");
+    if (!std::filesystem::exists(fuente)) {
+        error << "error[NOK0001]: no se encontró el punto de entrada del proyecto\n"
+                 "   = ayuda: cree «principal.oki» o «fuente/principal.oki»\n";
+        return USO_INCORRECTO;
+    }
+
+    std::vector<std::string_view> nuevos;
+    nuevos.push_back(fuente);
+    for (const std::string_view argumento : argumentos) {
+        nuevos.push_back(argumento);
+    }
+    return comando_compilar(nuevos, salida, error);
+}
+
 int comando_ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
                      std::ostream& error) {
     return compilar_archivo(argumentos, salida, error, true);

@@ -1,0 +1,8 @@
+// Módulo del proyecto, en su carpeta «biblioteca».
+publico funcion saludar(nombre: texto) -> texto {
+    retornar "Hola, " + nombre
+}
+
+publico funcion doblar(n: entero) -> entero {
+    retornar n * 2
+}

@@ -1062,3 +1062,22 @@ matematicas.cuadrado(6)       // 36
 
 - El módulo `matematicas` está **escrito en Nooki** y viaja con el compilador, igual que `resultado`.
 - `dividir` reparte también el último trozo cuando el separador no aparece al final.
+
+
+### 18.22 Proyectos y búsqueda de módulos
+
+```bash
+$ tree
+principal.oki
+biblioteca/
+    utilidades.oki
+
+$ nooki construir
+```
+
+- `usar modulo` busca, en este orden: junto al archivo que importa, en su carpeta `biblioteca/`, y
+  subiendo por los directorios padre hasta encontrarlo.
+- Los módulos del compilador (`resultado`, `matematicas`) están disponibles sin archivo; un proyecto
+  puede sustituirlos con su propia versión en `biblioteca/`.
+- `nooki construir` compila el proyecto del directorio actual usando `principal.oki` o
+  `fuente/principal.oki` como punto de entrada.
