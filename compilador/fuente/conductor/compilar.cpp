@@ -420,9 +420,13 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     }
 
     const std::filesystem::path salida_binario = ruta_de_salida(opciones);
-    const std::string comando = entrecomillar_si_hace_falta(compilador) + " -O2 -o " +
-                                entrecomillar_si_hace_falta(salida_binario.string()) + " " +
-                                entrecomillar_si_hace_falta(intermedio.string());
+    // La consola del sistema no entiende «/» como separador: se usa el nativo.
+    std::filesystem::path binario_nativo = salida_binario;
+    std::filesystem::path intermedio_nativo = intermedio;
+    const std::string comando =
+        entrecomillar_si_hace_falta(compilador) + " -O2 -o " +
+        entrecomillar_si_hace_falta(binario_nativo.make_preferred().string()) + " " +
+        entrecomillar_si_hace_falta(intermedio_nativo.make_preferred().string());
 
     const int codigo = ejecutar_comando(comando);
     if (codigo != 0) {

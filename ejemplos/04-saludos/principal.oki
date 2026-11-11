@@ -1,0 +1,32 @@
+// Rasgos: el mismo mensaje a tipos que no comparten padre.
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase persona implementa Saluda {
+    publico nombre: texto
+
+    publico funcion saludar() -> texto {
+        retornar "Hola, soy " + este.nombre
+    }
+}
+
+clase robot implementa Saluda {
+    publico modelo: texto
+
+    publico funcion saludar() -> texto {
+        retornar "Bip. Unidad " + este.modelo
+    }
+}
+
+funcion presentar(quien: &Saluda) -> vacio {
+    imprimir(quien.saludar())
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    variable r = nuevo robot { modelo: "R2" }
+    presentar(&p)
+    presentar(&r)
+    retornar 0
+}

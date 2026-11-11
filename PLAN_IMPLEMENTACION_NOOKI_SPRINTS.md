@@ -265,7 +265,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S66** | A-14: mover un campo | ✅ Vaciar un texto pone su longitud a cero, los métodos heredados cuentan como miembros, la variable construida recuerda su tipo y `imprimir` acepta booleanos |
 | **S67** | Cierre de la 1.0 | ✅ Notas de versión, inventario de pendientes con tamaños y versión 1.0.0 en todo el proyecto |
 | **S68** | Preparar la publicación | ✅ Licencias completas (A-06), `CONTRIBUIR.md` al día, `PUBLICAR.md` con los pasos y CI revisada |
-| **S69** | Seguridad y base de datos | SHA-2, AES, CSPRNG; SQLite; 60 tests |
+| **S69** | Ejemplos y resaltado | ✅ Cuatro ejemplos ejecutables, extensión de VS Code (TextMate), sintaxis de Vim e instrucciones para otros editores; corregida la ejecución con rutas `/` en Windows |
 | **S70** | **Cierre v0.8: pruebas integradas** | Atributo `@prueba`, mocks y benchmarks en el propio lenguaje; 100 % de la std con tests |
 
 ---

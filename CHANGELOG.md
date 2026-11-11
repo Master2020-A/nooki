@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 69 — Ejemplos y resaltado de sintaxis (2026-11-11)
+
+- **`ejemplos/`**: cuatro programas ejecutables (hola, notas con módulo y errores, inventario con
+  herencia, saludos con rasgos), cada uno con su salida real en `ejemplos/LEEME.md`.
+- **Resaltado de sintaxis**: extensión de **VS Code** (gramática TextMate + configuración de
+  lenguaje), sintaxis de **Vim/Neovim**, e instrucciones para Sublime Text, Zed, TextMate y
+  Notepad++. Todo en `editores/`.
+- **Fallo corregido**: `nooki ejecutar` con rutas que usan `/` fallaba en Windows, porque el comando se
+  entregaba a la consola tal cual y esta no entiende `/` como separador. Ahora las rutas se normalizan
+  al separador nativo antes de invocar al sistema.
+
 ### Sprint 68 — Preparar la publicación (2026-11-11)
 
 - **Licencias completas**: `LICENCIA-MIT.txt` y `LICENCIA-APACHE.txt` con los textos íntegros, y

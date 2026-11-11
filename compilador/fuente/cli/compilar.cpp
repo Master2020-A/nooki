@@ -72,7 +72,10 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
         return resultado.codigo;
     }
 
-    return nooki::ejecutar_comando(nooki::entrecomillar_si_hace_falta(resultado.binario.string()));
+    // `make_preferred` convierte «/» en «\» en Windows: la consola no entiende «/».
+    std::filesystem::path binario = resultado.binario;
+    return nooki::ejecutar_comando(
+        nooki::entrecomillar_si_hace_falta(binario.make_preferred().string()));
 }
 
 }  // namespace

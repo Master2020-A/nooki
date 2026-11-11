@@ -1,0 +1,5 @@
+// El programa más pequeño posible.
+funcion principal() -> entero {
+    imprimir("¡Hola, Nooki!")
+    retornar 0
+}

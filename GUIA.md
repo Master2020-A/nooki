@@ -11,7 +11,9 @@ Nooki es un lenguaje compilado, con sintaxis en español, tipado comprobado ante
 memoria determinista: no hay recolector de basura y no hay excepciones.
 
 Necesitas el compilador `nooki` en el `PATH` y un compilador de C (`cc`, `gcc`, `clang` o MSVC), que
-Nooki usa como backend. Para compilar Nooki desde el código fuente, mira [LEEME](LEEME.md).
+Nooki usa como backend. Para compilar Nooki desde el código fuente, mira [LEEME](LEEME.md). Si quieres ejecutar los ejemplos
+sin escribir nada, están en [`ejemplos/`](ejemplos/); y para colorear `.oki` en tu editor, en
+[`editores/`](editores/).
 
 Todo programa Nooki vive en un archivo `.oki` y necesita una función `principal`.
 

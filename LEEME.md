@@ -38,6 +38,23 @@ $ nooki ejecutar hola.oki
 **Versión actual: 1.0.0.** Biblioteca: `resultado`, `matematicas`, `textos`, `listas` y `fechas`, escritos en Nooki. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
+## Probar sin instalar nada
+
+El repositorio trae cuatro programas listos en [`ejemplos/`](ejemplos/):
+
+```bash
+$ export PATH="$PWD/build/linux/compilador:$PATH"   # Windows: ver ejemplos/LEEME.md
+$ nooki ejecutar ejemplos/01-hola/principal.oki
+¡Hola, Nooki!
+
+$ nooki ejecutar ejemplos/04-saludos/principal.oki
+Hola, soy Ana
+Bip. Unidad R2
+```
+
+Cada uno con su explicación en [`ejemplos/LEEME.md`](ejemplos/LEEME.md): módulos, clases con
+herencia, rasgos y lectura de la entrada estándar.
+
 ## Empezar en tres comandos
 
 ```bash
@@ -88,6 +105,17 @@ compilador/            código del compilador (C++20)
 pruebas/conformidad/   programas que se compilan y ejecutan en cada `ctest`
 spec/                  especificación del lenguaje
 docs/adr/              decisiones de arquitectura
+```
+
+## Resaltado de sintaxis
+
+Los archivos `.oki` se colorean en **VS Code**, **Vim/Neovim**, **Sublime Text**, **Zed** y cualquier
+editor que lea gramáticas TextMate. Las definiciones están en [`editores/`](editores/), con
+instrucciones en [`editores/LEEME.md`](editores/LEEME.md).
+
+```powershell
+# VS Code, Windows
+Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.0.0"
 ```
 
 ## Documentación

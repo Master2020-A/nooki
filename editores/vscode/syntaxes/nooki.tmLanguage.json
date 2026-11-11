@@ -1,0 +1,174 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Nooki",
+  "scopeName": "source.nooki",
+  "fileTypes": ["oki"],
+  "patterns": [
+    { "include": "#comentarios" },
+    { "include": "#textos" },
+    { "include": "#caracteres" },
+    { "include": "#numeros" },
+    { "include": "#declaraciones" },
+    { "include": "#control" },
+    { "include": "#tipos" },
+    { "include": "#literales" },
+    { "include": "#modulos" },
+    { "include": "#objeto" },
+    { "include": "#llamadas" },
+    { "include": "#operadores" }
+  ],
+  "repository": {
+    "comentarios": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.nooki",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "textos": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.nooki",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.nooki",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "caracteres": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.nooki",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.nooki",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numeros": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.nooki",
+          "match": "\\b[0-9][0-9_]*\\.[0-9][0-9_]*\\b"
+        },
+        {
+          "name": "constant.numeric.integer.nooki",
+          "match": "\\b[0-9][0-9_]*\\b"
+        }
+      ]
+    },
+    "declaraciones": {
+      "patterns": [
+        {
+          "match": "\\b(funcion)\\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
+          "captures": {
+            "1": { "name": "storage.type.function.nooki" },
+            "2": { "name": "entity.name.function.nooki" }
+          }
+        },
+        {
+          "match": "\\b(clase|estructura|rasgo|interfaz|enumeracion|union|tipo)\\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
+          "captures": {
+            "1": { "name": "storage.type.class.nooki" },
+            "2": { "name": "entity.name.type.nooki" }
+          }
+        },
+        {
+          "match": "\\b(variable|constante)\\b",
+          "name": "storage.type.variable.nooki"
+        },
+        {
+          "match": "\\b(publico|privado|protegido|interna|estatico|abstracta|mutable)\\b",
+          "name": "storage.modifier.nooki"
+        },
+        {
+          "match": "\\b(hereda|implementa|implementar|como|donde)\\b",
+          "name": "keyword.other.herencia.nooki"
+        }
+      ]
+    },
+    "control": {
+      "patterns": [
+        {
+          "match": "\\b(si|sino|sinosi|mientras|para|en|hacer|bucle|romper|continuar|retornar|coincide|caso|defecto|intentar|atrapar|finalmente|lanzar|asincrono|esperar)\\b",
+          "name": "keyword.control.nooki"
+        }
+      ]
+    },
+    "tipos": {
+      "patterns": [
+        {
+          "match": "\\b(entero|entero8|entero16|entero32|entero64|entero128|natural|natural8|natural16|natural32|natural64|natural128|flotante|flotante32|flotante64|booleano|caracter|texto|vacio|byte|tamano|tamano_signado|nulo)\\b",
+          "name": "storage.type.primitivo.nooki"
+        },
+        {
+          "match": "\\b(Caja|Vector|Mapa|resultado)\\b",
+          "name": "support.type.nooki"
+        }
+      ]
+    },
+    "literales": {
+      "patterns": [
+        {
+          "match": "\\b(verdadero|falso)\\b",
+          "name": "constant.language.boolean.nooki"
+        }
+      ]
+    },
+    "modulos": {
+      "patterns": [
+        {
+          "match": "\\b(usar|importar|exportar|externo|modulo)\\b",
+          "name": "keyword.control.importar.nooki"
+        },
+        {
+          "match": "\\b([a-záéíóúüñ_][a-záéíóúüñ0-9_]*)(\\.)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
+          "captures": {
+            "1": { "name": "entity.name.namespace.nooki" },
+            "2": { "name": "punctuation.accessor.nooki" },
+            "3": { "name": "entity.name.function.nooki" }
+          }
+        }
+      ]
+    },
+    "objeto": {
+      "patterns": [
+        {
+          "match": "\\b(nuevo|este|Este|super)\\b",
+          "name": "variable.language.nooki"
+        }
+      ]
+    },
+    "llamadas": {
+      "patterns": [
+        {
+          "match": "\\b([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)\\s*(?=\\()",
+          "name": "entity.name.function.llamada.nooki"
+        }
+      ]
+    },
+    "operadores": {
+      "patterns": [
+        {
+          "match": "\\+\\+|--|==|!=|<=|>=|&&|\\|\\||\\.\\.=|->|\\?|!|\\+|-|\\*|/|%|=|<|>|&",
+          "name": "keyword.operator.nooki"
+        },
+        {
+          "match": "[{}()\\[\\],;:]",
+          "name": "punctuation.nooki"
+        }
+      ]
+    }
+  }
+}

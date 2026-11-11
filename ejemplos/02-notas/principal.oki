@@ -1,0 +1,33 @@
+// Lee «nombre:nota» por la entrada estándar y resume.
+//   $ echo "Ana:30" | principal
+usar notas
+usar listas
+
+funcion principal() -> entero {
+    variable libro = Mapa<texto, entero>.nuevo()
+    variable rechazadas = 0
+
+    variable linea = leer_linea()
+    mientras (linea.largo() > 0) {
+        variable corte = linea.buscar(":")
+        variable resultado = notas.nota_de(&linea)
+        coincide (resultado) {
+            caso Vale(v) => libro.insertar(linea.subtexto(0, corte), v)
+            caso Falla(m) => rechazadas = rechazadas + 1
+        }
+        linea = leer_linea()
+    }
+
+    variable nombres = libro.claves()
+    variable total = 0
+    variable i = 0
+    mientras (i < nombres.largo()) {
+        total = total + libro.obtener(nombres.obtener(i))
+        i = i + 1
+    }
+
+    imprimir(libro.largo())
+    imprimir(rechazadas)
+    imprimir(total)
+    retornar 0
+}

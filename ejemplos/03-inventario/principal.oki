@@ -1,0 +1,47 @@
+// Clases, herencia y polimorfismo.
+clase producto {
+    publico nombre: texto
+    publico precio: entero
+
+    publico funcion describir() -> texto {
+        retornar "producto"
+    }
+
+    publico funcion costo() -> entero {
+        retornar este.precio
+    }
+}
+
+clase perecedero hereda producto {
+    publico dias: entero
+
+    publico funcion describir() -> texto {
+        retornar "perecedero"
+    }
+
+    publico funcion costo() -> entero {
+        si (este.dias < 3) {
+            retornar este.precio / 2
+        }
+        retornar este.precio
+    }
+}
+
+funcion principal() -> entero {
+    variable pan = nuevo producto { nombre: "pan", precio: 10 }
+    variable leche = nuevo perecedero { nombre: "leche", precio: 20, dias: 2 }
+
+    variable catalogo = Vector<texto>.nuevo()
+    catalogo.agregar(pan.describir())
+    catalogo.agregar(leche.describir())
+
+    variable i = 0
+    mientras (i < catalogo.largo()) {
+        imprimir(catalogo.obtener(i))
+        i = i + 1
+    }
+
+    imprimir(pan.costo())
+    imprimir(leche.costo())
+    retornar 0
+}

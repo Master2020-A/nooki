@@ -1,0 +1,41 @@
+{
+  "name": "nooki",
+  "displayName": "Nooki",
+  "description": "Resaltado de sintaxis para Nooki (.oki): el lenguaje compilado con sintaxis en español.",
+  "version": "1.0.0",
+  "publisher": "nooki",
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "nooki",
+    "español",
+    "spanish"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "nooki",
+        "aliases": [
+          "Nooki",
+          "nooki"
+        ],
+        "extensions": [
+          ".oki"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "nooki",
+        "scopeName": "source.nooki",
+        "path": "./syntaxes/nooki.tmLanguage.json"
+      }
+    ]
+  }
+}

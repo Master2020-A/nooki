@@ -1,0 +1,20 @@
+// Módulo del ejemplo: analizar líneas «nombre:nota».
+publico enumeracion fallo {
+    Vale(valor: entero)
+    Falla(motivo: texto)
+}
+
+publico funcion nota_de(linea: &texto) -> fallo {
+    variable corte = linea.buscar(":")
+    si (corte <= 0) {
+        retornar Falla("falta el separador")
+    }
+    variable nota = linea.subtexto(corte + 1, 100).a_entero()
+    si (nota < 0) {
+        retornar Falla("nota negativa")
+    }
+    si (nota > 100) {
+        retornar Falla("nota fuera de rango")
+    }
+    retornar Vale(nota)
+}
