@@ -96,8 +96,9 @@ Sprint 57 ✅  Tiempos de vida: el préstamo que escapa
 Sprint 58 ✅  Los casos inválidos pasan por todas las fases
 Sprint 59 ✅  La duración del préstamo
 Sprint 60 ✅  Cierre de la v0.8 · auditoría de diagnóstico
-Sprint 61 ✅  Biblioteca 	extos y tipos de colección
-Sprint 62 ✅  Biblioteca embebida: 	extos viaja en el compilador
+Sprint 61 ✅  Biblioteca `textos` en Nooki
+Sprint 62 ✅  Biblioteca embebida: `textos` viaja en el compilador
+Sprint 63 ✅  Biblioteca: `listas` y `fechas`
 ```
 
 **Ya compila y ejecuta:**

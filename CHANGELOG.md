@@ -3,6 +3,87 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 63 — La biblioteca crece (2026-11-11)
+
+- **`listas`**: `suma`, `mayor`, `menor`, `promedio` y `contiene` sobre `&Vector<entero>`, escritos en
+  Nooki.
+- **`fechas`**: `bisiesto` (con la regla de los siglos: 2100 no, 2024 sí), `dias_del_mes` y
+  `dias_del_anio`.
+- Ambos viajan **dentro del compilador**: se usan con `usar` sin copiar archivos.
+- Caso de conformidad `0045-biblioteca-listas`.
+
+### Sprint 62 — A-13 no era un fallo (2026-11-11)
+
+- **La biblioteca embebida funciona**: `usar textos` sin archivo resuelve el módulo que viaja dentro
+  del compilador.
+- **A-13 era un archivo viejo**: `build\textos.oki`, un programa de pruebas olvidado, tapaba al módulo
+  embebido. *Diagnóstico anterior equivocado, corregido aquí.*
+- **Un módulo no puede definir `principal`**: antes un módulo con punto de entrada producía dos `main`.
+
+### Sprint 61 — Biblioteca en Nooki y tipos de colección (2026-11-10)
+
+- **Módulo `textos`** escrito en Nooki: `unir`, `repetir` y `contar`.
+- **El elemento de un `Vector<texto>` es un texto**: se tipaba como entero y la concatenación no
+  compilaba.
+- **`*prestamo` de texto**: desreferenciar un `&texto` devuelve un texto.
+- **Un archivo ya no puede importarse a sí mismo**: `usar principal` dentro de `principal.oki` cargaba
+  el propio archivo como módulo y generaba dos `main`.
+
+## [0.8.0] — 2026-11-10
+
+La propiedad queda cerrada por los dos extremos: el valor no se puede mover mientras alguien lo presta
+(`NOK5007`), y no se puede devolver un préstamo a algo que muere (`NOK5006`).
+
+### Sprint 60 — Cierre de la v0.8 (2026-11-10)
+
+- **Auditoría de diagnóstico**: los **46 códigos** están definidos, todos se emiten y todos tienen
+  mensaje en español e inglés. **36 tienen un caso que los provoca**.
+- **Tres códigos ganaron caso**: `NOK4011`, `NOK4012` y `NOK4010`.
+- **Los 10 restantes, identificados** como deuda de pruebas (A-12): rutas de integración (CLI, carga de
+  módulos, símbolo privado, backend y avisos).
+
+### Sprint 59 — La duración del préstamo (2026-11-10)
+
+- **Reasignar o mover el dueño mientras otro lo presta es error** (`NOK5007`).
+- **Prestar una clase presta el objeto**: `&persona` ya no genera un puntero doble, y pasar `&p` a un
+  parámetro `&Clase` compila.
+
+### Sprint 58 — Que las pruebas prueben lo que dicen (2026-11-10)
+
+- **Los casos `invalido/` pasan por todas las fases**: léxico, parser y verificación.
+- **Cuatro casos inválidos semánticos nuevos**: `NOK5006`, `NOK5001`, `NOK5004` y `NOK3011`.
+
+### Sprint 57 — El préstamo que escapa (2026-11-10)
+
+- **Devolver un préstamo a una variable local es error** (`NOK5006`).
+- **Prestar un parámetro sí se puede devolver**; los argumentos de una llamada no escapan.
+
+## [0.7.0] — 2026-11-10
+
+**El sistema de tipos está completo.** Con rasgos y `&Rasgo`, el lenguaje tiene las dos formas de
+polimorfismo: por jerarquía y por contrato.
+
+### Sprint 56 — Cierre de la v0.7 (2026-11-10)
+
+- **ADR-026** documenta los rasgos: contrato verificado, tabla por (tipo, rasgo), adaptadores y el
+  coste de `&Rasgo`.
+- **La guía gana un paso 11** sobre rasgos, con su salida verificada.
+
+### Sprint 55 — `&Rasgo`: despacho por rasgo (2026-11-10)
+
+- **`&Rasgo` como tipo**: una referencia que lleva el objeto y su tabla de métodos.
+- **Tabla por (tipo, rasgo)** con un adaptador por método y despacho dinámico entre tipos **no
+  emparentados**.
+
+### Sprint 54 — Rasgos (2026-11-10)
+
+- **`rasgo Nombre { funcion f(...) -> tipo }`** declara un contrato; `clase X implementa A, B` se
+  compromete a cumplirlo.
+- El compilador exige que **estén todos los métodos** (`NOK3011`) y que la **firma coincida**
+  (`NOK4012`).
+
 ## [0.6.0] — 2026-11-10
 
 **Sin defectos conocidos.** Por primera vez la lista de «cosas que están mal y se saben» está vacía:

@@ -32,10 +32,10 @@ $ nooki ejecutar hola.oki
 | Errores como valores (`resultado` y `?`), sin excepciones | sí |
 | Colecciones: `Vector<entero>`, `Vector<texto>`, `Mapa<texto, entero>` | sí |
 | Módulos con visibilidad y proyectos con `biblioteca/` | sí |
-| Biblioteca estándar escrita en Nooki | `resultado`, `matematicas` |
+| Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
-**Versión actual: 0.8.0.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o
+**Versión actual: 0.8.0.** Biblioteca: `resultado`, `matematicas`, `textos`, `listas` y `fechas`, escritos en Nooki. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Empezar en tres comandos
