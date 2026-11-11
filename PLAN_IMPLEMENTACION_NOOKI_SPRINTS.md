@@ -213,7 +213,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S41** | Operaciones de texto | ✅ `buscar`, `subtexto`, `contiene`, `empieza_con`, `caracter` y `a_entero`, con copia propia en `subtexto` y comprobación de índices. *Las variantes con datos quedan para el sprint siguiente* |
 | **S42** | Variantes con datos | ✅ Variantes con campos, unión etiquetada, construcción por nombre, patrones que ligan (`caso Bien(v)`), cobertura sin comodín y liberación de campos de texto (ADR-024) |
 | **S43** | Biblioteca en Nooki | ✅ Módulo `resultado` escrito en Nooki e integrado en el compilador, `?` estructural sobre cualquier enumeración con forma de resultado, y retirada del tipo especial (ADR-025) |
-| **S44** | **Cierre v0.5: memoria transitoria** | RC/GC temporal (ADR-07) integrado y documentado; ejemplos con heap funcionando; deuda registrada con fecha de pago (S52) |
+| **S44** | La biblioteca crece | ✅ `texto.dividir` que devuelve un vector, `mayusculas`, `minusculas`, `recortar` y el módulo `matematicas` escrito en Nooki |
 
 ---
 

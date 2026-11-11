@@ -550,7 +550,66 @@ const char* PRELUDIO =
     "    m->capacidad = 0;\n"
     "}\n"
     "\n"
-    "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
+    "/* Operaciones que reservan: partir, cambiar de caja y recortar. */\n"
+    "static nooki_vector_texto nooki_texto_dividir(nooki_texto t, nooki_texto separador) {\n"
+    "    nooki_vector_texto partes = nooki_vector_texto_nuevo();\n"
+    "    if (separador.largo == 0) {\n"
+    "        nooki_vector_texto_agregar(&partes, nooki_texto_subtexto(t, 0, t.largo));\n"
+    "        return partes;\n"
+    "    }\n"
+    "    long long inicio = 0;\n"
+    "    for (;;) {\n"
+    "        long long pos = -1;\n"
+    "        for (long long i = inicio; i + separador.largo <= t.largo; ++i) {\n"
+    "            if (memcmp(t.datos + i, separador.datos, (size_t)separador.largo) == 0) {\n"
+    "                pos = i;\n"
+    "                break;\n"
+    "            }\n"
+    "        }\n"
+    "        const long long fin = pos < 0 ? t.largo : pos;\n"
+    "        nooki_vector_texto_agregar(&partes, nooki_texto_subtexto(t, inicio, fin - inicio));\n"
+    "        if (pos < 0) {\n"
+    "            break;\n"
+    "        }\n"
+    "        inicio = pos + separador.largo;\n"
+    "    }\n"
+    "    return partes;\n"
+    "}\n"
+    "\n"
+    "static nooki_texto nooki_texto_mayusculas(nooki_texto t) {\n"
+    "    nooki_texto r = nooki_texto_subtexto(t, 0, t.largo);\n"
+    "    for (long long i = 0; i < r.largo; ++i) {\n"
+    "        if (r.datos[i] >= 'a' && r.datos[i] <= 'z') {\n"
+    "            r.datos[i] = (char)(r.datos[i] - 'a' + 'A');\n"
+    "        }\n"
+    "    }\n"
+    "    return r;\n"
+    "}\n"
+    "\n"
+    "static nooki_texto nooki_texto_minusculas(nooki_texto t) {\n"
+    "    nooki_texto r = nooki_texto_subtexto(t, 0, t.largo);\n"
+    "    for (long long i = 0; i < r.largo; ++i) {\n"
+    "        if (r.datos[i] >= 'A' && r.datos[i] <= 'Z') {\n"
+    "            r.datos[i] = (char)(r.datos[i] - 'A' + 'a');\n"
+    "        }\n"
+    "    }\n"
+    "    return r;\n"
+    "}\n"
+    "\n"
+    "static nooki_texto nooki_texto_recortar(nooki_texto t) {\n"
+    "    long long desde = 0;\n"
+    "    long long hasta = t.largo;\n"
+    "    while (desde < hasta && (t.datos[desde] == ' ' || t.datos[desde] == 9 ||\n"
+    "                             t.datos[desde] == 10 || t.datos[desde] == 13)) {\n"
+    "        desde += 1;\n"
+    "    }\n"
+    "    while (hasta > desde && (t.datos[hasta - 1] == ' ' || t.datos[hasta - 1] == 9 ||\n"
+    "                             t.datos[hasta - 1] == 10 || t.datos[hasta - 1] == 13)) {\n"
+    "        hasta -= 1;\n"
+    "    }\n"
+    "    return nooki_texto_subtexto(t, desde, hasta - desde);\n"
+    "}\n"
+    "\n"    "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
     "typedef struct {\n"
     "    long long* datos;\n"
     "} nooki_caja;\n"
@@ -1830,7 +1889,11 @@ private:
                         (tipo_de(*acceso.izquierda) == "nooki_texto" ||
                          tipo_de(*acceso.izquierda) == "nooki_texto*")) {
                         const std::string& metodo = acceso.anotacion;
-                        if (metodo == "subtexto") {
+                        if (metodo == "dividir") {
+                            return "nooki_vector_texto";
+                        }
+                        if (metodo == "subtexto" || metodo == "mayusculas" ||
+                            metodo == "minusculas" || metodo == "recortar") {
                             return "nooki_texto";
                         }
                         if (metodo == "contiene" || metodo == "empieza_con") {
@@ -2352,8 +2415,9 @@ private:
                         prestado ? "(*" + expresion(*acceso.izquierda) + ")"
                                  : expresion(*acceso.izquierda);
                     static const std::set<std::string> METODOS_TEXTO = {
-                        "largo", "subtexto", "caracter", "buscar",
-                        "contiene", "empieza_con", "a_entero"};
+                        "largo", "subtexto", "caracter", "buscar", "contiene",
+                        "empieza_con", "a_entero", "dividir", "mayusculas",
+                        "minusculas", "recortar"};
                     if (METODOS_TEXTO.count(std::string(acceso.anotacion)) != 0) {
                         std::string llamada =
                             "nooki_texto_" + std::string(acceso.anotacion) + "(" + objeto;

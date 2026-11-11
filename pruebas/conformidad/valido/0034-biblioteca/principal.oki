@@ -1,0 +1,24 @@
+// La biblioteca crece: matemáticas en Nooki y texto que parte cadenas.
+usar matematicas
+
+funcion principal() -> entero {
+    variable csv = "Ana:30;Luis:25"
+    variable pares = csv.dividir(";")
+
+    para (par en pares) {
+        variable corte = par.buscar(":")
+        variable nombre = par.subtexto(0, corte)
+        variable edad = par.subtexto(corte + 1, 100).a_entero()
+        imprimir(nombre.mayusculas())
+        imprimir(edad)
+    }
+
+    imprimir(matematicas.maximo(3, 9))
+    imprimir(matematicas.minimo(3, 9))
+    imprimir(matematicas.absoluto(0 - 7))
+    imprimir(matematicas.cuadrado(6))
+
+    imprimir("  hola  ".recortar())
+    imprimir("Hola".minusculas())
+    retornar 0
+}

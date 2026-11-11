@@ -40,6 +40,34 @@ publico enumeracion resultado {
 }
 )";
     }
+    if (modulo == "matematicas") {
+        return R"(// Biblioteca estándar: operaciones matemáticas básicas.
+publico funcion maximo(a: entero, b: entero) -> entero {
+    si (a > b) {
+        retornar a
+    }
+    retornar b
+}
+
+publico funcion minimo(a: entero, b: entero) -> entero {
+    si (a < b) {
+        retornar a
+    }
+    retornar b
+}
+
+publico funcion absoluto(n: entero) -> entero {
+    si (n < 0) {
+        retornar 0 - n
+    }
+    retornar n
+}
+
+publico funcion cuadrado(n: entero) -> entero {
+    retornar n * n
+}
+)";
+    }
     return {};
 }
 

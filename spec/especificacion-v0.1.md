@@ -1040,3 +1040,25 @@ coincide (comprobar(5)) {
 - Si están todas las variantes, el `coincide` es exhaustivo sin `caso _`.
 - Las enumeraciones **sin datos** siguen siendo enteros con constantes: nada anterior cambia.
 - Los campos de texto de una variante se liberan al salir del ámbito.
+
+
+### 18.21 Más biblioteca
+
+| Llamada | Devuelve |
+|---|---|
+| `t.dividir(separador)` | `Vector<texto>` con copias de los trozos |
+| `t.mayusculas()` | copia en mayúsculas (ASCII) |
+| `t.minusculas()` | copia en minúsculas (ASCII) |
+| `t.recortar()` | copia sin espacios ni saltos en los extremos |
+
+```aura
+usar matematicas
+
+matematicas.maximo(3, 9)      // 9
+matematicas.minimo(3, 9)      // 3
+matematicas.absoluto(0 - 7)   // 7
+matematicas.cuadrado(6)       // 36
+```
+
+- El módulo `matematicas` está **escrito en Nooki** y viaja con el compilador, igual que `resultado`.
+- `dividir` reparte también el último trozo cuando el separador no aparece al final.

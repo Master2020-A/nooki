@@ -5,6 +5,15 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 44 — La biblioteca crece (2026-11-10)
+
+- **`texto.dividir(separador)`**: parte un texto y devuelve un `Vector<texto>` cuyos elementos son
+  copias con dueño. Con esto un programa analiza una línea con varios campos.
+- **`texto.mayusculas()`, `minusculas()` y `recortar()`**: copias transformadas; `recortar` quita
+  espacios y saltos de los extremos.
+- **Módulo `matematicas` escrito en Nooki**: `maximo`, `minimo`, `absoluto` y `cuadrado`.
+- Programa de conformidad `0034-biblioteca`, que analiza un CSV y usa la biblioteca matemática.
+
 ### Sprint 43 — La biblioteca estándar se escribe en Nooki (2026-11-10)
 
 - **Módulo `resultado` escrito en Nooki**: `usar resultado` trae la enumeración con `Ok(valor)` y

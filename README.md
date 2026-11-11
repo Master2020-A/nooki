@@ -79,7 +79,8 @@ Sprint 40 ✅  Errores como valores · `Resultado` y `?`
 Sprint 41 ✅  Operaciones de texto · cortar, buscar y convertir
 Sprint 42 ✅  Variantes con datos · `caso Bien(v)`
 Sprint 43 ✅  `resultado` escrito en Nooki · la biblioteca crece
-Sprint 44 ⬜  Más biblioteca y paquetes
+Sprint 44 ✅  `texto.dividir`, `matematicas` y más biblioteca
+Sprint 45 ⬜  Sistema de paquetes
 ```
 
 **Ya compila y ejecuta:**
