@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(Nooki
-    VERSION 0.4.0
+    VERSION 0.5.0
     DESCRIPTION "Compilador del lenguaje Nooki"
     HOMEPAGE_URL "https://nooki.dev"
     LANGUAGES CXX)

@@ -1,0 +1,29 @@
+// Programa de cierre: módulos, genéricos, errores, colecciones y entrada.
+usar notas
+usar matematicas
+
+funcion principal() -> entero {
+    variable libro = Mapa<texto, entero>.nuevo()
+    variable rechazadas = 0
+
+    variable linea = leer_linea()
+    mientras (linea.largo() > 0) {
+        variable partes = notas.partir(&linea)
+        variable resultado = notas.nota_de(&linea)
+        coincide (resultado) {
+            caso Vale(v) => libro.insertar(partes.primero, v)
+            caso Falla(m) => rechazadas = rechazadas + 1
+        }
+        linea = leer_linea()
+    }
+
+    variable total = 0
+    variable nombres = libro.claves()
+    para (nombre en nombres) {
+        total = total + libro.obtener(nombre)
+    }
+    imprimir(libro.largo())
+    imprimir(rechazadas)
+    imprimir(total)
+    retornar 0
+}

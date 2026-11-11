@@ -1,0 +1,39 @@
+// Módulo de notas: genéricos, errores con variantes y texto.
+publico enumeracion fallo {
+    Vale(valor: entero)
+    Falla(motivo: texto)
+}
+
+publico estructura par<T> {
+    publico primero: T
+    publico segundo: T
+}
+
+// Parte "nombre:nota" en un par. Se construye directamente en el `retornar`
+// porque devolver una construcción con variables locales con dueño las libera.
+publico funcion partir(linea: &texto) -> par<texto> {
+    variable corte = linea.buscar(":")
+    si (corte > 0) {
+        retornar par<texto> {
+            primero: linea.subtexto(0, corte),
+            segundo: linea.subtexto(corte + 1, 100)
+        }
+    }
+    retornar par<texto> { primero: linea.subtexto(0, linea.largo()), segundo: "0" }
+}
+
+// Devuelve la nota o el motivo por el que no vale.
+publico funcion nota_de(linea: &texto) -> fallo {
+    variable corte = linea.buscar(":")
+    si (corte <= 0) {
+        retornar Falla("falta el separador")
+    }
+    variable nota = linea.subtexto(corte + 1, 100).a_entero()
+    si (nota < 0) {
+        retornar Falla("nota negativa")
+    }
+    si (nota > 100) {
+        retornar Falla("nota fuera de rango")
+    }
+    retornar Vale(nota)
+}

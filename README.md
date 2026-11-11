@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.4.0 |
+| **Versión** | 0.5.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -82,7 +82,7 @@ Sprint 43 ✅  `resultado` escrito en Nooki · la biblioteca crece
 Sprint 44 ✅  `texto.dividir`, `matematicas` y más biblioteca
 Sprint 45 ✅  Proyectos · `nooki construir` y búsqueda en `biblioteca/`
 Sprint 46 ✅  Genéricos de tipos · `estructura par<T>`
-Sprint 47 ⬜  Cierres y documentación
+Sprint 47 ✅  Cierre de la v0.5 · auditoría y programa de cierre
 ```
 
 **Ya compila y ejecuta:**

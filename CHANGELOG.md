@@ -3,7 +3,22 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.5.0] — 2026-11-10
+
+**El lenguaje del plan está implementado.** Con genéricos de tipos, proyectos y biblioteca escrita en
+Nooki, todo lo que la especificación describe —salvo tiempos de vida y rasgos— funciona y está
+probado: 59 programas que se compilan y ejecutan en cada `ctest`, en GCC y MSVC.
+
+### Sprint 47 — Cierre de la v0.5 (2026-11-10)
+
+- **Auditoría de diagnóstico**: los 41 códigos `NOK` están definidos y todos se emiten en algún
+  camino del compilador; ninguno quedó huérfano.
+- **Programa de cierre `0037-notas`**: módulos, genéricos (`par<texto>`), errores con variantes,
+  `coincide` con ligaduras, mapa, préstamos y entrada estándar, en un solo programa de dos archivos.
+- **Hallazgo documentado**: devolver una construcción que embebe variables locales con dueño las
+  libera al retornar y deja punteros colgando. Se documenta como limitación conocida y se marca como
+  el próximo trabajo de corrección; el ejemplo lo evita construyendo directamente en el `retornar`.
+- **v0.5.0**.
 
 ### Sprint 46 — Genéricos de tipos (2026-11-10)
 

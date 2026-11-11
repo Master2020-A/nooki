@@ -225,7 +225,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 |---|---|---|
 | **S45** | Paquetes: proyectos | ✅ `usar` busca junto al importador y en `biblioteca/` subiendo por los padres, y `nooki construir` compila el proyecto tomando su punto de entrada |
 | **S46** | Genéricos de tipos | ✅ `estructura par<T>` con instanciación explícita (`par<entero>`), monomorficación por combinación y registro previo de campos para resolver accesos |
-| **S47** | Préstamos: análisis de regiones (NLL simplificado) | Basado en *liveness*; conflictos mutable/inmutable; 100 tests |
+| **S47** | Cierre de la v0.5 | ✅ Auditoría de los 41 códigos de diagnóstico (todos se emiten), programa de cierre con todo el lenguaje, limitación de devolución de compuestos documentada y versión 0.5.0 |
 | **S48** | Préstamos en llamadas y retornos | Reglas de elisión de *lifetimes*; 80 tests |
 | **S49** | *Lifetimes* explícitos | Sintaxis `'v`; verificación en funciones y estructuras; 60 tests |
 | **S50** | Propiedad + OOP + closures | Préstamo de campos, `este`, captura en closures; 60 tests |
