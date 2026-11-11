@@ -83,6 +83,101 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "listas") {
+        return R"(// Biblioteca estándar: operaciones sobre listas de enteros.
+publico funcion suma(numeros: &Vector<entero>) -> entero {
+    variable total = 0
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        total = total + numeros.obtener(i)
+        i = i + 1
+    }
+    retornar total
+}
+
+publico funcion mayor(numeros: &Vector<entero>) -> entero {
+    variable mejor = numeros.obtener(0)
+    variable i = 1
+    mientras (i < numeros.largo()) {
+        si (numeros.obtener(i) > mejor) {
+            mejor = numeros.obtener(i)
+        }
+        i = i + 1
+    }
+    retornar mejor
+}
+
+publico funcion menor(numeros: &Vector<entero>) -> entero {
+    variable peor = numeros.obtener(0)
+    variable i = 1
+    mientras (i < numeros.largo()) {
+        si (numeros.obtener(i) < peor) {
+            peor = numeros.obtener(i)
+        }
+        i = i + 1
+    }
+    retornar peor
+}
+
+publico funcion contiene(numeros: &Vector<entero>, buscado: entero) -> booleano {
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        si (numeros.obtener(i) == buscado) {
+            retornar verdadero
+        }
+        i = i + 1
+    }
+    retornar falso
+}
+
+publico funcion promedio(numeros: &Vector<entero>) -> entero {
+    si (numeros.largo() == 0) {
+        retornar 0
+    }
+    variable total = 0
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        total = total + numeros.obtener(i)
+        i = i + 1
+    }
+    retornar total / numeros.largo()
+}
+
+)";
+    }
+    if (modulo == "fechas") {
+        return R"(// Biblioteca estándar: aritmética de calendario.
+publico funcion bisiesto(anio: entero) -> booleano {
+    si (anio % 400 == 0) {
+        retornar verdadero
+    }
+    si (anio % 100 == 0) {
+        retornar falso
+    }
+    retornar anio % 4 == 0
+}
+
+publico funcion dias_del_mes(mes: entero, anio: entero) -> entero {
+    si (mes == 2) {
+        si (bisiesto(anio)) {
+            retornar 29
+        }
+        retornar 28
+    }
+    si (mes == 4 || mes == 6 || mes == 9 || mes == 11) {
+        retornar 30
+    }
+    retornar 31
+}
+
+publico funcion dias_del_anio(anio: entero) -> entero {
+    si (bisiesto(anio)) {
+        retornar 366
+    }
+    retornar 365
+}
+)";
+    }
     if (modulo == "matematicas") {
         return R"(// Biblioteca estándar: operaciones matemáticas básicas.
 publico funcion maximo(a: entero, b: entero) -> entero {

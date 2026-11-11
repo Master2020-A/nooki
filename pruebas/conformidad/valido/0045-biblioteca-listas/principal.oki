@@ -1,0 +1,33 @@
+// Biblioteca embebida: listas y fechas, escritas en Nooki.
+usar listas
+usar fechas
+
+funcion principal() -> entero {
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(3)
+    numeros.agregar(7)
+    numeros.agregar(2)
+
+    imprimir(listas.suma(&numeros))
+    imprimir(listas.mayor(&numeros))
+    imprimir(listas.menor(&numeros))
+    imprimir(listas.promedio(&numeros))
+
+    si (listas.contiene(&numeros, 7)) {
+        imprimir("tiene siete")
+    }
+    si (listas.contiene(&numeros, 5)) {
+        imprimir("tiene cinco")
+    }
+
+    si (fechas.bisiesto(2024)) {
+        imprimir("2024 bisiesto")
+    }
+    si (fechas.bisiesto(2100)) {
+        imprimir("2100 bisiesto")
+    }
+    imprimir(fechas.dias_del_mes(2, 2024))
+    imprimir(fechas.dias_del_mes(4, 2024))
+    imprimir(fechas.dias_del_anio(2023))
+    retornar 0
+}

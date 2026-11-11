@@ -1248,3 +1248,18 @@ imprimir(textos.unir(&partes, ", "))
   reemplace una pieza de la biblioteca, pero conviene saberlo al depurar.
 - **Un módulo no puede definir `principal`**: un módulo es una biblioteca y se informa en el módulo.
 - Un archivo **no puede importarse a sí mismo**.
+
+
+### 18.33 La biblioteca estándar
+
+Los módulos viajan dentro del compilador: se usan con «usar» sin copiar ningún archivo.
+
+| Módulo | Contenido |
+|---|---|
+| `resultado` | `Ok(valor)`, `Error(mensaje)` |
+| `matematicas` | `maximo`, `minimo`, `absoluto`, `cuadrado` |
+| `textos` | `unir(&Vector<texto>, separador)`, `repetir(&texto, veces)`, `contar(&texto, aguja)` |
+| `listas` | `suma`, `mayor`, `menor`, `promedio`, `contiene` sobre `&Vector<entero>` |
+| `fechas` | `bisiesto(anio)`, `dias_del_mes(mes, anio)`, `dias_del_anio(anio)` |
+
+Todos están escritos en Nooki y se compilan con el mismo compilador: no hay runtime en C detrás de ellos.
