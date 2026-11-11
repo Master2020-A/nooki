@@ -1274,3 +1274,11 @@ valor (`f(p)`).
 - **Reasignar no marca el valor como movido**: sustituye el valor, y la variable sigue siendo válida.
 - Prestar un parámetro que es una clase se rechaza: solo se prestan variables locales.
 - Mover un campo a una colección todavía no se reconoce como movimiento (A-14).
+
+
+### 18.35 Mover un campo
+
+- Mover un campo a una colección (`vector.agregar(p.nombre)`) transfiere la cadena y deja el campo
+  **vacío y válido**: longitud cero, sin puntero colgando.
+- Un método heredado cuenta como miembro del tipo, tanto al leer un campo como al llamarlo.
+- `imprimir` acepta enteros, textos y booleanos.

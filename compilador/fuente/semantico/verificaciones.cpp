@@ -695,7 +695,12 @@ private:
                     sentencia.expresion->monticulo) {
                     declarar_referencia(sentencia.nombre);
                     declarar_prestable(sentencia.nombre);
-                    declarar(sentencia.nombre, real);
+                    // Se recuerda el tipo concreto para leer sus campos, salvo que
+                    // se haya declarado un tipo base: ahí manda el declarado.
+                    declarar(sentencia.nombre, real,
+                             sentencia.tipo_declarado.empty()
+                                 ? sentencia.expresion->anotacion
+                                 : sentencia.tipo_declarado);
                     return;
                 }
                 if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
@@ -1255,9 +1260,9 @@ private:
             const Tipo argumento =
                 expresion.lista.front() ? tipo_de(*expresion.lista.front()) : Tipo::Desconocido;
             if (argumento != Tipo::Entero && argumento != Tipo::Texto &&
-                argumento != Tipo::Desconocido) {
+                argumento != Tipo::Booleano && argumento != Tipo::Desconocido) {
                 error(diagnostico::codigos::TIPO_INCOMPATIBLE, expresion.lista.front()->span)
-                    .parametro("esperado", "entero o texto")
+                    .parametro("esperado", "entero, texto o booleano")
                     .parametro("encontrado", nombre(argumento));
             }
             return Tipo::Vacio;
@@ -1314,6 +1319,14 @@ private:
         }
 
         const Funcion* metodo = metodo_de(*definicion, acceso.anotacion);
+        // Un método heredado se busca en la cadena de bases.
+        for (const sintactico::DefinicionTipo* base = definicion; metodo == nullptr;
+             base = base_de(*base)) {
+            if (base == nullptr) {
+                break;
+            }
+            metodo = metodo_de(*base, acceso.anotacion);
+        }
         if (metodo == nullptr) {
             error(diagnostico::codigos::MIEMBRO_DESCONOCIDO, acceso.span)
                 .parametro("tipo", std::string(definicion->nombre))
@@ -1429,11 +1442,34 @@ private:
             metodo != nullptr) {
             return desde_nombre(metodo->tipo_retorno);
         }
+        // Un método heredado también es un miembro del tipo.
+        for (const sintactico::DefinicionTipo* base = base_de(*definicion);
+             base != nullptr; base = base_de(*base)) {
+            if (const Funcion* heredado = metodo_de(*base, expresion.anotacion);
+                heredado != nullptr) {
+                return desde_nombre(heredado->tipo_retorno);
+            }
+            for (const sintactico::Campo& campo : base->campos) {
+                if (campo.nombre == expresion.anotacion) {
+                    return desde_nombre(campo.tipo);
+                }
+            }
+        }
 
         error(diagnostico::codigos::MIEMBRO_DESCONOCIDO, expresion.span)
             .parametro("tipo", std::string(definicion->nombre))
             .parametro("nombre", expresion.anotacion);
         return Tipo::Desconocido;
+    }
+
+    /// Clase base de una definición, si la tiene.
+    const sintactico::DefinicionTipo* base_de(
+        const sintactico::DefinicionTipo& definicion) const {
+        if (definicion.base.empty()) {
+            return nullptr;
+        }
+        const sintactico::DefinicionTipo* base = tipo_por_nombre(definicion.base);
+        return base == &definicion ? nullptr : base;
     }
 
     /// Campos de una clase, incluidos los heredados (base primero).

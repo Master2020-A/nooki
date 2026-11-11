@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 66 — A-14: mover un campo (2026-11-11)
+
+- **Mover un campo a una colección lo deja vacío, no roto**: al vaciar un `texto` no se ponía su
+  longitud a cero, así que quedaba un texto con puntero nulo y longitud vieja — cualquier lectura
+  posterior era corrupción. Ahora el valor movido es un texto vacío válido.
+- **Un método heredado cuenta como miembro**: `h.f()` donde `f` está en la clase base se rechazaba con
+  «no tiene ningún miembro». Se busca en la cadena de bases, en el acceso a campos y en la llamada.
+- **Una variable construida recuerda su tipo concreto**: `variable p = nuevo persona {...}` no guardaba
+  `persona`, así que `p.nombre + "fin"` no compilaba.
+- **`imprimir` acepta booleanos** (1 o 0).
+- Caso `0046-campo-a-coleccion`.
+
 ### Sprint 65 — Todas las vías del movimiento (2026-11-11)
 
 - **La comprobación de préstamo vive en un solo sitio** (`comprobar_prestamo`), al que llaman todas

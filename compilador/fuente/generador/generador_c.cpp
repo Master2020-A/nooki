@@ -3169,6 +3169,7 @@ private:
             salida_ << indentacion() << nombre << ".datos = NULL;\n";
         } else if (tipo == "nooki_texto") {
             salida_ << indentacion() << nombre << ".datos = NULL;\n";
+            salida_ << indentacion() << nombre << ".largo = 0;\n";
             salida_ << indentacion() << nombre << ".propio = 0;\n";
         } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
                    tipo.rfind("nooki_mapa_", 0) == 0) {
@@ -3285,7 +3286,7 @@ private:
                 // Vale un nombre o un campo: en ambos casos el origen se vacía.
                 const std::string origen = expresion(*nodo.lista.front());
                 salida = "(" + salida + ", " + origen + ".datos = NULL, " + origen +
-                         ".propio = 0)";
+                         ".largo = 0, " + origen + ".propio = 0)";
             }
             return salida;
         }

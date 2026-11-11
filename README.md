@@ -101,6 +101,7 @@ Sprint 62 ✅  Biblioteca embebida: `textos` viaja en el compilador
 Sprint 63 ✅  Biblioteca: `listas` y `fechas`
 Sprint 64 ✅  Cierre de la v0.9 · prueba de coherencia documental
 Sprint 65 ✅  Todas las vías del movimiento
+Sprint 66 ✅  A-14 cerrado: mover un campo lo deja vacío y válido
 ```
 
 **Ya compila y ejecuta:**

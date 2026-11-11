@@ -1,0 +1,18 @@
+// Mover un campo a una colección: el campo queda vacío, pero válido.
+clase persona {
+    publico nombre: texto
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" + "!" }
+    variable gentes = Vector<texto>.nuevo()
+
+    variable copia = p.nombre + "fin"
+    gentes.agregar(p.nombre)
+
+    imprimir(copia)
+    imprimir(gentes.obtener(0))
+    imprimir(p.nombre.largo())
+    imprimir(p.nombre == "")
+    retornar 0
+}

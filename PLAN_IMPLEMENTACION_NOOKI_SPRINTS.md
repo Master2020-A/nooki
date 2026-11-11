@@ -262,7 +262,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S63** | Biblioteca: listas y fechas | ✅ Módulos `listas` (`suma`, `mayor`, `menor`, `promedio`, `contiene`) y `fechas` (`bisiesto`, `dias_del_mes`, `dias_del_anio`) embebidos, con caso propio |
 | **S64** | Cierre de la v0.9 | ✅ Prueba de coherencia documental en `ctest` (encuentra sprints sin entrada y versiones desalineadas), guía con paso 12 sobre la biblioteca y versión 0.9.0 |
 | **S65** | Las vías del movimiento | ✅ La comprobación de préstamo se centraliza y cubre reasignación, declaración y argumento por valor; caso `0017`. *Quedan anotados A-14 (mover un campo a una colección) y el límite de prestar un parámetro de clase* |
-| **S66** | Serialización | JSON, CSV, TOML, YAML, binario, base64; *round-trip*; 100 tests |
+| **S66** | A-14: mover un campo | ✅ Vaciar un texto pone su longitud a cero, los métodos heredados cuentan como miembros, la variable construida recuerda su tipo y `imprimir` acepta booleanos |
 | **S67** | Red | TCP, UDP, HTTP cliente, TLS, URL; servidor HTTP básico; 60 tests |
 | **S68** | Tiempo y sistema | Fecha, hora, zonas, cronómetro; procesos, entorno, señales; 80 tests |
 | **S69** | Seguridad y base de datos | SHA-2, AES, CSPRNG; SQLite; 60 tests |
