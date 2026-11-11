@@ -1,8 +1,8 @@
-# Especificación del lenguaje NOOKI v0.5
+# Especificación del lenguaje NOOKI v0.6
 
 | Campo | Valor |
 |---|---|
-| **Estado** | Borrador normativo — v0.1 ampliada en la v0.5 (§18) |
+| **Estado** | Borrador normativo — v0.1 ampliada en la v0.6 (§18) |
 | **Fecha** | 2026-11-09 |
 | **Extensión de archivo** | `.oki` |
 | **Gramática** | [`gramatica.ebnf`](gramatica.ebnf) (normativa) |
@@ -1110,3 +1110,21 @@ variable textos = par<texto> { primero: "hola", segundo: " mundo" }
 - **`romper` y `continuar` liberan** los valores con dueño declarados en el ámbito que abandonan.
 - Los compuestos construidos en el sitio o devueltos por una llamada **liberan sus campos** al salir
   del ámbito.
+
+
+### 18.25 Una llamada que mueve no puede ir anidada
+
+```aura
+funcion consumir(t: texto) -> entero { ... }
+
+variable c = "adios"
+variable n = consumir(c)     // correcto: c se mueve aquí
+imprimir(consumir(c))        // error: no hay dónde vaciar c
+```
+
+- Una llamada que **mueve** un valor con dueño (parámetro por valor) solo puede aparecer como
+  **sentencia** o como **inicializador de una declaración**.
+- Dentro de otra expresión (`f(g(a))`, `imprimir(f(a))`), el compilador no tiene dónde emitir el
+  vaciado del origen, así que lo rechaza en lugar de dejar una fuga silenciosa.
+- La alternativa es siempre la misma: guardar el resultado en una variable, o prestar el valor con
+  `&` si la función lo acepta.

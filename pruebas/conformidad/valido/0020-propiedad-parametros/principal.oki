@@ -16,6 +16,7 @@ funcion principal() -> entero {
     imprimir(b)             // uno! — sigue siendo válido
 
     variable c = "adios"
-    imprimir(consumir(c))   // 5  — aquí «c» se mueve
+    variable largo = consumir(c)   // aquí «c» se mueve
+    imprimir(largo)
     retornar 0
 }

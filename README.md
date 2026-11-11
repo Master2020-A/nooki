@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.5.0 |
+| **Versión** | 0.6.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -86,6 +86,7 @@ Sprint 47 ✅  Cierre de la v0.5 · auditoría y programa de cierre
 Sprint 48 ✅  Propiedad en el retorno y en la construcción
 Sprint 49 ✅  Los compuestos liberan sus campos
 Sprint 50 ✅  Copia de compuestos rechazada y saltos que liberan
+Sprint 51 ✅  Cierre de la v0.6 · sin defectos conocidos
 ```
 
 **Ya compila y ejecuta:**

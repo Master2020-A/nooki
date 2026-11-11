@@ -3,7 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.6.0] — 2026-11-10
+
+**Sin defectos conocidos.** Por primera vez la lista de «cosas que están mal y se saben» está vacía:
+los huecos de propiedad que quedaban abiertos se cerraron, y el único caso que el generador no puede
+resolver —una llamada que mueve un valor con dueño dentro de otra expresión— es ahora un error de
+compilación, no una fuga silenciosa.
+
+### Sprint 51 — Cerrar A-11 y publicar la v0.6 (2026-11-10)
+
+- **Llamada anidada que movería un valor con dueño**: `f(g(a))` donde `g` mueve `a` ya no compila. El
+  generador no tiene dónde emitir el vaciado del origen dentro de una expresión, así que lo rechaza
+  con un mensaje que explica la alternativa.
+- **Caso `0020-propiedad-parametros` migrado** a la forma que sí funciona: mover en una declaración.
+- Versión 0.6.0 y especificación actualizada.
 
 ### Sprint 50 — Cerrar los huecos de propiedad (2026-11-10)
 

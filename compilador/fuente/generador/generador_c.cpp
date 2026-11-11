@@ -1520,6 +1520,19 @@ private:
         ambito.liberables.clear();
     }
 
+    /// Incrementa la profundidad de expresión mientras dura.
+    struct GuardiaProfundidad {
+        explicit GuardiaProfundidad(EmisorC& emisor) : emisor_(emisor) {
+            ++emisor_.profundidad_expresion_;
+        }
+        ~GuardiaProfundidad() { --emisor_.profundidad_expresion_; }
+        GuardiaProfundidad(const GuardiaProfundidad&) = delete;
+        GuardiaProfundidad& operator=(const GuardiaProfundidad&) = delete;
+
+    private:
+        EmisorC& emisor_;
+    };
+
     /// Libera los ámbitos abiertos por encima de `profundidad` (sin cerrarlos:
     /// el cierre normal ya no emitirá nada porque las listas quedan vacías).
     void liberar_desde(std::size_t profundidad) {
@@ -2306,6 +2319,7 @@ private:
     std::string expresion(const sintactico::Expresion& nodo) {
         using sintactico::TipoExpresion;
 
+        const GuardiaProfundidad guardia(*this);
         switch (nodo.tipo) {
             case TipoExpresion::Texto:
                 return "nooki_texto_literal(\"" + escapar_c(nodo.lexema) + "\")";
@@ -2829,6 +2843,35 @@ private:
                                 std::string(nombre_llamado);
             }
         }
+        // Una llamada que mueve un valor con dueño no puede ir anidada en otra
+        // expresión: no habría dónde emitir el vaciado del origen.
+        if (profundidad_expresion_ > 1) {
+            const auto declarados = parametros_.find(std::string(nombre_llamado));
+            if (declarados != parametros_.end()) {
+                for (std::size_t i = 0;
+                     i < nodo.lista.size() && i < declarados->second.size(); ++i) {
+                    if (!nodo.lista[i] ||
+                        nodo.lista[i]->tipo != sintactico::TipoExpresion::Identificador) {
+                        continue;
+                    }
+                    const std::string& declarado = declarados->second[i];
+                    if (!declarado.empty() &&
+                        (declarado.front() == '&' || declarado.front() == '*')) {
+                        continue;
+                    }
+                    const std::string tipo_arg = tipo_de(*nodo.lista[i]);
+                    if (tipo_arg == "nooki_texto" || tipo_arg == "nooki_caja" ||
+                        tipo_arg.rfind("nooki_vector_", 0) == 0 ||
+                        tipo_arg.rfind("nooki_mapa_", 0) == 0 ||
+                        (!tipo_arg.empty() && tipo_arg.back() == '*')) {
+                        no_soportado("una llamada que mueve un valor con dueño debe usarse "
+                                     "como sentencia o inicializador");
+                        return "0";
+                    }
+                }
+            }
+        }
+
         std::string salida = nombre_para_c + "(";
         const auto declarados = parametros_.find(std::string(nombre_llamado));
         bool primero = true;
@@ -3076,6 +3119,7 @@ private:
     std::set<std::string> instancias_tipo_;
     std::set<std::string> compuestos_con_dueno_;
     std::vector<std::size_t> bucles_;
+    int profundidad_expresion_ = 0;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string,
