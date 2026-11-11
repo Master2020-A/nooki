@@ -35,7 +35,7 @@ $ nooki ejecutar hola.oki
 | Biblioteca estándar escrita en Nooki | `resultado`, `matematicas` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
-**Versión actual: 0.7.0.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o
+**Versión actual: 0.8.0.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Empezar en tres comandos

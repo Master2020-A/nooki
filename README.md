@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.7.0 |
+| **Versión** | 0.8.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -95,6 +95,7 @@ Sprint 56 ✅  Cierre de la v0.7 · sistema de tipos completo
 Sprint 57 ✅  Tiempos de vida: el préstamo que escapa
 Sprint 58 ✅  Los casos inválidos pasan por todas las fases
 Sprint 59 ✅  La duración del préstamo
+Sprint 60 ✅  Cierre de la v0.8 · auditoría de diagnóstico
 ```
 
 **Ya compila y ejecuta:**

@@ -247,7 +247,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S57** | Tiempos de vida: escape | ✅ Devolver un préstamo a una variable local es error (`NOK5006`); devolver un préstamo recibido como parámetro está permitido. *La duración entre variables del mismo ámbito sigue sin verificarse* |
 | **S58** | Arnés: casos inválidos en todas las fases | ✅ Los `invalido/` pasan por léxico, parser y verificación; cuatro casos semánticos nuevos (`NOK5001`, `NOK3011`, `NOK5004`, `NOK5006`) |
 | **S59** | Duración del préstamo | ✅ Mover o reasignar el dueño con un préstamo vivo es error (`NOK5007`); prestar una clase conserva una sola referencia. *La duración temporal (`&x` vivo entre sentencias) sigue sin verificarse* |
-| **S60** | Documentación y `nooki doc` | Doc comments `///`; extracción; sitio HTML; 80 % de la std documentada |
+| **S60** | Cierre de la v0.8 | ✅ Auditoría de los 46 códigos (todos se emiten y tienen mensaje; 36 con caso), tres códigos nuevos con prueba y versión 0.8.0 |
 | **S61** | **Cierre v0.7: integración con editores** | Extensión VS Code (sintaxis + snippets + cliente LSP), Vim/Neovim, Sublime |
 
 ---

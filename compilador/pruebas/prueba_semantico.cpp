@@ -258,6 +258,21 @@ constexpr Caso INVALIDOS[] = {
      "    variable n = s + 1\n    retornar 0\n}",
      "NOK4001"},
 
+    // --- Tipos, rasgos y propagación ---------------------------------------
+    {"funcion principal() -> entero {\n    variable x = 1?\n    retornar x\n}",
+     "NOK4011"},
+
+    {"rasgo Saluda {\n    funcion saludar() -> texto\n}\n"
+     "clase muda implementa Saluda {\n    publico nombre: texto\n"
+     "    publico funcion saludar() -> entero {\n        retornar 1\n    }\n}\n"
+     "funcion principal() -> entero {\n    retornar 0\n}",
+     "NOK4012"},
+
+    {"clase base {\n    publico funcion f() -> entero {\n        retornar 1\n    }\n}\n"
+     "clase hija hereda base {\n    publico funcion f() -> texto {\n        retornar \"x\"\n    }\n}\n"
+     "funcion principal() -> entero {\n    retornar 0\n}",
+     "NOK4010"},
+
     // --- Tiempos de vida ---------------------------------------------------
     {"funcion malo() -> &texto {\n    variable local = \"x\" + \"\"\n"
      "    retornar &local\n}\n"
