@@ -96,6 +96,7 @@ Sprint 57 ✅  Tiempos de vida: el préstamo que escapa
 Sprint 58 ✅  Los casos inválidos pasan por todas las fases
 Sprint 59 ✅  La duración del préstamo
 Sprint 60 ✅  Cierre de la v0.8 · auditoría de diagnóstico
+Sprint 61 ✅  Biblioteca 	extos y tipos de colección
 ```
 
 **Ya compila y ejecuta:**

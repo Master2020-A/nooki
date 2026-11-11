@@ -547,6 +547,13 @@ private:
             if (es_prestamo(parametro.tipo)) {
                 registrar_prestamo(parametro.nombre, parametro.tipo.rfind("&mutable", 0) == 0);
             }
+            if (parametro.tipo == "&texto" || parametro.tipo == "&mutable texto") {
+                prestamos_texto_.insert(std::string(parametro.nombre));
+            }
+            // Un parámetro `&Vector<texto>` también es un vector de textos.
+            if (parametro.tipo.find("Vector<texto>") != std::string_view::npos) {
+                declarar_vector_texto(parametro.nombre);
+            }
         }
 
         for (const Sentencia& sentencia : funcion.cuerpo) {
@@ -1022,6 +1029,12 @@ private:
             return Tipo::Entero;
         }
         if (expresion.lexema == "*") {
+            // Desreferenciar un `&texto` da un texto, no un entero.
+            if (expresion.izquierda &&
+                expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                prestamos_texto_.count(std::string(expresion.izquierda->lexema)) != 0) {
+                return Tipo::Texto;
+            }
             const bool caja = expresion.izquierda &&
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
                               es_caja(expresion.izquierda->lexema);
@@ -1264,6 +1277,20 @@ private:
             }
         }
 
+        // `Vector<texto>.obtener(i)` devuelve un texto, no un entero.
+        if (acceso.anotacion == "obtener" && acceso.izquierda &&
+            acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            es_vector_texto(acceso.izquierda->lexema)) {
+            return Tipo::Texto;
+        }
+        if ((acceso.anotacion == "obtener" || acceso.anotacion == "largo") &&
+            acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            declarada(acceso.izquierda->lexema) &&
+            !es_vector_texto(acceso.izquierda->lexema) &&
+            estructura_de(*acceso.izquierda).empty()) {
+            return Tipo::Entero;
+        }
+
         // `vector.agregar(texto)` toma el dueño del elemento.
         if (acceso.anotacion == "agregar" && acceso.izquierda &&
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
@@ -1493,6 +1520,8 @@ private:
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     std::set<std::string> parametros_actuales_;
+    /// Parámetros que son un préstamo de texto: `*parametro` es un texto.
+    std::set<std::string> prestamos_texto_;
     /// Dueño prestado → variable que guarda el préstamo.
     std::map<std::string, std::string> prestamos_;
     const Funcion* funcion_actual_ = nullptr;

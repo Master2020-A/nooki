@@ -1,0 +1,36 @@
+publico funcion unir(partes: &Vector<texto>, separador: texto) -> texto {
+    variable junto = ""
+    variable i = 0
+    mientras (i < partes.largo()) {
+        si (i > 0) {
+            junto = junto + separador
+        }
+        junto = junto + partes.obtener(i)
+        i = i + 1
+    }
+    retornar junto
+}
+
+publico funcion repetir(pieza: &texto, veces: entero) -> texto {
+    variable junto = ""
+    variable i = 0
+    mientras (i < veces) {
+        junto = junto + *pieza
+        i = i + 1
+    }
+    retornar junto
+}
+
+publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
+    variable total = 0
+    variable resto = *pieza
+    mientras (resto.largo() > 0) {
+        variable posicion = resto.buscar(*aguja)
+        si (posicion < 0) {
+            romper
+        }
+        total = total + 1
+        resto = resto.subtexto(posicion + 1, resto.largo())
+    }
+    retornar total
+}

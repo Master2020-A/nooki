@@ -2359,7 +2359,17 @@ private:
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
-                        return acceso.anotacion == "agregar" ? "void" : "long long";
+                        if (acceso.anotacion == "agregar") {
+                            return "void";
+                        }
+                        // El elemento de un `Vector<texto>` es un texto.
+                        if (acceso.anotacion == "obtener") {
+                            return tipo_de(*acceso.izquierda).find("texto") !=
+                                           std::string::npos
+                                       ? "nooki_texto"
+                                       : "long long";
+                        }
+                        return "long long";
                     }
                     if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
@@ -2401,7 +2411,17 @@ private:
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
-                        return acceso.anotacion == "agregar" ? "void" : "long long";
+                        if (acceso.anotacion == "agregar") {
+                            return "void";
+                        }
+                        // El elemento de un `Vector<texto>` es un texto.
+                        if (acceso.anotacion == "obtener") {
+                            return tipo_de(*acceso.izquierda).find("texto") !=
+                                           std::string::npos
+                                       ? "nooki_texto"
+                                       : "long long";
+                        }
+                        return "long long";
                     }
                     std::string tipo_objeto =
                         acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
@@ -2450,8 +2470,17 @@ private:
                 }
                 return "void";
             }
-            case TipoExpresion::Unaria:
-                return expresion.lexema == "!" ? "int" : "long long";
+            case TipoExpresion::Unaria: {
+                if (expresion.lexema == "!") {
+                    return "int";
+                }
+                // `*prestamo` de texto devuelve el texto prestado.
+                if (expresion.lexema == "*" && expresion.izquierda &&
+                    tipo_de(*expresion.izquierda) == "nooki_texto*") {
+                    return "nooki_texto";
+                }
+                return "long long";
+            }
             case TipoExpresion::Binaria: {
                 const std::string_view operador = expresion.lexema;
                 const bool comparacion = operador == "==" || operador == "!=" ||
@@ -2740,7 +2769,11 @@ private:
             if (tipo == "nooki_caja*") {
                 return "(*(*" + expresion(*nodo.izquierda) + ").datos)";
             }
-            no_soportado("«*» sobre algo que no es una «Caja»");
+            // `*prestamo` de texto: el prestatario devuelve el valor prestado.
+            if (tipo == "nooki_texto*") {
+                return "(*" + expresion(*nodo.izquierda) + ")";
+            }
+            no_soportado("«*» sobre algo que no es una «Caja» ni un préstamo de texto");
             return "0";
         }
         if (nodo.lexema != "-" && nodo.lexema != "!") {

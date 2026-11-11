@@ -31,6 +31,9 @@ constexpr const char* EXTENSION_BINARIO = "";
 std::string leer_archivo(const std::filesystem::path& ruta);
 
 /// Biblioteca estándar mínima, escrita en Nooki y empaquetada con el compilador.
+/// Archivo que se está compilando: un módulo no puede ser él mismo.
+std::filesystem::path archivo_de_entrada;
+
 std::string_view fuente_biblioteca(std::string_view modulo) {
     if (modulo == "resultado") {
         return R"(// Biblioteca estándar: el resultado de una operación que puede fallar.
@@ -84,7 +87,10 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     // Se busca junto al archivo que importa, en su carpeta «biblioteca» y
     // subiendo por los directorios padre hasta encontrar una.
     // Se parte de una ruta absoluta para poder subir por los directorios padre.
-    const std::filesystem::path base = std::filesystem::absolute(directorio);
+    std::error_code error_ruta;
+    const std::filesystem::path base =
+        directorio.empty() ? std::filesystem::current_path(error_ruta)
+                           : std::filesystem::absolute(directorio, error_ruta);
     std::filesystem::path ruta = base / (clave + ".oki");
     for (std::filesystem::path actual = base; !std::filesystem::exists(ruta);) {
         const std::filesystem::path candidato = actual / "biblioteca" / (clave + ".oki");
@@ -96,6 +102,19 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
             break;
         }
         actual = actual.parent_path();
+    }
+
+    // Un archivo no puede importarse a sí mismo.
+    if (!archivo_de_entrada.empty() && std::filesystem::exists(ruta)) {
+        std::error_code error_canonico;
+        const std::filesystem::path modulo_real =
+            std::filesystem::weakly_canonical(ruta, error_canonico);
+        if (!error_canonico && modulo_real == archivo_de_entrada) {
+            emisor.error(diagnostico::codigos::MODULO_NO_ENCONTRADO, diagnostico::Span{})
+                .parametro("modulo", clave)
+                .ayuda("un archivo no puede usarse a sí mismo como módulo");
+            return false;
+        }
     }
 
     std::string contenido = leer_archivo(ruta);
@@ -190,6 +209,12 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         emisor.error(diagnostico::codigos::ARCHIVO_NO_ENCONTRADO, diagnostico::Span{})
             .parametro("archivo", opciones.fuente.string());
         return Resultado{1, {}, {}};
+    }
+
+    std::error_code error_entrada;
+    archivo_de_entrada = std::filesystem::weakly_canonical(opciones.fuente, error_entrada);
+    if (error_entrada) {
+        archivo_de_entrada = opciones.fuente;
     }
 
     const auto archivo = fuentes.anadir(opciones.fuente.string(), contenido);

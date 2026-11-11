@@ -1220,3 +1220,21 @@ p = nuevo persona { nombre: "Eva" }   // error NOK5007
   doble.
 - La duración de un préstamo temporal (tomado y usado entre sentencias del mismo ámbito) todavía no
   se verifica.
+
+
+### 18.31 Biblioteca escrita en Nooki
+
+```aura
+// biblioteca/textos.oki
+publico funcion unir(partes: &Vector<texto>, separador: texto) -> texto { ... }
+
+// principal.oki
+usar textos
+imprimir(textos.unir(&partes, ", "))
+```
+
+- Un módulo de biblioteca es **código Nooki normal**: `biblioteca/<nombre>.oki` con funciones
+  `publico`.
+- `nooki` lo busca junto al archivo, en `biblioteca/` y subiendo por los directorios padre.
+- Un archivo **no puede importarse a sí mismo**: se informa como módulo no encontrado.
+- El elemento de un `Vector<texto>` es un `texto`; `*prestamo` de un `&texto` es un `texto`.

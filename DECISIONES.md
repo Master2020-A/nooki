@@ -113,6 +113,7 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-06 | Incorporar el texto completo de Apache-2.0 (`LICENSE-APACHE`) | ⬜ Abierto | Antes de la primera publicación (S94) |
 | A-07 | Conectar el repositorio a GitHub y comprobar la primera ejecución de CI | ⬜ Abierto | Al cerrar S03 |
 | A-08 | **¿`-2 ** 2` debe ser `(-2)**2` o `-(2**2)`?** La especificación dice lo primero; Python y Ruby dicen lo segundo | ⬜ Abierto (RFC) | Antes de la v1.0 |
+| A-13 | **Un módulo nuevo añadido a la biblioteca embebida del compilador no registra sus funciones**: los módulos de `biblioteca/` sí funcionan. Hay que revisar cómo se acumulan los programas de módulos | ⬜ Abierto (fallo) | Antes de ampliar la biblioteca embebida |
 | A-12 | **Diez códigos de diagnóstico sin caso directo** (CLI, carga de módulos, símbolo privado, backend y avisos) | ⬜ Abierto (deuda de pruebas) | Sin fecha |
 | A-11 | **Llamada que mueve un valor con dueño dentro de otra expresión** (`f(g(a))`) no lo mueve | ✅ Cerrado (S51): es error de compilación en lugar de fuga | — |
 | A-10 | **Devolver una construcción con variables locales con dueño** libera esas variables al retornar y deja punteros colgando | ✅ Cerrado (S48–S49): el retorno y la construcción transfieren, y los compuestos frescos liberan sus campos | — |

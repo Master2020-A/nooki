@@ -248,7 +248,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S58** | Arnés: casos inválidos en todas las fases | ✅ Los `invalido/` pasan por léxico, parser y verificación; cuatro casos semánticos nuevos (`NOK5001`, `NOK3011`, `NOK5004`, `NOK5006`) |
 | **S59** | Duración del préstamo | ✅ Mover o reasignar el dueño con un préstamo vivo es error (`NOK5007`); prestar una clase conserva una sola referencia. *La duración temporal (`&x` vivo entre sentencias) sigue sin verificarse* |
 | **S60** | Cierre de la v0.8 | ✅ Auditoría de los 46 códigos (todos se emiten y tienen mensaje; 36 con caso), tres códigos nuevos con prueba y versión 0.8.0 |
-| **S61** | **Cierre v0.7: integración con editores** | Extensión VS Code (sintaxis + snippets + cliente LSP), Vim/Neovim, Sublime |
+| **S61** | Biblioteca en Nooki | ✅ Módulo `textos` (`unir`, `repetir`, `contar`) con caso propio, tipos de `Vector<texto>` y de `*prestamo` corregidos, y auto-importación rechazada. *La biblioteca embebida no registra módulos nuevos (A-13)* |
 
 ---
 

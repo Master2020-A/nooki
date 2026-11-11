@@ -1,0 +1,18 @@
+// Módulo de biblioteca escrito en Nooki: unir, repetir y contar.
+usar textos
+
+funcion principal() -> entero {
+    variable partes = Vector<texto>.nuevo()
+    partes.agregar("uno" + "")
+    partes.agregar("dos" + "")
+    partes.agregar("tres" + "")
+    imprimir(textos.unir(&partes, ", "))
+
+    variable guion = "-" + ""
+    imprimir(textos.repetir(&guion, 5))
+
+    variable frase = "la casa de la calle" + ""
+    variable aguja = "la" + ""
+    imprimir(textos.contar(&frase, &aguja))
+    retornar 0
+}
