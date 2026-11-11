@@ -37,6 +37,14 @@ target_link_libraries(prueba_semantico PRIVATE nooki_nucleo)
 nooki_aplicar_opciones(prueba_semantico)
 add_test(NAME semantico COMMAND prueba_semantico)
 
+# Coherencia de la documentación: sprints en el historial y versiones iguales.
+add_executable(prueba_documentos prueba_documentos.cpp)
+nooki_aplicar_opciones(prueba_documentos)
+target_compile_definitions(prueba_documentos PRIVATE _CRT_SECURE_NO_WARNINGS)
+add_test(NAME documentos COMMAND prueba_documentos)
+set_tests_properties(documentos PROPERTIES
+    ENVIRONMENT "NOOKI_DIR_RAIZ=${CMAKE_SOURCE_DIR}")
+
 # Arnés de conformidad: ejecuta los programas .oki de pruebas/conformidad.
 add_executable(nooki_conformidad arnes_conformidad.cpp)
 target_link_libraries(nooki_conformidad PRIVATE nooki_nucleo)

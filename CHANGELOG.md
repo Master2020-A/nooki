@@ -3,7 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.9.0] — 2026-11-11
+
+**La biblioteca estándar tiene cinco módulos, todos escritos en Nooki**, y la documentación ya no
+puede desincronizarse sin que un `ctest` lo diga.
+
+### Sprint 64 — Cierre de la v0.9 (2026-11-11)
+
+- **Prueba de coherencia documental** (`prueba_documentos`): comprueba que cada sprint terminado del
+  plan tiene entrada en el historial y en el README, y que la versión coincide en CMake, historial,
+  LEEME y especificación. Está en `ctest` como el resto.
+- **Al estrenarla encontró dos huecos**: los sprints 52 y 53 no estaban en el historial. Reparados, y
+  también las entradas 0.7.0 y 0.8.0 que faltaban.
+- **La guía gana un paso 12** sobre la biblioteca estándar, con su salida verificada.
+- v0.9.0.
 
 ### Sprint 63 — La biblioteca crece (2026-11-11)
 
@@ -76,6 +89,18 @@ polimorfismo: por jerarquía y por contrato.
 - **`&Rasgo` como tipo**: una referencia que lleva el objeto y su tabla de métodos.
 - **Tabla por (tipo, rasgo)** con un adaptador por método y despacho dinámico entre tipos **no
   emparentados**.
+
+### Sprint 53 — La guía en español (2026-11-10)
+
+- **`GUIA.md`**: recorrido de cero a un programa con módulos en once pasos, cada uno **ejecutado** para
+  copiar su salida real.
+- **`LEEME.md`**: qué es Nooki, qué pilares tiene y cuáles no, cómo compilarlo y cómo se prueba.
+
+### Sprint 52 — Las herramientas del proyecto (2026-11-10)
+
+- **`nooki nuevo`**, **`nooki probar`** y **`nooki limpiar`**: crear un proyecto que compila, ejecutar
+  pruebas contra su `.esperado` y borrar artefactos.
+- **La búsqueda de módulos parte de rutas absolutas**, así que `usar` funciona desde subcarpetas.
 
 ### Sprint 54 — Rasgos (2026-11-10)
 

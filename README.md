@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.8.0 |
+| **Versión** | 0.9.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -99,6 +99,7 @@ Sprint 60 ✅  Cierre de la v0.8 · auditoría de diagnóstico
 Sprint 61 ✅  Biblioteca `textos` en Nooki
 Sprint 62 ✅  Biblioteca embebida: `textos` viaja en el compilador
 Sprint 63 ✅  Biblioteca: `listas` y `fechas`
+Sprint 64 ✅  Cierre de la v0.9 · prueba de coherencia documental
 ```
 
 **Ya compila y ejecuta:**

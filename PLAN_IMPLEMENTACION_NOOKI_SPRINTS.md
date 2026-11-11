@@ -260,7 +260,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 |---|---|---|
 | **S62** | A-13: biblioteca embebida | ✅ No era un fallo: un archivo viejo tapaba el módulo. `textos` va embebido y un módulo con `principal` se rechaza |
 | **S63** | Biblioteca: listas y fechas | ✅ Módulos `listas` (`suma`, `mayor`, `menor`, `promedio`, `contiene`) y `fechas` (`bisiesto`, `dias_del_mes`, `dias_del_anio`) embebidos, con caso propio |
-| **S64** | Texto | Formato, regex, utilidades Unicode, plantillas; 100 tests |
+| **S64** | Cierre de la v0.9 | ✅ Prueba de coherencia documental en `ctest` (encuentra sprints sin entrada y versiones desalineadas), guía con paso 12 sobre la biblioteca y versión 0.9.0 |
 | **S65** | Matemáticas y aleatorio | Básicas, trigonometría, álgebra lineal, estadística, RNG (PCG); 100 tests |
 | **S66** | Serialización | JSON, CSV, TOML, YAML, binario, base64; *round-trip*; 100 tests |
 | **S67** | Red | TCP, UDP, HTTP cliente, TLS, URL; servidor HTTP básico; 60 tests |

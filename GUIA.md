@@ -1,6 +1,6 @@
 # Guía de Nooki
 
-Un recorrido de cero a un programa con módulos, en once pasos. **Todos los ejemplos de esta guía se
+Un recorrido de cero a un programa con módulos, en doce pasos. **Todos los ejemplos de esta guía se
 compilan y se ejecutan**: la salida que ves es la que da el compilador, copiada de una ejecución real.
 
 ---
@@ -351,6 +351,59 @@ Bip. Unidad R2
 cada uno responde con su implementación. Si a una clase le falta un método del rasgo, no compila.
 
 Fíjate en la diferencia con la herencia del paso 8: allí había una jerarquía; aquí solo un contrato.
+
+---
+
+## 12. La biblioteca estándar
+
+Nooki trae cinco módulos escritos en Nooki. Se usan con `usar`, sin copiar archivos:
+
+```aura
+usar listas
+usar fechas
+usar textos
+
+funcion principal() -> entero {
+    variable notas = Vector<entero>.nuevo()
+    notas.agregar(8)
+    notas.agregar(6)
+    notas.agregar(10)
+
+    imprimir(listas.suma(&notas))
+    imprimir(listas.promedio(&notas))
+    imprimir(listas.mayor(&notas))
+
+    variable coma = ", " + ""
+    variable partes = Vector<texto>.nuevo()
+    partes.agregar("uno" + "")
+    partes.agregar("dos" + "")
+    imprimir(textos.unir(&partes, coma))
+
+    si (fechas.bisiesto(2024)) {
+        imprimir("2024 es bisiesto")
+    }
+    retornar 0
+}
+```
+
+```
+24
+8
+10
+uno, dos
+2024 es bisiesto
+```
+
+| Módulo | Trae |
+|---|---|
+| `resultado` | `Ok(valor)` y `Error(mensaje)` |
+| `matematicas` | `maximo`, `minimo`, `absoluto`, `cuadrado` |
+| `textos` | `unir`, `repetir`, `contar` |
+| `listas` | `suma`, `mayor`, `menor`, `promedio`, `contiene` |
+| `fechas` | `bisiesto`, `dias_del_mes`, `dias_del_anio` |
+
+Un proyecto puede **sustituir** un módulo con el suyo: un archivo `biblioteca/<nombre>.oki` tiene
+prioridad sobre el que viaja en el compilador.
 
 ---
 
