@@ -1189,3 +1189,19 @@ presentar(&p)          // despacha a persona.saludar
 - La llamada despacha a la implementación del tipo concreto, aunque el tipo no herede de nadie.
 - Cada par (tipo, rasgo) genera su tabla y un adaptador por método.
 - Sirve para tratar igual a tipos **no emparentados**, que es lo que la herencia no puede dar.
+
+
+### 18.29 El préstamo que escapa
+
+```aura
+funcion malo() -> &texto {
+    variable local = "temporal" + ""
+    retornar &local          // error: «local» muere al salir
+}
+```
+
+- **No se puede devolver un préstamo a una variable local** (`NOK5006`).
+- **Sí se puede devolver un préstamo recibido como parámetro**: el valor vive en quien llamó.
+- Los préstamos pasados como **argumento** no escapan: solo duran la llamada.
+- Esto cubre el caso en que una referencia quedaría colgando al volver. La duración de un préstamo
+  entre variables del mismo ámbito todavía no se verifica.

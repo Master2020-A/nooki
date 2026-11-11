@@ -258,6 +258,12 @@ constexpr Caso INVALIDOS[] = {
      "    variable n = s + 1\n    retornar 0\n}",
      "NOK4001"},
 
+    // --- Tiempos de vida ---------------------------------------------------
+    {"funcion malo() -> &texto {\n    variable local = \"x\" + \"\"\n"
+     "    retornar &local\n}\n"
+     "funcion principal() -> entero {\n    retornar 0\n}",
+     "NOK5006"},
+
     // --- Propiedad en parámetros -------------------------------------------
     {"funcion consumir(t: texto) -> entero {\n    retornar t.largo()\n}\n"
      "funcion principal() -> entero {\n    variable a = \"uno\" + \"!\"\n"

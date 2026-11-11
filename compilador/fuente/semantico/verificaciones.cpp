@@ -528,6 +528,11 @@ private:
             parametros_tipo_.insert(std::string(parametro));
         }
 
+        parametros_actuales_.clear();
+        for (const sintactico::Parametro& parametro : funcion.parametros) {
+            parametros_actuales_.insert(std::string(parametro.nombre));
+        }
+
         abrir_ambito();
         for (const sintactico::Parametro& parametro : funcion.parametros) {
             const Tipo tipo = desde_nombre(parametro.tipo);
@@ -757,7 +762,10 @@ private:
             case TipoSentencia::Continuar:
                 return;
 
-            case TipoSentencia::Retornar: {
+            case TipoSentencia::Retornar:
+                if (sentencia.expresion) {
+                    revisar_escape(*sentencia.expresion, funcion);
+                } {
                 revisar_retorno(sentencia, funcion);
                 return;
             }
@@ -769,6 +777,35 @@ private:
             case TipoSentencia::Coincide:
                 revisar_coincide(sentencia, funcion);
                 return;
+        }
+    }
+
+    /// Un préstamo a una variable local no puede salir de la función.
+    void revisar_escape(const Expresion& expresion, const Funcion& funcion) {
+        if (expresion.tipo == TipoExpresion::Unaria &&
+            (expresion.lexema == "&" || expresion.lexema == "&mutable") &&
+            expresion.izquierda &&
+            expresion.izquierda->tipo == TipoExpresion::Identificador) {
+            const std::string_view nombre = expresion.izquierda->lexema;
+            if (parametros_actuales_.count(std::string(nombre)) == 0) {
+                error(diagnostico::codigos::PRESTAMO_QUE_ESCAPA, expresion.span)
+                    .parametro("nombre", std::string(nombre))
+                    .ayuda("devuelva el valor por movimiento o reciba el préstamo como parámetro");
+            }
+        }
+        // Los argumentos de una llamada solo viven durante la llamada: no escapan.
+        if (expresion.tipo != TipoExpresion::Llamada) {
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    revisar_escape(*argumento, funcion);
+                }
+            }
+        }
+        if (expresion.izquierda) {
+            revisar_escape(*expresion.izquierda, funcion);
+        }
+        if (expresion.derecha) {
+            revisar_escape(*expresion.derecha, funcion);
         }
     }
 
@@ -1436,6 +1473,7 @@ private:
              std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
+    std::set<std::string> parametros_actuales_;
     const Funcion* funcion_actual_ = nullptr;
     std::string_view estructura_actual_;
     std::vector<Ambito> ambitos_;

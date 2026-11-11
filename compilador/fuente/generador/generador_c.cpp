@@ -2947,7 +2947,8 @@ private:
             }
             const sintactico::Expresion& argumento = *nodo.lista.front();
             const std::string tipo = tipo_de(argumento);
-            const char* funcion = tipo == "nooki_texto" ? "nooki_imprimir_texto"
+            const char* funcion = tipo == "nooki_texto" || tipo == "nooki_texto*"
+                                  ? "nooki_imprimir_texto"
                                   : (tipo == "long long" || tipo == "int")
                                       ? "nooki_imprimir_entero"
                                       : nullptr;
@@ -2955,7 +2956,11 @@ private:
                 no_soportado("«imprimir» con un valor que el backend no sabe imprimir");
                 return "0";
             }
-            return std::string(funcion) + "(" + expresion(argumento) + ")";
+            // Un préstamo de texto se imprime por su valor.
+            const std::string valor =
+                tipo == "nooki_texto*" ? "(*" + expresion(argumento) + ")"
+                                       : expresion(argumento);
+            return std::string(funcion) + "(" + valor + ")";
         }
 
         // Dentro de un módulo, una llamada a otro símbolo suyo lleva su prefijo.
