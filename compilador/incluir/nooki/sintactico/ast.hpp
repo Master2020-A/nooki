@@ -180,6 +180,8 @@ struct DefinicionTipo {
     bool publico = false;
     /// Clase base (`clase cuadrado hereda figura`), vacío si no hereda.
     std::string_view base;
+    /// Rasgos que implementa (`clase persona implementa Describible`).
+    std::vector<std::string_view> rasgos;
     std::vector<Campo> campos;
     std::vector<Funcion> metodos;
     diagnostico::Span span;
@@ -201,7 +203,15 @@ struct Enumeracion {
     diagnostico::Span span;
 };
 
+/// `rasgo Describible { funcion describir() -> texto }`.
+struct Rasgo {
+    std::string_view nombre;
+    std::vector<Funcion> metodos;
+    diagnostico::Span span;
+};
+
 struct Programa {
+    std::vector<Rasgo> rasgos;
     std::vector<Funcion> funciones;
     std::vector<DefinicionTipo> tipos;
     std::vector<Enumeracion> enumeraciones;

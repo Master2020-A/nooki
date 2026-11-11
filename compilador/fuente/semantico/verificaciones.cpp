@@ -45,6 +45,9 @@ public:
                                        &enumeracion);
             }
         }
+        for (const sintactico::Rasgo& rasgo : programa_.rasgos) {
+            rasgos_.emplace(std::string(rasgo.nombre), &rasgo);
+        }
         for (const sintactico::Funcion& funcion : programa_.funciones) {
             if (!funcion.modulo.empty()) {
                 modulos_[funcion.modulo].emplace(funcion.nombre, &funcion);
@@ -59,6 +62,7 @@ public:
             revisar_funcion(funcion);
         }
         revisar_sobrescrituras();
+        revisar_rasgos();
         for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
             const std::string_view anterior = estructura_actual_;
             estructura_actual_ = definicion.nombre;
@@ -451,6 +455,41 @@ private:
             }
         }
         return true;
+    }
+
+    /// Comprueba que un tipo cumple los rasgos que declara implementar.
+    void revisar_rasgos() {
+        for (const sintactico::DefinicionTipo& definicion : programa_.tipos) {
+            for (const std::string_view nombre_rasgo : definicion.rasgos) {
+                const auto rasgo = rasgos_.find(std::string(nombre_rasgo));
+                if (rasgo == rasgos_.end()) {
+                    error(diagnostico::codigos::TIPO_DESCONOCIDO, definicion.span)
+                        .parametro("nombre", std::string(nombre_rasgo));
+                    continue;
+                }
+                for (const sintactico::Funcion& exigido : rasgo->second->metodos) {
+                    const sintactico::Funcion* propio = nullptr;
+                    for (const sintactico::Funcion& metodo : definicion.metodos) {
+                        if (metodo.nombre == exigido.nombre) {
+                            propio = &metodo;
+                            break;
+                        }
+                    }
+                    if (propio == nullptr) {
+                        error(diagnostico::codigos::METODO_DE_RASGO_FALTANTE, definicion.span)
+                            .parametro("tipo", std::string(definicion.nombre))
+                            .parametro("metodo", std::string(exigido.nombre))
+                            .parametro("rasgo", std::string(nombre_rasgo));
+                        continue;
+                    }
+                    if (!firma_compatible(*propio, exigido)) {
+                        error(diagnostico::codigos::FIRMA_DE_RASGO, propio->span)
+                            .parametro("metodo", std::string(exigido.nombre))
+                            .parametro("rasgo", std::string(nombre_rasgo));
+                    }
+                }
+            }
+        }
     }
 
     void revisar_sobrescrituras() {
@@ -1385,6 +1424,7 @@ private:
     std::map<std::string_view, const Funcion*> funciones_;
     std::map<std::string, const sintactico::DefinicionTipo*> tipos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
+    std::map<std::string, const sintactico::Rasgo*> rasgos_;
     std::map<std::string,
              std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;

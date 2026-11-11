@@ -241,7 +241,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
 | **S53** | Guía en español | ✅ `GUIA.md` en diez pasos con la salida real de cada ejemplo, `LEEME.md` de presentación e instalación, y verificación de todos los fragmentos ejecutándolos |
-| **S54** | Gestor de paquetes | `nooki.toml`, semver, lockfile, caché, *workspaces*; 40 tests |
+| **S54** | Rasgos | ✅ `rasgo` con firmas y `implementa` en tipos; verificación de método faltante (`NOK3011`) y firma incompatible (`NOK4012`), sin coste en ejecución |
 | **S55** | Registro de paquetes (modo solitario: Git) | Índice en repositorio Git + archivos estáticos, semver y firma opcional; servidor propio **solo si aparecen usuarios** (D-15) |
 | **S56** | Formateador | Basado en AST, idempotente, `--check`, `.nooki-formato.toml`; 100 casos golden |
 | **S57** | Compilación incremental | Sistema de consultas, caché en disco, invalidación fina; recompilación 10× más rápida |

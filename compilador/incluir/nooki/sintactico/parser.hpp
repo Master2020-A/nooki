@@ -54,6 +54,7 @@ private:
     Sentencia analizar_bucle();
     Sentencia analizar_coincide();
     Enumeracion analizar_enumeracion();
+    Rasgo analizar_rasgo();
     Patron analizar_patron();
 
     /// Analiza una expresión cuyos operadores tengan al menos `potencia_minima`.

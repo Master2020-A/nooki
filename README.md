@@ -89,6 +89,7 @@ Sprint 50 ✅  Copia de compuestos rechazada y saltos que liberan
 Sprint 51 ✅  Cierre de la v0.6 · sin defectos conocidos
 Sprint 52 ✅  Herramientas: `nuevo`, `probar` y `limpiar`
 Sprint 53 ✅  Guía y presentación en español
+Sprint 54 ✅  Rasgos · `rasgo` e `implementa`
 ```
 
 **Ya compila y ejecuta:**

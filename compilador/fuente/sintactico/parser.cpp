@@ -205,6 +205,10 @@ Programa Parser::analizar() {
             programa.enumeraciones.push_back(analizar_enumeracion());
             continue;
         }
+        if (token.es(TipoToken::PalabraClave) && token.lexema == "rasgo") {
+            programa.rasgos.push_back(analizar_rasgo());
+            continue;
+        }
         error_en(token, diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
         avanzar();
     }
@@ -246,6 +250,24 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
         }
         if (!aceptar_lexema(">")) {
             error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«>»");
+        }
+    }
+
+    // Rasgos: `clase persona implementa Describible, Comparable`.
+    while (actual().lexema == "implementa") {
+        avanzar();
+        for (;;) {
+            if (const Token& rasgo = actual();
+                rasgo.es(TipoToken::Identificador) || rasgo.es(TipoToken::PalabraClave)) {
+                definicion.rasgos.push_back(rasgo.lexema);
+                avanzar();
+            } else {
+                error_en(rasgo, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de rasgo");
+                break;
+            }
+            if (!aceptar_lexema(",")) {
+                break;
+            }
         }
     }
 
@@ -473,6 +495,92 @@ std::vector<Sentencia> Parser::analizar_bloque() {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«}»");
     }
     return cuerpo;
+}
+
+Rasgo Parser::analizar_rasgo() {
+    Rasgo rasgo;
+    rasgo.span = actual().span;
+    avanzar();  // "rasgo"
+
+    if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+        rasgo.nombre = nombre.lexema;
+        avanzar();
+    } else {
+        error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de rasgo");
+        return rasgo;
+    }
+
+    if (!aceptar_lexema("{")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«{»");
+        return rasgo;
+    }
+
+    while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
+        if (actual().lexema != "funcion") {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
+            avanzar();
+            continue;
+        }
+
+        Funcion firma;
+        firma.span = actual().span;
+        avanzar();  // "funcion"
+
+        if (const Token& nombre = actual();
+            nombre.es(TipoToken::Identificador) || nombre.es(TipoToken::PalabraClave)) {
+            firma.nombre = nombre.lexema;
+            avanzar();
+        } else {
+            error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de método");
+            break;
+        }
+
+        if (!aceptar_lexema("(")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
+            break;
+        }
+        while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ")") {
+            Parametro parametro;
+            parametro.span = actual().span;
+            if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+                parametro.nombre = nombre.lexema;
+                avanzar();
+            } else {
+                error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO,
+                         "un nombre de parámetro");
+                break;
+            }
+            if (!aceptar_lexema(":")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
+                break;
+            }
+            parametro.tipo = analizar_tipo_texto();
+            if (parametro.tipo.empty()) {
+                break;
+            }
+            firma.parametros.push_back(std::move(parametro));
+            if (!aceptar_lexema(",")) {
+                break;
+            }
+        }
+        if (!aceptar_lexema(")")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
+            break;
+        }
+
+        if (aceptar_lexema("->")) {
+            const std::string_view tipo = analizar_tipo_texto();
+            if (!tipo.empty()) {
+                firma.tipo_retorno = tipo;
+            }
+        }
+        rasgo.metodos.push_back(std::move(firma));
+    }
+
+    if (!aceptar_lexema("}")) {
+        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«}»");
+    }
+    return rasgo;
 }
 
 Enumeracion Parser::analizar_enumeracion() {

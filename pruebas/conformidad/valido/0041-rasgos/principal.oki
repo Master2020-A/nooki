@@ -1,0 +1,38 @@
+// Rasgos: un tipo declara que implementa un conjunto de métodos.
+rasgo Describible {
+    funcion describir() -> texto
+}
+
+rasgo Medible {
+    funcion medir() -> entero
+}
+
+clase persona implementa Describible {
+    publico nombre: texto
+
+    publico funcion describir() -> texto {
+        retornar "persona " + este.nombre
+    }
+}
+
+clase cuadrado implementa Describible, Medible {
+    publico lado: entero
+
+    publico funcion describir() -> texto {
+        retornar "cuadrado"
+    }
+
+    publico funcion medir() -> entero {
+        retornar este.lado * 4
+    }
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    imprimir(p.describir())
+
+    variable c = nuevo cuadrado { lado: 3 }
+    imprimir(c.describir())
+    imprimir(c.medir())
+    retornar 0
+}

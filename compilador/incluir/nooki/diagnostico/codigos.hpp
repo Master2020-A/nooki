@@ -36,6 +36,7 @@ inline constexpr std::string_view MIEMBRO_DESCONOCIDO = "NOK3006";
 inline constexpr std::string_view VARIANTE_DESCONOCIDA = "NOK3007";
 inline constexpr std::string_view MODULO_NO_ENCONTRADO = "NOK3008";
 inline constexpr std::string_view SIMBOLO_PRIVADO = "NOK3009";
+inline constexpr std::string_view METODO_DE_RASGO_FALTANTE = "NOK3011";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";
@@ -49,6 +50,7 @@ inline constexpr std::string_view PRESTAMO_INVALIDO = "NOK4008";
 inline constexpr std::string_view ESCRITURA_EN_PRESTAMO_INMUTABLE = "NOK4009";
 inline constexpr std::string_view FIRMA_INCOMPATIBLE = "NOK4010";
 inline constexpr std::string_view PROPAGACION_SIN_RESULTADO = "NOK4011";
+inline constexpr std::string_view FIRMA_DE_RASGO = "NOK4012";
 
 // --- Propiedad y préstamos (NOK5xxx) ---------------------------------------
 inline constexpr std::string_view USO_TRAS_MOVER = "NOK5001";

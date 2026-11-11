@@ -1144,3 +1144,26 @@ $ nooki limpiar             # borra binarios y artefactos
   su salida con `pruebas/<nombre>.oki.esperado`. Sin archivo esperado, basta con que termine bien.
 - La comparación ignora los saltos de línea de Windows.
 - `nooki limpiar` no toca el código fuente: solo `build/`, `artefactos/` y binarios sueltos.
+
+
+### 18.27 Rasgos
+
+```aura
+rasgo Describible {
+    funcion describir() -> texto
+}
+
+clase persona implementa Describible {
+    publico nombre: texto
+
+    publico funcion describir() -> texto {
+        retornar "persona " + este.nombre
+    }
+}
+```
+
+- Un `rasgo` declara **firmas** de métodos, sin cuerpo.
+- Un tipo declara `implementa A, B` y se compromete a ofrecer esos métodos.
+- El compilador exige que **estén todos** (`NOK3011`) y que la **firma coincida** (`NOK4012`).
+- Los rasgos no generan código: son una comprobación de tiempo de compilación.
+- Todavía no hay despacho por rasgo (`&Rasgo`): los métodos se llaman sobre el tipo concreto.

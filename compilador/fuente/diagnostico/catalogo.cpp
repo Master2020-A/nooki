@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 42> MENSAJES{{
+constexpr std::array<EntradaMensaje, 44> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -96,6 +96,10 @@ constexpr std::array<EntradaMensaje, 42> MENSAJES{{
     {codigos::SIMBOLO_PRIVADO, "«{simbolo}» es privado del módulo «{modulo}»",
      "“{simbolo}” is private to module “{modulo}”"},
 
+    {codigos::METODO_DE_RASGO_FALTANTE,
+     "a «{tipo}» le falta «{metodo}», que exige el rasgo «{rasgo}»",
+     "“{tipo}” is missing “{metodo}”, required by trait “{rasgo}”"},
+
     {codigos::COINCIDE_NO_EXHAUSTIVO,
      "el «coincide» no cubre todos los casos: añada un caso «_»",
      "the “coincide” is not exhaustive: add a “_” case"},
@@ -117,6 +121,10 @@ constexpr std::array<EntradaMensaje, 42> MENSAJES{{
     {codigos::PROPAGACION_SIN_RESULTADO,
      "«?» solo se usa en una función que devuelve «Resultado»",
      "“?” can only be used in a function returning “Resultado”"},
+
+    {codigos::FIRMA_DE_RASGO,
+     "«{metodo}» no coincide con la firma que exige el rasgo «{rasgo}»",
+     "“{metodo}” does not match the signature required by trait “{rasgo}”"},
 
     {codigos::PRESTAMO_GUARDADO,
      "un préstamo no se puede guardar en una variable: solo vive durante la llamada",
