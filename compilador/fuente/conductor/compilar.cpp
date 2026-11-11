@@ -43,6 +43,46 @@ publico enumeracion resultado {
 }
 )";
     }
+    if (modulo == "textos") {
+        return R"(// Biblioteca estándar: utilidades sobre listas de textos.
+publico funcion unir(partes: &Vector<texto>, separador: texto) -> texto {
+    variable junto = ""
+    variable i = 0
+    mientras (i < partes.largo()) {
+        si (i > 0) {
+            junto = junto + separador
+        }
+        junto = junto + partes.obtener(i)
+        i = i + 1
+    }
+    retornar junto
+}
+
+publico funcion repetir(pieza: &texto, veces: entero) -> texto {
+    variable junto = ""
+    variable i = 0
+    mientras (i < veces) {
+        junto = junto + *pieza
+        i = i + 1
+    }
+    retornar junto
+}
+
+publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
+    variable total = 0
+    variable resto = *pieza
+    mientras (resto.largo() > 0) {
+        variable posicion = resto.buscar(*aguja)
+        si (posicion < 0) {
+            romper
+        }
+        total = total + 1
+        resto = resto.subtexto(posicion + 1, resto.largo())
+    }
+    retornar total
+}
+)";
+    }
     if (modulo == "matematicas") {
         return R"(// Biblioteca estándar: operaciones matemáticas básicas.
 publico funcion maximo(a: entero, b: entero) -> entero {
@@ -137,6 +177,18 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     sintactico::Programa sub = parser.analizar();
     if (emisor.hay_errores()) {
         return false;
+    }
+
+    // Un módulo es una biblioteca: no tiene punto de entrada.
+    for (const sintactico::Funcion& funcion : sub.funciones) {
+        if (funcion.nombre == "principal") {
+            emisor.error(diagnostico::codigos::TOKEN_INESPERADO, funcion.span)
+                .parametro("esperado", "un módulo sin «principal»")
+                .parametro("encontrado", std::string(clave) + ".principal")
+                .ayuda("un módulo es una biblioteca: quite «principal» de «" +
+                       std::string(clave) + ".oki»");
+            return false;
+        }
     }
 
     for (const std::string_view uso : sub.usos) {

@@ -258,7 +258,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
-| **S62** | io, archivos, rutas, consola | Lectura/escritura con buffers, errores tipados; 80 tests |
+| **S62** | A-13: biblioteca embebida | ✅ No era un fallo: un archivo viejo tapaba el módulo. `textos` va embebido y un módulo con `principal` se rechaza |
 | **S63** | Colecciones | Mapa, conjunto, cola, pila, deque, árbol, grafo + iteradores; 150 tests y benchmarks |
 | **S64** | Texto | Formato, regex, utilidades Unicode, plantillas; 100 tests |
 | **S65** | Matemáticas y aleatorio | Básicas, trigonometría, álgebra lineal, estadística, RNG (PCG); 100 tests |

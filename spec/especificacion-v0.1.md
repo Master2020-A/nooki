@@ -1238,3 +1238,13 @@ imprimir(textos.unir(&partes, ", "))
 - `nooki` lo busca junto al archivo, en `biblioteca/` y subiendo por los directorios padre.
 - Un archivo **no puede importarse a sí mismo**: se informa como módulo no encontrado.
 - El elemento de un `Vector<texto>` es un `texto`; `*prestamo` de un `&texto` es un `texto`.
+
+
+### 18.32 Módulos y biblioteca embebida
+
+- `usar m` busca **primero un archivo**: junto al que importa, en `biblioteca/` y subiendo por los
+  directorios padre. Si no lo encuentra, usa el módulo de la biblioteca que viaja en el compilador.
+- **Un archivo con el nombre de un módulo lo sustituye.** Es intencionado: permite que un proyecto
+  reemplace una pieza de la biblioteca, pero conviene saberlo al depurar.
+- **Un módulo no puede definir `principal`**: un módulo es una biblioteca y se informa en el módulo.
+- Un archivo **no puede importarse a sí mismo**.

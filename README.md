@@ -97,6 +97,7 @@ Sprint 58 ✅  Los casos inválidos pasan por todas las fases
 Sprint 59 ✅  La duración del préstamo
 Sprint 60 ✅  Cierre de la v0.8 · auditoría de diagnóstico
 Sprint 61 ✅  Biblioteca 	extos y tipos de colección
+Sprint 62 ✅  Biblioteca embebida: 	extos viaja en el compilador
 ```
 
 **Ya compila y ejecuta:**
