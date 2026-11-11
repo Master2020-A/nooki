@@ -227,7 +227,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S46** | Genéricos de tipos | ✅ `estructura par<T>` con instanciación explícita (`par<entero>`), monomorficación por combinación y registro previo de campos para resolver accesos |
 | **S47** | Cierre de la v0.5 | ✅ Auditoría de los 41 códigos de diagnóstico (todos se emiten), programa de cierre con todo el lenguaje, limitación de devolución de compuestos documentada y versión 0.5.0 |
 | **S48** | Cerrar A-10 | ✅ El retorno de un compuesto transfiere sus variables con dueño y la construcción las mueve; el caso indirecto también queda cerrado. *Queda una fuga: los compuestos no liberan sus campos* |
-| **S49** | *Lifetimes* explícitos | Sintaxis `'v`; verificación en funciones y estructuras; 60 tests |
+| **S49** | Compuestos que liberan | ✅ `soltar` por instanciación para compuestos con campos con dueño, liberación solo de los frescos y movimiento de campos insertados en colecciones |
 | **S50** | Propiedad + OOP + closures | Préstamo de campos, `este`, captura en closures; 60 tests |
 | **S51** | `Send`/`Sync` y *data races* | Rasgos marcadores; verificación en concurrencia; `ContadorRef` y atómicos correctos; 50 tests |
 | **S52** | **Cierre v0.6: corpus oráculo** | Adaptar los *UI tests* de Rust como oráculo; 500 válidos + 500 inválidos; **eliminar el GC temporal** (ADR-07 pagada) |

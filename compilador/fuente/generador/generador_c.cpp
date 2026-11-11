@@ -874,10 +874,19 @@ private:
             }
             const std::string nombre_c = nombre_de_instancia(instancia);
             const std::vector<std::string> argumentos = argumentos_de_instancia(instancia);
+            bool con_dueno = false;
             for (const sintactico::Campo& campo : generico->second->campos) {
-                campos_[nombre_c][std::string(campo.nombre)] =
-                    tipo_declarado_c(sustituir_tipo(campo.tipo, *generico->second,
-                                                    argumentos));
+                const std::string tipo_campo = tipo_declarado_c(
+                    sustituir_tipo(campo.tipo, *generico->second, argumentos));
+                campos_[nombre_c][std::string(campo.nombre)] = tipo_campo;
+                if (tipo_campo == "nooki_texto" || tipo_campo == "nooki_caja" ||
+                    tipo_campo.rfind("nooki_vector_", 0) == 0 ||
+                    tipo_campo.rfind("nooki_mapa_", 0) == 0) {
+                    con_dueno = true;
+                }
+            }
+            if (con_dueno) {
+                compuestos_con_dueno_.insert(nombre_c);
             }
         }
 
@@ -1179,6 +1188,30 @@ private:
                         << ";\n";
             }
             salida_ << "} " << nombre_c << ";\n\n";
+
+            // Si algún campo tiene dueño, el compuesto lo libera al salir.
+            bool con_dueno = false;
+            salida_ << "static void " << nombre_c << "_soltar(" << nombre_c << "* valor) {\n";
+            for (const sintactico::Campo& campo : generico->second->campos) {
+                const std::string tipo_campo = tipo_declarado_c(
+                    sustituir_tipo(campo.tipo, *generico->second, argumentos));
+                if (tipo_campo == "nooki_texto") {
+                    salida_ << "    nooki_texto_soltar(&valor->" << campo.nombre << ");\n";
+                    con_dueno = true;
+                } else if (tipo_campo == "nooki_caja") {
+                    salida_ << "    nooki_caja_soltar(&valor->" << campo.nombre << ");\n";
+                    con_dueno = true;
+                } else if (tipo_campo.rfind("nooki_vector_", 0) == 0 ||
+                           tipo_campo.rfind("nooki_mapa_", 0) == 0) {
+                    salida_ << "    " << tipo_campo << "_soltar(&valor->" << campo.nombre
+                            << ");\n";
+                    con_dueno = true;
+                }
+            }
+            salida_ << "}\n\n";
+            if (con_dueno) {
+                compuestos_con_dueno_.insert(nombre_c);
+            }
         }
 
         // Definición de las tablas virtuales, ya con todos los tipos disponibles.
@@ -1875,9 +1908,14 @@ private:
         emitir_movimientos_de_llamada(*sentencia.expresion);
 
         const bool referencia_de_clase = !tipo.empty() && tipo.back() == '*';
+        const bool compuesto_fresco =
+            compuestos_con_dueno_.count(tipo) != 0 &&
+            (sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion ||
+             sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada);
+
         if (tipo == "nooki_caja" || tipo == "nooki_texto" ||
             tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0 ||
-            referencia_de_clase) {
+            compuesto_fresco || referencia_de_clase) {
             // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
                 const std::string& origen = std::string(sentencia.expresion->lexema);
@@ -1896,7 +1934,7 @@ private:
             } else if (referencia_de_clase) {
                 liberar = tipo.substr(0, tipo.size() - 1) + "_soltar";
             } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
-                       tipo.rfind("nooki_mapa_", 0) == 0) {
+                       tipo.rfind("nooki_mapa_", 0) == 0 || compuesto_fresco) {
                 liberar = tipo + "_soltar";
             }
             registrar_liberable(sentencia.nombre, std::move(liberar), referencia_de_clase);
@@ -2931,8 +2969,10 @@ private:
                 (acceso.anotacion == "insertar" && nodo.lista.size() == 2);
             if (toma_dueno && nodo.lista.front() &&
                 tipo_de(*nodo.lista.front()) == "nooki_texto" &&
-                nodo.lista.front()->tipo == sintactico::TipoExpresion::Identificador) {
-                const std::string origen(nodo.lista.front()->lexema);
+                (nodo.lista.front()->tipo == sintactico::TipoExpresion::Identificador ||
+                 nodo.lista.front()->tipo == sintactico::TipoExpresion::Miembro)) {
+                // Vale un nombre o un campo: en ambos casos el origen se vacía.
+                const std::string origen = expresion(*nodo.lista.front());
                 salida = "(" + salida + ", " + origen + ".datos = NULL, " + origen +
                          ".propio = 0)";
             }
@@ -3014,6 +3054,7 @@ private:
     std::map<std::string, const sintactico::Funcion*> funciones_ast_;
     std::map<std::string, const sintactico::DefinicionTipo*> genericos_tipo_;
     std::set<std::string> instancias_tipo_;
+    std::set<std::string> compuestos_con_dueno_;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string,

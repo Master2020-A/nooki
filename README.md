@@ -84,6 +84,7 @@ Sprint 45 ✅  Proyectos · `nooki construir` y búsqueda en `biblioteca/`
 Sprint 46 ✅  Genéricos de tipos · `estructura par<T>`
 Sprint 47 ✅  Cierre de la v0.5 · auditoría y programa de cierre
 Sprint 48 ✅  Propiedad en el retorno y en la construcción
+Sprint 49 ✅  Los compuestos liberan sus campos
 ```
 
 **Ya compila y ejecuta:**

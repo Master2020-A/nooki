@@ -1,0 +1,26 @@
+// Los compuestos con campos con dueño se liberan al salir del ámbito.
+estructura par<T> {
+    publico primero: T
+    publico segundo: T
+}
+
+funcion principal() -> entero {
+    variable total = 0
+    variable i = 0
+
+    mientras (i < 3) {
+        variable letras = "a" + ""
+        variable numeros = "b" + ""
+        variable p = par<texto> { primero: letras, segundo: numeros }
+        total = total + p.primero.largo() + p.segundo.largo()
+        i = i + 1
+    }
+    imprimir(total)
+
+    variable libro = Mapa<texto, entero>.nuevo()
+    variable q = par<texto> { primero: "clave" + "", segundo: "valor" + "" }
+    libro.insertar(q.primero, 7)
+    imprimir(libro.largo())
+    imprimir(libro.obtener("clave"))
+    retornar 0
+}

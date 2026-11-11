@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 49 — Los compuestos liberan sus campos (2026-11-10)
+
+- **Destructor por instanciación**: un compuesto genérico cuyos campos tienen dueño genera su
+  `soltar` y se libera al salir del ámbito. La fuga que quedaba abierta en A-10 se cierra.
+- **Solo se libera el compuesto fresco**: el construido en el sitio o devuelto por una llamada. Uno
+  copiado desde otra variable comparte los campos y no se libera, para no liberar dos veces.
+- **Los campos también se mueven**: `libro.insertar(q.primero, ...)` vacía `q.primero` después de
+  insertarlo, de modo que el mapa y el compuesto no comparten la misma cadena.
+- Caso de conformidad `0039-compuestos-dueno`, que construye compuestos en un bucle e inserta sus
+  campos en un mapa.
+
 ### Sprint 48 — Cerrar A-10: el retorno transfiere lo que contiene (2026-11-10)
 
 - **Devolver un compuesto transfiere sus variables**: `retornar par<texto> { primero: nombre }` ya no
