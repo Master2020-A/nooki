@@ -36,6 +36,7 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-023](docs/adr/ADR-023-errores-como-valores.md) | Errores como valores: `Resultado`, `Ok`/`Error` y `?` | ✅ Aprobada (S40) |
 | [ADR-024](docs/adr/ADR-024-variantes-con-datos.md) | Variantes con datos y patrones que ligan | ✅ Aprobada (S42) |
 | [ADR-025](docs/adr/ADR-025-biblioteca-en-nooki.md) | La biblioteca estándar se escribe en Nooki; `Resultado` deja de ser especial | ✅ Aprobada (S43) |
+| [ADR-026](docs/adr/ADR-026-rasgos.md) | Rasgos como contrato verificado y `&Rasgo` con despacho por tabla | ✅ Aprobada (S54–S55) |
 
 ---
 
@@ -106,7 +107,7 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 |---|---|---|---|
 | A-01 | **Marca y dominio de "Nooki"** | 🟡 Parcialmente resuelto | Ver §5.1 |
 | A-02 | **Equipo** | ✅ **Cerrado:** 1 persona | — |
-| A-03 | Infraestructura del registro de paquetes | ⬜ Abierto | S55 |
+| A-03 | Infraestructura del registro de paquetes | 🟡 Parcial: búsqueda en `biblioteca/` y biblioteca integrada (S45, S52). Falta un registro público | Fase de paquetes |
 | A-04 | Política de seguridad y divulgación de vulnerabilidades | ⬜ Abierto | S91 |
 | A-05 | Financiación (becas, patrocinio, fundación) | ⬜ Abierto | Antes de S52 |
 | A-06 | Incorporar el texto completo de Apache-2.0 (`LICENSE-APACHE`) | ⬜ Abierto | Antes de la primera publicación (S94) |
@@ -114,7 +115,7 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-08 | **¿`-2 ** 2` debe ser `(-2)**2` o `-(2**2)`?** La especificación dice lo primero; Python y Ruby dicen lo segundo | ⬜ Abierto (RFC) | Antes de la v1.0 |
 | A-11 | **Llamada que mueve un valor con dueño dentro de otra expresión** (`f(g(a))`) no lo mueve | ✅ Cerrado (S51): es error de compilación en lugar de fuga | — |
 | A-10 | **Devolver una construcción con variables locales con dueño** libera esas variables al retornar y deja punteros colgando | ✅ Cerrado (S48–S49): el retorno y la construcción transfieren, y los compuestos frescos liberan sus campos | — |
-| A-09 | **Semántica de referencia para `clase` y herencia**: requieren liberar en todas las salidas de ámbito e incrementar en cada copia. Se harán junto al ownership, no antes | ⬜ Diferido a propósito | Fase de memoria (S45+) |
+| A-09 | **Semántica de referencia para `clase` y herencia** | ✅ Resuelto (S36): ADR-021, clases por referencia con `nuevo` | — |
 
 ### 5.1 Resultado de la verificación del nombre (A-01)
 

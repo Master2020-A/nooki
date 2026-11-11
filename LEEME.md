@@ -28,13 +28,14 @@ $ nooki ejecutar hola.oki
 | OOP completa: clases, herencia, polimorfismo, `super` | sí |
 | Genéricos de funciones y de tipos | sí |
 | Enumeraciones con datos y emparejamiento | sí |
+| Rasgos y despacho por rasgo (`&Rasgo`) | sí |
 | Errores como valores (`resultado` y `?`), sin excepciones | sí |
 | Colecciones: `Vector<entero>`, `Vector<texto>`, `Mapa<texto, entero>` | sí |
 | Módulos con visibilidad y proyectos con `biblioteca/` | sí |
 | Biblioteca estándar escrita en Nooki | `resultado`, `matematicas` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
-**Versión actual: 0.6.0.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o
+**Versión actual: 0.7.0.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Empezar en tres comandos

@@ -1,6 +1,6 @@
 # Guía de Nooki
 
-Un recorrido de cero a un programa con módulos, en diez pasos. **Todos los ejemplos de esta guía se
+Un recorrido de cero a un programa con módulos, en once pasos. **Todos los ejemplos de esta guía se
 compilan y se ejecutan**: la salida que ves es la que da el compilador, copiada de una ejecución real.
 
 ---
@@ -305,6 +305,52 @@ ab
 
 Un mismo tipo sirve para varios: el compilador genera una estructura por combinación, sin despacho en
 ejecución.
+
+---
+
+## 11. Rasgos: polimorfismo sin parentesco
+
+```aura
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase persona implementa Saluda {
+    publico nombre: texto
+    publico funcion saludar() -> texto {
+        retornar "Hola, soy " + este.nombre
+    }
+}
+
+clase robot implementa Saluda {
+    publico modelo: texto
+    publico funcion saludar() -> texto {
+        retornar "Bip. Unidad " + este.modelo
+    }
+}
+
+funcion presentar(quien: &Saluda) -> vacio {
+    imprimir(quien.saludar())
+}
+
+funcion principal() -> entero {
+    variable p = nuevo persona { nombre: "Ana" }
+    variable r = nuevo robot { modelo: "R2" }
+    presentar(&p)
+    presentar(&r)
+    retornar 0
+}
+```
+
+```
+Hola, soy Ana
+Bip. Unidad R2
+```
+
+`persona` y `robot` no comparten padre, pero ambos cumplen `Saluda`, y `presentar` los trata igual:
+cada uno responde con su implementación. Si a una clase le falta un método del rasgo, no compila.
+
+Fíjate en la diferencia con la herencia del paso 8: allí había una jerarquía; aquí solo un contrato.
 
 ---
 

@@ -8,7 +8,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | | |
 |---|---|
 | **Nombre** | Nooki |
-| **Versión** | 0.6.0 |
+| **Versión** | 0.7.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
 | **Implementación** | C++20 + LLVM |
@@ -91,6 +91,7 @@ Sprint 52 ✅  Herramientas: `nuevo`, `probar` y `limpiar`
 Sprint 53 ✅  Guía y presentación en español
 Sprint 54 ✅  Rasgos · `rasgo` e `implementa`
 Sprint 55 ✅  `&Rasgo` · despacho dinámico entre tipos no emparentados
+Sprint 56 ✅  Cierre de la v0.7 · sistema de tipos completo
 ```
 
 **Ya compila y ejecuta:**
