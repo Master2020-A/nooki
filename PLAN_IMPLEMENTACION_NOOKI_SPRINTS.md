@@ -245,7 +245,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S55** | `&Rasgo` | ✅ Referencia a rasgo con objeto y tabla, tabla por (tipo, rasgo) con adaptadores, despacho dinámico y conversión en variables y argumentos |
 | **S56** | Cierre de la v0.7 | ✅ ADR-026 de rasgos, guía con paso 11, decisiones al día y versión 0.7.0 |
 | **S57** | Tiempos de vida: escape | ✅ Devolver un préstamo a una variable local es error (`NOK5006`); devolver un préstamo recibido como parámetro está permitido. *La duración entre variables del mismo ámbito sigue sin verificarse* |
-| **S58** | LSP | Diagnósticos, hover, completado, ir a definición; 40 tests de integración |
+| **S58** | Arnés: casos inválidos en todas las fases | ✅ Los `invalido/` pasan por léxico, parser y verificación; cuatro casos semánticos nuevos (`NOK5001`, `NOK3011`, `NOK5004`, `NOK5006`) |
 | **S59** | Linter y `nooki verificar` | 20 reglas con sugerencia y arreglo automático; marco de mocks y benchmarks |
 | **S60** | Documentación y `nooki doc` | Doc comments `///`; extracción; sitio HTML; 80 % de la std documentada |
 | **S61** | **Cierre v0.7: integración con editores** | Extensión VS Code (sintaxis + snippets + cliente LSP), Vim/Neovim, Sublime |

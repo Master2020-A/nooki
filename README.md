@@ -93,6 +93,7 @@ Sprint 54 ✅  Rasgos · `rasgo` e `implementa`
 Sprint 55 ✅  `&Rasgo` · despacho dinámico entre tipos no emparentados
 Sprint 56 ✅  Cierre de la v0.7 · sistema de tipos completo
 Sprint 57 ✅  Tiempos de vida: el préstamo que escapa
+Sprint 58 ✅  Los casos inválidos pasan por todas las fases
 ```
 
 **Ya compila y ejecuta:**

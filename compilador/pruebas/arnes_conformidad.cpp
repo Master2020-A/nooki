@@ -25,6 +25,8 @@
 #include "nooki/diagnostico/emisor.hpp"
 #include "nooki/diagnostico/gestor_fuentes.hpp"
 #include "nooki/lexico/lexer.hpp"
+#include "nooki/semantico/verificaciones.hpp"
+#include "nooki/sintactico/parser.hpp"
 #include "nooki/proceso.hpp"
 
 namespace fs = std::filesystem;
@@ -170,7 +172,8 @@ bool compilar_y_comparar(const Caso& caso, std::string& esperado, std::string& o
     return obtenido == esperado;
 }
 
-/// Analiza el léxico del caso y compara los códigos con los esperados.
+/// Pasa el caso por todas las fases (léxico, sintáctico y semántico) y compara
+/// los códigos con los esperados. Un caso inválido debe fallar en la fase que sea.
 bool analizar_codigos(const Caso& caso, std::vector<std::string>& esperados,
                       std::vector<std::string>& obtenidos) {
     const std::string contenido = leer(caso.directorio / "principal.oki");
@@ -178,8 +181,21 @@ bool analizar_codigos(const Caso& caso, std::vector<std::string>& esperados,
     GestorFuentes fuentes;
     Emisor emisor;
     const auto archivo = fuentes.anadir(caso.nombre + "/principal.oki", contenido);
+
     nooki::lexico::Lexer lexer(fuentes, archivo, emisor);
-    lexer.todos();
+    const auto tokens = lexer.todos();
+
+    // Los casos válidos se compilan y ejecutan aparte; aquí solo se comprueba que
+    // el léxico no se queje. Los inválidos, en cambio, pasan por todas las fases:
+    // un error semántico también es un error del caso.
+    if (caso.invalido && !emisor.hay_errores()) {
+        nooki::sintactico::Parser parser(fuentes, archivo, emisor, tokens);
+        const nooki::sintactico::Programa programa = parser.analizar();
+
+        if (!emisor.hay_errores()) {
+            nooki::semantico::verificar(programa, emisor);
+        }
+    }
 
     obtenidos = codigos_de(emisor);
     esperados = caso.invalido ? leer_codigos(caso.directorio / "esperado.txt")

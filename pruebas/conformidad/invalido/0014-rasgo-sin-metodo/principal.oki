@@ -1,0 +1,12 @@
+// Un tipo que declara un rasgo y no cumple el contrato.
+rasgo Saluda {
+    funcion saludar() -> texto
+}
+
+clase mudo implementa Saluda {
+    publico nombre: texto
+}
+
+funcion principal() -> entero {
+    retornar 0
+}

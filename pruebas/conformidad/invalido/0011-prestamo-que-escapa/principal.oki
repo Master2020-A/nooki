@@ -1,0 +1,9 @@
+// Devolver un préstamo a algo local: la variable muere al salir de la función.
+funcion malo() -> &texto {
+    variable local = "temporal" + ""
+    retornar &local
+}
+
+funcion principal() -> entero {
+    retornar 0
+}

@@ -1,0 +1,12 @@
+// Copiar un compuesto con campos con dueño.
+estructura par<T> {
+    publico primero: T
+    publico segundo: T
+}
+
+funcion principal() -> entero {
+    variable a = par<texto> { primero: "x", segundo: "y" }
+    variable b = a
+    imprimir(b.primero)
+    retornar 0
+}

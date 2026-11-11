@@ -1,0 +1,7 @@
+// Usar un valor después de moverlo.
+funcion principal() -> entero {
+    variable a = "uno" + "!"
+    variable b = a
+    imprimir(a)
+    retornar 0
+}

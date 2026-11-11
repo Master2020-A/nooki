@@ -104,8 +104,9 @@ docs/adr/              decisiones de arquitectura
 Cada cambio pasa por tres filtros:
 
 1. **Ocho suites unitarias** del compilador (léxico, parser, semántica, diagnósticos, CLI, expresión).
-2. **62 programas de conformidad** en `pruebas/conformidad/valido/`: cada uno se compila, se ejecuta y
-   su salida se compara con la esperada. Si un cambio rompe el código generado, se ve aquí.
+2. **65 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
+   la esperada; los inválidos pasan por léxico, parser y verificación y deben emitir exactamente los
+   códigos que declaran.
 3. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos.
 
 Los diagnósticos también se prueban: cada código `NOK` tiene un caso que lo provoca.
