@@ -3,6 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 48 — Cerrar A-10: el retorno transfiere lo que contiene (2026-11-10)
+
+- **Devolver un compuesto transfiere sus variables**: `retornar par<texto> { primero: nombre }` ya no
+  libera `nombre`; la propiedad pasa al llamante.
+- **Construir una estructura mueve lo que se le pasa**: `variable p = par<texto> { primero: nombre }`
+  anula `nombre`, igual que una asignación. Se cierra el caso indirecto (construir y devolver la
+  variable), que seguía dejando punteros colgando.
+- **Caso de conformidad `0038-propiedad-retorno`** con las dos formas: la directa y la que construye
+  en una variable antes de devolver.
+- **Riesgo residual documentado** (A-10, reducido): un compuesto con campos con dueño no los libera al
+  salir del ámbito, así que esas cadenas se pierden. Es una fuga, no corrupción.
+
 ## [0.5.0] — 2026-11-10
 
 **El lenguaje del plan está implementado.** Con genéricos de tipos, proyectos y biblioteca escrita en

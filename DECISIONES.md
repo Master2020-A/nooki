@@ -112,7 +112,7 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-06 | Incorporar el texto completo de Apache-2.0 (`LICENSE-APACHE`) | ⬜ Abierto | Antes de la primera publicación (S94) |
 | A-07 | Conectar el repositorio a GitHub y comprobar la primera ejecución de CI | ⬜ Abierto | Al cerrar S03 |
 | A-08 | **¿`-2 ** 2` debe ser `(-2)**2` o `-(2**2)`?** La especificación dice lo primero; Python y Ruby dicen lo segundo | ⬜ Abierto (RFC) | Antes de la v1.0 |
-| A-10 | **Devolver una construcción con variables locales con dueño** libera esas variables al retornar y deja punteros colgando | ⬜ Abierto (corrección) | Antes de la v0.6 |
+| A-10 | **Devolver una construcción con variables locales con dueño** libera esas variables al retornar y deja punteros colgando | ✅ Cerrado (S48): el retorno y la construcción transfieren. Queda una fuga: los compuestos no liberan sus campos | — |
 | A-09 | **Semántica de referencia para `clase` y herencia**: requieren liberar en todas las salidas de ámbito e incrementar en cada copia. Se harán junto al ownership, no antes | ⬜ Diferido a propósito | Fase de memoria (S45+) |
 
 ### 5.1 Resultado de la verificación del nombre (A-01)

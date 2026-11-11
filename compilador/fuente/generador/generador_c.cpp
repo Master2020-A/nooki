@@ -1476,9 +1476,9 @@ private:
     }
 
     /// Libera las cajas de un ámbito, de la última declarada a la primera.
-    void liberar_cajas(Ambito& ambito, std::string_view excluir = {}) {
+    void liberar_cajas(Ambito& ambito, const std::set<std::string>& conservar = {}) {
         for (auto it = ambito.liberables.rbegin(); it != ambito.liberables.rend(); ++it) {
-            if (!excluir.empty() && it->nombre == excluir) {
+            if (conservar.count(it->nombre) != 0) {
                 continue;  // se devuelve: la propiedad pasa al llamante
             }
             salida_ << indentacion() << it->funcion << "("
@@ -1488,9 +1488,29 @@ private:
     }
 
     /// Antes de un `retornar` hay que liberar todas las cajas vivas.
-    void liberar_todo(std::string_view excluir = {}) {
+    void liberar_todo(const std::set<std::string>& conservar = {}) {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
-            liberar_cajas(*it, excluir);
+            liberar_cajas(*it, conservar);
+        }
+    }
+
+    /// Nombres que aparecen en una expresión: si se devuelve un compuesto, sus
+    /// variables con dueño se transfieren al llamante y no se liberan.
+    static void recoger_identificadores(const sintactico::Expresion& expresion,
+                                        std::set<std::string>& nombres) {
+        if (expresion.tipo == sintactico::TipoExpresion::Identificador) {
+            nombres.insert(std::string(expresion.lexema));
+        }
+        for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+            if (argumento) {
+                recoger_identificadores(*argumento, nombres);
+            }
+        }
+        if (expresion.izquierda) {
+            recoger_identificadores(*expresion.izquierda, nombres);
+        }
+        if (expresion.derecha) {
+            recoger_identificadores(*expresion.derecha, nombres);
         }
     }
 
@@ -1715,14 +1735,14 @@ private:
                 }
                 return;
 
-            case TipoSentencia::Retornar:
-                // Devolver un valor con dueño lo mueve: no se libera aquí.
-                if (sentencia.expresion &&
-                    sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
-                    liberar_todo(sentencia.expresion->lexema);
-                } else {
-                    liberar_todo();
+            case TipoSentencia::Retornar: {
+                // Devolver un valor con dueño lo mueve: no se libera aquí, ni él
+                // ni las variables que aparezcan dentro de un compuesto devuelto.
+                std::set<std::string> conservar;
+                if (sentencia.expresion) {
+                    recoger_identificadores(*sentencia.expresion, conservar);
                 }
+                liberar_todo(conservar);
                 if (sentencia.expresion) {
                     salida_ << indentacion() << "return " << expresion(*sentencia.expresion)
                             << ";\n";
@@ -1730,6 +1750,7 @@ private:
                     salida_ << indentacion() << (principal ? "return 0;\n" : "return;\n");
                 }
                 return;
+            }
 
             case TipoSentencia::Variable:
             case TipoSentencia::Constante:
@@ -1841,6 +1862,15 @@ private:
         }
 
         salida_ << tipo << ' ' << sentencia.nombre << " = " << valor << ";\n";
+
+        // Una construcción con variables con dueño se queda con ellas.
+        if (sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion) {
+            std::set<std::string> nombres;
+            recoger_identificadores(*sentencia.expresion, nombres);
+            for (const std::string& nombre : nombres) {
+                anular_variable(nombre);
+            }
+        }
 
         emitir_movimientos_de_llamada(*sentencia.expresion);
 
@@ -2796,6 +2826,22 @@ private:
                     }
                 }
             }
+        }
+    }
+
+    /// Vacía una variable con dueño: su valor pasa a otro sitio.
+    void anular_variable(const std::string& nombre) {
+        const std::string tipo = buscar(nombre);
+        if (tipo == "nooki_caja") {
+            salida_ << indentacion() << nombre << ".datos = NULL;\n";
+        } else if (tipo == "nooki_texto") {
+            salida_ << indentacion() << nombre << ".datos = NULL;\n";
+            salida_ << indentacion() << nombre << ".propio = 0;\n";
+        } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
+                   tipo.rfind("nooki_mapa_", 0) == 0) {
+            salida_ << indentacion() << nombre << ".datos = NULL;\n";
+            salida_ << indentacion() << nombre << ".largo = 0;\n";
+            salida_ << indentacion() << nombre << ".capacidad = 0;\n";
         }
     }
 

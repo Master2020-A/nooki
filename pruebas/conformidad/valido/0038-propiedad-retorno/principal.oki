@@ -1,0 +1,42 @@
+// Devolver un compuesto transfiere la propiedad de lo que contiene (asunto A-10).
+estructura par<T> {
+    publico primero: T
+    publico segundo: T
+}
+
+// Antes, «nombre» y «resto» se liberaban al retornar y el par quedaba colgando.
+funcion partir(linea: &texto) -> par<texto> {
+    variable corte = linea.buscar(":")
+    variable nombre = linea.subtexto(0, corte)
+    variable resto = linea.subtexto(corte + 1, 100)
+    retornar par<texto> { primero: nombre, segundo: resto }
+}
+
+// Construir el par en una variable y devolverla tampoco debe liberar sus campos.
+funcion partir_guardado(linea: &texto) -> par<texto> {
+    variable nombre = linea.subtexto(0, 3)
+    variable guardado = par<texto> { primero: nombre, segundo: "fin" }
+    retornar guardado
+}
+
+funcion principal() -> entero {
+    variable libro = Mapa<texto, entero>.nuevo()
+
+    variable a = "Ana" + ":30"
+    variable b = "Luis" + ":25"
+    variable pa = partir(&a)
+    variable pb = partir(&b)
+
+    libro.insertar(pa.primero, 1)
+    libro.insertar(pb.primero, 2)
+
+    imprimir(libro.largo())
+    imprimir(libro.obtener("Ana"))
+    imprimir(libro.obtener("Luis"))
+
+    variable c = "Eva" + ":40"
+    variable pc = partir_guardado(&c)
+    imprimir(pc.primero)
+    imprimir(pc.segundo)
+    retornar 0
+}
