@@ -8,8 +8,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 Puedes elegir, para cada uso, la licencia que prefieras:
 
-- **MIT**: permisiva y simple.
-- **Apache-2.0**: permisiva con concesión explícita de patentes, preferida por muchas empresas.
+- **MIT** ([texto completo](LICENCIA-MIT.txt)): permisiva y simple.
+- **Apache-2.0** ([texto completo](LICENCIA-APACHE.txt)): permisiva con concesión explícita de
+  patentes, preferida por muchas empresas.
 
 ## Excepción de runtime
 

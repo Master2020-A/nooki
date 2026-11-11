@@ -103,6 +103,7 @@ Sprint 64 ✅  Cierre de la v0.9 · prueba de coherencia documental
 Sprint 65 ✅  Todas las vías del movimiento
 Sprint 66 ✅  A-14 cerrado: mover un campo lo deja vacío y válido
 Sprint 67 ✅  Cierre de la 1.0
+Sprint 68 ✅  Preparar la publicación
 ```
 
 **Ya compila y ejecuta:**

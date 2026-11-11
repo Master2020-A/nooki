@@ -111,7 +111,7 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-04 | Política de seguridad y divulgación de vulnerabilidades | ⬜ Abierto | S91 |
 | A-05 | Financiación (becas, patrocinio, fundación) | ⬜ Abierto | Antes de S52 |
 | A-06 | Incorporar el texto completo de Apache-2.0 (`LICENSE-APACHE`) | ⬜ Abierto | Antes de la primera publicación (S94) |
-| A-07 | Conectar el repositorio a GitHub y comprobar la primera ejecución de CI | ⬜ Abierto | Al cerrar S03 |
+| A-07 | Conectar el repositorio a GitHub y comprobar la primera ejecución de CI | 🟡 Preparado (S68): pasos exactos en `PUBLICAR.md` y CI revisada. Falta ejecutarla | Antes de anunciar el proyecto |
 | A-08 | **¿`-2 ** 2` debe ser `(-2)**2` o `-(2**2)`?** La especificación dice lo primero; Python y Ruby dicen lo segundo | ⬜ Abierto (RFC) | Antes de la v1.0 |
 | A-14 | **Mover un campo de un objeto a una colección** | ✅ Cerrado (S66): el campo se vacía de verdad (longitud a cero) y queda un texto vacío válido | — |
 | A-13 | **Un módulo nuevo de la biblioteca embebida no registraba sus funciones** | ✅ Cerrado (S62): no era un fallo del compilador; un archivo `build/textos.oki` olvidado tapaba al módulo. La búsqueda prefiere archivo a biblioteca | — |

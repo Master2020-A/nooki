@@ -1,80 +1,120 @@
 # Cómo contribuir a Nooki
 
-Gracias por asomarte. Nooki está en fase de diseño activo: el compilador existe, pero casi nada
-está implementado todavía. Es un buen momento para entrar.
+Gracias por asomarte. Nooki está en la **versión 1.0**: el lenguaje funciona, está probado en dos
+compiladores y no tiene defectos conocidos. Lo que falta está listado, con su tamaño, en
+[DECISIONES.md](DECISIONES.md).
+
+Es un buen momento para entrar: hay huecos pequeños que cierran cosas grandes.
 
 ## Antes de escribir código
 
-1. Lee [README.md](README.md) para entender el estado del proyecto.
-2. Lee [DECISIONES.md](DECISIONES.md): las decisiones ya están cerradas y no se rediscuten sin RFC.
-3. Lee el sprint correspondiente en [PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md).
-   Cada sprint tiene un criterio de terminado claro: si no lo cumples, no está terminado.
+1. Lee el [LEEME](LEEME.md) para saber qué es y qué no es el proyecto.
+2. Lee [DECISIONES.md](DECISIONES.md): las decisiones cerradas no se rediscuten sin un RFC, y las
+   abiertas están esperando a alguien.
+3. Mira el [plan de sprints](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md): cada fila es un sprint con su
+   criterio de terminado.
 
-## Requisitos
+## Reglas del proyecto
 
-| Herramienta | Versión mínima |
+### Código
+
+- **C++20**, sin dependencias externas. Solo la biblioteca estándar.
+- Estilo del repositorio: 100 columnas, nombres de dominio en español (`verificar`, `emitir`,
+  `ambito`), miembros con guion bajo final (`campos_`).
+- **Sin `#include` en medio de un archivo** ni código comentado: lo que no se usa se borra.
+- Todo lo que el compilador genere debe compilar **sin avisos** en GCC y MSVC.
+
+### Pruebas
+
+Ninguna característica entra sin su prueba. Hay tres niveles:
+
+| Nivel | Dónde | Qué prueba |
+|---|---|---|
+| Unitarias | `compilador/pruebas/` | una fase del compilador, en memoria |
+| Conformidad válida | `pruebas/conformidad/valido/` | un programa que se compila, se ejecuta y su salida coincide con `esperado.txt` |
+| Conformidad inválida | `pruebas/conformidad/invalido/` | un programa que debe emitir exactamente los códigos de `esperado.txt` |
+
+```bash
+$ cmake --preset windows-mingw      # o linux, macos, windows-msvc-2022
+$ cmake --build --preset windows-mingw
+$ ctest --preset windows-mingw
+```
+
+**Un cambio que rompe `ctest` no está terminado**, aunque el programa que lo motivó funcione.
+
+### Diagnósticos
+
+Cada código `NOK` necesita tres cosas:
+
+1. La constante en `compilador/incluir/nooki/diagnostico/codigos.hpp`.
+2. El mensaje en español e inglés en `compilador/fuente/diagnostico/catalogo.cpp`, con parámetros
+   `{asi}`.
+3. **Un caso que lo provoque**, en conformidad o en una suite.
+
+Y el mensaje debe decir **qué hacer**, no solo qué pasó:
+
+```
+error[NOK5001]: no se puede usar «a»: el valor se movió antes
+   = ayuda: se movió a otro sitio: use «&» para prestarlo sin transferirlo
+```
+
+### Documentación
+
+Si el cambio afecta al lenguaje, actualiza en el mismo commit:
+
+- `spec/especificacion-v0.1.md` (una sección nueva o la existente),
+- `CHANGELOG.md`,
+- `GUIA.md` si es algo que un usuario principiante necesita,
+- `PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md` (la fila del sprint).
+
+Hay una prueba, `prueba_documentos`, que comprueba que los sprints terminados figuran en el historial
+y en el LEEME, y que las versiones coinciden. **Si se te olvida algo, `ctest` lo dice.**
+
+### Commits
+
+- Mensaje en español, en imperativo: `biblioteca: anade el modulo textos`.
+- Firmados: `git commit -s`.
+- Un commit por sprint cuando trabajes por sprints, o un commit por cambio coherente.
+- El cuerpo del mensaje explica **qué** y **por qué**, no repite el título.
+
+## Cómo empezar
+
+```bash
+$ git clone <repositorio>
+$ cd nooki
+$ cmake --preset windows-mingw     # o linux, macos
+$ cmake --build --preset windows-mingw
+$ ctest --preset windows-mingw
+$ build/windows-mingw/compilador/nooki --version
+```
+
+Y después:
+
+```bash
+$ build/windows-mingw/compilador/nooki ejecutar pruebas/conformidad/valido/0001-*/principal.oki
+```
+
+## Dónde mirar primero
+
+| Buscas | Empieza por |
 |---|---|
-| CMake | 3.25 |
-| Compilador C++ | MSVC 2022, GCC 12, Clang 15 (C++20) |
-| Git | cualquiera reciente |
+| Entender el lenguaje | [GUIA.md](GUIA.md) |
+| Entender una decisión | [docs/adr/](docs/adr/) |
+| Ver qué falta | [DECISIONES.md](DECISIONES.md), sección 7 |
+| Tocar el compilador | `compilador/fuente/generador/generador_c.cpp` es el corazón; `semantico/verificaciones.cpp` las reglas |
+| Añadir a la biblioteca | `fuente_biblioteca` en `conductor/compilar.cpp`, y un caso en `pruebas/conformidad/valido/` |
 
-Opcionales: `clang-format` y `clang-tidy` (se usan en CI).
+## Lo que más falta
 
-## Compilar y probar
+En orden de esfuerzo, y todas bien acotadas:
 
-```bash
-# Windows (elige uno)
-cmake --preset windows-msvc-2026     # Visual Studio 2026
-cmake --preset windows-msvc          # Visual Studio 2022 (el que usa CI)
-cmake --preset windows-mingw         # MinGW GCC
+1. **Casos para los diez códigos de integración** (A-12): CLI, carga de módulos, backend.
+2. **Biblioteca estándar**: `archivo`, `texto` avanzado, aritmética de fechas.
+3. **Paquetes con manifiesto**.
+4. **Tiempos de vida completos**.
 
-# Linux / macOS
-cmake --preset linux                 # o macos
+## Código de conducta
 
-cmake --build --preset <preset>
-ctest --preset <preset>
-```
-
-Con saneamiento (solo Linux y macOS):
-
-```bash
-cmake --preset saneamiento
-cmake --build --preset saneamiento 2>/dev/null || cmake --build build/saneamiento
-ctest --preset saneamiento
-```
-
-## Estilo
-
-- Código, comentarios, mensajes y **nombres de identificadores en español**.
-- Formato: `.clang-format` (4 espacios, 100 columnas). Ejecuta `clang-format -i` antes de enviar.
-- Análisis: `.clang-tidy`.
-- Comentarios solo cuando expliquen el *porqué*, no el *qué*.
-
-## Pruebas
-
-- Toda funcionalidad nueva necesita pruebas. En esta etapa, en `compilador/pruebas/`.
-- A partir del Sprint 5, además, un caso de conformidad en `pruebas/conformidad/` (formato descrito
-  en [pruebas/LEEME.md](pruebas/LEEME.md)).
-- Un cambio que no compila y no pasa las pruebas en Windows, Linux y macOS no se acepta.
-
-## Commits y firma
-
-- Mensajes de commit en español, en imperativo: `añade el verificador de préstamos`.
-- Firma tus commits con `git commit -s` (DCO). Al hacerlo certificas que puedes aportar ese código
-  bajo la licencia del proyecto.
-
-## Cambios que afectan al lenguaje
-
-Si tu idea cambia la sintaxis, la semántica o la librería estándar, **no abras un PR**: abre un
-**RFC** con la plantilla de [docs/rfcs/0000-plantilla.md](docs/rfcs/0000-plantilla.md). Si se
-aprueba, se crea un ADR y después se implementa.
-
-## Dónde empezar
-
-Busca los sprints abiertos en el plan. Un buen primer aporte suele ser:
-
-- un caso de conformidad que hoy falla,
-- un mensaje de error que se entiende mal,
-- una prueba que falta.
-
-Gracias.
+Se espera respeto y crítica técnica. Los desacuerdos se resuelven con argumentos y con pruebas, no
+con autoridad: la mitad de los arreglos de este proyecto empezaron con un caso de conformidad que
+fallaba.

@@ -3,6 +3,20 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 68 — Preparar la publicación (2026-11-11)
+
+- **Licencias completas**: `LICENCIA-MIT.txt` y `LICENCIA-APACHE.txt` con los textos íntegros, y
+  `LICENCIA.md` que enlaza ambos. Cierra A-06.
+- **`CONTRIBUIR.md` reescrito**: reflejaba el estado del sprint 3 («casi nada implementado»). Ahora
+  explica las reglas reales: C++20 sin dependencias, los tres niveles de prueba, los tres requisitos
+  de un diagnóstico nuevo y el commit firmado.
+- **`PUBLICAR.md`**: los pasos exactos para subir el repositorio, ejecutar la CI por primera vez y
+  qué hacer con lo que falle.
+- **CI revisada**: presets y rutas del binario comprobados contra `CMakePresets.json` y el árbol de
+  `build/`.
+
 ## [1.0.0] — 2026-11-11
 
 **Nooki 1.0: todo lo que la especificación describe está implementado y probado, sin defectos
