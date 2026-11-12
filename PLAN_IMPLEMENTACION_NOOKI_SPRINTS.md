@@ -266,7 +266,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S67** | Cierre de la 1.0 | ✅ Notas de versión, inventario de pendientes con tamaños y versión 1.0.0 en todo el proyecto |
 | **S68** | Preparar la publicación | ✅ Licencias completas (A-06), `CONTRIBUIR.md` al día, `PUBLICAR.md` con los pasos y CI revisada |
 | **S69** | Ejemplos y resaltado | ✅ Cuatro ejemplos ejecutables, extensión de VS Code (TextMate), sintaxis de Vim e instrucciones para otros editores; corregida la ejecución con rutas `/` en Windows |
-| **S70** | **Cierre v0.8: pruebas integradas** | Atributo `@prueba`, mocks y benchmarks en el propio lenguaje; 100 % de la std con tests |
+| **S70** | Verificación fuera de Windows | ✅ GCC 13.3, Clang 18.1 y ASan+UBSan en Linux: compilación sin avisos y 9/9 suites en las tres cadenas. Eliminados dos avisos y añadido el preset `saneamiento` que faltaba. *macOS sin verificar (A-15)* |
 
 ---
 

@@ -160,6 +160,10 @@
             "configurePreset": "linux"
         },
         {
+            "name": "saneamiento",
+            "configurePreset": "saneamiento"
+        },
+        {
             "name": "macos",
             "configurePreset": "macos"
         }

@@ -17,13 +17,6 @@ namespace {
 /// Nombres de los rasgos del programa, para resolver `&Rasgo` en los tipos.
 inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
 
-/// Nombres de las clases del programa: prestar una referencia es prestar el objeto.
-inline std::set<std::string>* CLASES_DEL_PROGRAMA = nullptr;
-
-bool es_clase_c(std::string_view nombre) {
-    return CLASES_DEL_PROGRAMA != nullptr &&
-           CLASES_DEL_PROGRAMA->count(std::string(nombre)) != 0;
-}
 
 bool es_rasgo_c(std::string_view nombre) {
     return RASGOS_DEL_PROGRAMA != nullptr &&
@@ -891,7 +884,6 @@ private:
                 clases_.insert(std::string(definicion.nombre));
             }
         }
-        CLASES_DEL_PROGRAMA = &clases_;
         recoger_instancias(programa);
         for (const std::string& instancia : instancias_tipo_) {
             tipo_c_de_[instancia] = nombre_de_instancia(instancia);

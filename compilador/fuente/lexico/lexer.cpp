@@ -247,7 +247,7 @@ std::string describir_caracter(char32_t valor) {
 
 Lexer::Lexer(const diagnostico::GestorFuentes& fuentes, diagnostico::ArchivoId archivo,
              diagnostico::Emisor& emisor)
-    : fuentes_(fuentes), archivo_(archivo), emisor_(emisor), contenido_(fuentes.contenido(archivo)) {}
+    : archivo_(archivo), emisor_(emisor), contenido_(fuentes.contenido(archivo)) {}
 
 char Lexer::actual() const noexcept { return pos_ < contenido_.size() ? contenido_[pos_] : '\0'; }
 

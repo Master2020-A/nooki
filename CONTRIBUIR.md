@@ -42,6 +42,24 @@ $ ctest --preset windows-mingw
 
 **Un cambio que rompe `ctest` no está terminado**, aunque el programa que lo motivó funcione.
 
+### Verificar en Linux desde Windows
+
+Con WSL instalado, las tres cadenas de Linux se comprueban en unos minutos:
+
+```bash
+wsl -d Ubuntu -- bash -lc "cd /mnt/c/.../nooki && cmake --preset linux && \
+  cmake --build --preset linux -j 4 && ctest --preset linux"
+```
+
+Y con detección de errores de memoria y comportamiento indefinido:
+
+```bash
+wsl -d Ubuntu -- bash -lc "cd /mnt/c/.../nooki && cmake --preset saneamiento && \
+  cmake --build --preset saneamiento -j 4 && ctest --preset saneamiento"
+```
+
+Para Clang, configurar aparte con `-DCMAKE_CXX_COMPILER=clang++`.
+
 ### Diagnósticos
 
 Cada código `NOK` necesita tres cosas:

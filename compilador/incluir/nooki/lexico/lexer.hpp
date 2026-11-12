@@ -42,7 +42,6 @@ private:
     Token leer_caracter_o_vida();
     Token leer_operador();
 
-    const diagnostico::GestorFuentes& fuentes_;
     diagnostico::ArchivoId archivo_;
     diagnostico::Emisor& emisor_;
     std::string_view contenido_;

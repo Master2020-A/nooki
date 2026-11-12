@@ -105,6 +105,7 @@ Sprint 66 ✅  A-14 cerrado: mover un campo lo deja vacío y válido
 Sprint 67 ✅  Cierre de la 1.0
 Sprint 68 ✅  Preparar la publicación
 Sprint 69 ✅  Ejemplos ejecutables y resaltado en editores
+Sprint 70 ✅  Verificado en Linux: GCC, Clang y ASan+UBSan
 ```
 
 **Ya compila y ejecuta:**

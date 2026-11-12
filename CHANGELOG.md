@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 70 — Verificación fuera de Windows (2026-11-11)
+
+**El compilador compila y pasa las nueve suites en Linux, con tres cadenas distintas.** Era la regla 1
+del plan («verde en los tres sistemas») y nunca se había comprobado.
+
+| Cadena | Compilación | Suites |
+|---|---|---|
+| GCC 13.3 · Ubuntu 24.04 | ✅ sin avisos | **9/9** |
+| Clang 18.1 · Ubuntu 24.04 | ✅ sin avisos | **9/9** |
+| GCC 13.3 + **ASan + UBSan**, avisos como errores | ✅ | **9/9** sin errores de memoria ni comportamiento indefinido |
+
+Los ejemplos también se ejecutan en Linux (`nooki ejecutar ejemplos/01-hola/principal.oki`).
+
+- **Dos avisos eliminados** que solo veía Clang: un campo `fuentes_` sin usar en el lexer y una función
+  `es_clase_c` huérfana en el generador.
+- **Faltaba el preset de compilación `saneamiento`**: estaba documentado y solo existía el de
+  configuración, así que `cmake --build --preset saneamiento` fallaba al instante. Añadido.
+- **macOS sigue sin verificar** (no hay hardware): se anota como A-15. La cadena de Clang en Linux es
+  la evidencia más cercana disponible.
+
 ### Sprint 69 — Ejemplos y resaltado de sintaxis (2026-11-11)
 
 - **`ejemplos/`**: cuatro programas ejecutables (hola, notas con módulo y errores, inventario con
