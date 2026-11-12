@@ -56,6 +56,9 @@ nooki_aplicar_opciones(nooki_nucleo)
 
 add_executable(nooki fuente/principal.cpp)
 target_link_libraries(nooki PRIVATE nooki_nucleo)
+if(WIN32)
+    target_link_libraries(nooki PRIVATE shell32)
+endif()
 nooki_aplicar_opciones(nooki)
 
 set_target_properties(nooki PROPERTIES OUTPUT_NAME "nooki")

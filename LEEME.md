@@ -136,8 +136,8 @@ Cada cambio pasa por tres filtros:
 2. **74 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
    la esperada; los inválidos pasan por léxico, parser y verificación y deben emitir exactamente los
    códigos que declaran.
-3. **Once suites**, entre ellas el fuzzing (entradas aleatorias contra todas las fases) y los
-   benchmarks, y la que comprueba que la documentación no se desincronice.
+3. **Trece suites**, entre ellas el fuzzing (entradas aleatorias contra todas las fases), los
+   benchmarks, la aritmética comprobada y la que comprueba que la documentación no se desincronice.
 4. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos.
 
 Los diagnósticos también se prueban: cada código `NOK` tiene un caso que lo provoca.

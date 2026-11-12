@@ -1,4 +1,5 @@
 #include "nooki/cli/compilar.hpp"
+#include "nooki/rutas.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -34,7 +35,7 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
                 return USO_INCORRECTO;
             }
             ++i;
-            opciones.salida = std::string(argumentos[i]);
+            opciones.salida = ruta_desde_utf8(argumentos[i]);
         } else if (argumento == "--emitir-c") {
             opciones.solo_c = true;
         } else if (argumento == "--conservar") {
@@ -43,7 +44,7 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
             error << "nooki: la opción «" << argumento << "» no existe\n";
             return USO_INCORRECTO;
         } else if (!hay_fuente) {
-            opciones.fuente = std::string(argumento);
+            opciones.fuente = ruta_desde_utf8(argumento);
             hay_fuente = true;
         } else {
             error << "nooki: sobra el argumento «" << argumento << "»\n";
@@ -75,7 +76,7 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
     // `make_preferred` convierte «/» en «\» en Windows: la consola no entiende «/».
     std::filesystem::path binario = resultado.binario;
     return nooki::ejecutar_comando(
-        nooki::entrecomillar_si_hace_falta(binario.make_preferred().string()));
+        nooki::entrecomillar_si_hace_falta(ruta_a_utf8(binario.make_preferred())));
 }
 
 }  // namespace

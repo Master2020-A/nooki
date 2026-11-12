@@ -5,6 +5,46 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 72 — Desbordamiento comprobado y rutas con tildes (2026-11-11)
+
+**ADR-03 se cumple por fin.** Era una decisión cerrada y el código la contradecía: `a + b` se emitía
+como un `+` de C y desbordaba en silencio. Ahora la aritmética entera pasa por funciones comprobadas:
+
+```aura
+variable grande = 9223372036854775807
+variable otro = grande + 1
+```
+```
+$ ./programa
+error en ejecucion: desbordamiento al sumar
+$ echo $?
+70
+```
+
+- **Comprobadas**: suma, resta, multiplicación, división, módulo y negación. Un desbordamiento, una
+  división por cero o negar el mínimo detienen el programa con código **70** y un mensaje en la salida
+  de error. Nunca se continúa con un valor equivocado.
+- **Sin coste apreciable**: con `-O2` cada comprobación es un salto predicho.
+- **`prueba_panico`**: seis casos que compilan, ejecutan y verifican el código y el mensaje.
+
+**Y el fuzzer del sprint anterior destapó un fallo de fondo: los nombres con tildes.** En un lenguaje
+en español eso no es un caso raro.
+
+- `nooki ejecutar archivo ñ.oki` **caía el compilador**: Windows entrega los argumentos en la página de
+  códigos local y la conversión a ruta lanzaba `Illegal byte sequence`. Ahora la línea de comandos se
+  lee en UTF-16 y se convierte a UTF-8 (`CommandLineToArgvW`).
+- Todas las conversiones de ruta a texto pasan por UTF-8 (`ruta_a_utf8`), no por `.string()`.
+- El archivo `.c` intermedio usa un nombre ASCII, y si el destino tiene tildes se enlaza en una ruta
+  ASCII y el binario se mueve después: el enlazador de MinGW no abre rutas con acentos.
+- Las órdenes con bytes no ASCII se entregan al intérprete como UTF-16 (`_wsystem`).
+- **`prueba_rutas`**: compila y ejecuta `carpeta con tildes á/programa ñ.oki`.
+
+**Y un tercer fallo, silencioso desde el principio**: en Linux y macOS `ejecutar_comando` devolvía el
+estado de espera de `system()` en lugar del código de salida, así que un programa que salía con 70 se
+leía como 17920. Corregido con `WEXITSTATUS`.
+
+- **13 suites** en `ctest`, verdes en MinGW, MSVC, GCC y ASan+UBSan.
+
 ### Sprint 71 — Fuzzing y benchmarks (2026-11-11)
 
 Dos guardarraíles del plan que nunca se habían cumplido: el fuzzing continuo (regla 8) y los

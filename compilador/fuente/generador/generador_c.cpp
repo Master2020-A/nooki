@@ -153,6 +153,7 @@ std::string tipo_estructura(const sintactico::DefinicionTipo& definicion) {
 
 const char* PRELUDIO =
     "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
+    "#include <limits.h>\n"
     "#include <stdio.h>\n"
     "#include <stdlib.h>\n"
     "#include <string.h>\n"
@@ -642,6 +643,96 @@ const char* PRELUDIO =
     "        free(caja->datos);\n"
     "        caja->datos = NULL;\n"
     "    }\n"
+    "}\n"
+    "\n"
+    "/* Aritmetica comprobada (ADR-03): un desbordamiento no se ignora. */\n"
+    "static void nooki_panico(const char* mensaje) {\n"
+    "    fflush(stdout);\n"
+    "    fprintf(stderr, \"error en ejecucion: %s\\n\", mensaje);\n"
+    "    exit(70);\n"
+    "}\n"
+    "\n"
+    "static long long nooki_ent_sumar(long long a, long long b) {\n"
+    "#if defined(__GNUC__) || defined(__clang__)\n"
+    "    long long r;\n"
+    "    if (__builtin_add_overflow(a, b, &r)) {\n"
+    "        nooki_panico(\"desbordamiento al sumar\");\n"
+    "    }\n"
+    "    return r;\n"
+    "#else\n"
+    "    if ((b > 0 && a > LLONG_MAX - b) || (b < 0 && a < LLONG_MIN - b)) {\n"
+    "        nooki_panico(\"desbordamiento al sumar\");\n"
+    "    }\n"
+    "    return a + b;\n"
+    "#endif\n"
+    "}\n"
+    "\n"
+    "static long long nooki_ent_restar(long long a, long long b) {\n"
+    "#if defined(__GNUC__) || defined(__clang__)\n"
+    "    long long r;\n"
+    "    if (__builtin_sub_overflow(a, b, &r)) {\n"
+    "        nooki_panico(\"desbordamiento al restar\");\n"
+    "    }\n"
+    "    return r;\n"
+    "#else\n"
+    "    if ((b < 0 && a > LLONG_MAX + b) || (b > 0 && a < LLONG_MIN + b)) {\n"
+    "        nooki_panico(\"desbordamiento al restar\");\n"
+    "    }\n"
+    "    return a - b;\n"
+    "#endif\n"
+    "}\n"
+    "\n"
+    "static long long nooki_ent_multiplicar(long long a, long long b) {\n"
+    "#if defined(__GNUC__) || defined(__clang__)\n"
+    "    long long r;\n"
+    "    if (__builtin_mul_overflow(a, b, &r)) {\n"
+    "        nooki_panico(\"desbordamiento al multiplicar\");\n"
+    "    }\n"
+    "    return r;\n"
+    "#else\n"
+    "    if (a == 0 || b == 0) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    if (a == -1 && b == LLONG_MIN) nooki_panico(\"desbordamiento al multiplicar\");\n"
+    "    if (b == -1 && a == LLONG_MIN) nooki_panico(\"desbordamiento al multiplicar\");\n"
+    "    if (a > 0) {\n"
+    "        if (b > 0 ? a > LLONG_MAX / b : b < LLONG_MIN / a) {\n"
+    "            nooki_panico(\"desbordamiento al multiplicar\");\n"
+    "        }\n"
+    "    } else {\n"
+    "        if (b > 0 ? a < LLONG_MIN / b : a < LLONG_MAX / b) {\n"
+    "            nooki_panico(\"desbordamiento al multiplicar\");\n"
+    "        }\n"
+    "    }\n"
+    "    return a * b;\n"
+    "#endif\n"
+    "}\n"
+    "\n"
+    "static long long nooki_ent_dividir(long long a, long long b) {\n"
+    "    if (b == 0) {\n"
+    "        nooki_panico(\"division por cero\");\n"
+    "    }\n"
+    "    if (a == LLONG_MIN && b == -1) {\n"
+    "        nooki_panico(\"desbordamiento al dividir\");\n"
+    "    }\n"
+    "    return a / b;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_ent_modulo(long long a, long long b) {\n"
+    "    if (b == 0) {\n"
+    "        nooki_panico(\"modulo por cero\");\n"
+    "    }\n"
+    "    if (a == LLONG_MIN && b == -1) {\n"
+    "        nooki_panico(\"desbordamiento al calcular el modulo\");\n"
+    "    }\n"
+    "    return a % b;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_ent_negativo(long long a) {\n"
+    "    if (a == LLONG_MIN) {\n"
+    "        nooki_panico(\"desbordamiento al negar\");\n"
+    "    }\n"
+    "    return -a;\n"
     "}\n"
     "\n"
     "static void nooki_imprimir_entero(long long valor) {\n"
@@ -2775,7 +2866,11 @@ private:
         if (!nodo.izquierda) {
             return "0";
         }
-        return "(" + std::string(nodo.lexema) + expresion(*nodo.izquierda) + ")";
+        // Negar el mínimo de `entero` desborda: se comprueba (ADR-03).
+        if (nodo.lexema == "-") {
+            return "nooki_ent_negativo(" + expresion(*nodo.izquierda) + ")";
+        }
+        return "(!" + expresion(*nodo.izquierda) + ")";
     }
 
     std::string binaria(const sintactico::Expresion& nodo) {
@@ -2817,6 +2912,23 @@ private:
         if (!conocido) {
             no_soportado("el operador «" + std::string(operador) + "»");
             return "0";
+        }
+
+        // Aritmética entera comprobada (ADR-03): suma, resta, multiplicación,
+        // división y módulo avisan de un desbordamiento o de una división por cero.
+        const bool entero_izquierda = tipo_izquierda == "long long" || tipo_izquierda == "int";
+        const bool entero_derecha = tipo_derecha == "long long" || tipo_derecha == "int";
+        if (entero_izquierda && entero_derecha && !es_comparacion(operador)) {
+            static const std::map<std::string_view, std::string_view> COMPROBADAS = {
+                {"+", "nooki_ent_sumar"},   {"-", "nooki_ent_restar"},
+                {"*", "nooki_ent_multiplicar"}, {"/", "nooki_ent_dividir"},
+                {"%", "nooki_ent_modulo"},
+            };
+            const auto comprobada = COMPROBADAS.find(operador);
+            if (comprobada != COMPROBADAS.end()) {
+                return std::string(comprobada->second) + "(" + expresion(*nodo.izquierda) +
+                       ", " + expresion(*nodo.derecha) + ")";
+            }
         }
 
         return "(" + expresion(*nodo.izquierda) + " " + std::string(operador) + " " +

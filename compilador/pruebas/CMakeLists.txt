@@ -54,6 +54,20 @@ target_compile_definitions(nooki_fuzz
 add_test(NAME fuzz COMMAND nooki_fuzz 600)
 set_tests_properties(fuzz PROPERTIES TIMEOUT 120)
 
+# Aritmética comprobada: desbordamiento y división por cero terminan con 70.
+add_executable(prueba_panico panico.cpp)
+target_link_libraries(prueba_panico PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_panico)
+add_test(NAME panico COMMAND prueba_panico)
+set_tests_properties(panico PROPERTIES TIMEOUT 120)
+
+# Rutas con tildes: compilar y ejecutar un archivo «programa ñ.oki».
+add_executable(prueba_rutas rutas.cpp)
+target_link_libraries(prueba_rutas PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_rutas)
+add_test(NAME rutas COMMAND prueba_rutas)
+set_tests_properties(rutas PROPERTIES TIMEOUT 120)
+
 # Rendimiento: línea base de las métricas del plan.
 add_executable(nooki_rendimiento rendimiento.cpp)
 target_link_libraries(nooki_rendimiento PRIVATE nooki_nucleo)

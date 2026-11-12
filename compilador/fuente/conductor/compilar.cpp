@@ -1,4 +1,5 @@
 #include "nooki/conductor/compilar.hpp"
+#include "nooki/rutas.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -259,13 +260,13 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
         if (integrado.empty()) {
             emisor.error(diagnostico::codigos::MODULO_NO_ENCONTRADO, diagnostico::Span{})
                 .parametro("modulo", clave)
-                .ayuda("se buscó «" + ruta.string() + "»");
+                .ayuda("se buscó «" + ruta_a_utf8(ruta) + "»");
             return false;
         }
         contenido = std::string(integrado);
     }
 
-    const auto archivo = fuentes.anadir(ruta.string(), contenido);
+    const auto archivo = fuentes.anadir(ruta_a_utf8(ruta), contenido);
     lexico::Lexer lexer(fuentes, archivo, emisor);
     const auto tokens = lexer.todos();
     sintactico::Parser parser(fuentes, archivo, emisor, tokens);
@@ -323,6 +324,29 @@ std::string leer_archivo(const std::filesystem::path& ruta) {
     return contenido.str();
 }
 
+/// Sustituye por «_» todo byte que no sea ASCII imprimible.
+std::string nombre_ascii(const std::string& nombre) {
+    std::string salida;
+    salida.reserve(nombre.size());
+    for (const unsigned char caracter : nombre) {
+        salida += (caracter >= 0x20 && caracter < 0x7F) ? static_cast<char>(caracter) : '_';
+    }
+    if (salida.empty()) {
+        salida = "programa";
+    }
+    return salida;
+}
+
+/// ¿Todos los bytes de la ruta son ASCII imprimible?
+bool ruta_es_ascii(const std::filesystem::path& ruta) {
+    for (const unsigned char caracter : ruta_a_utf8(ruta)) {
+        if (caracter >= 0x80) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::filesystem::path ruta_de_salida(const Opciones& opciones) {
     if (!opciones.salida.empty()) {
         return opciones.salida;
@@ -354,7 +378,7 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     const std::string contenido = leer_archivo(opciones.fuente);
     if (contenido.empty() && !std::filesystem::exists(opciones.fuente)) {
         emisor.error(diagnostico::codigos::ARCHIVO_NO_ENCONTRADO, diagnostico::Span{})
-            .parametro("archivo", opciones.fuente.string());
+            .parametro("archivo", ruta_a_utf8(opciones.fuente));
         return Resultado{1, {}, {}};
     }
 
@@ -364,7 +388,7 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         archivo_de_entrada = opciones.fuente;
     }
 
-    const auto archivo = fuentes.anadir(opciones.fuente.string(), contenido);
+    const auto archivo = fuentes.anadir(ruta_a_utf8(opciones.fuente), contenido);
 
     lexico::Lexer lexer(fuentes, archivo, emisor);
     const auto tokens = lexer.todos();
@@ -410,9 +434,12 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         return Resultado{1, resultado.c_generado, {}};
     }
 
+    // El archivo intermedio lleva un nombre ASCII: la consola y el compilador de C
+    // no tratan igual los nombres con tildes en todas las plataformas, y el
+    // contenido ya identifica el programa por su ruta en los diagnósticos.
     const std::filesystem::path intermedio =
         std::filesystem::temp_directory_path() /
-        ("nooki_" + opciones.fuente.stem().string() + ".c");
+        ("nooki_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) + ".c");
 
     {
         std::ofstream archivo_c(intermedio, std::ios::binary | std::ios::trunc);
@@ -420,25 +447,54 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     }
 
     const std::filesystem::path salida_binario = ruta_de_salida(opciones);
+    // El enlazador de MinGW no abre rutas con tildes: se enlaza en una ruta ASCII
+    // y el binario se mueve después, que sí entiende Unicode.
+    std::error_code error_mover;
+    const bool necesita_mover =
+        !ruta_es_ascii(salida_binario) &&
+        std::filesystem::path(salida_binario).has_parent_path();
+    std::filesystem::path destino_enlace = salida_binario;
+    if (necesita_mover) {
+        destino_enlace = std::filesystem::temp_directory_path() /
+                         ("nooki_salida_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) +
+                          EXTENSION_BINARIO);
+    }
+
     // La consola del sistema no entiende «/» como separador: se usa el nativo.
-    std::filesystem::path binario_nativo = salida_binario;
+    std::filesystem::path binario_nativo = destino_enlace;
     std::filesystem::path intermedio_nativo = intermedio;
     const std::string comando =
         entrecomillar_si_hace_falta(compilador) + " -O2 -o " +
-        entrecomillar_si_hace_falta(binario_nativo.make_preferred().string()) + " " +
-        entrecomillar_si_hace_falta(intermedio_nativo.make_preferred().string());
+        entrecomillar_si_hace_falta(ruta_a_utf8(binario_nativo.make_preferred())) + " " +
+        entrecomillar_si_hace_falta(ruta_a_utf8(intermedio_nativo.make_preferred()));
 
     const int codigo = ejecutar_comando(comando);
     if (codigo != 0) {
         emisor.error(diagnostico::codigos::FALLO_COMPILADOR_C, diagnostico::Span{})
             .parametro("compilador", compilador)
             .parametro("codigo", std::to_string(codigo))
-            .nota("C generado en " + intermedio.string());
+            .nota("C generado en " + ruta_a_utf8(intermedio));
         return Resultado{1, resultado.c_generado, {}};
     }
 
+    // El binario se enlazó en una ruta ASCII si el destino tenía tildes: se mueve.
+    if (necesita_mover) {
+        std::filesystem::copy_file(destino_enlace, salida_binario,
+                                   std::filesystem::copy_options::overwrite_existing,
+                                   error_mover);
+        if (error_mover) {
+            emisor.error(diagnostico::codigos::FALLO_COMPILADOR_C, diagnostico::Span{})
+                .parametro("compilador", compilador)
+                .parametro("codigo", std::to_string(error_mover.value()))
+                .nota("no se pudo mover el binario a «" + ruta_a_utf8(salida_binario) + "»");
+            return Resultado{1, resultado.c_generado, {}};
+        }
+        std::error_code ignorado;
+        std::filesystem::remove(destino_enlace, ignorado);
+    }
+
     if (opciones.conservar_intermedios) {
-        error << "nooki: C intermedio conservado en " << intermedio.string() << '\n';
+        error << "nooki: C intermedio conservado en " << ruta_a_utf8(intermedio) << '\n';
     } else {
         std::error_code ignorado;
         std::filesystem::remove(intermedio, ignorado);

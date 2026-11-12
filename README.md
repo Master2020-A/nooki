@@ -107,6 +107,7 @@ Sprint 68 ✅  Preparar la publicación
 Sprint 69 ✅  Ejemplos ejecutables y resaltado en editores
 Sprint 70 ✅  Verificado en Linux: GCC, Clang y ASan+UBSan
 Sprint 71 ✅  Fuzzing y benchmarks: 100 000 entradas y un fallo real cerrado
+Sprint 72 ✅  Aritmética comprobada y rutas con tildes
 ```
 
 **Ya compila y ejecuta:**

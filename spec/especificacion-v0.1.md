@@ -1282,3 +1282,20 @@ valor (`f(p)`).
   **vacío y válido**: longitud cero, sin puntero colgando.
 - Un método heredado cuenta como miembro del tipo, tanto al leer un campo como al llamarlo.
 - `imprimir` acepta enteros, textos y booleanos.
+
+
+### 18.36 Aritmética comprobada
+
+Sumar, restar, multiplicar, dividir, calcular el módulo o negar un `entero` **comprueba el resultado**
+(ADR-03). Si desborda, si se divide por cero o si se niega el mínimo del tipo, el programa se detiene:
+
+```
+error en ejecucion: desbordamiento al sumar
+```
+
+El código de salida es **70** y el mensaje va a la salida de error. Un desbordamiento nunca se
+ignora en silencio ni produce un valor equivocado.
+
+- El coste es un salto predicho por operación: con `-O2` el compilador de C lo resuelve en una
+  instrucción y una bifurcación.
+- `entero` es de 64 bits con signo.
