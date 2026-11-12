@@ -255,10 +255,18 @@ char Lexer::mirar(std::size_t distancia) const noexcept {
     return (pos_ + distancia) < contenido_.size() ? contenido_[pos_ + distancia] : '\0';
 }
 
-void Lexer::avanzar(std::size_t cantidad) noexcept { pos_ += cantidad; }
+void Lexer::avanzar(std::size_t cantidad) noexcept {
+    pos_ += cantidad;
+    // Un escape al final del archivo puede pedir avanzar más de lo que queda:
+    // la posición nunca debe pasar del tamaño, o los `substr` posteriores fallan.
+    if (pos_ > contenido_.size()) {
+        pos_ = contenido_.size();
+    }
+}
 
 Token Lexer::crear(TipoToken tipo, std::size_t inicio) const {
-    return Token{tipo, contenido_.substr(inicio, pos_ - inicio),
+    const std::size_t desde = inicio < contenido_.size() ? inicio : contenido_.size();
+    return Token{tipo, contenido_.substr(desde, pos_ - desde),
                  diagnostico::Span{archivo_, static_cast<std::uint32_t>(inicio),
                                    static_cast<std::uint32_t>(pos_)}};
 }

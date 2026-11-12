@@ -1,0 +1,4 @@
+funcion principal() -> entero {
+    variable t = "abc\
+    retornar 0
+}

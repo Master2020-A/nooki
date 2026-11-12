@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 71 — Fuzzing y benchmarks (2026-11-11)
+
+Dos guardarraíles del plan que nunca se habían cumplido: el fuzzing continuo (regla 8) y los
+benchmarks (regla 9).
+
+**El fuzzer encontró un fallo real en la primera sesión larga.** Un escape inválido al final del
+archivo (`"abc\`) hacía caer el compilador con `std::out_of_range`: `avanzar(2)` dejaba la posición un
+byte más allá del final y el `substr` de `crear` lanzaba. Corregido acotando la posición —ahora un
+valor movido o un escape al final dan un diagnóstico, no una caída— y con un caso de regresión
+(`invalido/0018-escape-al-final`).
+
+- **`nooki_fuzz`**: 600 entradas en `ctest` (2 000 por defecto, semilla elegible). Mezcla mutaciones del
+  corpus de conformidad, piezas del lenguaje y bytes aleatorios, y pasa cada entrada por léxico, parser,
+  verificación y generación. Guarda la entrada que provoque una excepción.
+- **Resultado**: **100 000 entradas con cinco semillas** sin caídas, en Windows y en Linux.
+- **`nooki_rendimiento`**: línea base de las métricas del plan. Lexer **25,5 MB/s** (Windows) y **33,3
+  MB/s** (Linux); compilación completa **0,0029 s por 1 000 líneas**, unas **setecientas veces** por
+  debajo del objetivo de 2 s del plan. Bajo sanitizadores mide sin exigir umbrales.
+- **11 suites** en `ctest` (eran 9), en las cinco cadenas.
+
 ### Sprint 70 — Verificación fuera de Windows (2026-11-11)
 
 **El compilador compila y pasa las nueve suites en Linux, con tres cadenas distintas.** Era la regla 1

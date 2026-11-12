@@ -276,7 +276,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
-| **S71** | Ventanas y bucle de eventos | Win32, Cocoa, X11/Wayland; eventos de teclado y ratón; 3 demos |
+| **S71** | Fuzzing y benchmarks | ✅ `nooki_fuzz` (100 000 entradas, 5 semillas, sin caídas) encontró y cerró un fallo real: escape inválido al final del archivo. `nooki_rendimiento` da la línea base: 25–33 MB/s de lexer y 0,003 s por 1 000 líneas |
 | **S72** | Render 2D y texto | Skia, HarfBuzz/FreeType; texto con tildes y `ñ` correctos; benchmark de *frame* |
 | **S73** | Layout y estilos | Flex/Grid/Stack; temas claro/oscuro; 60 tests visuales |
 | **S74** | Widgets básicos | Ventana, Botón, Etiqueta, CampoTexto, Casilla, Combo, Deslizador, Progreso; 60 tests |

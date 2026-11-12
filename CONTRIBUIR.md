@@ -33,6 +33,7 @@ Ninguna característica entra sin su prueba. Hay tres niveles:
 | Unitarias | `compilador/pruebas/` | una fase del compilador, en memoria |
 | Conformidad válida | `pruebas/conformidad/valido/` | un programa que se compila, se ejecuta y su salida coincide con `esperado.txt` |
 | Conformidad inválida | `pruebas/conformidad/invalido/` | un programa que debe emitir exactamente los códigos de `esperado.txt` |
+| Fuzzing | `compilador/pruebas/fuzz.cpp` | que ninguna entrada aleatoria haga caer el compilador |
 
 ```bash
 $ cmake --preset windows-mingw      # o linux, macos, windows-msvc-2022

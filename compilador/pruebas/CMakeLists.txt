@@ -45,6 +45,22 @@ add_test(NAME documentos COMMAND prueba_documentos)
 set_tests_properties(documentos PROPERTIES
     ENVIRONMENT "NOOKI_DIR_RAIZ=${CMAKE_SOURCE_DIR}")
 
+# Fuzzing: entradas aleatorias y mutadas contra todas las fases.
+add_executable(nooki_fuzz fuzz.cpp)
+target_link_libraries(nooki_fuzz PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(nooki_fuzz)
+target_compile_definitions(nooki_fuzz
+    PRIVATE NOOKI_DIR_CONFORMIDAD="${CMAKE_SOURCE_DIR}/pruebas/conformidad")
+add_test(NAME fuzz COMMAND nooki_fuzz 600)
+set_tests_properties(fuzz PROPERTIES TIMEOUT 120)
+
+# Rendimiento: línea base de las métricas del plan.
+add_executable(nooki_rendimiento rendimiento.cpp)
+target_link_libraries(nooki_rendimiento PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(nooki_rendimiento)
+add_test(NAME rendimiento COMMAND nooki_rendimiento)
+set_tests_properties(rendimiento PROPERTIES TIMEOUT 300)
+
 # Arnés de conformidad: ejecuta los programas .oki de pruebas/conformidad.
 add_executable(nooki_conformidad arnes_conformidad.cpp)
 target_link_libraries(nooki_conformidad PRIVATE nooki_nucleo)
