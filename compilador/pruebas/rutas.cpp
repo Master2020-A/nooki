@@ -27,7 +27,7 @@ constexpr const char* EXTENSION = "";
 }  // namespace
 
 int main() {
-    const fs::path directorio = fs::current_path() / "rutas" / "carpeta con tildes á";
+    const fs::path directorio = fs::temp_directory_path() / "nooki-rutas" / "carpeta con tildes á";
     std::error_code error_fs;
     fs::create_directories(directorio, error_fs);
 

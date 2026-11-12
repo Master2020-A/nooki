@@ -21,6 +21,6 @@ compile_commands.json
 .vscode/
 *.user
 
-# Sistema
+# Salidas de las pruebas que compilan y ejecutan programas`npanico/`nrutas/`n`n# Sistema
 Thumbs.db
 .DS_Store

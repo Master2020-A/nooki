@@ -99,7 +99,7 @@ std::string leer(const fs::path& ruta) {
 }  // namespace
 
 int main() {
-    const fs::path directorio = fs::current_path() / "panico";
+    const fs::path directorio = fs::temp_directory_path() / "nooki-panico";
     std::error_code error_fs;
     fs::create_directories(directorio, error_fs);
 
