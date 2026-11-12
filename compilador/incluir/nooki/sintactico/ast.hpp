@@ -83,6 +83,10 @@ enum class TipoSentencia : unsigned char {
     Continuar,
     Bloque,
     Coincide,
+    /// `inseguro { ... }`: dentro no se comprueba la aritmética.
+    Inseguro,
+    /// `asm!("...")`: ensamblador en línea, solo dentro de `inseguro`.
+    Asm,
 };
 
 /// Un patrón de `coincide`: comodín, literal o variante de enumeración.

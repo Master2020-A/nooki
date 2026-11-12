@@ -17,7 +17,7 @@ struct EntradaMensaje {
 
 // Los mensajes viven aquí y en ningún otro sitio: cambiar una redacción es cambiar
 // una línea, y traducir es rellenar la tercera columna.
-constexpr std::array<EntradaMensaje, 46> MENSAJES{{
+constexpr std::array<EntradaMensaje, 47> MENSAJES{{
     {codigos::ARCHIVO_NO_ENCONTRADO, "no se pudo leer el archivo «{archivo}»",
      "cannot read file “{archivo}”"},
 
@@ -95,6 +95,10 @@ constexpr std::array<EntradaMensaje, 46> MENSAJES{{
 
     {codigos::SIMBOLO_PRIVADO, "«{simbolo}» es privado del módulo «{modulo}»",
      "“{simbolo}” is private to module “{modulo}”"},
+
+    {codigos::ASM_FUERA_DE_INSEGURO,
+     "«asm!» solo se permite dentro de un bloque «inseguro { }»",
+     "“asm!” is only allowed inside an “inseguro { }” block"},
 
     {codigos::METODO_DE_RASGO_FALTANTE,
      "a «{tipo}» le falta «{metodo}», que exige el rasgo «{rasgo}»",

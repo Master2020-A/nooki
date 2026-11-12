@@ -809,6 +809,19 @@ private:
                 return;
             }
 
+            case TipoSentencia::Asm:
+                if (profundidad_inseguro_ == 0) {
+                    error(diagnostico::codigos::ASM_FUERA_DE_INSEGURO, sentencia.span)
+                        .ayuda("envuélvalo en «inseguro { }» y documente por qué");
+                }
+                return;
+
+            case TipoSentencia::Inseguro:
+                ++profundidad_inseguro_;
+                revisar_cuerpo(sentencia.cuerpo, funcion);
+                --profundidad_inseguro_;
+                return;
+
             case TipoSentencia::Bloque:
                 revisar_cuerpo(sentencia.cuerpo, funcion);
                 return;
@@ -1564,6 +1577,8 @@ private:
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     std::set<std::string> parametros_actuales_;
+    /// Dentro de cuántos bloques `inseguro` estamos.
+    int profundidad_inseguro_ = 0;
     /// Parámetros que son un préstamo de texto: `*parametro` es un texto.
     std::set<std::string> prestamos_texto_;
     /// Dueño prestado → variable que guarda el préstamo.

@@ -1,0 +1,20 @@
+// `inseguro` y `asm!`: la válvula de escape del lenguaje.
+//
+// Fuera de `inseguro`, la aritmética se comprueba y el desbordamiento detiene el
+// programa. Dentro, se emite el operador del hardware tal cual: es responsabilidad
+// del programador, y por eso se escribe de forma explícita.
+funcion principal() -> entero {
+    variable grande = 9223372036854775807
+
+    inseguro {
+        variable envuelto = grande + 1
+        si (envuelto < 0) {
+            imprimir("se envolvio")
+        }
+    }
+
+    variable tranquilidad = 1 + 1
+    imprimir(tranquilidad)
+    imprimir("sigo vivo")
+    retornar 0
+}

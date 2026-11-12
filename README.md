@@ -109,6 +109,7 @@ Sprint 70 ✅  Verificado en Linux: GCC, Clang y ASan+UBSan
 Sprint 71 ✅  Fuzzing y benchmarks: 100 000 entradas y un fallo real cerrado
 Sprint 72 ✅  Aritmética comprobada y rutas con tildes
 Sprint 73 ✅  FFI: llamar a C desde Nooki
+Sprint 74 ✅  `inseguro` y `asm!`: control de hardware
 ```
 
 **Ya compila y ejecuta:**

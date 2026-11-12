@@ -2121,6 +2121,27 @@ private:
                 salida_ << indentacion() << "continue;\n";
                 return;
 
+            case TipoSentencia::Asm:
+                // MSVC no admite ensamblador en línea en x64: se avisa al compilar.
+                salida_ << "#if defined(_MSC_VER)\n";
+                salida_ << indentacion() << "#error \"asm! necesita GCC, Clang o MinGW\"\n";
+                salida_ << "#else\n";
+                salida_ << indentacion() << "__asm__ __volatile__(\"" << escapar_c(sentencia.nombre)
+                        << "\");\n";
+                salida_ << "#endif\n";
+                return;
+
+            case TipoSentencia::Inseguro: {
+                // Dentro de un bloque `inseguro` la aritmética no se comprueba.
+                const bool anterior = sin_comprobacion_;
+                sin_comprobacion_ = true;
+                salida_ << indentacion() << "{\n";
+                emitir_cuerpo(sentencia.cuerpo);
+                salida_ << indentacion() << "}\n";
+                sin_comprobacion_ = anterior;
+                return;
+            }
+
             case TipoSentencia::Bloque:
                 salida_ << indentacion() << "{\n";
                 emitir_cuerpo(sentencia.cuerpo);
@@ -2985,7 +3006,8 @@ private:
         // división y módulo avisan de un desbordamiento o de una división por cero.
         const bool entero_izquierda = tipo_izquierda == "long long" || tipo_izquierda == "int";
         const bool entero_derecha = tipo_derecha == "long long" || tipo_derecha == "int";
-        if (entero_izquierda && entero_derecha && !es_comparacion(operador)) {
+        if (entero_izquierda && entero_derecha && !es_comparacion(operador) &&
+            !sin_comprobacion_) {
             static const std::map<std::string_view, std::string_view> COMPROBADAS = {
                 {"+", "nooki_ent_sumar"},   {"-", "nooki_ent_restar"},
                 {"*", "nooki_ent_multiplicar"}, {"/", "nooki_ent_dividir"},
@@ -3562,6 +3584,8 @@ private:
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::set<std::string> externas_;
+    /// Dentro de `inseguro { }` la aritmética se emite sin comprobar.
+    bool sin_comprobacion_ = false;
     std::map<std::string, const sintactico::Rasgo*> rasgos_def_;
     std::set<std::string> clases_;
     std::vector<std::size_t> bucles_;

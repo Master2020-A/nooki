@@ -5,6 +5,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 74 — `inseguro` y `asm!` (2026-11-12)
+
+El último pilar del lenguaje: **control de hardware**. Y la válvula de escape que el plan pedía, con
+una regla que la hace explícita y localizable.
+
+```aura
+inseguro {
+    variable envuelto = grande + 1   // se envuelve, no se detiene
+    asm!("nop")
+}
+```
+
+- **`inseguro { ... }`**: dentro, la aritmética se emite tal cual, sin las comprobaciones de ADR-03.
+  Es lo que hace falta para escribir controladores, donde el desbordamiento es parte del hardware y no
+  un error.
+- **`asm!("...")`**: ensamblador en línea. **Solo dentro de `inseguro`** (`NOK3012`), para que cada uso
+  se pueda encontrar con una búsqueda.
+- **La propiedad no se desactiva**: dentro de `inseguro` se siguen liberando los valores y se siguen
+  moviendo al pasar; lo único que se apaga es la comprobación aritmética. Un bloque no puede hacer que
+  el compilador libere dos veces.
+- Caso `0048-inseguro`, verde en MinGW, MSVC y Linux.
+
+**Límite del `asm!`**: necesita un compilador de C que lo admita (GCC, Clang, MinGW). Si el backend es
+`cl.exe`, el C generado avisa con un `#error` claro en lugar de fallar de forma incomprensible.
+
+Con esto, **los cinco pilares del plan original tocan código**: sintaxis fácil, tipos, memoria segura,
+OOP completa y control de hardware.
+
 ### Sprint 73 — FFI: llamar a C (2026-11-12)
 
 El plan ponía el FFI **antes** de la biblioteca estándar, «porque sin libc no hay archivos, red ni

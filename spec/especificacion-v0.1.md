@@ -1317,3 +1317,23 @@ externo funcion time(zona: &entero) -> entero
   compilar el código generado.
 - Todavía no se declaran estructuras ni funciones que devuelvan `texto`, y no se elige biblioteca:
   se enlaza contra la de C del sistema.
+
+
+### 18.38 `inseguro` y `asm!`
+
+```aura
+inseguro {
+    variable envuelto = grande + 1   // se envuelve: no se comprueba
+    asm!("nop")
+}
+```
+
+- Dentro de un bloque `inseguro { }` la aritmética **no** se comprueba: se emite el operador de C tal
+  cual. Es la vía para el código que habla con el hardware.
+- **`asm!("...")`** emite ensamblador en línea y **solo se permite dentro de `inseguro`** (`NOK3012`).
+- **La propiedad no se desactiva**: dentro del bloque los valores se siguen moviendo al pasar y se
+  siguen liberando al salir. Lo único que se apaga es la comprobación aritmética.
+- `asm!` necesita un compilador de C que admita ensamblador en línea (GCC, Clang, MinGW). Con `cl.exe`
+  el C generado lo dice con un `#error`.
+- Los bloques `inseguro` deben documentar por qué están: son la lista de sitios donde el lenguaje no
+  garantiza nada.

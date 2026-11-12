@@ -814,6 +814,38 @@ Sentencia Parser::analizar_sentencia() {
         return sentencia;
     }
 
+    // `asm!("...")`: ensamblador en línea.
+    if (actual().lexema == "asm") {
+        sentencia.tipo = TipoSentencia::Asm;
+        avanzar();
+        if (!aceptar_lexema("!")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«!»");
+            return sentencia;
+        }
+        if (!aceptar_lexema("(")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
+            return sentencia;
+        }
+        if (const Token& codigo = actual(); codigo.es(TipoToken::Texto)) {
+            sentencia.nombre = sin_comillas(codigo.lexema);
+            avanzar();
+        } else {
+            error_en(codigo, diagnostico::codigos::TOKEN_INESPERADO, "un texto con el ensamblador");
+        }
+        if (!aceptar_lexema(")")) {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
+        }
+        return sentencia;
+    }
+
+    // `inseguro { ... }`: dentro no se comprueba la aritmética.
+    if (actual().lexema == "inseguro") {
+        sentencia.tipo = TipoSentencia::Inseguro;
+        avanzar();
+        sentencia.cuerpo = analizar_bloque();
+        return sentencia;
+    }
+
     if (actual().es(TipoToken::PalabraClave)) {
         const std::string_view palabra = actual().lexema;
 
