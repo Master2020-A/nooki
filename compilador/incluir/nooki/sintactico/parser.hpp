@@ -38,7 +38,7 @@ private:
 
     void error_en(const lexico::Token& token, std::string_view codigo, std::string_view esperado);
 
-    Funcion analizar_funcion();
+    Funcion analizar_funcion(bool externa = false);
     DefinicionTipo analizar_definicion_tipo(bool es_clase);
     /// ¿La `{` actual inicia una construcción (`punto { x: 1 }`) y no un bloque?
     bool viene_construccion();

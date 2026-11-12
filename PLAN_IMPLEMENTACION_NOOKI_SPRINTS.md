@@ -278,7 +278,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 |---|---|---|
 | **S71** | Fuzzing y benchmarks | ✅ `nooki_fuzz` (100 000 entradas, 5 semillas, sin caídas) encontró y cerró un fallo real: escape inválido al final del archivo. `nooki_rendimiento` da la línea base: 25–33 MB/s de lexer y 0,003 s por 1 000 líneas |
 | **S72** | Desbordamiento comprobado y rutas con tildes | ✅ ADR-03 implementado: suma, resta, multiplicación, división, módulo y negación comprobados, con parada y código 70 (`prueba_panico`). Corregidos tres fallos: nombres con tildes que hacían caer el compilador, enlace en rutas no ASCII y código de salida mal leído en POSIX |
-| **S73** | Layout y estilos | Flex/Grid/Stack; temas claro/oscuro; 60 tests visuales |
+| **S73** | FFI: llamar a C | ✅ `externo funcion` con traducción de tipos (`&texto` ↔ `const char*`, `&escalar` ↔ puntero), textos sin copia y `nulo` ↔ `NULL`. Caso `0047-ffi` en las tres cadenas. *Sin estructuras, sin retorno de `texto` y sin elegir biblioteca* |
 | **S74** | Widgets básicos | Ventana, Botón, Etiqueta, CampoTexto, Casilla, Combo, Deslizador, Progreso; 60 tests |
 | **S75** | Widgets avanzados | Tabla, Árbol, Pestañas, Diálogos, Selector de archivo, Canvas; 50 tests |
 | **S76** | Eventos y animaciones | Callbacks, gestos, transiciones; 40 tests |

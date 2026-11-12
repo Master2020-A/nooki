@@ -1,0 +1,14 @@
+// FFI: se declaran funciones de C y se llaman desde Nooki.
+// `puts` recibe un `&texto` como `const char*`; `time` recibe un puntero a entero.
+externo funcion puts(cadena: &texto) -> booleano
+externo funcion time(zona: &entero) -> entero
+
+funcion principal() -> entero {
+    puts("hola desde C")
+
+    variable ahora = time(nulo)
+    si (ahora > 1000000000) {
+        imprimir("el reloj responde")
+    }
+    retornar 0
+}

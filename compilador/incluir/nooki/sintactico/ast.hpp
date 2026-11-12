@@ -149,6 +149,9 @@ struct Funcion {
     /// Visibilidad para otros módulos. Por defecto, privada.
     bool publico = false;
 
+    /// `externo funcion`: declara una función de C, sin cuerpo.
+    bool es_externa = false;
+
     /// Parámetros de tipo de una función genérica: `funcion identidad<T>(...)`.
     std::vector<std::string_view> tipo_parametros;
 

@@ -1299,3 +1299,21 @@ ignora en silencio ni produce un valor equivocado.
 - El coste es un salto predicho por operación: con `-O2` el compilador de C lo resuelve en una
   instrucción y una bifurcación.
 - `entero` es de 64 bits con signo.
+
+
+### 18.37 FFI: llamar a C
+
+```aura
+externo funcion puts(cadena: &texto) -> booleano
+externo funcion time(zona: &entero) -> entero
+```
+
+- `externo funcion` **declara** una función de C: no lleva cuerpo y conserva su nombre de C.
+- Tipos: `entero` es `long long`, `booleano` es `int`, `caracter` es `char`, `vacio` es `void`.
+- `&texto` viaja como `const char*` apuntando a los bytes del texto, que ya terminan en cero: no hay
+  copia.
+- `&escalar` viaja como puntero al escalar, y `nulo` es el `NULL` de C.
+- La firma declarada debe coincidir con la de C. Si no, el compilador de C informa del conflicto al
+  compilar el código generado.
+- Todavía no se declaran estructuras ni funciones que devuelvan `texto`, y no se elige biblioteca:
+  se enlaza contra la de C del sistema.

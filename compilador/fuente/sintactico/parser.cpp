@@ -196,6 +196,17 @@ Programa Parser::analizar() {
             programa.funciones.push_back(analizar_funcion());
             continue;
         }
+        if (token.es(TipoToken::PalabraClave) && token.lexema == "externo") {
+            const std::size_t inicio = indice_;
+            avanzar();
+            if (actual().lexema != "funcion") {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«funcion»");
+                continue;
+            }
+            programa.funciones.push_back(analizar_funcion(true));
+            (void)inicio;
+            continue;
+        }
         if (token.es(TipoToken::PalabraClave) &&
             (token.lexema == "estructura" || token.lexema == "clase")) {
             programa.tipos.push_back(analizar_definicion_tipo(token.lexema == "clase"));
@@ -390,8 +401,9 @@ ExpresionPtr Parser::analizar_construccion(std::string_view tipo) {
     return nodo;
 }
 
-Funcion Parser::analizar_funcion() {
+Funcion Parser::analizar_funcion(bool externa) {
     Funcion funcion;
+    funcion.es_externa = externa;
     funcion.span = actual().span;
     avanzar();  // "funcion"
 
@@ -469,6 +481,15 @@ Funcion Parser::analizar_funcion() {
         if (!tipo.empty()) {
             funcion.tipo_retorno = tipo;
         }
+    }
+
+    // Una función externa se declara, no se define: no lleva cuerpo.
+    if (funcion.es_externa) {
+        if (actual().lexema == "{") {
+            error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "nada tras la firma");
+            analizar_bloque();
+        }
+        return funcion;
     }
 
     funcion.cuerpo = analizar_bloque();

@@ -887,8 +887,16 @@ public:
                 emitir_metodo(definicion, metodo);
             }
         }
+        // Las funciones de C se declaran; las de Nooki se definen.
         for (const sintactico::Funcion& funcion : programa.funciones) {
-            if (!funcion.tipo_parametros.empty()) {
+            if (!funcion.es_externa) {
+                continue;
+            }
+            salida_ << firma_externa(funcion) << '\n';
+        }
+
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            if (!funcion.tipo_parametros.empty() || funcion.es_externa) {
                 continue;
             }
             salida_ << '\n';
@@ -963,6 +971,11 @@ private:
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             if (!definicion.tipo_parametros.empty()) {
                 genericos_tipo_[std::string(definicion.nombre)] = &definicion;
+            }
+        }
+        for (const sintactico::Funcion& funcion : programa.funciones) {
+            if (funcion.es_externa) {
+                externas_.insert(std::string(funcion.nombre));
             }
         }
         for (const sintactico::Rasgo& rasgo : programa.rasgos) {
@@ -1858,6 +1871,56 @@ private:
     }
 
     // --- Funciones ---------------------------------------------------------
+    /// Tipo de C de un parámetro de una función externa. Un `&texto` viaja como
+    /// `const char*`, que es lo que espera una función de C.
+    static std::string tipo_externo(std::string_view escrito) {
+        if (escrito == "&texto" || escrito == "texto") {
+            return "const char*";
+        }
+        // Un préstamo de un tipo escalar es un puntero a ese tipo.
+        if (!escrito.empty() && escrito.front() == '&') {
+            const std::string dentro = tipo_externo(escrito.substr(1));
+            if (!dentro.empty() && dentro != "void") {
+                return dentro + "*";
+            }
+        }
+        if (escrito == "entero") {
+            return "long long";
+        }
+        if (escrito == "booleano") {
+            return "int";
+        }
+        if (escrito == "caracter") {
+            return "char";
+        }
+        if (escrito == "vacio") {
+            return "void";
+        }
+        return {};
+    }
+
+    /// Declaración de una función de C: `extern long long strlen(const char*);`
+    std::string firma_externa(const sintactico::Funcion& funcion) const {
+        const std::string retorno = tipo_externo(funcion.tipo_retorno);
+        std::string salida = "extern " + (retorno.empty() ? "long long" : retorno) + " " +
+                             std::string(funcion.nombre) + "(";
+        if (funcion.parametros.empty()) {
+            salida += "void";
+        } else {
+            bool primero = true;
+            for (const sintactico::Parametro& parametro : funcion.parametros) {
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                const std::string tipo = tipo_externo(parametro.tipo);
+                salida += tipo.empty() ? "long long" : tipo;
+            }
+        }
+        salida += ");";
+        return salida;
+    }
+
     std::string firma(const sintactico::Funcion& funcion) const {
         std::string salida = "static ";
         salida += tipo_declarado_c(funcion.tipo_retorno);
@@ -2312,6 +2375,8 @@ private:
                 return "long long";
             case TipoExpresion::Booleano:
                 return "int";
+            case TipoExpresion::Nulo:
+                return "nooki_nulo";
             case TipoExpresion::Identificador:
                 return buscar(expresion.lexema);
             case TipoExpresion::Construccion: {
@@ -2597,6 +2662,8 @@ private:
                 return limpiar_separadores(nodo.lexema);
             case TipoExpresion::Booleano:
                 return nodo.lexema == "verdadero" ? "1" : "0";
+            case TipoExpresion::Nulo:
+                return "NULL";
             case TipoExpresion::Identificador:
                 return std::string(nodo.lexema);
             case TipoExpresion::Construccion:
@@ -3173,6 +3240,13 @@ private:
             }
         }
 
+        // Una función externa conserva su nombre de C y sus textos viajan como
+        // `const char*`: se pasa el búfer, no la estructura.
+        const bool externa = externas_.count(std::string(nombre_llamado)) != 0;
+        if (externa) {
+            nombre_para_c = std::string(nombre_llamado);
+        }
+
         std::string salida = nombre_para_c + "(";
         const auto declarados = parametros_.find(std::string(nombre_llamado));
         bool primero = true;
@@ -3187,6 +3261,7 @@ private:
             primero = false;
 
             std::string valor = expresion(*argumento);
+
 
             // `&p` donde `p` ya es una referencia (una clase): se pasa tal cual.
             if (declarados != parametros_.end() && i < declarados->second.size() &&
@@ -3223,7 +3298,8 @@ private:
 
 
             // Un literal que llega a un parámetro prestado necesita dirección propia.
-            if (declarados != parametros_.end() && i < declarados->second.size()) {
+            if (!externa && declarados != parametros_.end() &&
+                i < declarados->second.size()) {
                 const std::string& declarado = declarados->second[i];
                 if (!declarado.empty() && declarado.front() == '&' &&
                     (argumento->tipo == sintactico::TipoExpresion::Texto ||
@@ -3231,6 +3307,19 @@ private:
                     valor = argumento_prestado(*argumento, declarado);
                 }
             }
+
+            // Un texto hacia una función de C viaja como puntero a sus bytes.
+            if (externa) {
+                const std::string tipo_argumento = tipo_de(*argumento);
+                if (tipo_argumento == "nooki_texto") {
+                    valor = argumento->tipo == sintactico::TipoExpresion::Identificador
+                                ? valor + ".datos"
+                                : "(" + valor + ").datos";
+                } else if (tipo_argumento == "nooki_texto*") {
+                    valor = "(" + valor + ")->datos";
+                }
+            }
+
             salida += valor;
         }
         salida += ')';
@@ -3472,6 +3561,7 @@ private:
     std::set<std::string> instancias_tipo_;
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
+    std::set<std::string> externas_;
     std::map<std::string, const sintactico::Rasgo*> rasgos_def_;
     std::set<std::string> clases_;
     std::vector<std::size_t> bucles_;

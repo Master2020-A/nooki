@@ -5,6 +5,38 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 73 — FFI: llamar a C (2026-11-12)
+
+El plan ponía el FFI **antes** de la biblioteca estándar, «porque sin libc no hay archivos, red ni
+tiempo». Ha llegado con tres años de retraso, y es el desbloqueo que faltaba.
+
+```aura
+externo funcion puts(cadena: &texto) -> booleano
+externo funcion time(zona: &entero) -> entero
+
+funcion principal() -> entero {
+    puts("hola desde C")
+    variable ahora = time(nulo)
+    si (ahora > 1000000000) {
+        imprimir("el reloj responde")
+    }
+    retornar 0
+}
+```
+
+- **`externo funcion`** declara una función de C: nombre, parámetros y tipo de retorno; sin cuerpo.
+- **Tipos traducidos**: `entero` ↔ `long long`, `booleano` ↔ `int`, `caracter` ↔ `char`, `vacio` ↔
+  `void`, `&texto` ↔ `const char*`, y `&escalar` ↔ puntero al escalar.
+- **Los textos viajan como puntero a sus bytes**: el runtime ya los guarda terminados en cero, así que
+  no hay copia ni asignación extra.
+- **`nulo`** ya se traduce: es el `NULL` de C, y sirve para los parámetros que lo admiten.
+- Caso de conformidad `0047-ffi`, verificado en MinGW, MSVC y Linux.
+
+**Límites conocidos, escritos**: no se declaran estructuras, ni funciones que devuelvan `texto`, ni se
+elige biblioteca (todo se enlaza contra la libc que el compilador de C use). Y si la firma declarada
+no coincide con la de C, el compilador de C avisa del conflicto: `strlen` devuelve `size_t`, así que
+declararlo `entero` no compila — hay que declararlo como `natural64`.
+
 ### Sprint 72 — Desbordamiento comprobado y rutas con tildes (2026-11-11)
 
 **ADR-03 se cumple por fin.** Era una decisión cerrada y el código la contradecía: `a + b` se emitía
