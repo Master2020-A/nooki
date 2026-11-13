@@ -1,10 +1,13 @@
 #include "nooki/cli/compilar.hpp"
+#include "nooki/lsp/servidor.hpp"
 #include "nooki/manifiesto.hpp"
 #include "nooki/rutas.hpp"
 
 #include <cstddef>
+#include <iostream>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "nooki/cli/orden.hpp"
 #include "nooki/conductor/compilar.hpp"
@@ -94,6 +97,14 @@ int compilar_con_rutas(std::span<const std::string_view> argumentos,
                        const std::vector<std::filesystem::path>& rutas, std::ostream& salida,
                        std::ostream& error) {
     return compilar_archivo(argumentos, salida, error, false, rutas);
+}
+
+/// `nooki lsp`: servidor de lenguaje por la entrada y salida estándar.
+int comando_lsp(std::span<const std::string_view>, std::ostream& salida,
+                std::ostream& error) {
+    (void)salida;
+    (void)error;
+    return nooki::lsp::servir(std::cin, std::cout);
 }
 
 /// `nooki construir`: compila el proyecto del directorio actual.

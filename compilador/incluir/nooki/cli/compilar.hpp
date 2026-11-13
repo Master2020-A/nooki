@@ -19,6 +19,9 @@ int comando_limpiar(std::span<const std::string_view> argumentos, std::ostream& 
 int comando_construir(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error);
 
+int comando_lsp(std::span<const std::string_view> argumentos, std::ostream& salida,
+                std::ostream& error);
+
 int compilar_con_rutas(std::span<const std::string_view> argumentos,
                        const std::vector<std::filesystem::path>& rutas, std::ostream& salida,
                        std::ostream& error);

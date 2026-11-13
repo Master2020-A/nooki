@@ -68,6 +68,12 @@ nooki_aplicar_opciones(prueba_rutas)
 add_test(NAME rutas COMMAND prueba_rutas)
 set_tests_properties(rutas PROPERTIES TIMEOUT 120)
 
+# Servidor de lenguaje: mensajes LSP y diagnósticos del documento.
+add_executable(prueba_lsp lsp.cpp)
+target_link_libraries(prueba_lsp PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_lsp)
+add_test(NAME lsp COMMAND prueba_lsp)
+
 # Manifiesto del proyecto: nooki.toml y dependencias.
 add_executable(prueba_manifiesto manifiesto.cpp)
 target_link_libraries(prueba_manifiesto PRIVATE nooki_nucleo)

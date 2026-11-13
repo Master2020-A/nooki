@@ -5,6 +5,36 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 76 — Servidor de lenguaje (2026-11-12)
+
+`nooki lsp` habla el **Language Server Protocol** por la entrada y salida estándar: cualquier editor con
+cliente LSP puede colorear errores mientras se escribe, sin escribir una extensión para Nooki.
+
+```json
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{...}}}
+```
+```json
+{"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"diagnostics":[
+  {"range":{"start":{"line":2,"character":4},"end":{"line":2,"character":12}},
+   "severity":1,"code":"NOK2002","source":"nooki",
+   "message":"se esperaba una expresión y se encontró «retornar»"}]}}
+```
+
+- **Sincronización completa** de documentos (`didOpen`, `didChange`): cada cambio reanaliza el archivo.
+- **Diagnósticos con rango exacto**: línea y columna del span, gravedad, código `NOKnnnn` y el mensaje en
+  español con sus notas y ayudas.
+- **Sin dependencias**: un lector y escritor de JSON de 300 líneas y el bucle del protocolo, en C++.
+  Nada de bibliotecas externas.
+- **`prueba_lsp`**: capacidades, un documento con error (comprueba código, severidad y línea) y un
+  documento correcto sin diagnósticos. **15 suites.**
+
+**Configuración en el editor**: cualquier cliente LSP sirve. En Neovim, con `nvim-lspconfig`, basta
+registrar el comando `nooki lsp` para los archivos `.oki`. La extensión de VS Code sigue coloreando la
+sintaxis; para diagnósticos necesita un cliente LSP (otro sprint).
+
+**Lo que no incluye**: autocompletado, ir a la definición, formato y resaltado semántico. El protocolo
+está montado para añadirlos sin tocar lo demás.
+
 ### Sprint 75 — Manifiesto y dependencias (2026-11-12)
 
 Un proyecto deja de ser una carpeta suelta: declara qué es y de qué depende.

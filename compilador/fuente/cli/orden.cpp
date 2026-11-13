@@ -118,6 +118,9 @@ int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
     if (comando->nombre == "construir") {
         return comando_construir(argumentos.subspan(1), salida, error);
     }
+    if (comando->nombre == "lsp") {
+        return comando_lsp(argumentos.subspan(1), salida, error);
+    }
     if (comando->nombre == "nuevo") {
         return comando_nuevo(argumentos.subspan(1), salida, error);
     }

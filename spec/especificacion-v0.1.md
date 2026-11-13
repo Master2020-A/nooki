@@ -1357,3 +1357,16 @@ saludos = { ruta = "../saludos" }
 - `nooki nuevo` crea el manifiesto con el nombre del proyecto.
 - No hay versiones semánticas, descarga desde Git ni registro: son la fase siguiente, y necesitan
   usuarios antes que diseño.
+
+
+### 18.40 Servidor de lenguaje
+
+`nooki lsp` atiende el protocolo LSP por la entrada y salida estándar:
+
+- `initialize`: capacidades (sincronización completa de documentos).
+- `textDocument/didOpen` y `didChange`: reanaliza el documento.
+- `textDocument/publishDiagnostics`: envía los diagnósticos con rango, gravedad, código y mensaje.
+- `shutdown` y `exit`.
+
+Los diagnósticos llevan la línea y la columna del span, así que el editor subraya exactamente lo que
+está mal. Cualquier cliente LSP sirve; no hay una extensión propia.

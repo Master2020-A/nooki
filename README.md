@@ -111,6 +111,7 @@ Sprint 72 ✅  Aritmética comprobada y rutas con tildes
 Sprint 73 ✅  FFI: llamar a C desde Nooki
 Sprint 74 ✅  `inseguro` y `asm!`: control de hardware
 Sprint 75 ✅  Manifiesto `nooki.toml` y dependencias
+Sprint 76 ✅  Servidor de lenguaje `nooki lsp`
 ```
 
 **Ya compila y ejecuta:**
