@@ -1207,6 +1207,7 @@ private:
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
             retornos_[std::string(funcion.nombre)] = tipo_declarado_c(funcion.tipo_retorno);
+        retorno_actual_ = retornos_[std::string(funcion.nombre)];
 
             std::vector<std::string> tipos;
             tipos.reserve(funcion.parametros.size());
@@ -1859,6 +1860,30 @@ private:
         }
     }
 
+    /// Nombres que viajan dentro del valor devuelto. El objeto de una llamada a
+    /// método no viaja: solo sus argumentos y lo que se construye con ellos.
+    static void recoger_devueltos(const sintactico::Expresion& expresion,
+                                  std::set<std::string>& nombres) {
+        if (expresion.tipo == sintactico::TipoExpresion::Identificador) {
+            nombres.insert(std::string(expresion.lexema));
+        }
+        for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+            if (argumento) {
+                recoger_devueltos(*argumento, nombres);
+            }
+        }
+        if (expresion.tipo == sintactico::TipoExpresion::Miembro) {
+            // `objeto.metodo(...)`: el objeto no se devuelve.
+            return;
+        }
+        if (expresion.izquierda) {
+            recoger_devueltos(*expresion.izquierda, nombres);
+        }
+        if (expresion.derecha) {
+            recoger_devueltos(*expresion.derecha, nombres);
+        }
+    }
+
     void declarar(std::string_view nombre, std::string tipo) {
         if (ambitos_.empty()) {
             return;
@@ -1873,6 +1898,16 @@ private:
             ambitos_.back().liberables.push_back(
                 Liberable{std::string(nombre), std::move(funcion), por_puntero});
         }
+    }
+
+    /// ¿Queda algo con dueño por liberar en los ámbitos abiertos?
+    bool hay_liberables() const {
+        for (const Ambito& ambito : ambitos_) {
+            if (!ambito.liberables.empty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// Prepara un argumento para un parámetro prestado. Un literal no tiene
@@ -2103,8 +2138,10 @@ private:
                 no_soportado("una función «principal» con parámetros");
             }
             salida_ << "int main(void) {\n";
+            retorno_actual_ = "int";
         } else {
             salida_ << firma(funcion) << " {\n";
+            retorno_actual_ = tipo_declarado_c(funcion.tipo_retorno);
         }
 
         abrir_ambito();
@@ -2154,9 +2191,29 @@ private:
             case TipoSentencia::Retornar: {
                 // Devolver un valor con dueño lo mueve: no se libera aquí, ni él
                 // ni las variables que aparezcan dentro de un compuesto devuelto.
+                // Lo que viaja dentro del valor devuelto se conserva; el objeto de
+                // una llamada a método, no: `v.largo()` devuelve un número, no `v`,
+                // así que `v` se libera.
                 std::set<std::string> conservar;
                 if (sentencia.expresion) {
-                    recoger_identificadores(*sentencia.expresion, conservar);
+                    recoger_devueltos(*sentencia.expresion, conservar);
+                }
+                // Si hay algo que liberar y la expresión usa esos valores (por
+                // ejemplo `v.largo()`), se evalúa primero en un temporal: liberar
+                // antes sería leer memoria liberada.
+                const bool quedan_liberables = hay_liberables();
+                if (sentencia.expresion && quedan_liberables) {
+                    const std::string temporal =
+                        "__nooki_retorno" + std::to_string(contador_temporal_++);
+                    const std::string tipo_retorno =
+                        (retorno_actual_.empty() || retorno_actual_ == "void")
+                            ? "long long"
+                            : retorno_actual_;
+                    salida_ << indentacion() << tipo_retorno << " " << temporal << " = "
+                            << expresion(*sentencia.expresion) << ";\n";
+                    liberar_todo(conservar);
+                    salida_ << indentacion() << "return " << temporal << ";\n";
+                    return;
                 }
                 liberar_todo(conservar);
                 if (sentencia.expresion) {
@@ -3817,6 +3874,8 @@ private:
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::set<std::string> externas_;
+    /// Tipo de retorno de la función que se está generando.
+    std::string retorno_actual_;
     /// Dentro de `inseguro { }` la aritmética se emite sin comprobar.
     bool sin_comprobacion_ = false;
     std::map<std::string, const sintactico::Rasgo*> rasgos_def_;

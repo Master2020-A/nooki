@@ -5,6 +5,33 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 95 — A-17 resuelto: la propiedad al salir de una función (2026-11-13)
+
+La fuga de A-17 no era de `pln.distancia`: era **del generador, en toda función que devolvía un valor
+teniendo algo con dueño**.
+
+```aura
+funcion calcula() -> entero {
+    variable v: Vector<entero> = Vector<entero>.nuevo()
+    v.agregar(1)
+    retornar v.largo()      // v no se liberaba nunca
+}
+```
+
+**Dos fallos encadenados:**
+
+1. **`retornar v.largo()` conservaba `v`** como si se devolviera, porque el nombre aparece como objeto
+   de la llamada. Ahora solo se conserva lo que **viaja dentro** del valor devuelto: los argumentos de
+   una llamada, sí; el objeto de un método, no.
+2. **Al liberar antes de devolver, se liberaba demasiado pronto**: `soltar(&v); return v.largo();` lee
+   memoria liberada. Ahora el valor se evalúa en un temporal, se libera lo que toca y se devuelve el
+   temporal.
+
+Resultado: **AddressSanitizer ya no encuentra ninguna fuga** en el caso que la destapó, y `archivo.leer`
+—que devuelve un texto dentro de un `Bien`— sigue conservándolo como debe.
+
+Las cuatro cadenas en verde.
+
 ### Sprint 94 — Redes: la IA queda cerrada (2026-11-13)
 
 Una red de una capa oculta que **aprende XOR**, el problema que no se puede resolver sin neuronas
