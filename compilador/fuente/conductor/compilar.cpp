@@ -1,5 +1,6 @@
 #include "nooki/conductor/compilar.hpp"
 #include "nooki/rutas.hpp"
+#include "nooki/ui/runtime_ui.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -37,6 +38,9 @@ std::filesystem::path archivo_de_entrada;
 
 /// Carpetas de dependencias donde buscar módulos, del manifiesto.
 std::vector<std::filesystem::path> rutas_de_modulos;
+
+/// ¿El programa usa el módulo de ventanas? Entonces hay que compilar su capa C.
+bool hace_falta_ui = false;
 
 std::string_view fuente_biblioteca(std::string_view modulo) {
     if (modulo == "resultado") {
@@ -84,6 +88,36 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
         resto = resto.subtexto(posicion + 1, resto.largo())
     }
     retornar total
+}
+)";
+    }
+    if (modulo == "ventana") {
+        return R"(// Biblioteca estándar: ventanas y bucle de eventos.
+// Un manejador es un entero; 0 significa que no hay entorno gráfico.
+externo funcion nooki_ui_ventana_crear(titulo: &texto, ancho: entero, alto: entero) -> entero
+externo funcion nooki_ui_ventana_viva(manejador: entero) -> booleano
+externo funcion nooki_ui_ventana_evento(manejador: entero) -> entero
+externo funcion nooki_ui_ventana_cerrar(manejador: entero) -> vacio
+externo funcion nooki_ui_ventana_esperar(milisegundos: entero) -> vacio
+
+publico funcion abrir(titulo: &texto, ancho: entero, alto: entero) -> entero {
+    retornar nooki_ui_ventana_crear(*titulo, ancho, alto)
+}
+
+publico funcion viva(manejador: entero) -> booleano {
+    retornar nooki_ui_ventana_viva(manejador)
+}
+
+publico funcion siguiente_evento(manejador: entero) -> entero {
+    retornar nooki_ui_ventana_evento(manejador)
+}
+
+publico funcion cerrar(manejador: entero) -> vacio {
+    nooki_ui_ventana_cerrar(manejador)
+}
+
+publico funcion pausa(milisegundos: entero) -> vacio {
+    nooki_ui_ventana_esperar(milisegundos)
 }
 )";
     }
@@ -299,6 +333,9 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
         return true;  // ya cargado: un ciclo no duplica el módulo
     }
     cargados.push_back(clave);
+    if (clave == "ventana") {
+        hace_falta_ui = true;
+    }
 
     // Se busca junto al archivo que importa, en su carpeta «biblioteca» y
     // subiendo por los directorios padre hasta encontrar una.
@@ -329,16 +366,25 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
         actual = actual.parent_path();
     }
 
-    // Un archivo no puede importarse a sí mismo.
+    // Un archivo no puede importarse a sí mismo: ese candidato se ignora y se
+    // sigue buscando (puede haber un módulo de la biblioteca con ese nombre).
     if (!archivo_de_entrada.empty() && std::filesystem::exists(ruta)) {
         std::error_code error_canonico;
         const std::filesystem::path modulo_real =
             std::filesystem::weakly_canonical(ruta, error_canonico);
         if (!error_canonico && modulo_real == archivo_de_entrada) {
-            emisor.error(diagnostico::codigos::MODULO_NO_ENCONTRADO, diagnostico::Span{})
-                .parametro("modulo", clave)
-                .ayuda("un archivo no puede usarse a sí mismo como módulo");
-            return false;
+            for (const std::filesystem::path& extra : rutas_de_modulos) {
+                const std::filesystem::path candidato = extra / (clave + ".oki");
+                if (std::filesystem::exists(candidato)) {
+                    ruta = candidato;
+                    break;
+                }
+            }
+            if (std::filesystem::weakly_canonical(ruta, error_canonico) == archivo_de_entrada) {
+                // Se deja sin resolver para que se use el módulo embebido.
+                ruta = std::filesystem::temp_directory_path() /
+                       ("nooki_inexistente_" + clave + ".oki");
+            }
         }
     }
 
@@ -550,13 +596,33 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
                           EXTENSION_BINARIO);
     }
 
+    // La capa de ventanas se compila aparte, solo si el programa usa el módulo.
+    std::filesystem::path ui_nativo;
+    std::string fuente_ui;
+    if (hace_falta_ui) {
+        fuente_ui = std::string(ui::fuente_runtime_ui());
+        ui_nativo = std::filesystem::temp_directory_path() /
+                    ("nooki_ui_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) + ".c");
+        std::ofstream archivo_ui(ui_nativo, std::ios::binary | std::ios::trunc);
+        archivo_ui << fuente_ui;
+    }
+
     // La consola del sistema no entiende «/» como separador: se usa el nativo.
     std::filesystem::path binario_nativo = destino_enlace;
     std::filesystem::path intermedio_nativo = intermedio;
-    const std::string comando =
+    std::string comando =
         entrecomillar_si_hace_falta(compilador) + " -O2 -o " +
         entrecomillar_si_hace_falta(ruta_a_utf8(binario_nativo.make_preferred())) + " " +
         entrecomillar_si_hace_falta(ruta_a_utf8(intermedio_nativo.make_preferred()));
+    if (hace_falta_ui) {
+        comando += " " + entrecomillar_si_hace_falta(ruta_a_utf8(ui_nativo.make_preferred()));
+        // Las bibliotecas del sistema que necesita la capa de ventanas.
+#if defined(_WIN32)
+        comando += " -luser32 -lgdi32";
+#else
+        comando += " -lX11";
+#endif
+    }
 
     const int codigo = ejecutar_comando(comando);
     if (codigo != 0) {

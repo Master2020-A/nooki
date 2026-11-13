@@ -24,6 +24,7 @@ add_library(nooki_nucleo STATIC
     fuente/manifiesto.cpp
     fuente/lsp/json.cpp
     fuente/lsp/servidor.cpp
+    fuente/ui/runtime_ui.cpp
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
     fuente/cli/compilar.cpp

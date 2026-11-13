@@ -114,6 +114,7 @@ Sprint 75 ✅  Manifiesto `nooki.toml` y dependencias
 Sprint 76 ✅  Servidor de lenguaje `nooki lsp`
 Sprint 77 ✅  Biblioteca: archivos y fechas
 Sprint 78 ✅  Estabilización: API congelada y distribución
+Sprint 79 ✅  UI: ventanas nativas desde Nooki
 ```
 
 **Ya compila y ejecuta:**

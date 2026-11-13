@@ -74,6 +74,13 @@ target_link_libraries(prueba_lsp PRIVATE nooki_nucleo)
 nooki_aplicar_opciones(prueba_lsp)
 add_test(NAME lsp COMMAND prueba_lsp)
 
+# Ventanas: la capa de UI se enlaza y responde (con o sin pantalla).
+add_executable(prueba_ventana ventana.cpp)
+target_link_libraries(prueba_ventana PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_ventana)
+add_test(NAME ventana COMMAND prueba_ventana)
+set_tests_properties(ventana PROPERTIES TIMEOUT 120)
+
 # Manifiesto del proyecto: nooki.toml y dependencias.
 add_executable(prueba_manifiesto manifiesto.cpp)
 target_link_libraries(prueba_manifiesto PRIVATE nooki_nucleo)

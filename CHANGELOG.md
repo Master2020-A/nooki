@@ -5,6 +5,42 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 79 — Ventanas (2026-11-12)
+
+El primer pilar de la UI: **una ventana de verdad desde Nooki**, con su bucle de eventos.
+
+```aura
+usar ventana
+
+variable v = ventana.abrir(&titulo, 480, 320)
+mientras (ventana.viva(v) && fotogramas < 30) {
+    si (ventana.siguiente_evento(v) == 1) {
+        romper
+    }
+    ventana.pausa(16)
+}
+ventana.cerrar(v)
+```
+
+- **Capa C por plataforma**: Win32 en Windows y X11 en Linux/Unix, dentro del mismo archivo de
+  runtime y separadas por `#ifdef`. macOS llegará con su backend.
+- **Solo se compila si se usa**: el conductor detecta el módulo `ventana` y añade el archivo C y las
+  bibliotecas del sistema (`user32`+`gdi32` o `X11`) a la orden del compilador de C. Un programa sin
+  interfaz no paga nada.
+- **Sin entorno gráfico no falla**: `abrir` devuelve 0 y el programa decide. Así una prueba se ejecuta
+  igual en un servidor que en un escritorio.
+- **`prueba_ventana`**: compila, ejecuta y acepta las dos salidas —«se abre y se cierra» en un
+  escritorio, «sin entorno gráfico» en un contenedor—. **16 suites.**
+
+**Dos fallos que aparecieron al montarlo:**
+
+1. **Colisión de nombres**: la función `viva` del módulo se compilaba como `nooki_ventana_viva`, el
+   mismo nombre que el extern que envolvía, así que **se llamaba a sí misma** en recursión infinita y
+   consumía la CPU sin parar. La capa C pasa a llamarse `nooki_ui_ventana_*`.
+2. **Un archivo llamado como el módulo** (`ventana.oki` con `usar ventana`) se rechazaba como
+   auto-importación. Ahora ese candidato se ignora y la búsqueda continúa hasta el módulo de la
+   biblioteca.
+
 ### Sprint 78 — Estabilización (2026-11-12)
 
 Un sprint que no añade lenguaje y cierra lo abierto.

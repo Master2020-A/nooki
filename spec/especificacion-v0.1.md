@@ -1398,3 +1398,25 @@ coincide (archivo.leer(&ruta)) {
 - Al añadir una función pública, añádela también a ese programa.
 - La distribución se genera con `herramientas/empaquetar.ps1` (Windows) o `empaquetar.sh` (Linux y
   macOS): binario, documentación, ejemplos, editores, especificación e `INSTALAR.txt`.
+
+
+### 18.43 Ventanas
+
+```aura
+usar ventana
+
+variable v = ventana.abrir(&titulo, 480, 320)
+mientras (ventana.viva(v)) {
+    si (ventana.siguiente_evento(v) == 1) { romper }
+    ventana.pausa(16)
+}
+ventana.cerrar(v)
+```
+
+- `abrir(titulo, ancho, alto)`: devuelve un **manejador** (un entero). **0 significa que no hay
+  entorno gráfico**, y el programa decide qué hacer; no es un error del lenguaje.
+- `viva(manejador)`: atiende los mensajes pendientes y dice si la ventana sigue abierta.
+- `siguiente_evento(manejador)`: 0 nada, 1 cerrar.
+- `cerrar(manejador)` y `pausa(milisegundos)`.
+- La capa C se compila **solo si el programa usa el módulo** y se enlaza con las bibliotecas del
+  sistema: `user32` y `gdi32` en Windows, `X11` en Linux y Unix. macOS necesita su backend.
