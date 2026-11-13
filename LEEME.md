@@ -32,7 +32,7 @@ $ nooki ejecutar hola.oki
 | Errores como valores (`resultado` y `?`), sin excepciones | sí |
 | Colecciones: `Vector<entero>`, `Vector<texto>`, `Mapa<texto, entero>` | sí |
 | Módulos con visibilidad y proyectos con `biblioteca/` | sí |
-| Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas`, `archivo`, `ventana`, `diseno`, `controles` |
+| Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas`, `archivo`, `ventana`, `diseno`, `controles`, `accesibilidad` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
 **Versión actual: 1.0.0.** En Linux, compilar programas con ventana necesita `libx11-dev`; para ejecutarlos sin pantalla, `xvfb-run`. Biblioteca: `resultado`, `matematicas`, `textos`, `listas` y `fechas`, escritos en Nooki. No hay defectos conocidos: todos los huecos de propiedad están cerrados o

@@ -1,0 +1,14 @@
+0
+255
+128
+negro sobre blanco
+blanco sobre blanco ilegible
+gris sobre blanco legible
+16777215
+0
+1
+0
+2
+foco en 2
+0
+0

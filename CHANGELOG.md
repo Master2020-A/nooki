@@ -5,6 +5,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 85 — Accesibilidad (2026-11-13)
+
+El sexto pilar de la UI: que la interfaz se pueda leer y recorrer con el teclado.
+
+```aura
+usar accesibilidad
+
+variable color_texto = accesibilidad.texto_sobre(color_boton)   // negro o blanco
+si (accesibilidad.legible(texto, fondo)) { ... }
+
+variable estado_foco = nuevo foco { indice: 0, total: 3 }
+estado_foco.siguiente()      // Tab
+estado_foco.anterior()       // Mayús+Tab
+```
+
+- **`luminancia(color)`**: 0 negro, 255 blanco, con la fórmula YIQ (enteros, sin coma flotante).
+- **`legible(texto, fondo)`**: diferencia de luminancia ≥ 128. **No es el contraste WCAG exacto** —eso
+  exige corrección gamma con potencias— pero es una heurística honesta que se calcula con enteros y
+  acierta en los casos normales. Está dicho en el módulo y en la especificación.
+- **`texto_sobre(fondo)`**: devuelve negro o blanco, el que más contraste dé. Es lo que usa el ejemplo
+  para el texto de los botones.
+- **`foco`**: índice que envuelve entre `total` controles, con `siguiente`, `anterior`, `es_actual` y
+  `primera`. Con `total = 0` no rompe: se queda en 0.
+- Caso `0054-accesibilidad`, y el ejemplo `05-ventana` dibuja un **contorno de foco** alrededor del
+  control activo.
+
+Todo el módulo es computación pura, así que se prueba como el layout: sin ventana.
+
 ### Sprint 84 — A-16 resuelto: la cola de eventos no se inicializaba (2026-11-12)
 
 La violación de acceso que aparecía al lanzar un programa con ventana desde `cmd /c` tenía una causa

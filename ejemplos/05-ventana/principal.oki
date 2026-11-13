@@ -1,6 +1,7 @@
 // Una ventana con una interfaz colocada por el módulo de diseño.
 usar ventana
 usar diseno
+usar accesibilidad
 
 funcion principal() -> entero {
     variable titulo = "Nooki — ejemplo de ventana" + ""
@@ -22,12 +23,25 @@ funcion principal() -> entero {
     ventana.escribir_texto(v, 24, col.hueco(18), &subtitulo, 0x9399B2)
 
     variable fila_botones = nuevo fila { x: 24, y: 96, ancho: 432, alto: 48, usado: 0, separacion: 12 }
+    variable color_boton = 0x89B4FA
+    variable color_texto = accesibilidad.texto_sobre(color_boton)
+    variable estado_foco = nuevo foco { indice: 0, total: 3 }
+
     variable i = 0
     mientras (i < 3) {
         variable x = 24 + fila_botones.hueco(120)
-        ventana.rectangulo(v, x, 96, 120, 48, 0x89B4FA)
+        ventana.rectangulo(v, x, 96, 120, 48, color_boton)
         variable etiqueta = "Boton" + ""
-        ventana.escribir_texto(v, x + 16, 96 + 24, &etiqueta, 0x11111B)
+        ventana.escribir_texto(v, x + 16, 96 + 24, &etiqueta, color_texto)
+
+        // El control con el foco lleva un contorno de 2 píxeles.
+        si (estado_foco.es_actual(i)) {
+            variable color_foco = 0xF9E2AF
+            ventana.rectangulo(v, x - 2, 96 - 2, 124, 2, color_foco)
+            ventana.rectangulo(v, x - 2, 96 + 48, 124, 2, color_foco)
+            ventana.rectangulo(v, x - 2, 96, 2, 48, color_foco)
+            ventana.rectangulo(v, x + 120, 96, 2, 48, color_foco)
+        }
         i = i + 1
     }
 

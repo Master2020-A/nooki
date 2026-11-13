@@ -1492,3 +1492,23 @@ mientras (e != 0) {
   sueltos en el programa.
 - `evento_x`, `evento_y` y `evento_tecla` dan los datos del último evento entregado.
 - La cola guarda 64 eventos, así que no se pierde entrada entre fotogramas.
+
+
+### 18.48 Accesibilidad
+
+```aura
+usar accesibilidad
+
+variable color_texto = accesibilidad.texto_sobre(fondo)
+si (accesibilidad.legible(texto, fondo)) { ... }
+
+variable estado = nuevo foco { indice: 0, total: 3 }
+estado.siguiente()
+```
+
+- `luminancia(color)`: 0 (negro) a 255 (blanco), fórmula YIQ con enteros.
+- `legible(texto, fondo)`: diferencia de luminancia de al menos 128.
+- `texto_sobre(fondo)`: negro o blanco, el que más contraste dé.
+- `foco`: índice que envuelve entre controles para navegar con Tab y Mayús+Tab.
+- La regla de legibilidad es una **heurística**, no el contraste WCAG exacto: ese exige corrección
+  gamma con potencias y aquí no se calcula con coma flotante.

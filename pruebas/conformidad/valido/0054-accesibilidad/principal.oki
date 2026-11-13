@@ -1,0 +1,44 @@
+// Accesibilidad: contraste de colores y navegación por teclado.
+usar accesibilidad
+
+funcion principal() -> entero {
+    imprimir(accesibilidad.luminancia(0x000000))
+    imprimir(accesibilidad.luminancia(0xFFFFFF))
+    imprimir(accesibilidad.luminancia(0x808080))
+
+    si (accesibilidad.legible(0x000000, 0xFFFFFF)) {
+        imprimir("negro sobre blanco")
+    }
+    si (accesibilidad.legible(0xFFFFFF, 0xFFFFFF)) {
+        imprimir("blanco sobre blanco legible")
+    } sino {
+        imprimir("blanco sobre blanco ilegible")
+    }
+    si (accesibilidad.legible(0x777777, 0xFFFFFF)) {
+        imprimir("gris sobre blanco legible")
+    } sino {
+        imprimir("gris sobre blanco ilegible")
+    }
+
+    imprimir(accesibilidad.texto_sobre(0x000000))
+    imprimir(accesibilidad.texto_sobre(0xFFFFFF))
+
+    variable f = nuevo foco { indice: 0, total: 3 }
+    f.siguiente()
+    imprimir(f.indice)
+    f.siguiente()
+    f.siguiente()
+    imprimir(f.indice)
+    f.anterior()
+    imprimir(f.indice)
+    si (f.es_actual(2)) {
+        imprimir("foco en 2")
+    }
+    f.primera()
+    imprimir(f.indice)
+
+    variable sin_controles = nuevo foco { indice: 0, total: 0 }
+    sin_controles.siguiente()
+    imprimir(sin_controles.indice)
+    retornar 0
+}

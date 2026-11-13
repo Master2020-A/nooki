@@ -299,7 +299,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S82** | UI: controles | ✅ `control` con `contiene` semiabierto, y `etiqueta`, `boton` y `barra` que heredan y dibujan. Caso `0053-controles`. Corregidos `&objeto.campo`, el despacho de `este` y la distinción clase/estructura |
 | **S83** | UI: eventos | ✅ Cola de 64 eventos (movimiento, pulsación, liberación, tecla, cierre) en Win32 y X11, con API legible en Nooki. `presentar` ya no invalida el contexto. *A-16: `cmd /c` hace caer el programa con ventana* |
 | **S84** | A-16 resuelto | ✅ La cola de eventos no se inicializaba al crear la ventana: `cuenta` quedaba con basura. Encontrado con ASan y Xvfb en Linux, corregido en las dos plataformas. `prueba_ventana` vuelve a ejecutar y comprobar el programa |
-| **S85** | ONNX Runtime | Carga e inferencia de modelos ONNX; GPU opcional; 30 tests |
+| **S85** | UI: accesibilidad | ✅ `luminancia`, `legible` y `texto_sobre` (YIQ con enteros) y la clase `foco` para navegar con Tab. Caso `0054` y contorno de foco en el ejemplo |
 | **S86** | PLN | Tokenizadores (BPE/SentencePiece), embeddings, sentimiento, entidades, resumen; 50 tests |
 | **S87** | IA generativa | Cliente OpenAI/Anthropic/Ollama, generación local GGUF, RAG con base vectorial; 40 tests |
 | **S88** | **Cierre v0.95: visión y GPU** | Imágenes, clasificación y detección vía ONNX; CUDA/Metal/Vulkan si hay recursos |

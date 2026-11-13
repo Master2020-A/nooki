@@ -91,6 +91,77 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "accesibilidad") {
+        return R"(// Biblioteca estándar: legibilidad y navegación por teclado.
+// Los colores son enteros 0xRRGGBB.
+
+// Luminancia percibida (YIQ): 0 negro, 255 blanco.
+publico funcion luminancia(color: entero) -> entero {
+    variable rojo = (color / 65536) % 256
+    variable verde = (color / 256) % 256
+    variable azul = color % 256
+    retornar (299 * rojo + 587 * verde + 114 * azul) / 1000
+}
+
+// Diferencia de luminancia entre dos colores, en la misma escala.
+publico funcion diferencia(a: entero, b: entero) -> entero {
+    variable la = luminancia(a)
+    variable lb = luminancia(b)
+    si (la > lb) {
+        retornar la - lb
+    }
+    retornar lb - la
+}
+
+// Criterio práctico: una diferencia de 128 sobre 255 es legible.
+// No es el contraste WCAG exacto (que exige corrección gamma), pero es una
+// heurística que se calcula con enteros y acierta en los casos normales.
+publico funcion legible(texto_color: entero, fondo: entero) -> booleano {
+    retornar diferencia(texto_color, fondo) >= 128
+}
+
+// Texto negro o blanco, el que más contraste dé sobre ese fondo.
+publico funcion texto_sobre(fondo: entero) -> entero {
+    si (luminancia(fondo) > 127) {
+        retornar 0x000000
+    }
+    retornar 0xFFFFFF
+}
+
+// --- Navegación por teclado ---
+
+// Lleva el control que tiene el foco entre `total` controles, con Tab y
+// Mayús+Tab. El índice siempre está en rango.
+publico clase foco {
+    publico indice: entero
+    publico total: entero
+
+    publico funcion siguiente() -> vacio {
+        si (este.total <= 0) {
+            este.indice = 0
+            retornar
+        }
+        este.indice = (este.indice + 1) % este.total
+    }
+
+    publico funcion anterior() -> vacio {
+        si (este.total <= 0) {
+            este.indice = 0
+            retornar
+        }
+        este.indice = (este.indice + este.total - 1) % este.total
+    }
+
+    publico funcion es_actual(cual: entero) -> booleano {
+        retornar cual == este.indice
+    }
+
+    publico funcion primera() -> vacio {
+        este.indice = 0
+    }
+}
+)";
+    }
     if (modulo == "controles") {
         return R"(// Biblioteca estándar: controles de interfaz (widgets).
 // La geometría se puede probar sin ventana; el dibujo necesita una.
