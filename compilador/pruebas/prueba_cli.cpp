@@ -54,6 +54,38 @@ void caso(std::string_view titulo) {
 }  // namespace
 
 int main() {
+    caso("documentar");
+    {
+        const std::filesystem::path directorio =
+            std::filesystem::temp_directory_path() / "nooki-documentar";
+        std::error_code ignorado;
+        std::filesystem::create_directories(directorio, ignorado);
+        const std::filesystem::path fuente = directorio / "api.oki";
+        {
+            std::ofstream flujo(fuente, std::ios::binary);
+            flujo << "publico funcion sumar(a: entero, b: entero) -> entero {\n"
+                     "    retornar a + b\n"
+                     "}\n\n"
+                     "funcion privada() -> entero {\n"
+                     "    retornar 0\n"
+                     "}\n";
+        }
+
+        const std::string antes = std::filesystem::current_path().string();
+        std::filesystem::current_path(directorio, ignorado);
+        const Resultado resultado = invocar({"documentar", ".", "--salida"});
+        std::filesystem::current_path(antes, ignorado);
+
+        comprobar(resultado.codigo == nooki::cli::EXITO, "documenta sin error");
+        comprobar(contiene(resultado.salida, "publico funcion sumar") ||
+                      contiene(resultado.salida, "sumar(a: entero, b: entero) -> entero"),
+                  "incluye la función pública");
+        comprobar(!contiene(resultado.salida, "privada"),
+                  "deja fuera lo que no es público");
+
+        std::filesystem::remove_all(directorio, ignorado);
+    }
+
     caso("verificar");
     {
         const std::filesystem::path directorio =
@@ -189,13 +221,6 @@ int main() {
         comprobar(todos_presentes, "aparecen todos los comandos");
     }
 
-    caso("comando todavía no disponible");
-    {
-        const Resultado resultado = invocar({"documentar", "hola.oki"});
-        comprobar(resultado.codigo == nooki::cli::NO_DISPONIBLE, "devuelve 69");
-        comprobar(contiene(resultado.error, "Sprint 60"), "indica en qué sprint llega");
-        comprobar(resultado.salida.empty(), "no escribe en la salida estándar");
-    }
 
     caso("comando inexistente");
     {

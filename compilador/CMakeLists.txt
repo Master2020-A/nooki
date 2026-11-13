@@ -29,6 +29,7 @@ add_library(nooki_nucleo STATIC
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
     fuente/cli/formatear.cpp
+    fuente/cli/documentar.cpp
     fuente/cli/verificar.cpp
     fuente/formato/formateador.cpp
     fuente/cli/compilar.cpp

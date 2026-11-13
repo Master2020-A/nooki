@@ -5,6 +5,35 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 104 — `nooki documentar` (2026-11-13)
+
+```bash
+$ nooki documentar .              # escribe API.md
+documentado: API.md (1 archivos)
+```
+
+```markdown
+## Módulo `geometria.oki`
+
+### Tipos
+
+- **`punto`** (estructura)
+  - `x`: entero
+  - `y`: entero
+
+### Funciones
+
+- `sumar(a: entero, b: entero) -> entero`
+```
+
+- Recorre los `.oki` del directorio, analiza cada uno y escribe **solo lo `publico`**: tipos con sus
+  campos, funciones con su firma y variantes de enumeración.
+- Un archivo con errores **no se documenta** en lugar de documentarse a medias.
+- **`--salida`** escribe por la salida estándar en vez de crear `API.md`.
+- Sale con 65 si ningún archivo expone nada.
+- Con esto **los 13 comandos de la tabla están implementados**: se retira la prueba de «comando
+  todavía no disponible», que ya no tiene caso que probar.
+
 ### Sprint 103 — Ir a la definición de variables (2026-11-13)
 
 El servidor ya resuelve también **variables, constantes y parámetros**.

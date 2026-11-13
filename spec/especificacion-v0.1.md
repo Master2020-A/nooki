@@ -1735,3 +1735,10 @@ nooki verificar <archivo.oki>   # 0 correcto, 65 con errores, 64 sin archivo
 - El servidor y 
 ooki formatear comparten la misma implementación (\
 ooki::formato::formatear\).
+
+### 18.64 Documentación generada
+
+- `nooki documentar [directorio]` escribe `API.md` con lo que cada archivo expone con `publico`:
+  tipos con sus campos, funciones con su firma y variantes de enumeración.
+- Un archivo con errores no se documenta.
+- `--salida` escribe por la salida estándar en lugar de crear el archivo.

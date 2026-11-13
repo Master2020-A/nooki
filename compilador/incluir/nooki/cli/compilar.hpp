@@ -33,6 +33,10 @@ int comando_compilar(std::span<const std::string_view> argumentos, std::ostream&
 int comando_ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
                      std::ostream& error);
 
+/// `nooki documentar [directorio]`: genera API.md con lo público del proyecto.
+int comando_documentar(std::span<const std::string_view> argumentos, std::ostream& salida,
+                       std::ostream& error);
+
 /// `nooki verificar <archivo.oki>`: léxico, parser y verificación, sin generar C.
 int comando_verificar(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error);

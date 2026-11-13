@@ -139,6 +139,7 @@ Sprint 100 ✅  nooki formatear
 Sprint 101 ✅  nooki verificar
 Sprint 102 ✅  Formato desde el editor
 Sprint 103 ✅  Ir a la definición de variables
+Sprint 104 ✅  nooki documentar
 ```
 
 **Ya compila y ejecuta:**

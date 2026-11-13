@@ -31,7 +31,7 @@ inline constexpr std::array<Comando, 13> COMANDOS{{
     {"limpiar", "Borra los artefactos de compilación", 0},
     {"verificar", "Comprueba el proyecto sin compilar", 0},
     {"formatear", "Formatea el código fuente", 0},
-    {"documentar", "Genera la documentación del proyecto", 60},
+    {"documentar", "Genera la documentación del proyecto", 0},
 }};
 
 }  // namespace nooki::cli
