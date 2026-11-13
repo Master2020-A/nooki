@@ -52,6 +52,8 @@ std::string tipo_c(std::string_view escrito) {
             return "nooki_texto";
         case nooki::semantico::Tipo::Booleano:
             return "int";
+        case nooki::semantico::Tipo::Flotante:
+            return "double";
         case nooki::semantico::Tipo::Vacio:
             return "void";
         case nooki::semantico::Tipo::Desconocido:
@@ -785,6 +787,26 @@ const char* PRELUDIO =
     "    }\n"
     "    fclose(archivo);\n"
     "    return 1;\n"
+    "}\n"
+    "\n"
+    "static void nooki_imprimir_flotante(double valor) {\n"
+    "    char buffer[64];\n"
+    "    snprintf(buffer, sizeof buffer, \"%.6f\", valor);\n"
+    "    /* Se quitan los ceros que sobran y, si queda, el punto; el decimal va con coma. */\n"
+    "    size_t largo = strlen(buffer);\n"
+    "    while (largo > 0 && buffer[largo - 1] == '0') {\n"
+    "        --largo;\n"
+    "    }\n"
+    "    if (largo > 0 && buffer[largo - 1] == '.') {\n"
+    "        --largo;\n"
+    "    }\n"
+    "    buffer[largo] = '\\0';\n"
+    "    for (size_t i = 0; i < largo; ++i) {\n"
+    "        if (buffer[i] == '.') {\n"
+    "            buffer[i] = ',';\n"
+    "        }\n"
+    "    }\n"
+    "    printf(\"%s\\n\", buffer);\n"
     "}\n"
     "\n"
     "static void nooki_imprimir_entero(long long valor) {\n"
@@ -2446,6 +2468,8 @@ private:
                 return "nooki_texto";
             case TipoExpresion::Entero:
                 return "long long";
+            case TipoExpresion::Flotante:
+                return "double";
             case TipoExpresion::Booleano:
                 return "int";
             case TipoExpresion::Nulo:
@@ -2705,6 +2729,9 @@ private:
                     tipo_de(*expresion.izquierda) == "nooki_texto*") {
                     return "nooki_texto";
                 }
+                if (expresion.izquierda && tipo_de(*expresion.izquierda) == "double") {
+                    return "double";
+                }
                 return "long long";
             }
             case TipoExpresion::Binaria: {
@@ -2719,8 +2746,18 @@ private:
                     tipo_de(*expresion.derecha) == "nooki_texto") {
                     return "nooki_texto";
                 }
-                return comparacion ? "int" : "long long";
+                if (comparacion) {
+                    return "int";
+                }
+                // Si algún operando es flotante, el resultado también lo es.
+                if ((expresion.izquierda && tipo_de(*expresion.izquierda) == "double") ||
+                    (expresion.derecha && tipo_de(*expresion.derecha) == "double")) {
+                    return "double";
+                }
+                return "long long";
             }
+            case TipoExpresion::Como:
+                return tipo_c(expresion.anotacion);
             case TipoExpresion::Asignacion:
                 return expresion.izquierda ? tipo_de(*expresion.izquierda) : "long long";
             default:
@@ -2738,6 +2775,10 @@ private:
                 return "nooki_texto_literal(\"" + escapar_c(nodo.lexema) + "\")";
             case TipoExpresion::Entero:
                 return limpiar_separadores(nodo.lexema);
+            case TipoExpresion::Flotante:
+                return limpiar_separadores(nodo.lexema);
+            case TipoExpresion::Como:
+                return conversion(nodo);
             case TipoExpresion::Booleano:
                 return nodo.lexema == "verdadero" ? "1" : "0";
             case TipoExpresion::Nulo:
@@ -2764,6 +2805,17 @@ private:
 
         no_soportado(descripcion_expresion(nodo.tipo));
         return "0";
+    }
+
+    /// «expr como tipo»: de entero a flotante y de flotante a entero.
+    std::string conversion(const sintactico::Expresion& nodo) {
+        if (!nodo.izquierda) {
+            no_soportado("una conversión sin valor");
+            return "0";
+        }
+        const std::string valor = expresion(*nodo.izquierda);
+        const std::string destino = tipo_c(nodo.anotacion);
+        return "((" + destino + ")(" + valor + "))";
     }
 
     std::string construccion(const sintactico::Expresion& nodo) {
@@ -3011,8 +3063,12 @@ private:
         if (!nodo.izquierda) {
             return "0";
         }
-        // Negar el mínimo de `entero` desborda: se comprueba (ADR-03).
+        // Negar el mínimo de `entero` desborda: se comprueba (ADR-03). Un
+        // flotante se niega directamente, sin comprobación.
         if (nodo.lexema == "-") {
+            if (tipo_de(*nodo.izquierda) == "double") {
+                return "(-(" + expresion(*nodo.izquierda) + "))";
+            }
             return "nooki_ent_negativo(" + expresion(*nodo.izquierda) + ")";
         }
         return "(!" + expresion(*nodo.izquierda) + ")";
@@ -3300,6 +3356,8 @@ private:
                                   ? "nooki_imprimir_texto"
                                   : (tipo == "long long" || tipo == "int")
                                       ? "nooki_imprimir_entero"
+        : (tipo == "double")
+        ? "nooki_imprimir_flotante"
                                       : nullptr;
             if (funcion == nullptr) {
                 no_soportado("«imprimir» con un valor que el backend no sabe imprimir");

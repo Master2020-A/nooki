@@ -12,6 +12,8 @@ const char* nombre(Tipo tipo) noexcept {
             return "texto";
         case Tipo::Booleano:
             return "booleano";
+        case Tipo::Flotante:
+            return "flotante";
         case Tipo::Desconocido:
             return "desconocido";
     }
@@ -24,6 +26,9 @@ Tipo desde_nombre(std::string_view escrito) noexcept {
     }
     if (escrito == "booleano") {
         return Tipo::Booleano;
+    }
+    if (escrito == "flotante") {
+        return Tipo::Flotante;
     }
     if (escrito == "vacio") {
         return Tipo::Vacio;

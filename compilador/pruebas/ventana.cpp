@@ -59,7 +59,8 @@ funcion principal() -> entero {
     // Sin entrada del usuario, la cola está vacía: `evento` devuelve 0.
     variable eventos = 0
     variable fotogramas = 0
-    mientras (ventana.viva(v) && fotogramas < 3) {
+    ventana.pausa(50)
+    mientras (ventana.viva(v) && fotogramas < 10) {
         variable pendiente = ventana.evento(v)
         mientras (pendiente != 0) {
             eventos = eventos + 1

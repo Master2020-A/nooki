@@ -311,7 +311,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | Sprint | Objetivo | Entregable verificable (DoD) |
 |---|---|---|
 | **S89** | IA: estadística y activaciones | ✅ `minimo`, `maximo`, `media`, `varianza`, `desviacion`, `normalizar`, `relu`, `sigmoides` y `softmax` (todo por mil), con caso `0056` de valores calculables. Corregida la escala de la desviación |
-| **S90** | Conformidad y regresión | 100 % del corpus; 0 regresiones; golden tests en 3 sistemas |
+| **S90** | Flotantes | ✅ Tipo `flotante` (`double` en C): literales, variables, parámetros, retornos, aritmética, comparación, negación y `como` en las dos direcciones. Se imprime con coma. Caso `0057`. Prueba de ventana estabilizada |
 | **S91** | Auditoría de seguridad | Revisión de `inseguro`, fuzzing de 72 h, sanitizers, modelo de amenazas del gestor de paquetes |
 | **S92** | Rendimiento final y "modo didáctico" | Optimización del compilador; benchmarks vs C/Rust/Go; mensajes de error pedagógicos para principiantes |
 | **S93** | Documentación completa | Especificación 1.0, libro en español, tutoriales, referencia de API, guía de contribución |

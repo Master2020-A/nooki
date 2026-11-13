@@ -1036,9 +1036,11 @@ private:
             case TipoExpresion::Este:
             case TipoExpresion::Super:
                 return Tipo::Desconocido;
+            case TipoExpresion::Flotante:
+                return Tipo::Flotante;
             default:
-                // Caracteres, flotantes, índices y conversiones: el generador los
-                // rechaza con NOK6003 cuando llegue el momento.
+                // Caracteres, índices y conversiones: el generador los rechaza con
+                // NOK6003 cuando llegue el momento.
                 return Tipo::Desconocido;
         }
     }
@@ -1051,6 +1053,9 @@ private:
             return Tipo::Booleano;
         }
         if (expresion.lexema == "-") {
+            if (operando == Tipo::Flotante) {
+                return Tipo::Flotante;
+            }
             exigir(Tipo::Entero, operando, expresion.span);
             return Tipo::Entero;
         }
@@ -1110,6 +1115,17 @@ private:
             }
         }
 
+        // Flotantes: las cuatro operaciones y la comparación, siempre entre
+        // flotantes. No hay conversión implícita: se pide con «como».
+        if (izquierda == Tipo::Flotante && derecha == Tipo::Flotante) {
+            if (operador == "+" || operador == "-" || operador == "*" || operador == "/") {
+                return Tipo::Flotante;
+            }
+            if (operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
+                operador == "<=" || operador == ">=") {
+                return Tipo::Booleano;
+            }
+        }
         if (operador == "+" || operador == "-" || operador == "*" || operador == "/" ||
             operador == "%" || operador == "**") {
             exigir(Tipo::Entero, izquierda, expresion.span);
@@ -1297,9 +1313,10 @@ private:
             const Tipo argumento =
                 expresion.lista.front() ? tipo_de(*expresion.lista.front()) : Tipo::Desconocido;
             if (argumento != Tipo::Entero && argumento != Tipo::Texto &&
-                argumento != Tipo::Booleano && argumento != Tipo::Desconocido) {
+                argumento != Tipo::Booleano && argumento != Tipo::Flotante &&
+            argumento != Tipo::Desconocido) {
                 error(diagnostico::codigos::TIPO_INCOMPATIBLE, expresion.lista.front()->span)
-                    .parametro("esperado", "entero, texto o booleano")
+                    .parametro("esperado", "entero, texto, booleano o flotante")
                     .parametro("encontrado", nombre(argumento));
             }
             return Tipo::Vacio;

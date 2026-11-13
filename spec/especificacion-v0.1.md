@@ -1580,3 +1580,21 @@ variable p = tensor.softmax(x)   // suma 1000
   convención mientras el lenguaje no tenga coma flotante.
 - `normalizar` lleva los valores a 0..1000 conservando las proporciones.
 - `softmax` devuelve valores que **suman 1000**: los puntos del redondeo se le dan al mayor.
+
+
+### 18.53 Flotantes
+
+```aura
+variable x = 3.5
+variable y = x * 2.0           // 7
+imprimir(x / 2.0)              // 1,75
+variable n = 7 como flotante
+variable m = 3.9 como entero   // 3
+```
+
+- Tipo `flotante`: literales, variables, parámetros y retornos.
+- Operaciones: `+`, `-`, `*`, `/`, comparaciones y negación.
+- **No hay conversión implícita**: entre `entero` y `flotante` se convierte con `como`, en las dos
+  direcciones. Mezclarlos sin convertir es un error de tipo.
+- La división por cero de un flotante da infinito, no un pánico: es aritmética IEEE 754.
+- Se imprime con **coma decimal** y sin ceros de más.

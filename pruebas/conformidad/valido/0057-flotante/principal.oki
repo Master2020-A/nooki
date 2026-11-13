@@ -1,0 +1,34 @@
+funcion area(radio: flotante) -> flotante {
+    retornar 3.1416 * radio * radio
+}
+
+funcion principal() -> entero {
+    variable x = 3.5
+    variable y = 1.25
+    imprimir(x + y)
+    imprimir(x * 2.0)
+    imprimir(x / 2.0)
+    imprimir(x - 10.0)
+    imprimir(-x)
+
+    si (x > y) {
+        imprimir("x es mayor")
+    }
+    si (x == 3.5) {
+        imprimir("x es 3,5")
+    }
+
+    variable a = area(2.0)
+    imprimir(a)
+
+    variable entero_desde = 7 como flotante
+    imprimir(entero_desde)
+    variable flotante_a_entero = 3.9 como entero
+    imprimir(flotante_a_entero)
+
+    variable cero = 1.0
+    imprimir(cero)
+    variable negativo = -0.5
+    imprimir(negativo)
+    retornar 0
+}

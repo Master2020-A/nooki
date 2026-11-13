@@ -5,6 +5,38 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 90 — Flotantes de verdad (2026-11-13)
+
+El lenguaje gana **coma flotante**. Era lo que faltaba para que el autograd y las redes puedan dar
+pasos pequeños: con enteros por mil, `0.001` es `1` y `0.0001` es `0`.
+
+```aura
+variable x = 3.5
+variable y = x * 2.0        // 7
+imprimir(x / 2.0)           // 1,75
+imprimir(x - 10.0)          // -6,5
+imprimir(3.1416 * 2.0 * 2.0)  // 12,5664
+
+variable n = 7 como flotante
+variable m = 3.9 como entero   // 3
+```
+
+- **Tipo `flotante`** en el verificador y `double` en el C generado.
+- **Literales, variables, parámetros, retornos**, suma, resta, multiplicación, división, comparación
+  y negación.
+- **`como`**: conversión explícita entre `entero` y `flotante`, en las dos direcciones. **No hay
+  conversión implícita**: mezclar `entero` y `flotante` sigue siendo un error, como en el resto del
+  lenguaje.
+- **Se imprime con coma decimal** y sin ceros de más: `3,5`, `1,75`, `7`, `-0,5`.
+- Caso `0057-flotante`. **87 casos.**
+
+**Y un arreglo en la prueba de ventana**: era inestable (1 de cada 10 ejecuciones fallaba por una
+carrera al abrir y cerrar la ventana demasiado rápido). Ahora espera 50 ms y atiende 10 fotogramas en
+lugar de 3, y se ha ejecutado cinco veces seguidas sin fallar.
+
+**Lo que todavía no hay**: `flotante` en vectores, mapas y campos de estructura; y funciones
+matemáticas (`raíz`, `seno`, `potencia`) para flotantes. Llegarán cuando se usen.
+
 ### Sprint 89 — Estadística y activaciones (2026-11-13)
 
 Lo que convierte una matriz en algo útil para datos.

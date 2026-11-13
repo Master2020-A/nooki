@@ -14,6 +14,7 @@ enum class Tipo : unsigned char {
     Entero,
     Texto,
     Booleano,
+    Flotante,
 };
 
 /// Nombre del tipo para los mensajes ("entero", "texto", …).
