@@ -119,6 +119,7 @@ Sprint 80 ✅  UI: dibujo con GDI y X11
 Sprint 81 ✅  UI: layout en Nooki puro
 Sprint 82 ✅  UI: controles (etiqueta, botón, barra)
 Sprint 83 ✅  UI: eventos de ratón y teclado
+Sprint 84 ✅  A-16 resuelto: la cola de eventos sin inicializar
 ```
 
 **Ya compila y ejecuta:**

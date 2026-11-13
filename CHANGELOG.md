@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 84 — A-16 resuelto: la cola de eventos no se inicializaba (2026-11-12)
+
+La violación de acceso que aparecía al lanzar un programa con ventana desde `cmd /c` tenía una causa
+simple y vergonzosa: **la cola de eventos nunca se inicializaba al crear la ventana**. `cuenta` quedaba
+con lo que hubiera en el montículo, así que el primer `evento()` leía fuera del arreglo.
+
+- Por qué "a veces funcionaba": con memoria fresca del sistema, `cuenta` salía a cero y todo iba bien.
+  Bajo `cmd /c`, con el montículo ya usado, salía basura.
+- **Cómo se encontró**: compilando el programa con **AddressSanitizer** y ejecutándolo en Linux bajo
+  **Xvfb** (pantalla virtual). La traza señaló la línea exacta: `estado->cuenta` con `estado` apuntando
+  a memoria no válida.
+- **Arreglo**: inicializar `cabeza`, `cuenta` y `ultimo` al crear la ventana, en las dos plataformas.
+- **`prueba_ventana` vuelve a ejecutar el programa** y comprueba lo que imprime: que se abre, que el
+  rectángulo rojo y el fondo blanco llegan a los píxeles, que la cola está vacía sin entrada y que se
+  cierra. A-16 **cerrado**.
+
+**Lección**: el fallo no dependía del lanzador, sino de si el montículo devolvía memoria a cero. Un
+síntoma que "desaparece" al cambiar cómo se ejecuta el programa casi siempre es memoria sin
+inicializar.
+
 ### Sprint 83 — Eventos (2026-11-12)
 
 El quinto pilar de la UI: **el ratón y el teclado llegan al programa**.

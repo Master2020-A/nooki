@@ -118,6 +118,13 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
     }
     estado->viva = 1;
     estado->cerrada = 0;
+    // La cola de eventos empieza vacía: sin esto, `cuenta` queda con basura.
+    estado->cabeza = 0;
+    estado->cuenta = 0;
+    estado->ultimo.clase = 0;
+    estado->ultimo.x = 0;
+    estado->ultimo.y = 0;
+    estado->ultimo.tecla = 0;
     estado->ventana = CreateWindowExA(0, "NookiVentana", titulo, WS_OVERLAPPEDWINDOW,
                                       CW_USEDEFAULT, CW_USEDEFAULT, (int)ancho, (int)alto,
                                       NULL, NULL, instancia, NULL);
@@ -349,6 +356,12 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
     estado->pantalla = pantalla;
     estado->viva = 1;
     estado->cerrada = 0;
+    estado->cabeza = 0;
+    estado->cuenta = 0;
+    estado->ultimo.clase = 0;
+    estado->ultimo.x = 0;
+    estado->ultimo.y = 0;
+    estado->ultimo.tecla = 0;
     estado->ventana = XCreateSimpleWindow(pantalla, RootWindow(pantalla, 0), 0, 0,
                                           (unsigned)ancho, (unsigned)alto, 0,
                                           BlackPixel(pantalla, 0), WhitePixel(pantalla, 0));

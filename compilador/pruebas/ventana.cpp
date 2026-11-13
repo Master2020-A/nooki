@@ -126,17 +126,45 @@ int main() {
         return 1;
     }
 
-    // La ejecución del binario se comprueba a mano (ver CHANGELOG, sprint 83):
-    // lanzado desde `cmd /c` el programa termina con una violación de acceso, y
-    // desde una consola normal funciona. Queda como incidencia A-16. Aquí se
-    // comprueba lo que sí es determinista: que un programa con ventana compila y
-    // enlaza, y que el binario existe.
     if (!fs::exists(binario)) {
         std::cout << "FALLO: no se generó el binario del programa de ventana\n";
         return 1;
     }
+
+    // Se ejecuta y se comprueba lo que imprime: dibujo, píxeles y cola de eventos.
+    const fs::path texto_salida = directorio / "salida.txt";
+    const std::string comando =
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario)) + " > " +
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(texto_salida));
+    const int codigo = nooki::ejecutar_comando(comando);
+    const std::string obtenido = leer(texto_salida);
+
+    fs::remove(texto_salida, error_fs);
     fs::remove(binario, error_fs);
     fs::remove(fuente, error_fs);
 
-    std::cout << "ventana: el programa compila y enlaza con la capa de UI\n";    return 0;
+    if (codigo != 0) {
+        std::cout << "FALLO: el programa de ventana terminó con " << codigo << "\n";
+        return 1;
+    }
+
+    const bool con_pantalla = obtenido.find("ventana creada") != std::string::npos;
+    const bool sin_pantalla = obtenido.find("sin entorno grafico") != std::string::npos;
+    if (!con_pantalla && !sin_pantalla) {
+        std::cout << "FALLO: salida inesperada «" << obtenido << "»\n";
+        return 1;
+    }
+
+    if (con_pantalla) {
+        if (obtenido.find("ventana cerrada") == std::string::npos ||
+            obtenido.find("rectangulo rojo") == std::string::npos ||
+            obtenido.find("fondo blanco") == std::string::npos ||
+            obtenido.find("sin eventos") == std::string::npos) {
+            std::cout << "FALLO: la ventana no dibujó o no cerró bien\n" << obtenido;
+            return 1;
+        }
+        std::cout << "ventana: se abre, dibuja, atiende eventos y se cierra\n";
+    } else {
+        std::cout << "ventana: sin entorno gráfico, la capa responde con 0\n";
+    }    return 0;
 }
