@@ -28,6 +28,7 @@ add_library(nooki_nucleo STATIC
     fuente/ia/runtime_ia.cpp
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
+    fuente/cli/formatear.cpp
     fuente/cli/compilar.cpp
     fuente/cli/ast.cpp
     fuente/cli/proyecto.cpp

@@ -30,7 +30,7 @@ inline constexpr std::array<Comando, 13> COMANDOS{{
     {"probar", "Ejecuta las pruebas del proyecto", 0},
     {"limpiar", "Borra los artefactos de compilación", 0},
     {"verificar", "Comprueba el proyecto sin compilar", 59},
-    {"formatear", "Formatea el código fuente", 56},
+    {"formatear", "Formatea el código fuente", 0},
     {"documentar", "Genera la documentación del proyecto", 60},
 }};
 

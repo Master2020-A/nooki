@@ -136,6 +136,9 @@ int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
     if (comando->nombre == "ast") {
         return comando_ast(argumentos.subspan(1), salida, error);
     }
+    if (comando->nombre == "formatear") {
+        return comando_formatear(argumentos.subspan(1), salida, error);
+    }
 
     // Un comando marcado como disponible sin implementación es un fallo del propio compilador:
     // se avisa en vez de devolver éxito silenciosamente.

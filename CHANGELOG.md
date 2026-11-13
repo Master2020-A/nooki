@@ -5,6 +5,29 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 100 — Formato: `nooki formatear` (2026-11-13)
+
+```bash
+$ nooki formatear ejemplos/06-tareas/principal.oki
+formateado: ejemplos/06-tareas/principal.oki
+
+$ nooki formatear principal.oki --comprobar   # 65 si no está formateado
+```
+
+- **Sangría canónica** de cuatro espacios por nivel, calculada con las llaves.
+- **No toca el contenido**: ni comentarios, ni textos, ni el orden de nada. Solo los espacios del
+  principio y del final de cada línea.
+- **Las llaves dentro de comentarios y de textos no cuentan**: `// { falsa }` y `"llave { dentro"` se
+  ignoran al medir la profundidad. Es el detalle que rompe la mitad de los formateadores sencillos.
+- **`--comprobar`** no escribe nada y sale con 65 si algún archivo cambiaría: sirve para la integración
+  continua.
+- **Idempotente**: formatear lo formateado no cambia nada, y hay una prueba que lo comprueba.
+- La prueba de la CLI incluye un archivo desordenado, comprueba la sangría resultante y que la segunda
+  pasada no cambia nada. **31 comprobaciones.**
+
+El comando estaba en la tabla desde el sprint 56 y nunca se había implementado: aparecía como
+«disponible» y daba un error interno. Ahora está.
+
 ### Sprint 99 — Ir a la definición (2026-11-13)
 
 `nooki lsp` completa la tríada del editor: diagnósticos, autocompletado y **navegación**.

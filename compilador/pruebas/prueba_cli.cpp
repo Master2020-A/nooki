@@ -6,8 +6,11 @@
 
 #include "nooki/cli/comandos.hpp"
 #include "nooki/cli/orden.hpp"
+#include "nooki/rutas.hpp"
 #include "nooki/version.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -51,6 +54,42 @@ void caso(std::string_view titulo) {
 }  // namespace
 
 int main() {
+    caso("formatear");
+    {
+        const std::filesystem::path directorio =
+            std::filesystem::temp_directory_path() / "nooki-formatear";
+        std::error_code ignorado;
+        std::filesystem::create_directories(directorio, ignorado);
+        const std::filesystem::path archivo = directorio / "desordenado.oki";
+        {
+            std::ofstream flujo(archivo, std::ios::binary);
+            flujo << "funcion principal() -> entero {\n"
+                     "        variable x = 1\n"
+                     "   retornar x\n"
+                     "}\n";
+        }
+
+        const std::string ruta = nooki::ruta_a_utf8(archivo);
+        const Resultado resultado = invocar({"formatear", ruta});
+        comprobar(resultado.codigo == nooki::cli::EXITO, "formatea sin error");
+        comprobar(contiene(resultado.salida, "formateado"), "avisa de lo que ha hecho");
+
+        std::ifstream lectura(archivo, std::ios::binary);
+        std::ostringstream contenido;
+        contenido << lectura.rdbuf();
+        const std::string texto = contenido.str();
+        comprobar(texto.find("    variable x = 1") != std::string::npos,
+                  "deja la variable con cuatro espacios");
+        comprobar(texto.find("    retornar x") != std::string::npos,
+                  "deja el retorno al mismo nivel");
+
+        // Formatear dos veces no cambia nada, y `--comprobar` lo detecta.
+        const Resultado segunda = invocar({"formatear", ruta, "--comprobar"});
+        comprobar(segunda.codigo == nooki::cli::EXITO, "ya estaba formateado");
+
+        std::filesystem::remove_all(directorio, ignorado);
+    }
+
     const std::string version_esperada = std::string("nooki ") + nooki::version::TEXTO;
 
     caso("compilar sin archivo");
@@ -119,9 +158,9 @@ int main() {
 
     caso("comando todavía no disponible");
     {
-        const Resultado resultado = invocar({"formatear", "hola.oki"});
+        const Resultado resultado = invocar({"verificar", "hola.oki"});
         comprobar(resultado.codigo == nooki::cli::NO_DISPONIBLE, "devuelve 69");
-        comprobar(contiene(resultado.error, "Sprint 56"), "indica en qué sprint llega");
+        comprobar(contiene(resultado.error, "Sprint 59"), "indica en qué sprint llega");
         comprobar(resultado.salida.empty(), "no escribe en la salida estándar");
     }
 

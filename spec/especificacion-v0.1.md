@@ -1707,3 +1707,15 @@ nombre.borrar()
 - `textDocument/definition` devuelve la ubicación de la declaración de la palabra bajo el cursor.
 - Resuelve funciones, tipos y enumeraciones del documento con el AST ya analizado.
 - El servidor anuncia `definitionProvider` en sus capacidades.
+
+### 18.61 Formato
+
+``bash
+nooki formatear <archivo.oki>...            # reescribe con sangría de cuatro espacios
+nooki formatear <archivo.oki> --comprobar   # 65 si cambiaría algo
+``
+
+- Solo normaliza la sangría y los espacios del final de línea: **no toca** comentarios, textos ni el
+  orden del código.
+- Las llaves dentro de textos y comentarios no cuentan para la profundidad.
+- Es idempotente y `--comprobar` sirve para la integración continua.

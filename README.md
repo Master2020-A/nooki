@@ -135,6 +135,7 @@ Sprint 96 ✅  UI: campo de texto con UTF-8
 Sprint 97 ✅  Cobertura de diagnósticos y códigos de salida
 Sprint 98 ✅  Autocompletado en el servidor de lenguaje
 Sprint 99 ✅  Ir a la definición
+Sprint 100 ✅  nooki formatear
 ```
 
 **Ya compila y ejecuta:**
