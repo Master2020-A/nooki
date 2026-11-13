@@ -102,6 +102,68 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "autograd") {
+        return R"(// Biblioteca estándar: derivadas automáticas sobre un grafo de operaciones.
+// Se construye la expresión, se llama a `atras` y cada nodo tiene su gradiente.
+externo funcion nooki_ia_auto_dato(valor: flotante) -> entero
+externo funcion nooki_ia_auto_valor(nodo: entero) -> flotante
+externo funcion nooki_ia_auto_gradiente(nodo: entero) -> flotante
+externo funcion nooki_ia_auto_suma(a: entero, b: entero) -> entero
+externo funcion nooki_ia_auto_resta(a: entero, b: entero) -> entero
+externo funcion nooki_ia_auto_producto(a: entero, b: entero) -> entero
+externo funcion nooki_ia_auto_division(a: entero, b: entero) -> entero
+externo funcion nooki_ia_auto_relu(a: entero) -> entero
+externo funcion nooki_ia_auto_sigmoides(a: entero) -> entero
+externo funcion nooki_ia_auto_atras(nodo: entero) -> vacio
+externo funcion nooki_ia_auto_liberar(nodo: entero) -> vacio
+
+// Un número del que se puede derivar.
+publico funcion dato(valor: flotante) -> entero {
+    retornar nooki_ia_auto_dato(valor)
+}
+
+publico funcion valor(nodo: entero) -> flotante {
+    retornar nooki_ia_auto_valor(nodo)
+}
+
+publico funcion gradiente(nodo: entero) -> flotante {
+    retornar nooki_ia_auto_gradiente(nodo)
+}
+
+publico funcion suma(a: entero, b: entero) -> entero {
+    retornar nooki_ia_auto_suma(a, b)
+}
+
+publico funcion resta(a: entero, b: entero) -> entero {
+    retornar nooki_ia_auto_resta(a, b)
+}
+
+publico funcion producto(a: entero, b: entero) -> entero {
+    retornar nooki_ia_auto_producto(a, b)
+}
+
+publico funcion division(a: entero, b: entero) -> entero {
+    retornar nooki_ia_auto_division(a, b)
+}
+
+publico funcion relu(a: entero) -> entero {
+    retornar nooki_ia_auto_relu(a)
+}
+
+publico funcion sigmoides(a: entero) -> entero {
+    retornar nooki_ia_auto_sigmoides(a)
+}
+
+// Calcula los gradientes de todo el grafo desde este nodo.
+publico funcion atras(nodo: entero) -> vacio {
+    nooki_ia_auto_atras(nodo)
+}
+
+publico funcion liberar(nodo: entero) -> vacio {
+    nooki_ia_auto_liberar(nodo)
+}
+)";
+    }
     if (modulo == "tabla") {
         return R"(// Biblioteca estándar: tablas con columnas con nombre, como un DataFrame.
 // Las columnas son numéricas o de texto. Los números con decimales van por mil.
@@ -1124,7 +1186,7 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     if (clave == "ventana" || clave == "imagenes") {
         hace_falta_ui = true;
     }
-    if (clave == "tensor" || clave == "tabla") {
+    if (clave == "tensor" || clave == "tabla" || clave == "autograd") {
         hace_falta_ia = true;
     }
 

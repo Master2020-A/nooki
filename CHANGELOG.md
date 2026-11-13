@@ -5,6 +5,37 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 93 — Autograd (2026-11-13)
+
+Derivadas automáticas: el lenguaje ya puede calcular gradientes.
+
+```aura
+usar autograd
+
+variable x = autograd.dato(2.0)
+variable y = autograd.suma(autograd.producto(x, x), autograd.dato(3.0))   // x² + 3
+autograd.atras(y)
+imprimir(autograd.gradiente(x))    // 4  →  2x
+```
+
+- **Operaciones**: `suma`, `resta`, `producto`, `division`, `relu`, `sigmoides`.
+- **`atras(y)`** recorre el grafo en orden topológico (DFS post-orden) y reparte los gradientes.
+- Verificado con derivadas conocidas: `d(x²+3)/dx = 4` en x=2; `d(3x)/dx = 3`; `relu(-1)` da 0;
+  `sigmoides(0)` da valor `0,5` y gradiente `0,25`.
+- Caso `0060-autograd`. **90 casos.**
+
+**Dos cosas que hubo que arreglar:**
+
+1. **La FFI no mapeaba `flotante`** en las firmas externas: declaraba `long long` y devolvía basura
+   (el valor impreso era la dirección del nodo). Ahora `flotante` es `double` también ahí.
+2. **El primer diseño usaba «áreas» para agrupar nodos** y no funcionaba: cada `dato` creaba la suya, así
+   que `atras` limpiaba solo una parte del grafo y los gradientes se acumulaban entre cálculos
+   (`3x` daba 7 en vez de 3). Ahora **todos los nodos viven en una lista global**: limpiar y liberar son
+   recorridos de esa lista, sin importar cómo se construyó el grafo.
+
+**Nota**: `liberar` suelta **todos** los nodos vivos, no solo los del grafo indicado. Está documentado en
+el módulo; es el precio de no tener recolector de basura.
+
 ### Sprint 92 — Tablas: el DataFrame (2026-11-13)
 
 ```aura

@@ -128,6 +128,7 @@ Sprint 89 ✅  IA: estadística y activaciones
 Sprint 90 ✅  Flotantes de verdad en el lenguaje
 Sprint 91 ✅  IA: PLN (lenguaje natural)
 Sprint 92 ✅  IA: tablas (DataFrame)
+Sprint 93 ✅  IA: autograd
 ```
 
 **Ya compila y ejecuta:**

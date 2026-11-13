@@ -1636,3 +1636,21 @@ imprimir(tabla.suma(t, 1))
 - `filtrar(t, columna, &valor)` por texto; `ordenar(t, columna)` por número; `contar_por(t, columna)`
   devuelve una tabla con «valor» y «cuenta».
 - Las funciones `externo` **pueden devolver `texto`**: el generador copia la cadena de C.
+
+
+### 18.56 Autograd
+
+```aura
+usar autograd
+
+variable x = autograd.dato(2.0)
+variable y = autograd.suma(autograd.producto(x, x), autograd.dato(3.0))
+autograd.atras(y)
+imprimir(autograd.gradiente(x))   // 4
+```
+
+- Operaciones: `suma`, `resta`, `producto`, `division`, `relu`, `sigmoides`.
+- `atras(y)` calcula los gradientes de todo el grafo con orden topológico.
+- `valor(nodo)` y `gradiente(nodo)` para leer el resultado.
+- `liberar(nodo)` suelta **todos** los nodos vivos del proceso, no solo los del grafo: no hay
+  recolector de basura.

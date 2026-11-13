@@ -468,6 +468,235 @@ long long nooki_ia_tensor_softmax(long long manejador) {
     return salida;
 }
 
+/* --- Autograd: derivadas automáticas sobre un grafo de operaciones ---
+ * Cada nodo guarda su valor, su gradiente y de dónde viene. Todos los nodos
+ * viven en una lista global: así se limpian los gradientes y se libera todo de
+ * una vez, sin recorrer el grafo dos veces ni compartir áreas. */
+
+typedef struct nooki_auto_nodo {
+    double valor;
+    double gradiente;
+    int operacion; /* 0 dato, 1 suma, 2 resta, 3 producto, 4 división, 5 relu, 6 sigmoide */
+    struct nooki_auto_nodo* izquierda;
+    struct nooki_auto_nodo* derecha;
+    struct nooki_auto_nodo* siguiente_global;
+    int visitado;
+} nooki_auto_nodo;
+
+static nooki_auto_nodo* nooki_auto_todos = NULL;
+
+static nooki_auto_nodo* nooki_auto_nodo_de(long long manejador) {
+    return (nooki_auto_nodo*)(intptr_t)manejador;
+}
+
+static nooki_auto_nodo* nooki_auto_crear(double valor, int operacion, nooki_auto_nodo* izquierda,
+                                         nooki_auto_nodo* derecha) {
+    nooki_auto_nodo* nodo = (nooki_auto_nodo*)malloc(sizeof(nooki_auto_nodo));
+    if (nodo == NULL) {
+        return NULL;
+    }
+    nodo->valor = valor;
+    nodo->gradiente = 0.0;
+    nodo->operacion = operacion;
+    nodo->izquierda = izquierda;
+    nodo->derecha = derecha;
+    nodo->visitado = 0;
+    nodo->siguiente_global = nooki_auto_todos;
+    nooki_auto_todos = nodo;
+    return nodo;
+}
+
+long long nooki_ia_auto_dato(double valor) {
+    return (long long)(intptr_t)nooki_auto_crear(valor, 0, NULL, NULL);
+}
+
+double nooki_ia_auto_valor(long long manejador) {
+    nooki_auto_nodo* nodo = nooki_auto_nodo_de(manejador);
+    return nodo == NULL ? 0.0 : nodo->valor;
+}
+
+double nooki_ia_auto_gradiente(long long manejador) {
+    nooki_auto_nodo* nodo = nooki_auto_nodo_de(manejador);
+    return nodo == NULL ? 0.0 : nodo->gradiente;
+}
+
+static long long nooki_auto_binaria(long long a_manejador, long long b_manejador, int operacion,
+                                    double valor) {
+    nooki_auto_nodo* a = nooki_auto_nodo_de(a_manejador);
+    nooki_auto_nodo* b = nooki_auto_nodo_de(b_manejador);
+    if (a == NULL || b == NULL) {
+        return 0;
+    }
+    return (long long)(intptr_t)nooki_auto_crear(valor, operacion, a, b);
+}
+
+long long nooki_ia_auto_suma(long long a, long long b) {
+    nooki_auto_nodo* na = nooki_auto_nodo_de(a);
+    nooki_auto_nodo* nb = nooki_auto_nodo_de(b);
+    if (na == NULL || nb == NULL) {
+        return 0;
+    }
+    return nooki_auto_binaria(a, b, 1, na->valor + nb->valor);
+}
+
+long long nooki_ia_auto_resta(long long a, long long b) {
+    nooki_auto_nodo* na = nooki_auto_nodo_de(a);
+    nooki_auto_nodo* nb = nooki_auto_nodo_de(b);
+    if (na == NULL || nb == NULL) {
+        return 0;
+    }
+    return nooki_auto_binaria(a, b, 2, na->valor - nb->valor);
+}
+
+long long nooki_ia_auto_producto(long long a, long long b) {
+    nooki_auto_nodo* na = nooki_auto_nodo_de(a);
+    nooki_auto_nodo* nb = nooki_auto_nodo_de(b);
+    if (na == NULL || nb == NULL) {
+        return 0;
+    }
+    return nooki_auto_binaria(a, b, 3, na->valor * nb->valor);
+}
+
+long long nooki_ia_auto_division(long long a, long long b) {
+    nooki_auto_nodo* na = nooki_auto_nodo_de(a);
+    nooki_auto_nodo* nb = nooki_auto_nodo_de(b);
+    if (na == NULL || nb == NULL || nb->valor == 0.0) {
+        return 0;
+    }
+    return nooki_auto_binaria(a, b, 4, na->valor / nb->valor);
+}
+
+static double nooki_auto_exponencial(double x) {
+    if (x > 40.0) {
+        return 1e17;
+    }
+    if (x < -40.0) {
+        return 0.0;
+    }
+    double termino = 1.0;
+    double suma = 1.0;
+    for (int i = 1; i < 60; ++i) {
+        termino *= x / (double)i;
+        suma += termino;
+    }
+    return suma;
+}
+
+long long nooki_ia_auto_relu(long long manejador) {
+    nooki_auto_nodo* a = nooki_auto_nodo_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    return (long long)(intptr_t)nooki_auto_crear(a->valor > 0.0 ? a->valor : 0.0, 5, a, NULL);
+}
+
+long long nooki_ia_auto_sigmoides(long long manejador) {
+    nooki_auto_nodo* a = nooki_auto_nodo_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const double valor = 1.0 / (1.0 + nooki_auto_exponencial(-a->valor));
+    return (long long)(intptr_t)nooki_auto_crear(valor, 6, a, NULL);
+}
+
+typedef struct {
+    nooki_auto_nodo** datos;
+    int cuantos;
+    int capacidad;
+} nooki_auto_pila;
+
+static void nooki_auto_orden(nooki_auto_nodo* nodo, nooki_auto_pila* pila) {
+    if (nodo == NULL || nodo->visitado) {
+        return;
+    }
+    nodo->visitado = 1;
+    nooki_auto_orden(nodo->izquierda, pila);
+    nooki_auto_orden(nodo->derecha, pila);
+    if (pila->cuantos >= pila->capacidad) {
+        const int nueva_capacidad = pila->capacidad == 0 ? 16 : pila->capacidad * 2;
+        nooki_auto_nodo** nueva = (nooki_auto_nodo**)realloc(
+            pila->datos, (size_t)nueva_capacidad * sizeof(nooki_auto_nodo*));
+        if (nueva == NULL) {
+            return;
+        }
+        pila->datos = nueva;
+        pila->capacidad = nueva_capacidad;
+    }
+    pila->datos[pila->cuantos++] = nodo;
+}
+
+void nooki_ia_auto_atras(long long manejador) {
+    nooki_auto_nodo* raiz = nooki_auto_nodo_de(manejador);
+    if (raiz == NULL) {
+        return;
+    }
+    /* Se limpian gradientes y marcas de todos los nodos vivos. */
+    for (nooki_auto_nodo* nodo = nooki_auto_todos; nodo != NULL; nodo = nodo->siguiente_global) {
+        nodo->gradiente = 0.0;
+        nodo->visitado = 0;
+    }
+
+    nooki_auto_pila pila;
+    pila.datos = NULL;
+    pila.cuantos = 0;
+    pila.capacidad = 0;
+    nooki_auto_orden(raiz, &pila);
+    if (pila.datos == NULL) {
+        return;
+    }
+
+    raiz->gradiente = 1.0;
+    /* La pila va de hojas a raíz: se recorre al revés, de la raíz a las hojas. */
+    for (int i = pila.cuantos - 1; i >= 0; --i) {
+        nooki_auto_nodo* nodo = pila.datos[i];
+        const double g = nodo->gradiente;
+        switch (nodo->operacion) {
+            case 1:
+                if (nodo->izquierda) nodo->izquierda->gradiente += g;
+                if (nodo->derecha) nodo->derecha->gradiente += g;
+                break;
+            case 2:
+                if (nodo->izquierda) nodo->izquierda->gradiente += g;
+                if (nodo->derecha) nodo->derecha->gradiente -= g;
+                break;
+            case 3:
+                if (nodo->izquierda) nodo->izquierda->gradiente += g * nodo->derecha->valor;
+                if (nodo->derecha) nodo->derecha->gradiente += g * nodo->izquierda->valor;
+                break;
+            case 4:
+                if (nodo->izquierda) nodo->izquierda->gradiente += g / nodo->derecha->valor;
+                if (nodo->derecha) {
+                    nodo->derecha->gradiente -=
+                        g * nodo->izquierda->valor /
+                        (nodo->derecha->valor * nodo->derecha->valor);
+                }
+                break;
+            case 5:
+                if (nodo->izquierda) nodo->izquierda->gradiente += nodo->valor > 0.0 ? g : 0.0;
+                break;
+            case 6:
+                if (nodo->izquierda) {
+                    nodo->izquierda->gradiente += g * nodo->valor * (1.0 - nodo->valor);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    free(pila.datos);
+}
+
+/* Libera todos los nodos vivos. Los manejadores dejan de ser válidos. */
+void nooki_ia_auto_liberar(long long manejador) {
+    (void)manejador;
+    nooki_auto_nodo* nodo = nooki_auto_todos;
+    while (nodo != NULL) {
+        nooki_auto_nodo* siguiente = nodo->siguiente_global;
+        free(nodo);
+        nodo = siguiente;
+    }
+    nooki_auto_todos = NULL;
+}
 /* --- Tablas: columnas con nombre, como un DataFrame ---
  * Cada columna es numérica o de texto. Las de texto guardan copias propias. */
 

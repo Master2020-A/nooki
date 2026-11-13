@@ -1,0 +1,35 @@
+usar autograd
+
+funcion principal() -> entero {
+    // y = x*x + 3  →  dy/dx = 2x = 4 en x = 2
+    variable x = autograd.dato(2.0)
+    variable cuadrado = autograd.producto(x, x)
+    variable tres = autograd.dato(3.0)
+    variable y = autograd.suma(cuadrado, tres)
+
+    imprimir(autograd.valor(y))
+    autograd.atras(y)
+    imprimir(autograd.gradiente(x))
+
+    // y = 3x → 3
+    variable z = autograd.producto(autograd.dato(3.0), x)
+    autograd.atras(z)
+    imprimir(autograd.gradiente(x))
+
+    // relu en -1 → gradiente 0
+    variable neg = autograd.dato(0.0 - 1.0)
+    variable r = autograd.relu(neg)
+    autograd.atras(r)
+    imprimir(autograd.gradiente(neg))
+
+    // sigmoide en 0 → gradiente 0,25
+    variable cero = autograd.dato(0.0)
+    variable s = autograd.sigmoides(cero)
+    autograd.atras(s)
+    imprimir(autograd.valor(s))
+    imprimir(autograd.gradiente(cero))
+
+    autograd.liberar(y)
+    imprimir("fin")
+    retornar 0
+}

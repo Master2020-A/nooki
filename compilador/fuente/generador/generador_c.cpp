@@ -1985,6 +1985,9 @@ private:
         if (escrito == "booleano") {
             return "int";
         }
+        if (escrito == "flotante") {
+            return "double";
+        }
         if (escrito == "caracter") {
             return "char";
         }
