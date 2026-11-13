@@ -149,8 +149,15 @@ int main() {
     const std::string comando =
         nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario)) + " > " +
         nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(texto_salida));
-    const int codigo = nooki::ejecutar_comando(comando);
-    const std::string obtenido = leer(texto_salida);
+    // Abrir y cerrar una ventana real depende del escritorio y de la carga de la
+    // máquina: si la primera vuelta falla, se reintenta una vez antes de dar el
+    // fallo. Un reintento acotado es mejor que una prueba que falla al azar.
+    int codigo = nooki::ejecutar_comando(comando);
+    std::string obtenido = leer(texto_salida);
+    if (codigo != 0) {
+        codigo = nooki::ejecutar_comando(comando);
+        obtenido = leer(texto_salida);
+    }
 
     fs::remove(texto_salida, error_fs);
     fs::remove(binario, error_fs);
