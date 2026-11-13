@@ -1,0 +1,127 @@
+// Formulario: escribe tu nombre, pulsa «Saludar» y el programa te responde.
+//
+// Junta las tres piezas que hacían falta para una interfaz de verdad: un campo
+// de texto, un botón y una etiqueta que cambia. Se maneja con el ratón y con el
+// teclado: Tab pasa de un control a otro, Intro activa y Esc cierra.
+usar ventana
+usar controles
+usar accesibilidad
+
+funcion principal() -> entero {
+    variable titulo = "Nooki - Formulario" + ""
+    variable v = ventana.abrir(&titulo, 480, 300)
+
+    si (v == 0) {
+        imprimir("sin entorno grafico")
+        retornar 0
+    }
+
+    variable nombre = nuevo campo { x: 32, y: 80, ancho: 300, alto: 44,
+                                    contenido: "" + "", fondo: 0x313244, color: 0xF5E0DC,
+                                    marcador: "Escribe tu nombre" + "" }
+
+    variable saludar = nuevo boton { x: 348, y: 80, ancho: 100, alto: 44,
+                                     contenido: "Saludar" + "",
+                                     fondo: 0x89B4FA, color: 0x11111B }
+
+    variable respuesta = nuevo etiqueta { x: 32, y: 160, ancho: 416, alto: 32,
+                                          contenido: "" + "", color: 0xA6E3A1 }
+
+    variable foco_actual = nuevo foco { indice: 0, total: 2 }
+    variable dibujar = verdadero
+
+    mientras (ventana.viva(v)) {
+        variable pedido = ventana.repintar(v)
+        si (dibujar || pedido) {
+            ventana.limpiar(v, 0x1E1E2E)
+
+            variable cabecera = "Como te llamas?" + ""
+            ventana.escribir_texto(v, 32, 48, &cabecera, 0xF5E0DC)
+
+            nombre.dibujar(v)
+            saludar.dibujar(v)
+            respuesta.dibujar(v)
+
+            // El control con foco lleva contorno.
+            variable color_foco = 0xF9E2AF
+            si (foco_actual.es_actual(0)) {
+                ventana.rectangulo(v, 30, 78, 304, 2, color_foco)
+                ventana.rectangulo(v, 30, 124, 304, 2, color_foco)
+            } sino {
+                ventana.rectangulo(v, 346, 78, 104, 2, color_foco)
+                ventana.rectangulo(v, 346, 124, 104, 2, color_foco)
+            }
+
+            variable pie = "Tab: siguiente   Intro: saludar   Esc: salir" + ""
+            ventana.escribir_texto(v, 32, 250, &pie, 0x6C7086)
+
+            ventana.presentar(v)
+            dibujar = falso
+        }
+
+        variable cual_evento = ventana.evento(v)
+        mientras (cual_evento != 0) {
+            si (ventana.es_cerrar(cual_evento)) {
+                ventana.cerrar(v)
+                imprimir("hasta luego")
+                retornar 0
+            }
+
+            // Escribir en el campo.
+            si (ventana.es_letra(cual_evento)) {
+                nombre.escribir(ventana.evento_letra(v))
+                dibujar = verdadero
+            }
+
+            si (ventana.es_tecla(cual_evento)) {
+                variable tecla = ventana.evento_tecla(v)
+                si (tecla == 8) {
+                    nombre.borrar()
+                    dibujar = verdadero
+                }
+                si (tecla == 9) {
+                    foco_actual.siguiente()
+                    dibujar = verdadero
+                }
+                si (tecla == 13) {
+                    si (nombre.contenido.largo() > 0) {
+                        respuesta.contenido = "Hola, " + nombre.contenido
+                    } sino {
+                        respuesta.contenido = "Escribe algo primero" + ""
+                    }
+                    dibujar = verdadero
+                }
+                si (tecla == 27) {
+                    ventana.cerrar(v)
+                    imprimir("hasta luego")
+                    retornar 0
+                }
+            }
+
+            // Pulsar el botón.
+            si (ventana.es_pulsacion(cual_evento)) {
+                variable x = ventana.evento_x(v)
+                variable y = ventana.evento_y(v)
+                si (saludar.pulsado(x, y)) {
+                    si (nombre.contenido.largo() > 0) {
+                        respuesta.contenido = "Hola, " + nombre.contenido
+                    } sino {
+                        respuesta.contenido = "Escribe algo primero" + ""
+                    }
+                }
+                si (nombre.contiene(x, y)) {
+                    foco_actual.indice = 0
+                }
+                dibujar = verdadero
+            }
+
+            cual_evento = ventana.evento(v)
+        }
+
+        ventana.pausa(16)
+    }
+
+    ventana.cerrar(v)
+    imprimir("hasta luego")
+    retornar 0
+}

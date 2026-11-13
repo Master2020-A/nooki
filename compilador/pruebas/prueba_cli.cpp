@@ -53,6 +53,28 @@ void caso(std::string_view titulo) {
 int main() {
     const std::string version_esperada = std::string("nooki ") + nooki::version::TEXTO;
 
+    caso("compilar sin archivo");
+    {
+        const Resultado resultado = invocar({"compilar"});
+        comprobar(resultado.codigo == nooki::cli::USO_INCORRECTO, "devuelve uso incorrecto");
+        comprobar(contiene(resultado.error, "uso: nooki compilar"), "explica cómo se usa");
+    }
+
+    caso("compilar con -o sin ruta");
+    {
+        const Resultado resultado = invocar({"compilar", "x.oki", "-o"});
+        comprobar(resultado.codigo == nooki::cli::USO_INCORRECTO, "devuelve uso incorrecto");
+        comprobar(contiene(resultado.error, "falta la ruta"), "dice qué falta");
+    }
+
+    caso("compilar un archivo que no existe");
+    {
+        const Resultado resultado = invocar({"compilar", "no-existe-jamas.oki"});
+        comprobar(resultado.codigo == nooki::cli::DATOS_INCORRECTOS,
+                  "devuelve datos incorrectos");
+        comprobar(contiene(resultado.error, "NOK0001"), "lo marca con NOK0001");
+    }
+
     caso("version");
     {
         const Resultado resultado = invocar({"version"});

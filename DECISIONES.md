@@ -118,7 +118,8 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-15 | **macOS sin verificar**: no hay hardware Apple. Clang 18 en Linux compila y pasa las suites, que es la evidencia más cercana | ⬜ Abierto | Cuando haya un Mac o un runner de CI |
 | A-14 | **Mover un campo de un objeto a una colección** | ✅ Cerrado (S66): el campo se vacía de verdad (longitud a cero) y queda un texto vacío válido | — |
 | A-13 | **Un módulo nuevo de la biblioteca embebida no registraba sus funciones** | ✅ Cerrado (S62): no era un fallo del compilador; un archivo `build/textos.oki` olvidado tapaba al módulo. La búsqueda prefiere archivo a biblioteca | — |
-| A-12 | **Diez códigos de diagnóstico sin caso directo** (CLI, carga de módulos, símbolo privado, backend y avisos) | ⬜ Abierto (deuda de pruebas) | Sin fecha |
+| A-12 | Códigos de diagnóstico sin caso | 🟡 Parcial (S97): 40 de 46 con prueba. `NOK6001` y `NOK6002` necesitan una máquina sin `cc` o con `cc` roto; `NOK2003/2004/2005` son errores del analizador sin disparador estable; `NOK3009` necesita dos módulos. `NOK8001` retirado | Sin fecha |
+| A-12-antiguo | **Diez códigos de diagnóstico sin caso directo** (CLI, carga de módulos, símbolo privado, backend y avisos) | ⬜ Abierto (deuda de pruebas) | Sin fecha |
 | A-11 | **Llamada que mueve un valor con dueño dentro de otra expresión** (`f(g(a))`) no lo mueve | ✅ Cerrado (S51): es error de compilación en lugar de fuga | — |
 | A-10 | **Devolver una construcción con variables locales con dueño** libera esas variables al retornar y deja punteros colgando | ✅ Cerrado (S48–S49): el retorno y la construcción transfieren, y los compuestos frescos liberan sus campos | — |
 | A-09 | **Semántica de referencia para `clase` y herencia** | ✅ Resuelto (S36): ADR-021, clases por referencia con `nuevo` | — |

@@ -519,7 +519,7 @@ nunca** entre versiones (los mensajes sí pueden mejorar). El rango indica la fa
 | `NOK5xxx` | Propiedad, préstamos y tiempos de vida | `NOK5001`: uso después de mover |
 | `NOK6xxx` | Generación de código y enlazado | `NOK6001`: símbolo no encontrado |
 | `NOK7xxx` | FFI y ABI | `NOK7001`: tipo sin `@repr(C)` en la frontera |
-| `NOK8xxx` | Advertencias (no impiden compilar) | `NOK8001`: variable que nunca se modifica |
+| `NOK8xxx` | Advertencias (no impiden compilar) | sin códigos por ahora |
 | `NOK9xxx` | Error interno del compilador | `NOK9001`: invariante roto |
 
 Formato de salida en texto:

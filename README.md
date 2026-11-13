@@ -132,6 +132,7 @@ Sprint 93 ✅  IA: autograd
 Sprint 94 ✅  IA: redes neuronales (aprende XOR)
 Sprint 95 ✅  A-17 resuelto: propiedad al salir de una función
 Sprint 96 ✅  UI: campo de texto con UTF-8
+Sprint 97 ✅  Cobertura de diagnósticos y códigos de salida
 ```
 
 **Ya compila y ejecuta:**

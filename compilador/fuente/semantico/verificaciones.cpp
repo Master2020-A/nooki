@@ -588,7 +588,6 @@ private:
         cerrar_ambito();
     }
 
-    // --- Sentencias --------------------------------------------------------
     void revisar_sentencia(const Sentencia& sentencia, const Funcion& funcion) {
         switch (sentencia.tipo) {
             case TipoSentencia::Expresion:

@@ -173,6 +173,78 @@ int main() {
         }
     }
 
+    // Un literal de carácter todavía no se traduce al C: NOKK6003.
+    caso("literal de carácter");
+    {
+        const std::filesystem::path directorio =
+            std::filesystem::temp_directory_path() / "nooki-caracter";
+        std::error_code ignorado;
+        std::filesystem::create_directories(directorio, ignorado);
+
+        conductor::Opciones opciones;
+        opciones.fuente = directorio / "caracter.oki";
+#ifdef _WIN32
+        opciones.salida = directorio / "caracter.exe";
+#else
+        opciones.salida = directorio / "caracter";
+#endif
+        escribir(opciones.fuente,
+                 "funcion principal() -> entero {\n    variable letra = 'a'\n    retornar 0\n}\n");
+
+        diagnostico::GestorFuentes fuentes;
+        diagnostico::Emisor emisor;
+        std::ostringstream salida;
+        std::ostringstream error;
+
+        const auto resultado = conductor::compilar(opciones, fuentes, emisor, salida, error);
+        comprobar(resultado.codigo != 0, "la compilación falla");
+        bool encontrado = false;
+        for (const auto& diagnostico : emisor.diagnosticos()) {
+            if (diagnostico.codigo() == diagnostico::codigos::BACKEND_NO_SOPORTA) {
+                encontrado = true;
+            }
+        }
+        comprobar(encontrado, "avisa con NOK6003");
+
+        std::filesystem::remove_all(directorio, ignorado);
+    }
+
+    // Un módulo que no existe se detecta al cargarlo: NOK3008.
+    caso("módulo que no existe");
+    {
+        const std::filesystem::path directorio =
+            std::filesystem::temp_directory_path() / "nooki-modulo-falta";
+        std::error_code ignorado;
+        std::filesystem::create_directories(directorio, ignorado);
+
+        conductor::Opciones opciones;
+        opciones.fuente = directorio / "falta.oki";
+#ifdef _WIN32
+        opciones.salida = directorio / "falta.exe";
+#else
+        opciones.salida = directorio / "falta";
+#endif
+        escribir(opciones.fuente,
+                 "usar modulo_que_no_existe\n\nfuncion principal() -> entero {\n    retornar 0\n}\n");
+
+        diagnostico::GestorFuentes fuentes;
+        diagnostico::Emisor emisor;
+        std::ostringstream salida;
+        std::ostringstream error;
+
+        const auto resultado = conductor::compilar(opciones, fuentes, emisor, salida, error);
+        comprobar(resultado.codigo != 0, "la compilación falla");
+        bool encontrado = false;
+        for (const auto& diagnostico : emisor.diagnosticos()) {
+            if (diagnostico.codigo() == diagnostico::codigos::MODULO_NO_ENCONTRADO) {
+                encontrado = true;
+            }
+        }
+        comprobar(encontrado, "avisa con NOK3008");
+
+        std::filesystem::remove_all(directorio, ignorado);
+    }
+
     std::cout << "\n  " << (comprobaciones - fallos) << "/" << comprobaciones
               << " comprobaciones correctas";
     if (omitidas > 0) {

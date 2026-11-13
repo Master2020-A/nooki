@@ -76,7 +76,9 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
     }
 
     if (resultado.codigo != 0 || !ejecutar_despues || resultado.binario.empty()) {
-        return resultado.codigo;
+        // Los fallos de compilación salen con el código documentado en `ayuda`,
+        // no con el 1 genérico: quien automatiza puede distinguirlos.
+        return resultado.codigo == 0 ? 0 : DATOS_INCORRECTOS;
     }
 
     // `make_preferred` convierte «/» en «\» en Windows: la consola no entiende «/».

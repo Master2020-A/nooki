@@ -5,6 +5,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 97 — Cobertura de diagnósticos y código de salida (2026-11-13)
+
+Tres cosas pequeñas que cierran huecos reales.
+
+- **El compilador sale con el código documentado**: un fallo de compilación devolvía `1`; ahora devuelve
+  **65** (`DATOS_INCORRECTOS`), que es lo que dice `nooki ayuda`. Quien automatiza puede distinguir un
+  uso incorrecto (64) de una compilación fallida (65).
+- **`NOK6003` y `NOK3008` pasan a estar probados**: un literal de carácter y un módulo que no existe se
+  comprueban en la suite del compilador, que es la que ejercita el backend y la carga de módulos (el
+  arnés de conformidad solo llega al front end).
+- **Se retira `NOK8001`** («la variable nunca se modifica»). Estaba en el catálogo pero **nunca se
+  emitía**: era código muerto y documentación que prometía algo inexistente. Intenté implementarlo y
+  daba **31 avisos falsos** en un ejemplo de 200 líneas. Un aviso que grita en falso es peor que no
+  tenerlo, así que fuera. Quedan **46 códigos**, 40 con prueba.
+
+**Lo que no se puede probar sin trampas**: `NOK6001` (no hay compilador de C) y `NOK6002` (el
+compilador de C falla) exigen una máquina sin `cc` o un `cc` roto, y el compilador valida el candidato
+antes de usarlo. Quedan documentados como revisados a mano.
+
 ### Sprint 96 — Campo de texto: escribir en la interfaz (2026-11-13)
 
 La ausencia más grande de la UI, cerrada.

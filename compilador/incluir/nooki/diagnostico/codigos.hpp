@@ -61,9 +61,6 @@ inline constexpr std::string_view PRESTAMO_QUE_ESCAPA = "NOK5006";
 inline constexpr std::string_view MOVER_CON_PRESTAMO = "NOK5007";
 inline constexpr std::string_view PRESTAMO_EXCLUSIVO = "NOK5003";
 
-// --- Advertencias (NOK8xxx) -------------------------------------------------
-inline constexpr std::string_view VARIABLE_SIN_MUTAR = "NOK8001";
-
 // --- Generación y enlazado (NOK6xxx) ---------------------------------------
 inline constexpr std::string_view SIN_COMPILADOR_C = "NOK6001";
 inline constexpr std::string_view FALLO_COMPILADOR_C = "NOK6002";

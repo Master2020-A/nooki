@@ -170,8 +170,7 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
 
     {codigos::USO_TRAS_MOVER, "no se puede usar «{nombre}»: el valor se movió antes",
      "cannot use “{nombre}”: the value was moved before"},
-    {codigos::VARIABLE_SIN_MUTAR, "la variable «{nombre}» nunca se modifica",
-     "variable “{nombre}” is never mutated"},
+
 }};
 
 struct EntradaFija {
