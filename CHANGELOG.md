@@ -5,6 +5,23 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 78 — Estabilización (2026-11-12)
+
+Un sprint que no añade lenguaje y cierra lo abierto.
+
+- **La API de la biblioteca queda congelada por una prueba**: el caso `0051-api-biblioteca` llama a
+  **todas** las funciones públicas de los seis módulos. Si alguien cambia una firma o borra una función,
+  ese caso deja de compilar. Es la forma barata de que la API no se rompa por descuido: el compilador lo
+  dice en cada `ctest`.
+- **Distribución**: `herramientas/empaquetar.ps1` y `empaquetar.sh` producen
+  `dist/nooki-1.0.0-<plataforma>.zip` o `.tar.gz` con el binario, diez documentos, los ejemplos, los
+  editores, la especificación y un `INSTALAR.txt` con los pasos. Verificado: el binario empaquetado
+  compila y ejecuta un ejemplo.
+- **Caso `0019-asm-fuera-de-inseguro`**: el último código nuevo sin prueba, cerrado. **81 casos.**
+- **Auditoría de diagnóstico**: 36 de 47 códigos tienen caso. Los 11 restantes son rutas de integración
+  —CLI, carga de módulos, símbolo privado, fallos del compilador de C y avisos— y quedan en A-12 con su
+  motivo. No hay código muerto.
+
 ### Sprint 77 — Biblioteca: archivos y fechas (2026-11-12)
 
 Un lenguaje sin archivos no sirve para programas de verdad. Ahora los tiene, con la API de errores del

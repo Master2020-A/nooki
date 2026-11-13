@@ -113,6 +113,7 @@ Sprint 74 ✅  `inseguro` y `asm!`: control de hardware
 Sprint 75 ✅  Manifiesto `nooki.toml` y dependencias
 Sprint 76 ✅  Servidor de lenguaje `nooki lsp`
 Sprint 77 ✅  Biblioteca: archivos y fechas
+Sprint 78 ✅  Estabilización: API congelada y distribución
 ```
 
 **Ya compila y ejecuta:**

@@ -1388,3 +1388,13 @@ coincide (archivo.leer(&ruta)) {
 - **`fechas`**: una fecha es un entero, días desde el 1 de enero de 1970. `a_dias(anio, mes, dia)`,
   `a_anio`, `a_mes`, `a_dia`, `sumar_dias` y `dia_de_la_semana` (0 = lunes).
 - Los textos multilínea se escriben con tres comillas: `"""..."""`.
+
+
+### 18.42 Estabilidad de la biblioteca
+
+- La API pública de los módulos de la biblioteca **está congelada por una prueba**: el programa de
+  conformidad `0051-api-biblioteca` llama a todas las funciones públicas. Cambiar una firma sin querer
+  rompe `ctest` en lugar de romper a un usuario.
+- Al añadir una función pública, añádela también a ese programa.
+- La distribución se genera con `herramientas/empaquetar.ps1` (Windows) o `empaquetar.sh` (Linux y
+  macOS): binario, documentación, ejemplos, editores, especificación e `INSTALAR.txt`.

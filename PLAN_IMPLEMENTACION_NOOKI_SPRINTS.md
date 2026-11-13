@@ -283,7 +283,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S75** | Manifiesto y dependencias | ✅ `nooki.toml` con nombre, versión y dependencias por ruta; `nooki construir` resuelve módulos a través de ellas y `nooki nuevo` escribe el manifiesto. `prueba_manifiesto` y verificación de punta a punta con dos proyectos |
 | **S76** | Servidor de lenguaje | ✅ `nooki lsp` con JSON-RPC, `initialize`, sincronización de documentos y `publishDiagnostics` con rango, gravedad y mensaje en español. `prueba_lsp`. *Sin autocompletado ni formato* |
 | **S77** | Biblioteca: archivos y fechas | ✅ Módulo `archivo` (`leer`, `escribir`, `existe`) sobre tres integradas, y aritmética de calendario en `fechas`. Casos `0049` y `0050`. Corregidos los textos multilínea y el impresor del AST |
-| **S78** | **Cierre v0.9: herramientas de UI** | Vista previa/designer; ejemplos: calculadora y gestor de tareas |
+| **S78** | Estabilización | ✅ La API de la biblioteca queda congelada por el caso `0051`, empaquetado `.zip`/`.tar.gz` con binario y documentación (`herramientas/`), y caso `0019` para `NOK3012`. 81 casos y 36 de 47 códigos con prueba |
 
 ---
 

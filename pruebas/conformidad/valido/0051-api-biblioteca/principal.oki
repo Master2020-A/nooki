@@ -1,0 +1,104 @@
+// Congela la API pública de la biblioteca estándar.
+//
+// Este programa llama a **todas** las funciones públicas de todos los módulos. Si
+// alguien cambia una firma o borra una función, este caso deja de compilar: es la
+// prueba de que la API no se rompe por descuido.
+//
+// Al añadir una función a la biblioteca, añádela aquí.
+usar resultado
+usar matematicas
+usar textos
+usar listas
+usar fechas
+usar archivo
+
+funcion probar_matematicas() -> vacio {
+    imprimir(matematicas.maximo(3, 9))
+    imprimir(matematicas.minimo(3, 9))
+    imprimir(matematicas.absoluto(0 - 7))
+    imprimir(matematicas.cuadrado(5))
+}
+
+funcion probar_textos() -> vacio {
+    variable partes = Vector<texto>.nuevo()
+    partes.agregar("uno" + "")
+    partes.agregar("dos" + "")
+    variable separador = ", " + ""
+    imprimir(textos.unir(&partes, separador))
+
+    variable guion = "-" + ""
+    imprimir(textos.repetir(&guion, 3))
+
+    variable frase = "la casa" + ""
+    variable aguja = "a" + ""
+    imprimir(textos.contar(&frase, &aguja))
+}
+
+funcion probar_listas() -> vacio {
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(4)
+    numeros.agregar(6)
+    numeros.agregar(2)
+
+    imprimir(listas.suma(&numeros))
+    imprimir(listas.mayor(&numeros))
+    imprimir(listas.menor(&numeros))
+    imprimir(listas.promedio(&numeros))
+    si (listas.contiene(&numeros, 6)) {
+        imprimir("contiene")
+    }
+}
+
+funcion probar_fechas() -> vacio {
+    si (fechas.bisiesto(2024)) {
+        imprimir("bisiesto")
+    }
+    imprimir(fechas.dias_del_mes(2, 2024))
+    imprimir(fechas.dias_del_anio(2023))
+    imprimir(fechas.a_dias(2000, 1, 1))
+    imprimir(fechas.a_anio(10957))
+    imprimir(fechas.a_mes(10957))
+    imprimir(fechas.a_dia(10957))
+    imprimir(fechas.sumar_dias(0, 10))
+    imprimir(fechas.dia_de_la_semana(10957))
+}
+
+funcion probar_resultado() -> vacio {
+    variable bueno: resultado = Ok(7)
+    variable malo: resultado = Error("algo fallo")
+    coincide (bueno) {
+        caso Ok(v) => imprimir(v)
+        caso Error(m) => imprimir(m)
+    }
+    coincide (malo) {
+        caso Ok(v) => imprimir(v)
+        caso Error(m) => imprimir(m)
+    }
+}
+
+funcion probar_archivo() -> vacio {
+    variable ruta = "nooki-api-temporal.txt" + ""
+    variable contenido = "api" + ""
+
+    coincide (archivo.escribir(&ruta, &contenido)) {
+        caso Bien(v) => imprimir("escrito")
+        caso Mal(m) => imprimir(m)
+    }
+    si (archivo.existe(&ruta)) {
+        imprimir("existe")
+    }
+    coincide (archivo.leer(&ruta)) {
+        caso Bien(leido) => imprimir(leido)
+        caso Mal(m) => imprimir(m)
+    }
+}
+
+funcion principal() -> entero {
+    probar_matematicas()
+    probar_textos()
+    probar_listas()
+    probar_fechas()
+    probar_resultado()
+    probar_archivo()
+    retornar 0
+}

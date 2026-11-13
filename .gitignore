@@ -1,4 +1,5 @@
 # Artefactos de compilación
+dist/
 build/
 out/
 cmake-build-*/

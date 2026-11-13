@@ -1,0 +1,5 @@
+// `asm!` solo se permite dentro de `inseguro { }`.
+funcion principal() -> entero {
+    asm!("nop")
+    retornar 0
+}
