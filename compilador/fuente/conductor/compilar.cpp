@@ -91,6 +91,77 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "controles") {
+        return R"(// Biblioteca estándar: controles de interfaz (widgets).
+// La geometría se puede probar sin ventana; el dibujo necesita una.
+usar ventana
+
+publico clase control {
+    publico x: entero
+    publico y: entero
+    publico ancho: entero
+    publico alto: entero
+
+    publico funcion contiene(px: entero, py: entero) -> booleano {
+        si (px < este.x) {
+            retornar falso
+        }
+        si (py < este.y) {
+            retornar falso
+        }
+        si (px >= este.x + este.ancho) {
+            retornar falso
+        }
+        si (py >= este.y + este.alto) {
+            retornar falso
+        }
+        retornar verdadero
+    }
+
+    publico funcion dibujar(pantalla: entero) -> vacio {
+    }
+}
+
+publico clase etiqueta hereda control {
+    publico contenido: texto
+    publico color: entero
+
+    publico funcion dibujar(pantalla: entero) -> vacio {
+        ventana.escribir_texto(pantalla, este.x, este.y + este.alto - 6, &este.contenido,
+                               este.color)
+    }
+}
+
+publico clase boton hereda control {
+    publico contenido: texto
+    publico fondo: entero
+    publico color: entero
+
+    publico funcion dibujar(pantalla: entero) -> vacio {
+        ventana.rectangulo(pantalla, este.x, este.y, este.ancho, este.alto, este.fondo)
+        ventana.escribir_texto(pantalla, este.x + 12, este.y + este.alto / 2 + 5,
+                               &este.contenido, este.color)
+    }
+
+    publico funcion pulsado(px: entero, py: entero) -> booleano {
+        retornar este.contiene(px, py)
+    }
+}
+
+publico clase barra hereda control {
+    publico fondo: entero
+    publico relleno: entero
+    // Parte llena, de 0 a 100.
+    publico tanto: entero
+
+    publico funcion dibujar(pantalla: entero) -> vacio {
+        ventana.rectangulo(pantalla, este.x, este.y, este.ancho, este.alto, este.fondo)
+        variable lleno = este.ancho * este.tanto / 100
+        ventana.rectangulo(pantalla, este.x, este.y, lleno, este.alto, este.relleno)
+    }
+}
+)";
+    }
     if (modulo == "diseno") {
         return R"(// Biblioteca estándar: colocación de cajas (layout) sin dibujar nada.
 // Es computación pura: se puede probar sin abrir una ventana.

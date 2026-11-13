@@ -5,6 +5,37 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 82 — Controles (2026-11-12)
+
+El cuarto pilar de la UI: **widgets**. Con ventana, dibujo y layout, ya se pueden construir controles.
+
+```aura
+usar controles
+
+variable b = nuevo boton { x: 10, y: 10, ancho: 120, alto: 40,
+                           contenido: "Aceptar", fondo: 0x89B4FA, color: 0x11111B }
+b.dibujar(v)
+si (b.pulsado(15, 20)) { ... }
+```
+
+- **`control`** como base: posición y tamaño, y `contiene(px, py)` con intervalo **semiabierto**
+  (`x ≤ px < x+ancho`), que es lo que hace que dos controles pegados no se solapen.
+- **`etiqueta`**, **`boton`** y **`barra`** (progreso) heredan de `control` y sobrescriben `dibujar`.
+- **La geometría se prueba sin ventana**: el caso `0053-controles` comprueba pulsaciones dentro, fuera
+  y en los dos bordes. **83 casos.**
+
+**Y tres cosas del lenguaje que hubo que arreglar para que esto funcionara:**
+
+1. **`&objeto.campo` no estaba permitido** (`NOK4008`): prestar un campo es un préstamo de un sitio
+   válido. Ahora se permite y el dibujo de texto puede prestar `este.contenido` sin copiarlo.
+2. **Llamar a un método heredado desde `este`** generaba una llamada a la clase derivada, que no lo
+   tiene. Ahora `este` se trata como lo que es —una referencia— y la llamada va por la tabla virtual.
+3. **Pero solo en clases**: una estructura con métodos no tiene tabla virtual, y el cambio anterior la
+   rompía. La comprobación de «esto tiene tabla» pasó a exigir que el tipo sea una clase.
+
+**Y una dependencia nueva en Linux**: compilar un programa con ventana necesita `libx11-dev`, así que
+la CI lo instala.
+
 ### Sprint 81 — Layout (2026-11-12)
 
 El tercer pilar de la UI: **colocar las cosas**. Y, a diferencia de los dos anteriores, esto es

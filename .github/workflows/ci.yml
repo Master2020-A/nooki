@@ -44,6 +44,11 @@ jobs:
           "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" |
             Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
+      # Los programas con ventana se enlazan con X11 en Linux.
+      - name: Instalar X11 (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev
+
       - name: Configurar
         run: cmake --preset ${{ matrix.preset }}
 

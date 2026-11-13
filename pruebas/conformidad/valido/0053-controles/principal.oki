@@ -1,0 +1,39 @@
+// Controles: geometría y pulsación. El dibujo necesita ventana; esto no.
+usar controles
+
+funcion principal() -> entero {
+    variable b = nuevo boton { x: 10, y: 10, ancho: 120, alto: 40, contenido: "Aceptar" + "",
+                               fondo: 0x89B4FA, color: 0x11111B }
+
+    si (b.pulsado(15, 20)) {
+        imprimir("dentro")
+    }
+    si (b.pulsado(200, 20)) {
+        imprimir("fuera")
+    } sino {
+        imprimir("fuera")
+    }
+    si (b.pulsado(9, 20)) {
+        imprimir("dentro")
+    } sino {
+        imprimir("borde izquierdo fuera")
+    }
+    si (b.pulsado(130, 20)) {
+        imprimir("dentro")
+    } sino {
+        imprimir("borde derecho fuera")
+    }
+
+    variable e = nuevo etiqueta { x: 0, y: 0, ancho: 100, alto: 20, contenido: "Hola" + "",
+                                  color: 0xFFFFFF }
+    si (e.contiene(50, 10)) {
+        imprimir("etiqueta dentro")
+    }
+
+    variable barra_progreso = nuevo barra { x: 0, y: 0, ancho: 200, alto: 10, fondo: 0x313244,
+                                           relleno: 0xA6E3A1, tanto: 50 }
+    si (barra_progreso.contiene(100, 5)) {
+        imprimir("barra dentro")
+    }
+    retornar 0
+}

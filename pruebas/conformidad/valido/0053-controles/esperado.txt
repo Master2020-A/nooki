@@ -1,0 +1,6 @@
+dentro
+fuera
+borde izquierdo fuera
+borde derecho fuera
+etiqueta dentro
+barra dentro

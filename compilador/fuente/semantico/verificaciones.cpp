@@ -1074,10 +1074,17 @@ private:
             return Tipo::Entero;
         }
         if (expresion.lexema == "&" || expresion.lexema == "&mutable") {
+            // Un campo es un sitio válido: `&objeto.campo` presta el campo.
+            const bool campo = expresion.izquierda &&
+                               expresion.izquierda->tipo == TipoExpresion::Miembro;
             const bool caja = expresion.izquierda &&
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
                               (es_caja(expresion.izquierda->lexema) ||
                                es_prestable(expresion.izquierda->lexema));
+            if (campo) {
+                tipo_de(*expresion.izquierda);
+                return Tipo::Texto;
+            }
             if (!caja) {
                 error(diagnostico::codigos::PRESTAMO_INVALIDO, expresion.span);
             }

@@ -1454,3 +1454,21 @@ si (c.cabe(40)) { ... }
   `reiniciar()` vuelve al principio.
 - `centrar(disponible, medida)` y `repartir(disponible, partes)`.
 - Es computación pura: se prueba sin abrir una ventana.
+
+
+### 18.46 Controles
+
+```aura
+usar controles
+
+variable b = nuevo boton { x: 10, y: 10, ancho: 120, alto: 40,
+                           contenido: "Aceptar", fondo: 0x89B4FA, color: 0x11111B }
+b.dibujar(v)
+si (b.pulsado(15, 20)) { ... }
+```
+
+- `control`: base con `x`, `y`, `ancho`, `alto` y `contiene(px, py)` — intervalo semiabierto, de modo
+  que dos controles pegados no se solapan.
+- `etiqueta`, `boton` y `barra` heredan de `control` y sobrescriben `dibujar(pantalla)`.
+- `boton.pulsado(px, py)` es lo mismo que `contiene`: la diferencia es de intención.
+- La geometría se prueba sin ventana; solo `dibujar` necesita una.

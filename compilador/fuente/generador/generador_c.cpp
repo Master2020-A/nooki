@@ -3553,8 +3553,11 @@ private:
         }
 
         std::string tipo_objeto = tipo_de(*acceso.izquierda);
-        const bool objeto_puntero = !tipo_objeto.empty() && tipo_objeto.back() == '*';
-        if (objeto_puntero) {
+        // `este` siempre es una referencia al objeto, aunque su tipo no lleve «*».
+        const bool objeto_puntero =
+            (!tipo_objeto.empty() && tipo_objeto.back() == '*') ||
+            acceso.izquierda->tipo == sintactico::TipoExpresion::Este;
+        if (!tipo_objeto.empty() && tipo_objeto.back() == '*') {
             tipo_objeto.pop_back();
         }
 
@@ -3603,20 +3606,25 @@ private:
 
         const auto tipo_ptr = por_c_.find(tipo_objeto);
         const std::vector<std::string> virtuales = virtuales_de_at(tipo_objeto);
+        // Solo las clases tienen tabla virtual: una estructura se llama directo.
         const bool virtual_aqui =
-            objeto_puntero && tipo_ptr != por_c_.end() &&
+            objeto_puntero && tipo_ptr != por_c_.end() && tipo_ptr->second->es_clase &&
             std::find(virtuales.begin(), virtuales.end(), std::string(acceso.anotacion)) !=
                 virtuales.end();
 
+        // Expresión de C que da un puntero al objeto, sea `este` o un valor.
+        const std::string objeto_ptr =
+            acceso.izquierda->tipo == sintactico::TipoExpresion::Este
+                ? "este"
+                : (objeto_puntero ? expresion(*acceso.izquierda)
+                                  : "&" + expresion(*acceso.izquierda));
+
         std::string salida;
         if (virtual_aqui) {
-            salida = "((const " + raiz_c(tipo_objeto) + "_vtabla*)" +
-                     expresion(*acceso.izquierda) + "->vtabla)->" + std::string(acceso.anotacion) +
-                     "((void*)" + expresion(*acceso.izquierda);
+            salida = "((const " + raiz_c(tipo_objeto) + "_vtabla*)" + objeto_ptr + "->vtabla)->" +
+                     std::string(acceso.anotacion) + "((void*)" + objeto_ptr;
         } else {
-            salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
-            salida += objeto_puntero ? expresion(*acceso.izquierda)
-                                     : "&" + expresion(*acceso.izquierda);
+            salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(" + objeto_ptr;
         }
 
         for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
