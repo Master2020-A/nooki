@@ -68,6 +68,12 @@ nooki_aplicar_opciones(prueba_rutas)
 add_test(NAME rutas COMMAND prueba_rutas)
 set_tests_properties(rutas PROPERTIES TIMEOUT 120)
 
+# Manifiesto del proyecto: nooki.toml y dependencias.
+add_executable(prueba_manifiesto manifiesto.cpp)
+target_link_libraries(prueba_manifiesto PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_manifiesto)
+add_test(NAME manifiesto COMMAND prueba_manifiesto)
+
 # Rendimiento: línea base de las métricas del plan.
 add_executable(nooki_rendimiento rendimiento.cpp)
 target_link_libraries(nooki_rendimiento PRIVATE nooki_nucleo)

@@ -35,6 +35,9 @@ std::string leer_archivo(const std::filesystem::path& ruta);
 /// Archivo que se está compilando: un módulo no puede ser él mismo.
 std::filesystem::path archivo_de_entrada;
 
+/// Carpetas de dependencias donde buscar módulos, del manifiesto.
+std::vector<std::filesystem::path> rutas_de_modulos;
+
 std::string_view fuente_biblioteca(std::string_view modulo) {
     if (modulo == "resultado") {
         return R"(// Biblioteca estándar: el resultado de una operación que puede fallar.
@@ -228,6 +231,15 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
         directorio.empty() ? std::filesystem::current_path(error_ruta)
                            : std::filesystem::absolute(directorio, error_ruta);
     std::filesystem::path ruta = base / (clave + ".oki");
+
+    // Las dependencias del manifiesto se miran antes de subir por los padres.
+    for (const std::filesystem::path& extra : rutas_de_modulos) {
+        const std::filesystem::path candidato = extra / (clave + ".oki");
+        if (std::filesystem::exists(candidato)) {
+            ruta = candidato;
+            break;
+        }
+    }
     for (std::filesystem::path actual = base; !std::filesystem::exists(ruta);) {
         const std::filesystem::path candidato = actual / "biblioteca" / (clave + ".oki");
         if (std::filesystem::exists(candidato)) {
@@ -382,6 +394,7 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         return Resultado{1, {}, {}};
     }
 
+    rutas_de_modulos = opciones.rutas_de_modulos;
     std::error_code error_entrada;
     archivo_de_entrada = std::filesystem::weakly_canonical(opciones.fuente, error_entrada);
     if (error_entrada) {

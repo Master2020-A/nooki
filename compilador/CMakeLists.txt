@@ -21,6 +21,7 @@ add_library(nooki_nucleo STATIC
     fuente/utf8.cpp
     fuente/entorno.cpp
     fuente/proceso.cpp
+    fuente/manifiesto.cpp
     fuente/cli/orden.cpp
     fuente/cli/ayuda.cpp
     fuente/cli/compilar.cpp

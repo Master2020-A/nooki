@@ -1337,3 +1337,23 @@ inseguro {
   el C generado lo dice con un `#error`.
 - Los bloques `inseguro` deben documentar por qué están: son la lista de sitios donde el lenguaje no
   garantiza nada.
+
+
+### 18.39 Manifiesto y dependencias
+
+```toml
+# nooki.toml
+[proyecto]
+nombre = "agenda"
+version = "0.1.0"
+
+[dependencias]
+saludos = { ruta = "../saludos" }
+```
+
+- `nooki.toml` declara el proyecto y sus dependencias por **ruta**.
+- `nooki construir` añade a la búsqueda de módulos la raíz y la `biblioteca/` de cada dependencia,
+  así que `usar saludos` funciona sin copiar archivos.
+- `nooki nuevo` crea el manifiesto con el nombre del proyecto.
+- No hay versiones semánticas, descarga desde Git ni registro: son la fase siguiente, y necesitan
+  usuarios antes que diseño.

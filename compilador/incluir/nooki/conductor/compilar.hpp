@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 #include "nooki/diagnostico/emisor.hpp"
 #include "nooki/diagnostico/gestor_fuentes.hpp"
@@ -17,6 +18,8 @@ struct Opciones {
     bool solo_c = false;
     /// No borra el archivo .c intermedio.
     bool conservar_intermedios = false;
+    /// Carpetas adicionales donde buscar módulos (las dependencias del manifiesto).
+    std::vector<std::filesystem::path> rutas_de_modulos;
 };
 
 struct Resultado {

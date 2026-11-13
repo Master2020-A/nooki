@@ -9,6 +9,7 @@
 
 #include "nooki/cli/comandos.hpp"
 #include "nooki/cli/compilar.hpp"
+#include "nooki/manifiesto.hpp"
 #include "nooki/proceso.hpp"
 
 namespace nooki::cli {
@@ -50,6 +51,13 @@ int crear_proyecto(std::span<const std::string_view> argumentos, std::ostream& s
                      "}\n";
     }
     {
+        std::string motivo;
+        if (!nooki::escribir_manifiesto(raiz, nombre, motivo)) {
+            error << "nooki: " << motivo << "\n";
+            return FALLOS;
+        }
+    }
+    {
         std::ofstream modulo(raiz / "biblioteca" / "herramientas.oki");
         modulo << "// Módulo del proyecto.\n"
                   "publico funcion saludo(nombre: texto) -> texto {\n"
@@ -59,6 +67,7 @@ int crear_proyecto(std::span<const std::string_view> argumentos, std::ostream& s
 
     salida << "proyecto «" << nombre << "» creado\n"
            << "  " << nombre << "/principal.oki\n"
+           << "  " << nombre << "/nooki.toml\n"
            << "  " << nombre << "/biblioteca/herramientas.oki\n"
            << "\nentre en la carpeta y compile con «nooki construir»\n";
     return 0;

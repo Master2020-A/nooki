@@ -1,4 +1,5 @@
 #include "nooki/cli/compilar.hpp"
+#include "nooki/manifiesto.hpp"
 #include "nooki/rutas.hpp"
 
 #include <cstddef>
@@ -22,8 +23,10 @@ void imprimir_uso(std::ostream& error) {
 }
 
 int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream& salida,
-                     std::ostream& error, bool ejecutar_despues) {
+                     std::ostream& error, bool ejecutar_despues,
+                     const std::vector<std::filesystem::path>& rutas_de_modulos = {}) {
     conductor::Opciones opciones;
+    opciones.rutas_de_modulos = rutas_de_modulos;
     bool hay_fuente = false;
 
     for (std::size_t i = 0; i < argumentos.size(); ++i) {
@@ -86,6 +89,13 @@ int comando_compilar(std::span<const std::string_view> argumentos, std::ostream&
     return compilar_archivo(argumentos, salida, error, false);
 }
 
+/// Compila con carpetas de módulos adicionales (las dependencias del manifiesto).
+int compilar_con_rutas(std::span<const std::string_view> argumentos,
+                       const std::vector<std::filesystem::path>& rutas, std::ostream& salida,
+                       std::ostream& error) {
+    return compilar_archivo(argumentos, salida, error, false, rutas);
+}
+
 /// `nooki construir`: compila el proyecto del directorio actual.
 int comando_construir(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error) {
@@ -100,12 +110,23 @@ int comando_construir(std::span<const std::string_view> argumentos, std::ostream
         return USO_INCORRECTO;
     }
 
+    // El manifiesto aporta las dependencias: sus carpetas entran en la búsqueda.
+    nooki::Manifiesto manifiesto;
+    std::string motivo;
+    std::vector<std::filesystem::path> rutas;
+    if (nooki::leer_manifiesto(std::filesystem::current_path(), manifiesto, motivo)) {
+        rutas = manifiesto.rutas_de_busqueda();
+    } else if (std::filesystem::exists("nooki.toml")) {
+        error << "nooki: no se pudo leer nooki.toml: " << motivo << "\n";
+        return USO_INCORRECTO;
+    }
+
     std::vector<std::string_view> nuevos;
     nuevos.push_back(fuente);
     for (const std::string_view argumento : argumentos) {
         nuevos.push_back(argumento);
     }
-    return comando_compilar(nuevos, salida, error);
+    return compilar_con_rutas(nuevos, rutas, salida, error);
 }
 
 int comando_ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,

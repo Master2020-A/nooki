@@ -5,6 +5,37 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 75 — Manifiesto y dependencias (2026-11-12)
+
+Un proyecto deja de ser una carpeta suelta: declara qué es y de qué depende.
+
+```toml
+# agenda/nooki.toml
+[proyecto]
+nombre = "agenda"
+version = "0.1.0"
+
+[dependencias]
+saludos = { ruta = "../saludos" }
+```
+
+```aura
+usar saludos     // se resuelve en la dependencia, no solo en «biblioteca/»
+```
+
+- **`nooki.toml`**: nombre, versión y dependencias por ruta. Se admite un subconjunto de TOML —
+  secciones, `clave = "valor"` y `clave = { ruta = "..." }` — y los comentarios con `#`.
+- **`nooki construir` lee el manifiesto** y añade, a la búsqueda de módulos, la raíz y la `biblioteca/`
+  de cada dependencia.
+- **`nooki nuevo` escribe el manifiesto**, así que todo proyecto nuevo ya lo tiene.
+- **`prueba_manifiesto`**: lectura, dependencias, rutas de búsqueda y escritura. **14 suites.**
+- **Verificado de punta a punta**: dos proyectos (`agenda` y `saludos`), `nooki construir` desde
+  `agenda`, binario que imprime «Hola, Nooki» usando el módulo del otro proyecto.
+
+**Lo que no incluye**, y es deliberado: no hay versiones semánticas resueltas, ni descarga desde Git, ni
+registro, ni bloqueo de dependencias. Eso es un gestor de paquetes, y necesita usuarios antes que
+diseño. El manifiesto deja la puerta abierta: hoy `ruta`, mañana `version` y `git`.
+
 ### Sprint 74 — `inseguro` y `asm!` (2026-11-12)
 
 El último pilar del lenguaje: **control de hardware**. Y la válvula de escape que el plan pedía, con

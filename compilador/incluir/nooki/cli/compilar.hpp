@@ -3,6 +3,8 @@
 #include <iosfwd>
 #include <span>
 #include <string_view>
+#include <vector>
+#include <filesystem>
 
 namespace nooki::cli {
 
@@ -16,6 +18,10 @@ int comando_limpiar(std::span<const std::string_view> argumentos, std::ostream& 
 
 int comando_construir(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error);
+
+int compilar_con_rutas(std::span<const std::string_view> argumentos,
+                       const std::vector<std::filesystem::path>& rutas, std::ostream& salida,
+                       std::ostream& error);
 
 int comando_compilar(std::span<const std::string_view> argumentos, std::ostream& salida,
                      std::ostream& error);
