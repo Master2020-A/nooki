@@ -121,6 +121,15 @@ externo funcion nooki_ia_tensor_determinante(a: entero) -> entero
 externo funcion nooki_ia_tensor_suma_total(a: entero) -> entero
 externo funcion nooki_ia_tensor_iguales(a: entero, b: entero) -> entero
 externo funcion nooki_ia_tensor_liberar(a: entero) -> vacio
+externo funcion nooki_ia_tensor_minimo(t: entero) -> entero
+externo funcion nooki_ia_tensor_maximo(t: entero) -> entero
+externo funcion nooki_ia_tensor_media(t: entero) -> entero
+externo funcion nooki_ia_tensor_varianza(t: entero) -> entero
+externo funcion nooki_ia_tensor_desviacion(t: entero) -> entero
+externo funcion nooki_ia_tensor_normalizar(t: entero) -> entero
+externo funcion nooki_ia_tensor_relu(t: entero) -> entero
+externo funcion nooki_ia_tensor_sigmoides(t: entero) -> entero
+externo funcion nooki_ia_tensor_softmax(t: entero) -> entero
 
 publico funcion ceros(filas: entero, columnas: entero) -> entero {
     retornar nooki_ia_tensor_ceros(filas, columnas)
@@ -184,6 +193,46 @@ publico funcion iguales(a: entero, b: entero) -> booleano {
 
 publico funcion liberar(a: entero) -> vacio {
     nooki_ia_tensor_liberar(a)
+}
+
+// --- Estadística. Lo que tiene decimales se da por mil: 2500 es 2.5. ---
+
+publico funcion minimo(t: entero) -> entero {
+    retornar nooki_ia_tensor_minimo(t)
+}
+
+publico funcion maximo(t: entero) -> entero {
+    retornar nooki_ia_tensor_maximo(t)
+}
+
+publico funcion media(t: entero) -> entero {
+    retornar nooki_ia_tensor_media(t)
+}
+
+publico funcion varianza(t: entero) -> entero {
+    retornar nooki_ia_tensor_varianza(t)
+}
+
+publico funcion desviacion(t: entero) -> entero {
+    retornar nooki_ia_tensor_desviacion(t)
+}
+
+publico funcion normalizar(t: entero) -> entero {
+    retornar nooki_ia_tensor_normalizar(t)
+}
+
+// --- Activaciones ---
+
+publico funcion relu(t: entero) -> entero {
+    retornar nooki_ia_tensor_relu(t)
+}
+
+publico funcion sigmoides(t: entero) -> entero {
+    retornar nooki_ia_tensor_sigmoides(t)
+}
+
+publico funcion softmax(t: entero) -> entero {
+    retornar nooki_ia_tensor_softmax(t)
 }
 )";
     }

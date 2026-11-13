@@ -5,6 +5,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 89 — Estadística y activaciones (2026-11-13)
+
+Lo que convierte una matriz en algo útil para datos.
+
+```aura
+imprimir(tensor.media(a))        // 2500  → 2.5
+imprimir(tensor.varianza(a))     // 1250  → 1.25
+imprimir(tensor.desviacion(a))   // 1118  → 1.118
+
+variable n = tensor.normalizar(a)   // valores entre 0 y 1000
+variable r = tensor.relu(a)         // max(0, x)
+variable s = tensor.sigmoides(a)    // 731 para la entrada 1
+variable p = tensor.softmax(x)      // 90, 244, 666 — suman 1000
+```
+
+**Sin coma flotante en el lenguaje**, todo lo que tiene decimales se da **por mil**: `2500` es `2.5`.
+Es exacto, se compara con enteros y se documenta en el módulo. Cuando el generador soporte `flotante`
+de verdad, la escala desaparecerá sin cambiar los programas.
+
+- **Estadística**: `minimo`, `maximo`, `media`, `varianza`, `desviacion`, `normalizar`.
+- **Activaciones**: `relu`, `sigmoides` y `softmax`. El softmax resta el máximo antes de exponenciar
+  —para que no se dispare— y **reparte los puntos del redondeo para que siempre sume 1000**.
+- Caso `0056-estadistica` con valores calculables a mano: `[1,2,3,4]` da media 2500, varianza 1250 y
+  desviación 1118; `sigmoides(1) = 731`, `sigmoides(4) = 982`; `softmax([1,2,3]) = 90, 244, 666`.
+
+**Un fallo de escala**: la desviación calculaba la raíz de la varianza *ya escalada*, así que daba 35
+en vez de 1118. Lo encontró la comprobación a mano del caso.
+
 ### Sprint 88 — Tensores: empieza la fase de IA (2026-11-13)
 
 El primer pilar de la IA: **matrices con forma**.

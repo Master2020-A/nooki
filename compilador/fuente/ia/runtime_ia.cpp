@@ -253,6 +253,221 @@ long long nooki_ia_tensor_suma_total(long long manejador) {
     return suma;
 }
 
+/* --- Estadística. Los resultados con decimales se dan por mil. --- */
+
+long long nooki_ia_tensor_minimo(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL || a->filas == 0 || a->columnas == 0) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    long long minimo = a->datos[0];
+    for (size_t i = 1; i < total; ++i) {
+        if (a->datos[i] < minimo) {
+            minimo = a->datos[i];
+        }
+    }
+    return minimo;
+}
+
+long long nooki_ia_tensor_maximo(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL || a->filas == 0 || a->columnas == 0) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    long long maximo = a->datos[0];
+    for (size_t i = 1; i < total; ++i) {
+        if (a->datos[i] > maximo) {
+            maximo = a->datos[i];
+        }
+    }
+    return maximo;
+}
+
+/* Media de todos los elementos, por mil. */
+long long nooki_ia_tensor_media(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    if (total == 0) {
+        return 0;
+    }
+    double suma = 0.0;
+    for (size_t i = 0; i < total; ++i) {
+        suma += (double)a->datos[i];
+    }
+    const double media = suma / (double)total;
+    return (long long)(media < 0 ? media * 1000.0 - 0.5 : media * 1000.0 + 0.5);
+}
+
+/* Varianza poblacional, por mil al cuadrado (escala de la media). */
+long long nooki_ia_tensor_varianza(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    if (total == 0) {
+        return 0;
+    }
+    double suma = 0.0;
+    for (size_t i = 0; i < total; ++i) {
+        suma += (double)a->datos[i];
+    }
+    const double media = suma / (double)total;
+    double acumulado = 0.0;
+    for (size_t i = 0; i < total; ++i) {
+        const double diferencia = (double)a->datos[i] - media;
+        acumulado += diferencia * diferencia;
+    }
+    const double varianza = acumulado / (double)total;
+    return (long long)(varianza * 1000.0 + 0.5);
+}
+
+/* Desviación típica, por mil. */
+long long nooki_ia_tensor_desviacion(long long manejador) {
+    const long long varianza = nooki_ia_tensor_varianza(manejador);
+    if (varianza <= 0) {
+        return 0;
+    }
+    /* La varianza viene por mil, así que hay que multiplicarla otra vez por mil
+     * para que la raíz quede también por mil. */
+    double raiz = (double)varianza * 1000.0;
+    double estimacion = raiz > 1.0 ? raiz / 2.0 : 1.0;
+    for (int i = 0; i < 40; ++i) {
+        estimacion = 0.5 * (estimacion + raiz / estimacion);
+    }
+    return (long long)(estimacion + 0.5);
+}
+
+/* Lleva los valores a 0..1000 conservando las proporciones. */
+long long nooki_ia_tensor_normalizar(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    if (total == 0) {
+        return 0;
+    }
+    const long long minimo = nooki_ia_tensor_minimo(manejador);
+    const long long maximo = nooki_ia_tensor_maximo(manejador);
+    const long long rango = maximo - minimo;
+    const long long salida = nooki_tensor_nuevo(a->filas, a->columnas, 0);
+    nooki_tensor* s = nooki_tensor_de(salida);
+    if (s == NULL) {
+        return 0;
+    }
+    for (size_t i = 0; i < total; ++i) {
+        s->datos[i] = rango == 0 ? 0 : (a->datos[i] - minimo) * 1000 / rango;
+    }
+    return salida;
+}
+
+/* --- Activaciones --- */
+
+long long nooki_ia_tensor_relu(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const long long salida = nooki_tensor_nuevo(a->filas, a->columnas, 0);
+    nooki_tensor* s = nooki_tensor_de(salida);
+    if (s == NULL) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    for (size_t i = 0; i < total; ++i) {
+        s->datos[i] = a->datos[i] > 0 ? a->datos[i] : 0;
+    }
+    return salida;
+}
+
+static double nooki_tensor_exp(double x) {
+    /* Serie de Taylor para x negativos moderados, que es el uso de la sigmoide. */
+    if (x > 40.0) {
+        return 1e17;
+    }
+    if (x < -40.0) {
+        return 0.0;
+    }
+    double termino = 1.0;
+    double suma = 1.0;
+    for (int i = 1; i < 60; ++i) {
+        termino *= x / (double)i;
+        suma += termino;
+    }
+    return suma;
+}
+
+/* Sigmoide por mil: 0..1000. */
+long long nooki_ia_tensor_sigmoides(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const long long salida = nooki_tensor_nuevo(a->filas, a->columnas, 0);
+    nooki_tensor* s = nooki_tensor_de(salida);
+    if (s == NULL) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    for (size_t i = 0; i < total; ++i) {
+        const double valor = 1000.0 / (1.0 + nooki_tensor_exp(-(double)a->datos[i]));
+        s->datos[i] = (long long)(valor + 0.5);
+    }
+    return salida;
+}
+
+/* Softmax por mil: cada elemento entre 0 y 1000, y el total suma 1000. */
+long long nooki_ia_tensor_softmax(long long manejador) {
+    nooki_tensor* a = nooki_tensor_de(manejador);
+    if (a == NULL) {
+        return 0;
+    }
+    const size_t total = (size_t)a->filas * (size_t)a->columnas;
+    if (total == 0) {
+        return 0;
+    }
+    const long long salida = nooki_tensor_nuevo(a->filas, a->columnas, 0);
+    nooki_tensor* s = nooki_tensor_de(salida);
+    if (s == NULL) {
+        return 0;
+    }
+    /* Se resta el máximo para que la exponencial no se dispare. */
+    const long long maximo = nooki_ia_tensor_maximo(manejador);
+    double suma = 0.0;
+    double* temporal = (double*)malloc(total * sizeof(double));
+    if (temporal == NULL) {
+        nooki_ia_tensor_liberar(salida);
+        return 0;
+    }
+    for (size_t i = 0; i < total; ++i) {
+        temporal[i] = nooki_tensor_exp((double)(a->datos[i] - maximo));
+        suma += temporal[i];
+    }
+    long long repartido = 0;
+    for (size_t i = 0; i < total; ++i) {
+        s->datos[i] = (long long)(temporal[i] / suma * 1000.0);
+        repartido += s->datos[i];
+    }
+    /* El redondeo deja algunos puntos sueltos: se le dan al mayor. */
+    if (repartido != 1000) {
+        int mayor = 0;
+        for (size_t i = 1; i < total; ++i) {
+            if (s->datos[i] > s->datos[mayor]) {
+                mayor = (int)i;
+            }
+        }
+        s->datos[mayor] += 1000 - repartido;
+    }
+    free(temporal);
+    return salida;
+}
+
 /* 1 si las dos formas y todos los elementos coinciden. */
 long long nooki_ia_tensor_iguales(long long a_manejador, long long b_manejador) {
     nooki_tensor* a = nooki_tensor_de(a_manejador);

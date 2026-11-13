@@ -1564,3 +1564,19 @@ imprimir(tensor.leer(p, 0, 0))
 - Los elementos son enteros de 64 bits.
 - Si las formas no encajan, la operación devuelve 0 en lugar de fallar.
 - `liberar(t)` cuando ya no se use.
+
+
+### 18.52 Estadística y activaciones
+
+```aura
+imprimir(tensor.media(a))        // por mil: 2500 es 2.5
+variable n = tensor.normalizar(a)
+variable p = tensor.softmax(x)   // suma 1000
+```
+
+- `minimo`, `maximo`, `media`, `varianza`, `desviacion` y `normalizar`.
+- `relu`, `sigmoides` y `softmax`.
+- **Todo lo que tiene decimales se da por mil**: 2500 significa 2.5, 1118 significa 1.118. Es la
+  convención mientras el lenguaje no tenga coma flotante.
+- `normalizar` lleva los valores a 0..1000 conservando las proporciones.
+- `softmax` devuelve valores que **suman 1000**: los puntos del redondeo se le dan al mayor.

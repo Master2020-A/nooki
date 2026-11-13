@@ -124,6 +124,7 @@ Sprint 85 ✅  UI: accesibilidad y foco
 Sprint 86 ✅  UI: imágenes BMP
 Sprint 87 ✅  UI: aplicación de ejemplo, captura y guía de interfaz
 Sprint 88 ✅  IA: tensores
+Sprint 89 ✅  IA: estadística y activaciones
 ```
 
 **Ya compila y ejecuta:**
