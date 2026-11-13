@@ -10,7 +10,7 @@ Comprueba que el repositorio está limpio y verde:
 ```bash
 $ cd nooki
 $ git status --short              # no debe mostrar nada
-$ ctest --preset windows-mingw    # 9/9 correctas
+$ ctest --preset windows-mingw    # 17/17 correctas
 ```
 
 Y que la documentación es coherente:
@@ -65,7 +65,8 @@ falle**, y eso es información, no un fracaso. Lo más habitual:
 | `CMake Error: Could not find preset` | nombre de preset distinto | revisar `CMakePresets.json` |
 | El backend no encuentra compilador de C (Linux/macOS) | falta `cc` | instalar `build-essential` / Xcode CLT en el paso previo |
 | El backend no encuentra compilador de C (Windows) | el `cc` de MinGW no está en el `PATH` | el paso «Instalar compilador de C» ya lo añade; comprobar la ruta |
-| Falla solo en macOS | versión de Clang distinta | mirar el aviso concreto; el proyecto compila sin avisos en GCC y MSVC |
+| Falla al compilar un programa con ventana (Linux) | falta `libx11-dev` | el paso «Instalar X11» ya lo instala |
+| Falla solo en macOS | no hay backend de ventanas | el runtime responde «sin pantalla»; los programas compilan y las pruebas pasan |
 | `formato` o `analisis` en rojo | son informativos (`continue-on-error`) | no bloquean; se endurecen cuando el estilo se estabilice |
 
 Arregla lo que salga en un commit aparte, con su explicación:
@@ -84,7 +85,26 @@ $ git push origen v1.0.0
 
 Y crear la publicación en GitHub con el contenido de [NOTAS_DE_VERSION.md](NOTAS_DE_VERSION.md).
 
-## 5. Mantener la costumbre
+## 5. Publicar la distribución
+
+Se genera con un comando y contiene el binario, la documentación, los ejemplos, los editores, la
+especificación y un `INSTALAR.txt`:
+
+```powershell
+$ .\herramientas\empaquetar.ps1                    # Windows
+$ ./herramientas/empaquetar.sh                     # Linux y macOS
+```
+
+Queda en `dist/nooki-1.0.0-<plataforma>.zip` (o `.tar.gz`). Se adjunta a la publicación de GitHub.
+Conviene comprobar que el binario de dentro funciona antes de subirlo:
+
+```bash
+$ cd dist && unzip nooki-1.0.0-windows-x86_64.zip
+$ ./nooki-1.0.0-windows-x86_64/nooki.exe ejecutar nooki-1.0.0-windows-x86_64/ejemplos/01-hola/principal.oki
+¡Hola, Nooki!
+```
+
+## 6. Mantener la costumbre
 
 Cada cambio, desde el primero:
 
@@ -97,5 +117,5 @@ Cada cambio, desde el primero:
 ## Lo que falta después
 
 Con el repositorio publicado, lo que queda es la lista de [DECISIONES.md](DECISIONES.md), sección 7.
-Los dos primeros —casos para los diez códigos de integración, y la biblioteca estándar— son los que
-más confianza dan por hora de trabajo.
+La publicación es el paso que falta para que el proyecto exista fuera de esta máquina. Todo lo demás
+—macOS de verdad, el resaltado semántico, un diseñador visual— se decide mejor con usuarios delante.
