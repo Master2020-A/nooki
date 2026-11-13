@@ -1,0 +1,41 @@
+// Campo de texto: escribir, añadir acentos y borrar. La geometría y el estado
+// se prueban sin ventana; solo `dibujar` necesitaría una.
+usar controles
+
+funcion principal() -> entero {
+    variable c = nuevo campo { x: 0, y: 0, ancho: 200, alto: 40,
+                               contenido: "" + "", fondo: 0x313244, color: 0xFFFFFF,
+                               marcador: "Escribe" + "" }
+
+    imprimir(c.contenido.largo())
+    si (c.contiene(10, 10)) {
+        imprimir("dentro del campo")
+    }
+
+    // h, o, l, a
+    c.escribir(104)
+    c.escribir(111)
+    c.escribir(108)
+    c.escribir(97)
+    imprimir(c.contenido)
+
+    // ñ (dos bytes en UTF-8)
+    c.escribir(241)
+    imprimir(c.contenido)
+    imprimir(c.contenido.largo())
+
+    // Borrar quita el carácter entero, no medio.
+    c.borrar()
+    imprimir(c.contenido)
+
+    c.borrar()
+    imprimir(c.contenido)
+
+    c.limpiar_campo()
+    imprimir(c.contenido.largo())
+
+    // Borrar en un campo vacío no rompe nada.
+    c.borrar()
+    imprimir(c.contenido.largo())
+    retornar 0
+}

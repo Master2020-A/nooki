@@ -131,6 +131,7 @@ void nooki_ui_imagen_soltar(long long manejador) {
 #define NOOKI_EVENTO_PULSACION 3
 #define NOOKI_EVENTO_LIBERACION 4
 #define NOOKI_EVENTO_TECLA 5
+#define NOOKI_EVENTO_LETRA 6
 
 typedef struct {
     int clase;
@@ -204,6 +205,10 @@ static LRESULT CALLBACK nooki_ventana_proc(HWND ventana, UINT mensaje, WPARAM wp
             return 0;
         case WM_KEYDOWN:
             nooki_encolar(estado, NOOKI_EVENTO_TECLA, 0, 0, (int)wparam);
+            return 0;
+        case WM_CHAR:
+            /* El carácter ya viene traducido por el sistema. */
+            nooki_encolar(estado, NOOKI_EVENTO_LETRA, 0, 0, (int)wparam);
             return 0;
         default:
             break;
@@ -458,6 +463,7 @@ long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y
 #define NOOKI_EVENTO_PULSACION 3
 #define NOOKI_EVENTO_LIBERACION 4
 #define NOOKI_EVENTO_TECLA 5
+#define NOOKI_EVENTO_LETRA 6
 #define NOOKI_COLA_EVENTOS 64
 
 typedef struct {
@@ -571,7 +577,26 @@ int nooki_ui_ventana_viva(long long manejador) {
                 break;
             case KeyPress: {
                 const KeySym simbolo = XLookupKeysym(&evento.xkey, 0);
-                nooki_encolar(estado, NOOKI_EVENTO_TECLA, 0, 0, (int)simbolo);
+                char tecleado[8];
+                KeySym sin_usar = 0;
+                const int cuantos = XLookupString(&evento.xkey, tecleado, sizeof(tecleado),
+                                                  &sin_usar, NULL);
+                if (cuantos > 0) {
+                    /* Se decodifica el primer carácter UTF-8 tecleado. */
+                    const unsigned char primero = (unsigned char)tecleado[0];
+                    long codigo = primero;
+                    if ((primero & 0xE0) == 0xC0 && cuantos >= 2) {
+                        codigo = ((long)(primero & 0x1F) << 6) |
+                                 ((long)((unsigned char)tecleado[1]) & 0x3F);
+                    } else if ((primero & 0xF0) == 0xE0 && cuantos >= 3) {
+                        codigo = ((long)(primero & 0x0F) << 12) |
+                                 ((long)((unsigned char)tecleado[1] & 0x3F) << 6) |
+                                 ((long)((unsigned char)tecleado[2]) & 0x3F);
+                    }
+                    nooki_encolar(estado, NOOKI_EVENTO_LETRA, 0, 0, (int)codigo);
+                } else {
+                    nooki_encolar(estado, NOOKI_EVENTO_TECLA, 0, 0, (int)simbolo);
+                }
                 break;
             }
             default:

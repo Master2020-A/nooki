@@ -832,6 +832,38 @@ publico clase boton hereda control {
     }
 }
 
+// Campo de texto: guarda lo que se escribe y responde al teclado.
+publico clase campo hereda control {
+    publico contenido: texto
+    publico fondo: entero
+    publico color: entero
+    publico marcador: texto
+
+    publico funcion dibujar(pantalla: entero) -> vacio {
+        ventana.rectangulo(pantalla, este.x, este.y, este.ancho, este.alto, este.fondo)
+        variable escrito = este.contenido
+        si (escrito.largo() == 0) {
+            escrito = este.marcador
+        }
+        ventana.escribir_texto(pantalla, este.x + 8, este.y + este.alto / 2 + 5, &escrito,
+                               este.color)
+    }
+
+    // Añade el carácter tecleado (código de punto).
+    publico funcion escribir(codigo: entero) -> vacio {
+        este.contenido = este.contenido.agregar_codigo(codigo)
+    }
+
+    // Borra el último carácter.
+    publico funcion borrar() -> vacio {
+        este.contenido = este.contenido.sin_ultimo()
+    }
+
+    publico funcion limpiar_campo() -> vacio {
+        este.contenido = "" + ""
+    }
+}
+
 publico clase barra hereda control {
     publico fondo: entero
     publico relleno: entero
@@ -978,6 +1010,12 @@ publico funcion es_movimiento(cual: entero) -> booleano { retornar cual == 2 }
 publico funcion es_pulsacion(cual: entero) -> booleano { retornar cual == 3 }
 publico funcion es_liberacion(cual: entero) -> booleano { retornar cual == 4 }
 publico funcion es_tecla(cual: entero) -> booleano { retornar cual == 5 }
+publico funcion es_letra(cual: entero) -> booleano { retornar cual == 6 }
+
+// Código del carácter tecleado (UTF-8, ya traducido por el sistema).
+publico funcion evento_letra(manejador: entero) -> entero {
+    retornar nooki_ui_evento_tecla(manejador)
+}
 
 // --- Dibujo. Los colores son 0xRRGGBB. ---
 externo funcion nooki_ui_dibujo_limpiar(manejador: entero, color: entero) -> vacio

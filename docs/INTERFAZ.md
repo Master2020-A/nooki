@@ -120,7 +120,7 @@ Con honestidad, para que nadie lo busque:
 
 | Falta | Estado |
 |---|---|
-| Entrada de texto (escribir en un campo) | no hay conversión de tecla a texto |
+| Entrada de texto con cursor y selección | hay campo, pero el cursor siempre está al final |
 | PNG | hay BMP; PNG exige un decodificador entero |
 | Redimensionado con recolocación | la ventana se puede estirar, pero el contenido no se recoloca |
 | Varias ventanas | el manejador lo permite, pero no está probado |

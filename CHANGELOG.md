@@ -5,6 +5,38 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 96 — Campo de texto: escribir en la interfaz (2026-11-13)
+
+La ausencia más grande de la UI, cerrada.
+
+```aura
+usar controles
+
+variable nombre = nuevo campo { x: 20, y: 20, ancho: 280, alto: 40,
+                                contenido: "" + "", fondo: 0x313244, color: 0xFFFFFF,
+                                marcador: "Escribe tu nombre" + "" }
+
+// En el bucle de eventos:
+si (ventana.es_letra(cual_evento)) {
+    nombre.escribir(ventana.evento_letra(v))
+}
+si (ventana.es_tecla(cual_evento) && ventana.evento_tecla(v) == 8) {
+    nombre.borrar()
+}
+```
+
+- **Evento nuevo: `es_letra`** (clase 6). En Windows llega de `WM_CHAR`; en X11, de `XLookupString`,
+  que ya traduce teclas y acentos.
+- **`campo`** hereda de `control`: `contenido`, `escribir(codigo)`, `borrar()`, `limpiar_campo()` y
+  `dibujar` con marcador cuando está vacío.
+- **UTF-8 de verdad**: `texto.agregar_codigo(codigo)` codifica el punto de código y
+  `texto.sin_ultimo()` quita **un carácter completo**, no un byte. Escribir `ñ` y borrarla deja el
+  texto intacto, que es justo lo que rompe la mitad de los editores.
+- Caso `0062-campo-texto`. **92 casos.**
+
+Con esto la interfaz alcanza lo que se pedía al principio: controles, texto y teclado, como en
+cualquier biblioteca de escritorio.
+
 ### Sprint 95 — A-17 resuelto: la propiedad al salir de una función (2026-11-13)
 
 La fuga de A-17 no era de `pln.distancia`: era **del generador, en toda función que devolvía un valor

@@ -1672,3 +1672,22 @@ imprimir(redes.predecir(red, 1.0, 0.0, 0.0, 0.0))
   `predecir(red, x1..x4)`, `error(red)` y `liberar(red)`.
 - Los pesos iniciales son pseudoaleatorios **deterministas**: el mismo programa da el mismo resultado.
 - Los pesos son nodos de `autograd`: no hay un segundo motor de derivadas.
+
+
+### 18.58 Campo de texto
+
+```aura
+usar controles
+
+variable nombre = nuevo campo { x: 20, y: 20, ancho: 280, alto: 40,
+                                contenido: "" + "", fondo: 0x313244, color: 0xFFFFFF,
+                                marcador: "Escribe" + "" }
+nombre.escribir(ventana.evento_letra(v))
+nombre.borrar()
+```
+
+- `campo` hereda de `control`: `contenido`, `escribir(codigo)`, `borrar()` y `limpiar_campo()`.
+- El evento de letra llega con `es_letra(clase)` y `evento_letra(manejador)`. En Windows viene de
+  `WM_CHAR` y en X11 de `XLookupString`, que ya traducen teclas y acentos.
+- `texto.agregar_codigo(codigo)` codifica UTF-8 y `texto.sin_ultimo()` quita un carácter completo, no
+  un byte.

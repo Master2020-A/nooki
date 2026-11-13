@@ -131,6 +131,7 @@ Sprint 92 ✅  IA: tablas (DataFrame)
 Sprint 93 ✅  IA: autograd
 Sprint 94 ✅  IA: redes neuronales (aprende XOR)
 Sprint 95 ✅  A-17 resuelto: propiedad al salir de una función
+Sprint 96 ✅  UI: campo de texto con UTF-8
 ```
 
 **Ya compila y ejecuta:**

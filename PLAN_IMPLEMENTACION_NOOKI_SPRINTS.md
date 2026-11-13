@@ -317,7 +317,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S93** | IA: autograd | ✅ Grafo de operaciones con `suma`, `resta`, `producto`, `division`, `relu` y `sigmoides`, y `atras` en orden topológico. Verificado con derivadas conocidas. Caso `0060`. Corregido `flotante` en las firmas externas |
 | **S94** | IA: redes | ✅ Red de una capa oculta con sigmoide y descenso de gradiente sobre autograd. Aprende XOR: error de 0,261 a 0,0003. Caso `0061` que comprueba la clasificación |
 | **S95** | A-17 resuelto | ✅ La fuga era general: al devolver un valor, el generador no liberaba los locales con dueño, y conservaba el objeto de un método como si se devolviera. Ahora se conserva solo lo que viaja dentro del valor y se evalúa en un temporal antes de liberar. ASan limpio |
-| **S96** | **NOOKI v1.0** | Release pública, sitio, registro público; *spike* de autohospedaje (compilador escrito en Nooki) |
+| **S96** | UI: campo de texto | ✅ Clase `campo` con `escribir`, `borrar` y `limpiar_campo`, evento de letra (`WM_CHAR`/`XLookupString`) y UTF-8 correcto: `agregar_codigo` y `sin_ultimo` trabajan con caracteres, no con bytes. Caso `0062` |
 
 ---
 
