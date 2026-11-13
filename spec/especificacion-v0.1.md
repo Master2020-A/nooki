@@ -1691,3 +1691,12 @@ nombre.borrar()
   `WM_CHAR` y en X11 de `XLookupString`, que ya traducen teclas y acentos.
 - `texto.agregar_codigo(codigo)` codifica UTF-8 y `texto.sin_ultimo()` quita un carácter completo, no
   un byte.
+
+
+### 18.59 Autocompletado
+
+- `nooki lsp` responde a `textDocument/completion` con las palabras del lenguaje, los tipos, las
+  enumeraciones y las funciones del documento.
+- La lista se filtra por el prefijo que se está escribiendo.
+- El servidor guarda el texto de cada documento abierto para poder analizarlo.
+- Pendiente: ir a la definición, formato automático y resaltado semántico.

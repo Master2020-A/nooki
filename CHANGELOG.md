@@ -5,6 +5,21 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 98 — Autocompletado en el editor (2026-11-13)
+
+`nooki lsp` ya no solo subraya errores: **también completa**.
+
+- **`textDocument/completion`**: ofrece las palabras del lenguaje, los tipos, las enumeraciones y las
+  funciones declaradas en el documento, **filtradas por lo que se está escribiendo**.
+- El servidor guarda el texto de cada documento abierto, así que puede analizarlo al completar.
+- Sin prefijo se ofrecen palabras y funciones; al escribir dos letras, la lista se reduce a lo que
+  empieza así.
+- La prueba del LSP comprueba que aparecen `funcion` (palabra) y `suma` (la función declarada en el
+  documento). **17 suites.**
+
+**Lo que sigue faltando**: ir a la definición, formato automático y resaltado semántico. Están en
+`DECISIONES.md` como pendientes, no como olvidos.
+
 ### Sprint 97 — Cobertura de diagnósticos y código de salida (2026-11-13)
 
 Tres cosas pequeñas que cierran huecos reales.

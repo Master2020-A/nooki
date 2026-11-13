@@ -1,6 +1,7 @@
 #include "nooki/lsp/servidor.hpp"
 
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 
@@ -107,10 +108,69 @@ Json diagnosticos_de(std::string_view texto) {
     return lista;
 }
 
+/// Palabras del lenguaje, para ofrecerlas al escribir.
+const char* const PALABRAS[] = {
+    "funcion",   "variable", "constante", "retornar", "si",       "sino",
+    "mientras",  "para",     "en",        "romper",   "continuar", "coincide",
+    "caso",      "clase",    "estructura", "rasgo",   "implementa", "hereda",
+    "publico",   "privado",  "nuevo",     "este",     "usar",     "como",
+    "externo",   "inseguro", "asm",       "verdadero", "falso",   "nulo",
+    "entero",    "texto",    "flotante",  "booleano", "caracter", "vacio",
+    "Vector",    "Mapa",     "Caja",      "resultado"};
+
+/// Nombres declarados en el documento: tipos, funciones y variables conocidas.
+void recoger_nombres(const sintactico::Programa& programa, std::vector<std::string>& salida) {
+    for (const sintactico::DefinicionTipo& tipo : programa.tipos) {
+        salida.emplace_back(tipo.nombre);
+    }
+    for (const sintactico::Funcion& funcion : programa.funciones) {
+        if (funcion.modulo.empty()) {
+            salida.emplace_back(funcion.nombre);
+        }
+    }
+    for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
+        salida.emplace_back(enumeracion.nombre);
+    }
+}
+
+/// Prefijo que se está escribiendo antes del cursor.
+std::string prefijo_en(const std::string& texto, int linea, int columna) {
+    int linea_actual = 0;
+    std::size_t inicio = 0;
+    for (std::size_t i = 0; i < texto.size(); ++i) {
+        if (texto[i] == '\n') {
+            if (linea_actual == linea) {
+                break;
+            }
+            ++linea_actual;
+            inicio = i + 1;
+        }
+    }
+    if (linea_actual != linea) {
+        return {};
+    }
+    const std::size_t hasta = inicio + static_cast<std::size_t>(columna);
+    if (hasta > texto.size()) {
+        return {};
+    }
+    std::size_t desde = hasta;
+    while (desde > inicio) {
+        const unsigned char c = static_cast<unsigned char>(texto[desde - 1]);
+        const bool vale = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                          (c >= '0' && c <= '9') || c == '_' || c >= 0x80;
+        if (!vale) {
+            break;
+        }
+        --desde;
+    }
+    return texto.substr(desde, hasta - desde);
+}
+
 }  // namespace
 
 int servir(std::istream& entrada, std::ostream& salida) {
     bool terminado = false;
+    std::map<std::string, std::string> documentos;
     while (!terminado) {
         std::string cuerpo;
         if (!leer_mensaje(entrada, cuerpo)) {
@@ -140,6 +200,11 @@ int servir(std::istream& entrada, std::ostream& salida) {
             sincronizacion.poner("openClose", Json(true));
             sincronizacion.poner("change", Json(1));  // 1 = completo
             capacidades.poner("textDocumentSync", std::move(sincronizacion));
+            // El carácter que dispara el autocompletado no hace falta: el editor
+            // pide la lista y aquí se filtra por el prefijo.
+            Json completado = Json::objeto();
+            completado.poner("triggerCharacters", Json::arreglo());
+            capacidades.poner("completionProvider", std::move(completado));
 
             Json servidor = Json::objeto();
             servidor.poner("name", Json("nooki-lsp"));
@@ -164,6 +229,8 @@ int servir(std::istream& entrada, std::ostream& salida) {
                 }
             }
 
+            documentos[documento.campo("uri").cadena()] = texto;
+
             Json aviso = Json::objeto();
             aviso.poner("jsonrpc", Json("2.0"));
             aviso.poner("method", Json("textDocument/publishDiagnostics"));
@@ -172,6 +239,61 @@ int servir(std::istream& entrada, std::ostream& salida) {
             contenido.poner("diagnostics", diagnosticos_de(texto));
             aviso.poner("params", std::move(contenido));
             escribir_mensaje(salida, aviso);
+            continue;
+        }
+
+        if (metodo == "textDocument/completion") {
+            const Json& documento = parametros.campo("textDocument");
+            const Json& posicion = parametros.campo("position");
+            const int linea = posicion.campo("line").entero();
+            const int columna = posicion.campo("character").entero();
+
+            const std::string& uri = documento.campo("uri").cadena();
+            const auto guardado = documentos.find(uri);
+            if (guardado == documentos.end()) {
+                responder(Json::arreglo());
+                continue;
+            }
+            const std::string& texto = guardado->second;
+
+            // Nombres del documento, si se puede analizar.
+            std::vector<std::string> nombres;
+            {
+                diagnostico::GestorFuentes fuentes;
+                diagnostico::Emisor emisor;
+                const auto archivo = fuentes.anadir("documento.oki", texto);
+                lexico::Lexer lexer(fuentes, archivo, emisor);
+                const auto tokens = lexer.todos();
+                if (!emisor.hay_errores()) {
+                    sintactico::Parser parser(fuentes, archivo, emisor, tokens);
+                    const sintactico::Programa programa = parser.analizar();
+                    recoger_nombres(programa, nombres);
+                }
+            }
+
+            const std::string prefijo = prefijo_en(texto, linea, columna);
+            Json lista = Json::arreglo();
+            auto anadir = [&](const std::string& texto_opcion, int clase) {
+                if (!prefijo.empty() && texto_opcion.rfind(prefijo, 0) != 0) {
+                    return;
+                }
+                if (prefijo.empty() && clase != 3 && clase != 14) {
+                    return;  // sin prefijo solo se ofrecen palabras y funciones
+                }
+                Json opcion = Json::objeto();
+                opcion.poner("label", Json(texto_opcion));
+                opcion.poner("kind", Json(clase));
+                lista.poner({}, std::move(opcion));
+            };
+
+            for (const char* palabra : PALABRAS) {
+                anadir(palabra, 14);  // 14 = palabra clave
+            }
+            for (const std::string& nombre : nombres) {
+                anadir(nombre, 3);  // 3 = función
+            }
+
+            responder(std::move(lista));
             continue;
         }
 

@@ -124,8 +124,51 @@ int main() {
         }
     }
 
+    // Autocompletado: se pide en un documento con una función declarada.
+    {
+        const std::string apertura_dos =
+            R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}})";
+        const std::string abrir =
+            R"({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":)"
+            R"({"uri":"file:///comp.oki","text":"funcion suma(a: entero, b: entero) -> entero {\n)"
+            R"(    retornar a + b\n}\n"}}})";
+        const std::string pedir =
+            R"({"jsonrpc":"2.0","id":5,"method":"textDocument/completion","params":{)"
+            R"("textDocument":{"uri":"file:///comp.oki"},"position":{"line":3,"character":0}}})";
+        const std::string cerrar = R"({"jsonrpc":"2.0","id":6,"method":"shutdown"})";
+
+        std::istringstream entrada_dos(con_cabecera(apertura_dos) + con_cabecera(abrir) +
+                                       con_cabecera(pedir) + con_cabecera(cerrar) +
+                                       con_cabecera(salida_protocolo));
+        std::ostringstream salida_dos;
+        (void)nooki::lsp::servir(entrada_dos, salida_dos);
+        const std::vector<std::string> cuerpos_dos = cuerpos_de(salida_dos.str());
+
+        comprobar(cuerpos_dos.size() == 4, "se esperaban cuatro mensajes con la petición");
+        if (cuerpos_dos.size() >= 3) {
+            nooki::lsp::Json lista;
+            comprobar(nooki::lsp::Json::leer(cuerpos_dos[2], lista), "la lista no es JSON");
+            comprobar(lista.campo("id").entero() == 5, "la respuesta no lleva id 5");
+            const auto& opciones = lista.campo("result");
+            comprobar(opciones.es_arreglo(), "el resultado no es una lista");
+            bool hay_palabra = false;
+            bool hay_funcion = false;
+            for (const auto& opcion : opciones.elementos()) {
+                const std::string& etiqueta = opcion.campo("label").cadena();
+                if (etiqueta == "funcion") {
+                    hay_palabra = true;
+                }
+                if (etiqueta == "suma") {
+                    hay_funcion = true;
+                }
+            }
+            comprobar(hay_palabra, "debería ofrecer palabras del lenguaje");
+            comprobar(hay_funcion, "debería ofrecer la función declarada");
+        }
+    }
+
     if (fallos == 0) {
-        std::cout << "lsp: capacidades, diagnósticos y cierre correctos\n";
+        std::cout << "lsp: capacidades, diagnósticos, autocompletado y cierre correctos\n";
         return 0;
     }
     std::cout << fallos << " comprobación(es) fallida(s)\n";
