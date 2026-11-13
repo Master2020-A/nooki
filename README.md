@@ -129,6 +129,7 @@ Sprint 90 ✅  Flotantes de verdad en el lenguaje
 Sprint 91 ✅  IA: PLN (lenguaje natural)
 Sprint 92 ✅  IA: tablas (DataFrame)
 Sprint 93 ✅  IA: autograd
+Sprint 94 ✅  IA: redes neuronales (aprende XOR)
 ```
 
 **Ya compila y ejecuta:**

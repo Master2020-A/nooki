@@ -102,6 +102,54 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "redes") {
+        return R"(// Biblioteca estándar: redes neuronales de una capa oculta.
+// Se entrenan con descenso de gradiente sobre el grafo de autograd.
+externo funcion nooki_ia_red_nueva(entradas: entero, ocultas: entero) -> entero
+externo funcion nooki_ia_red_ejemplo(red: entero, x1: flotante, x2: flotante,
+                                     x3: flotante, x4: flotante,
+                                     esperado: flotante) -> vacio
+externo funcion nooki_ia_red_ejemplos(red: entero) -> entero
+externo funcion nooki_ia_red_entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio
+externo funcion nooki_ia_red_predecir(red: entero, x1: flotante, x2: flotante,
+                                      x3: flotante, x4: flotante) -> flotante
+externo funcion nooki_ia_red_error(red: entero) -> flotante
+externo funcion nooki_ia_red_liberar(red: entero) -> vacio
+
+// Crea una red con esas entradas (1 a 4) y neuronas ocultas.
+publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
+    retornar nooki_ia_red_nueva(entradas, ocultas)
+}
+
+// Añade un ejemplo. Las entradas que no se usen se pasan a 0.0.
+publico funcion ejemplo(red: entero, x1: flotante, x2: flotante, x3: flotante, x4: flotante,
+                        esperado: flotante) -> vacio {
+    nooki_ia_red_ejemplo(red, x1, x2, x3, x4, esperado)
+}
+
+publico funcion ejemplos(red: entero) -> entero {
+    retornar nooki_ia_red_ejemplos(red)
+}
+
+// Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.
+publico funcion entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio {
+    nooki_ia_red_entrenar(red, vueltas, tasa)
+}
+
+publico funcion predecir(red: entero, x1: flotante, x2: flotante, x3: flotante,
+                         x4: flotante) -> flotante {
+    retornar nooki_ia_red_predecir(red, x1, x2, x3, x4)
+}
+
+publico funcion error(red: entero) -> flotante {
+    retornar nooki_ia_red_error(red)
+}
+
+publico funcion liberar(red: entero) -> vacio {
+    nooki_ia_red_liberar(red)
+}
+)";
+    }
     if (modulo == "autograd") {
         return R"(// Biblioteca estándar: derivadas automáticas sobre un grafo de operaciones.
 // Se construye la expresión, se llama a `atras` y cada nodo tiene su gradiente.
@@ -1186,7 +1234,7 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     if (clave == "ventana" || clave == "imagenes") {
         hace_falta_ui = true;
     }
-    if (clave == "tensor" || clave == "tabla" || clave == "autograd") {
+    if (clave == "tensor" || clave == "tabla" || clave == "autograd" || clave == "redes") {
         hace_falta_ia = true;
     }
 

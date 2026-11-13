@@ -1654,3 +1654,21 @@ imprimir(autograd.gradiente(x))   // 4
 - `valor(nodo)` y `gradiente(nodo)` para leer el resultado.
 - `liberar(nodo)` suelta **todos** los nodos vivos del proceso, no solo los del grafo: no hay
   recolector de basura.
+
+
+### 18.57 Redes
+
+```aura
+usar redes
+
+variable red = redes.nueva(2, 4)
+redes.ejemplo(red, 0.0, 1.0, 0.0, 0.0, 1.0)
+redes.entrenar(red, 3000, 1.0)
+imprimir(redes.predecir(red, 1.0, 0.0, 0.0, 0.0))
+```
+
+- Una capa oculta, activación sigmoide y descenso de gradiente por ejemplo.
+- `nueva(entradas, ocultas)`, `ejemplo(red, x1..x4, esperado)`, `entrenar(red, vueltas, tasa)`,
+  `predecir(red, x1..x4)`, `error(red)` y `liberar(red)`.
+- Los pesos iniciales son pseudoaleatorios **deterministas**: el mismo programa da el mismo resultado.
+- Los pesos son nodos de `autograd`: no hay un segundo motor de derivadas.

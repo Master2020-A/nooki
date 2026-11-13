@@ -1,0 +1,43 @@
+// XOR con una red de una capa oculta: el problema que no se puede resolver
+// sin neuronas ocultas. Se comprueba la clasificación, no los decimales, para
+// que el caso valga en cualquier plataforma.
+usar redes
+
+funcion principal() -> entero {
+    variable red = redes.nueva(2, 4)
+
+    redes.ejemplo(red, 0.0, 0.0, 0.0, 0.0, 0.0)
+    redes.ejemplo(red, 0.0, 1.0, 0.0, 0.0, 1.0)
+    redes.ejemplo(red, 1.0, 0.0, 0.0, 0.0, 1.0)
+    redes.ejemplo(red, 1.0, 1.0, 0.0, 0.0, 0.0)
+
+    imprimir(redes.ejemplos(red))
+
+    variable antes: flotante = redes.error(red)
+    si (antes > 0.2) {
+        imprimir("empieza sin saber")
+    }
+
+    redes.entrenar(red, 3000, 1.0)
+
+    si (redes.error(red) < 0.05) {
+        imprimir("error bajo")
+    }
+
+    si (redes.predecir(red, 0.0, 0.0, 0.0, 0.0) < 0.1) {
+        imprimir("0 xor 0 = 0")
+    }
+    si (redes.predecir(red, 0.0, 1.0, 0.0, 0.0) > 0.9) {
+        imprimir("0 xor 1 = 1")
+    }
+    si (redes.predecir(red, 1.0, 0.0, 0.0, 0.0) > 0.9) {
+        imprimir("1 xor 0 = 1")
+    }
+    si (redes.predecir(red, 1.0, 1.0, 0.0, 0.0) < 0.1) {
+        imprimir("1 xor 1 = 0")
+    }
+
+    redes.liberar(red)
+    imprimir("fin")
+    retornar 0
+}

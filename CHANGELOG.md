@@ -5,6 +5,33 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 94 — Redes: la IA queda cerrada (2026-11-13)
+
+Una red de una capa oculta que **aprende XOR**, el problema que no se puede resolver sin neuronas
+ocultas.
+
+```aura
+usar redes
+
+variable red = redes.nueva(2, 4)                 // 2 entradas, 4 ocultas
+redes.ejemplo(red, 0.0, 1.0, 0.0, 0.0, 1.0)      // 0 xor 1 = 1
+redes.entrenar(red, 3000, 1.0)                   // 3000 vueltas, tasa 1.0
+imprimir(redes.predecir(red, 1.0, 0.0, 0.0, 0.0))  // 0,98
+```
+
+Resultado real tras entrenar: error de **0,261 a 0,0003** y las cuatro combinaciones acertadas
+(0,007 · 0,985 · 0,985 · 0,023).
+
+- **`nueva(entradas, ocultas)`**, `ejemplo`, `entrenar`, `predecir`, `error` y `liberar`.
+- Activación **sigmoide** y **descenso de gradiente** por ejemplo, con pesos inicializados de forma
+  pseudoaleatoria **determinista**: la red parte siempre igual, así que se puede probar.
+- Los pesos son **nodos de autograd**: entrenar es construir la expresión de cada ejemplo, llamar a
+  `atras` y mover los pesos. No hay un segundo motor de derivadas.
+- Caso `0061-redes`, que comprueba la **clasificación** y no los decimales, para que valga en cualquier
+  plataforma. **91 casos.**
+
+**Con esto termina la fase de IA**: tensores, estadística, flotantes, PLN, tablas, autograd y redes.
+
 ### Sprint 93 — Autograd (2026-11-13)
 
 Derivadas automáticas: el lenguaje ya puede calcular gradientes.

@@ -697,6 +697,213 @@ void nooki_ia_auto_liberar(long long manejador) {
     }
     nooki_auto_todos = NULL;
 }
+/* --- Redes: una capa oculta, activación sigmoide, descenso de gradiente ---
+ * Los pesos son nodos del grafo de autograd, así que el entrenamiento es
+ * construir la expresión de cada ejemplo, llamar a `atras` y mover los pesos. */
+
+typedef struct {
+    int entradas;
+    int ocultas;
+    double* muestras; /* entradas (4) + esperado, por ejemplo */
+    int cuantas;
+    int capacidad;
+    unsigned int semilla;
+    nooki_auto_nodo** pesos1;
+    nooki_auto_nodo** sesgos1;
+    nooki_auto_nodo** pesos2;
+    nooki_auto_nodo* sesgo2;
+} nooki_red;
+
+/* Número pseudoaleatorio pequeño y determinista: la red parte siempre igual. */
+static double nooki_red_aleatorio(nooki_red* red, double amplitud) {
+    red->semilla = red->semilla * 1103515245u + 12345u;
+    const double unidad = (double)((red->semilla >> 16) & 0x7FFF) / 32767.0;
+    return (unidad - 0.5) * 2.0 * amplitud;
+}
+
+long long nooki_ia_red_nueva(long long entradas, long long ocultas) {
+    if (entradas < 1 || entradas > 4 || ocultas < 1 || ocultas > 64) {
+        return 0;
+    }
+    nooki_red* red = (nooki_red*)malloc(sizeof(nooki_red));
+    if (red == NULL) {
+        return 0;
+    }
+    red->entradas = (int)entradas;
+    red->ocultas = (int)ocultas;
+    red->cuantas = 0;
+    red->capacidad = 16;
+    red->muestras = (double*)malloc((size_t)red->capacidad * 5 * sizeof(double));
+    red->semilla = 20261113u;
+    red->pesos1 = (nooki_auto_nodo**)malloc((size_t)entradas * (size_t)ocultas *
+                                            sizeof(nooki_auto_nodo*));
+    red->sesgos1 = (nooki_auto_nodo**)malloc((size_t)ocultas * sizeof(nooki_auto_nodo*));
+    red->pesos2 = (nooki_auto_nodo**)malloc((size_t)ocultas * sizeof(nooki_auto_nodo*));
+    if (red->muestras == NULL || red->pesos1 == NULL || red->sesgos1 == NULL ||
+        red->pesos2 == NULL) {
+        free(red->muestras);
+        free(red->pesos1);
+        free(red->sesgos1);
+        free(red->pesos2);
+        free(red);
+        return 0;
+    }
+    for (int i = 0; i < entradas * ocultas; ++i) {
+        red->pesos1[i] = nooki_auto_nodo_de(nooki_ia_auto_dato(nooki_red_aleatorio(red, 0.9)));
+    }
+    for (int h = 0; h < ocultas; ++h) {
+        red->sesgos1[h] = nooki_auto_nodo_de(nooki_ia_auto_dato(nooki_red_aleatorio(red, 0.9)));
+        red->pesos2[h] = nooki_auto_nodo_de(nooki_ia_auto_dato(nooki_red_aleatorio(red, 0.9)));
+    }
+    red->sesgo2 = nooki_auto_nodo_de(nooki_ia_auto_dato(nooki_red_aleatorio(red, 0.9)));
+    return (long long)(intptr_t)red;
+}
+
+static nooki_red* nooki_red_de(long long manejador) {
+    return (nooki_red*)(intptr_t)manejador;
+}
+
+void nooki_ia_red_ejemplo(long long manejador, double x1, double x2, double x3, double x4,
+                          double esperado) {
+    nooki_red* red = nooki_red_de(manejador);
+    if (red == NULL) {
+        return;
+    }
+    if (red->cuantas >= red->capacidad) {
+        const int nueva = red->capacidad * 2;
+        double* muestras = (double*)realloc(red->muestras, (size_t)nueva * 5 * sizeof(double));
+        if (muestras == NULL) {
+            return;
+        }
+        red->muestras = muestras;
+        red->capacidad = nueva;
+    }
+    double* fila = red->muestras + (size_t)red->cuantas * 5;
+    fila[0] = x1;
+    fila[1] = x2;
+    fila[2] = x3;
+    fila[3] = x4;
+    fila[4] = esperado;
+    ++red->cuantas;
+}
+
+long long nooki_ia_red_ejemplos(long long manejador) {
+    nooki_red* red = nooki_red_de(manejador);
+    return red == NULL ? 0 : red->cuantas;
+}
+
+/* Salida de la red para una entrada, sin construir grafo. */
+double nooki_ia_red_predecir(long long manejador, double x1, double x2, double x3, double x4) {
+    nooki_red* red = nooki_red_de(manejador);
+    if (red == NULL) {
+        return 0.0;
+    }
+    const double entradas[4] = {x1, x2, x3, x4};
+    double ocultas[64];
+    for (int h = 0; h < red->ocultas; ++h) {
+        double z = red->sesgos1[h]->valor;
+        for (int i = 0; i < red->entradas; ++i) {
+            z += entradas[i] * red->pesos1[i * red->ocultas + h]->valor;
+        }
+        ocultas[h] = 1.0 / (1.0 + nooki_auto_exponencial(-z));
+    }
+    double salida = red->sesgo2->valor;
+    for (int h = 0; h < red->ocultas; ++h) {
+        salida += ocultas[h] * red->pesos2[h]->valor;
+    }
+    return 1.0 / (1.0 + nooki_auto_exponencial(-salida));
+}
+
+/* Error cuadrático medio de los ejemplos guardados. */
+double nooki_ia_red_error(long long manejador) {
+    nooki_red* red = nooki_red_de(manejador);
+    if (red == NULL || red->cuantas == 0) {
+        return 0.0;
+    }
+    double total = 0.0;
+    for (int m = 0; m < red->cuantas; ++m) {
+        const double* fila = red->muestras + (size_t)m * 5;
+        const double salida = nooki_ia_red_predecir(manejador, fila[0], fila[1], fila[2], fila[3]);
+        const double diferencia = salida - fila[4];
+        total += diferencia * diferencia;
+    }
+    return total / (double)red->cuantas;
+}
+
+/* Construye la expresión de un ejemplo y devuelve la pérdida. */
+static nooki_auto_nodo* nooki_red_adelante(nooki_red* red, const double* fila) {
+    nooki_auto_nodo* ocultas[64];
+    for (int h = 0; h < red->ocultas; ++h) {
+        nooki_auto_nodo* z = red->sesgos1[h];
+        for (int i = 0; i < red->entradas; ++i) {
+            nooki_auto_nodo* entrada = nooki_auto_nodo_de(
+                nooki_ia_auto_dato(fila[i]));
+            nooki_auto_nodo* producto = nooki_auto_nodo_de(
+                (long long)(intptr_t)nooki_auto_crear(
+                    entrada->valor * red->pesos1[i * red->ocultas + h]->valor, 3,
+                    red->pesos1[i * red->ocultas + h], entrada));
+            z = nooki_auto_nodo_de((long long)(intptr_t)nooki_auto_crear(
+                z->valor + producto->valor, 1, z, producto));
+        }
+        ocultas[h] = nooki_auto_nodo_de((long long)(intptr_t)nooki_ia_auto_sigmoides(
+            (long long)(intptr_t)z));
+    }
+    nooki_auto_nodo* salida = red->sesgo2;
+    for (int h = 0; h < red->ocultas; ++h) {
+        nooki_auto_nodo* producto = nooki_auto_nodo_de((long long)(intptr_t)nooki_auto_crear(
+            ocultas[h]->valor * red->pesos2[h]->valor, 3, red->pesos2[h], ocultas[h]));
+        salida = nooki_auto_nodo_de((long long)(intptr_t)nooki_auto_crear(
+            salida->valor + producto->valor, 1, salida, producto));
+    }
+    nooki_auto_nodo* prediccion = nooki_auto_nodo_de(
+        (long long)(intptr_t)nooki_ia_auto_sigmoides((long long)(intptr_t)salida));
+    nooki_auto_nodo* esperado =
+        nooki_auto_nodo_de(nooki_ia_auto_dato(fila[4]));
+    nooki_auto_nodo* diferencia = nooki_auto_nodo_de((long long)(intptr_t)nooki_auto_crear(
+        prediccion->valor - esperado->valor, 2, prediccion, esperado));
+    return nooki_auto_nodo_de((long long)(intptr_t)nooki_auto_crear(
+        diferencia->valor * diferencia->valor, 3, diferencia, diferencia));
+}
+
+/* Mueve los pesos con el gradiente: descenso de gradiente por ejemplo. */
+static void nooki_red_actualizar(nooki_red* red, double tasa) {
+    for (int i = 0; i < red->entradas * red->ocultas; ++i) {
+        red->pesos1[i]->valor -= tasa * red->pesos1[i]->gradiente;
+    }
+    for (int h = 0; h < red->ocultas; ++h) {
+        red->sesgos1[h]->valor -= tasa * red->sesgos1[h]->gradiente;
+        red->pesos2[h]->valor -= tasa * red->pesos2[h]->gradiente;
+    }
+    red->sesgo2->valor -= tasa * red->sesgo2->gradiente;
+}
+
+void nooki_ia_red_entrenar(long long manejador, long long vueltas, double tasa) {
+    nooki_red* red = nooki_red_de(manejador);
+    if (red == NULL || red->cuantas == 0) {
+        return;
+    }
+    for (long long vuelta = 0; vuelta < vueltas; ++vuelta) {
+        for (int m = 0; m < red->cuantas; ++m) {
+            const double* fila = red->muestras + (size_t)m * 5;
+            nooki_auto_nodo* perdida = nooki_red_adelante(red, fila);
+            nooki_ia_auto_atras((long long)(intptr_t)perdida);
+            nooki_red_actualizar(red, tasa);
+        }
+    }
+}
+
+void nooki_ia_red_liberar(long long manejador) {
+    nooki_red* red = nooki_red_de(manejador);
+    if (red == NULL) {
+        return;
+    }
+    free(red->muestras);
+    free(red->pesos1);
+    free(red->sesgos1);
+    free(red->pesos2);
+    free(red);
+}
+
 /* --- Tablas: columnas con nombre, como un DataFrame ---
  * Cada columna es numérica o de texto. Las de texto guardan copias propias. */
 

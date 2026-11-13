@@ -1,0 +1,8 @@
+4
+empieza sin saber
+error bajo
+0 xor 0 = 0
+0 xor 1 = 1
+1 xor 0 = 1
+1 xor 1 = 0
+fin

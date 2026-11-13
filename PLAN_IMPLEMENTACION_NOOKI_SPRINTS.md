@@ -315,7 +315,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S91** | IA: PLN | ✅ `normalizar`, `tokenizar`, `contar`, `unicas`, `distintas`, `distancia` (edición) y `jaccard` (parecido por mil), todo en Nooki. Caso `0058`. Corregidos `(*x).método()`, el tipo de `&x`, los préstamos en argumentos y la asignación de colecciones (use-after-free) |
 | **S92** | IA: tablas | ✅ Módulo `tabla` (DataFrame): columnas con nombre numéricas y de texto, `filtrar`, `ordenar`, `contar_por`, `suma`, `media`, `minimo` y `maximo`. Caso `0059`. La FFI puede devolver `texto`. La UI de Linux se verifica con píxeles reales (WSLg) |
 | **S93** | IA: autograd | ✅ Grafo de operaciones con `suma`, `resta`, `producto`, `division`, `relu` y `sigmoides`, y `atras` en orden topológico. Verificado con derivadas conocidas. Caso `0060`. Corregido `flotante` en las firmas externas |
-| **S94** | Instaladores y distribución | MSI, DEB/RPM, Homebrew, WinGet; **PKG y notarización de macOS condicionados a un Mac o financiación** (D-17); firma de código; actualizador |
+| **S94** | IA: redes | ✅ Red de una capa oculta con sigmoide y descenso de gradiente sobre autograd. Aprende XOR: error de 0,261 a 0,0003. Caso `0061` que comprueba la clasificación |
 | **S95** | *Release candidate* | RC congelado; pruebas en 3 sistemas; migración de proyectos piloto |
 | **S96** | **NOOKI v1.0** | Release pública, sitio, registro público; *spike* de autohospedaje (compilador escrito en Nooki) |
 
