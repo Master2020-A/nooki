@@ -1370,3 +1370,21 @@ saludos = { ruta = "../saludos" }
 
 Los diagnósticos llevan la línea y la columna del span, así que el editor subraya exactamente lo que
 está mal. Cualquier cliente LSP sirve; no hay una extensión propia.
+
+
+### 18.41 Archivos y fechas
+
+```aura
+usar archivo
+
+coincide (archivo.leer(&ruta)) {
+    caso Bien(contenido) => imprimir(contenido)
+    caso Mal(motivo) => imprimir(motivo)
+}
+```
+
+- **`archivo`**: `existe(ruta)`, `leer(ruta)` y `escribir(ruta, contenido)`. Las dos últimas devuelven
+  el enumerado `lectura`, con `Bien(contenido)` o `Mal(motivo)`; `?` funciona sobre él.
+- **`fechas`**: una fecha es un entero, días desde el 1 de enero de 1970. `a_dias(anio, mes, dia)`,
+  `a_anio`, `a_mes`, `a_dia`, `sumar_dias` y `dia_de_la_semana` (0 = lunes).
+- Los textos multilínea se escriben con tres comillas: `"""..."""`.

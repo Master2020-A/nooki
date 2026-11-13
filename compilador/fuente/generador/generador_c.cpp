@@ -735,6 +735,58 @@ const char* PRELUDIO =
     "    return -a;\n"
     "}\n"
     "\n"
+    "/* Archivos: lectura y escritura completas (FFI con la libc). */\n"
+    "static nooki_texto nooki_leer_archivo(const char* ruta) {\n"
+    "    FILE* archivo = fopen(ruta, \"rb\");\n"
+    "    if (archivo == NULL) {\n"
+    "        return nooki_texto_literal(\"\");\n"
+    "    }\n"
+    "    nooki_texto t;\n"
+    "    if (fseek(archivo, 0, SEEK_END) != 0) {\n"
+    "        fclose(archivo);\n"
+    "        return nooki_texto_literal(\"\");\n"
+    "    }\n"
+    "    long tamano = ftell(archivo);\n"
+    "    if (tamano < 0 || fseek(archivo, 0, SEEK_SET) != 0) {\n"
+    "        fclose(archivo);\n"
+    "        return nooki_texto_literal(\"\");\n"
+    "    }\n"
+    "    t.largo = (long long)tamano;\n"
+    "    t.propio = 1;\n"
+    "    t.datos = (char*)malloc((size_t)tamano + 1);\n"
+    "    if (t.datos == NULL) {\n"
+    "        fclose(archivo);\n"
+    "        t.largo = 0;\n"
+    "        t.propio = 0;\n"
+    "        return t;\n"
+    "    }\n"
+    "    size_t leido = fread(t.datos, 1, (size_t)tamano, archivo);\n"
+    "    t.datos[leido] = 0;\n"
+    "    t.largo = (long long)leido;\n"
+    "    fclose(archivo);\n"
+    "    return t;\n"
+    "}\n"
+    "\n"
+    "static int nooki_escribir_archivo(const char* ruta, const char* contenido) {\n"
+    "    FILE* archivo = fopen(ruta, \"wb\");\n"
+    "    if (archivo == NULL) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    size_t largo = strlen(contenido);\n"
+    "    size_t escrito = fwrite(contenido, 1, largo, archivo);\n"
+    "    fclose(archivo);\n"
+    "    return escrito == largo;\n"
+    "}\n"
+    "\n"
+    "static int nooki_existe_archivo(const char* ruta) {\n"
+    "    FILE* archivo = fopen(ruta, \"rb\");\n"
+    "    if (archivo == NULL) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    fclose(archivo);\n"
+    "    return 1;\n"
+    "}\n"
+    "\n"
     "static void nooki_imprimir_entero(long long valor) {\n"
     "    printf(\"%lld\\n\", valor);\n"
     "}\n"
@@ -2625,8 +2677,13 @@ private:
                         variante != variantes_.end()) {
                         return "nooki_" + std::string(variante->second.first->nombre);
                     }
-                    if (expresion.izquierda->lexema == "leer_linea") {
+                    if (expresion.izquierda->lexema == "leer_linea" ||
+                        expresion.izquierda->lexema == "leer_archivo") {
                         return "nooki_texto";
+                    }
+                    if (expresion.izquierda->lexema == "escribir_archivo" ||
+                        expresion.izquierda->lexema == "existe_archivo") {
+                        return "int";
                     }
                     if (expresion.izquierda->lexema == "leer_entero") {
                         return "long long";
@@ -3191,6 +3248,38 @@ private:
             }
         }
 
+
+        if (nombre_llamado == "leer_archivo" || nombre_llamado == "escribir_archivo" ||
+            nombre_llamado == "existe_archivo") {
+            std::string salida = "nooki_" + std::string(nombre_llamado) + "(";
+            bool primero = true;
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                std::string valor = expresion(*argumento);
+                const std::string tipo = tipo_de(*argumento);
+                // Un texto (o un préstamo de texto) llega como puntero a sus bytes.
+                if (argumento->tipo == sintactico::TipoExpresion::Unaria &&
+                    argumento->lexema == "&" && argumento->izquierda &&
+                    tipo_de(*argumento->izquierda) == "nooki_texto") {
+                    valor = expresion(*argumento->izquierda) + ".datos";
+                } else if (tipo == "nooki_texto") {
+                    valor = argumento->tipo == sintactico::TipoExpresion::Identificador
+                                ? valor + ".datos"
+                                : "(" + valor + ").datos";
+                } else if (tipo == "nooki_texto*") {
+                    valor = "(" + valor + ")->datos";
+                }
+                salida += valor;
+            }
+            salida += ')';
+            return salida;
+        }
 
         if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {
             if (!nodo.lista.empty()) {

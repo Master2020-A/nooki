@@ -5,6 +5,37 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 77 — Biblioteca: archivos y fechas (2026-11-12)
+
+Un lenguaje sin archivos no sirve para programas de verdad. Ahora los tiene, con la API de errores del
+lenguaje:
+
+```aura
+usar archivo
+
+coincide (archivo.leer(&ruta)) {
+    caso Bien(contenido) => imprimir(contenido)
+    caso Mal(motivo) => imprimir(motivo)
+}
+```
+
+- **`archivo`**: `leer`, `escribir` y `existe`, con un enumerado `lectura` que lleva `Bien(contenido)` o
+  `Mal(motivo)`; el `?` del lenguaje funciona sobre él.
+- **Tres funciones integradas** en el runtime: `leer_archivo`, `escribir_archivo` y `existe_archivo`.
+  Leen el archivo entero y son las que un módulo de Nooki envuelve — el lenguaje no gana magia, gana
+  una API.
+- **`fechas` con aritmética**: `a_dias`, `a_anio`, `a_mes`, `a_dia`, `sumar_dias` y `dia_de_la_semana`.
+  Una fecha es un entero: días desde el 1 de enero de 1970. Verificado con valores conocidos
+  (`2000-01-01` = 10957, y el 12 de noviembre de 2026 cae en jueves).
+- Casos `0049-archivo` y `0050-fechas`. **79 casos de conformidad.**
+
+**Y dos fallos que aparecieron al escribir los casos:**
+
+1. **Los textos multilínea estaban rotos desde el principio**: `"""..."""` conservaba dos comillas a cada
+   lado, porque el analizador quitaba solo una. Ahora se quitan las tres.
+2. **El impresor del AST no conocía `inseguro` ni `asm!`** (del sprint anterior): `nooki ast` no las
+   mostraba y la compilación con avisos como errores fallaba. Lo detectó la cadena de saneamiento.
+
 ### Sprint 76 — Servidor de lenguaje (2026-11-12)
 
 `nooki lsp` habla el **Language Server Protocol** por la entrada y salida estándar: cualquier editor con

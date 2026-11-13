@@ -1252,6 +1252,23 @@ private:
         }
 
 
+        if (nombre_llamado == "leer_archivo" || nombre_llamado == "existe_archivo" ||
+            nombre_llamado == "escribir_archivo") {
+            const std::size_t esperados = nombre_llamado == "escribir_archivo" ? 2 : 1;
+            if (expresion.lista.size() != esperados) {
+                error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                    .parametro("funcion", std::string(nombre_llamado))
+                    .parametro("esperados", std::to_string(esperados))
+                    .parametro("dados", std::to_string(expresion.lista.size()));
+            }
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            return nombre_llamado == "leer_archivo" ? Tipo::Texto : Tipo::Booleano;
+        }
+
         if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {
             if (!expresion.lista.empty()) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)

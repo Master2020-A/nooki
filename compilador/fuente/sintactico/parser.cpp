@@ -94,6 +94,11 @@ diagnostico::Span unir(diagnostico::Span primero, diagnostico::Span segundo) {
 }
 
 std::string_view sin_comillas(std::string_view lexema) {
+    // Un texto multilínea lleva tres comillas a cada lado: «"""..."""».
+    if (lexema.size() >= 6 && lexema.substr(0, 3) == "\"\"\"" &&
+        lexema.substr(lexema.size() - 3) == "\"\"\"") {
+        return lexema.substr(3, lexema.size() - 6);
+    }
     if (lexema.size() >= 2) {
         return lexema.substr(1, lexema.size() - 2);
     }

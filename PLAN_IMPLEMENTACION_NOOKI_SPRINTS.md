@@ -282,7 +282,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S74** | `inseguro` y `asm!` | ✅ `inseguro { }` desactiva la comprobación aritmética (no la propiedad) y `asm!("...")` emite ensamblador en línea, permitido solo dentro de `inseguro` (`NOK3012`). Caso `0048` en las tres cadenas |
 | **S75** | Manifiesto y dependencias | ✅ `nooki.toml` con nombre, versión y dependencias por ruta; `nooki construir` resuelve módulos a través de ellas y `nooki nuevo` escribe el manifiesto. `prueba_manifiesto` y verificación de punta a punta con dos proyectos |
 | **S76** | Servidor de lenguaje | ✅ `nooki lsp` con JSON-RPC, `initialize`, sincronización de documentos y `publishDiagnostics` con rango, gravedad y mensaje en español. `prueba_lsp`. *Sin autocompletado ni formato* |
-| **S77** | Accesibilidad e i18n de UI | Navegación por teclado, lectores de pantalla, textos traducibles; auditoría |
+| **S77** | Biblioteca: archivos y fechas | ✅ Módulo `archivo` (`leer`, `escribir`, `existe`) sobre tres integradas, y aritmética de calendario en `fechas`. Casos `0049` y `0050`. Corregidos los textos multilínea y el impresor del AST |
 | **S78** | **Cierre v0.9: herramientas de UI** | Vista previa/designer; ejemplos: calculadora y gestor de tareas |
 
 ---

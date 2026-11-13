@@ -112,6 +112,7 @@ Sprint 73 ✅  FFI: llamar a C desde Nooki
 Sprint 74 ✅  `inseguro` y `asm!`: control de hardware
 Sprint 75 ✅  Manifiesto `nooki.toml` y dependencias
 Sprint 76 ✅  Servidor de lenguaje `nooki lsp`
+Sprint 77 ✅  Biblioteca: archivos y fechas
 ```
 
 **Ya compila y ejecuta:**

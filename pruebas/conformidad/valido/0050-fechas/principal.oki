@@ -1,0 +1,23 @@
+// Aritmética de calendario: una fecha son días desde el 1 de enero de 1970.
+usar fechas
+
+funcion principal() -> entero {
+    imprimir(fechas.a_dias(1970, 1, 1))
+    imprimir(fechas.a_dias(2000, 1, 1))
+    imprimir(fechas.a_anio(10957))
+    imprimir(fechas.a_mes(10957))
+    imprimir(fechas.a_dia(10957))
+
+    variable dia = fechas.a_dias(2026, 11, 12)
+    imprimir(fechas.a_anio(dia))
+    imprimir(fechas.a_mes(dia))
+    imprimir(fechas.a_dia(dia))
+
+    variable despues = fechas.sumar_dias(dia, 20)
+    imprimir(fechas.a_mes(despues))
+    imprimir(fechas.a_dia(despues))
+
+    // 0 = lunes; el 12 de noviembre de 2026 fue jueves.
+    imprimir(fechas.dia_de_la_semana(dia))
+    retornar 0
+}

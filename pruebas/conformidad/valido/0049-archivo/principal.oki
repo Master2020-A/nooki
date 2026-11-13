@@ -1,0 +1,31 @@
+// Biblioteca `archivo`: escribir, leer y comprobar existencia.
+// El archivo de prueba se crea en el directorio de trabajo del programa.
+usar archivo
+
+funcion principal() -> entero {
+    variable ruta = "nooki-prueba-archivo.txt" + ""
+    variable contenido = """linea uno
+linea dos"""
+
+    coincide (archivo.escribir(&ruta, &contenido)) {
+        caso Bien(v) => imprimir("escrito")
+        caso Mal(m) => imprimir(m)
+    }
+
+    si (archivo.existe(&ruta)) {
+        imprimir("existe")
+    }
+
+    coincide (archivo.leer(&ruta)) {
+        caso Bien(leido) => imprimir(leido)
+        caso Mal(m) => imprimir(m)
+    }
+
+    variable fantasma = "nooki-no-existe-jamas.txt" + ""
+    si (archivo.existe(&fantasma)) {
+        imprimir("no deberia existir")
+    } sino {
+        imprimir("no existe")
+    }
+    retornar 0
+}

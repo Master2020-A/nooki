@@ -238,6 +238,16 @@ std::string imprimir(const Sentencia& sentencia) {
             salida += ')';
             return salida;
         }
+
+        case TipoSentencia::Inseguro: {
+            std::string salida = "(inseguro";
+            agregar_sentencias(salida, sentencia.cuerpo);
+            salida += ')';
+            return salida;
+        }
+
+        case TipoSentencia::Asm:
+            return "(asm \"" + std::string(sentencia.nombre) + "\")";
     }
     return "?";
 }

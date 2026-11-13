@@ -87,6 +87,33 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "archivo") {
+        return R"(// Biblioteca estándar: leer y escribir archivos.
+publico enumeracion lectura {
+    Bien(contenido: texto)
+    Mal(motivo: texto)
+}
+
+publico funcion existe(ruta: &texto) -> booleano {
+    retornar existe_archivo(*ruta)
+}
+
+publico funcion leer(ruta: &texto) -> lectura {
+    si (!existe_archivo(*ruta)) {
+        retornar Mal("no existe el archivo")
+    }
+    variable contenido = leer_archivo(*ruta)
+    retornar Bien(contenido)
+}
+
+publico funcion escribir(ruta: &texto, contenido: &texto) -> lectura {
+    si (!escribir_archivo(*ruta, *contenido)) {
+        retornar Mal("no se pudo escribir")
+    }
+    retornar Bien("")
+}
+)";
+    }
     if (modulo == "listas") {
         return R"(// Biblioteca estándar: operaciones sobre listas de enteros.
 publico funcion suma(numeros: &Vector<entero>) -> entero {
@@ -179,6 +206,56 @@ publico funcion dias_del_anio(anio: entero) -> entero {
         retornar 366
     }
     retornar 365
+}
+
+// Una fecha se representa como días desde el 1 de enero de 1970.
+publico funcion a_dias(anio: entero, mes: entero, dia: entero) -> entero {
+    variable total = 0
+    variable a = 1970
+    mientras (a < anio) {
+        total = total + dias_del_anio(a)
+        a = a + 1
+    }
+    variable m = 1
+    mientras (m < mes) {
+        total = total + dias_del_mes(m, anio)
+        m = m + 1
+    }
+    retornar total + dia - 1
+}
+
+publico funcion a_anio(dias: entero) -> entero {
+    variable anio = 1970
+    variable resto = dias
+    mientras (resto >= dias_del_anio(anio)) {
+        resto = resto - dias_del_anio(anio)
+        anio = anio + 1
+    }
+    retornar anio
+}
+
+publico funcion a_mes(dias: entero) -> entero {
+    variable anio = a_anio(dias)
+    variable resto = dias - a_dias(anio, 1, 1)
+    variable mes = 1
+    mientras (resto >= dias_del_mes(mes, anio)) {
+        resto = resto - dias_del_mes(mes, anio)
+        mes = mes + 1
+    }
+    retornar mes
+}
+
+publico funcion a_dia(dias: entero) -> entero {
+    retornar dias - a_dias(a_anio(dias), a_mes(dias), 1) + 1
+}
+
+publico funcion sumar_dias(dias: entero, cantidad: entero) -> entero {
+    retornar dias + cantidad
+}
+
+// 0 = lunes … 6 = domingo. El 1 de enero de 1970 fue jueves.
+publico funcion dia_de_la_semana(dias: entero) -> entero {
+    retornar (dias + 3) % 7
 }
 )";
     }
