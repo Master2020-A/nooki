@@ -1420,3 +1420,20 @@ ventana.cerrar(v)
 - `cerrar(manejador)` y `pausa(milisegundos)`.
 - La capa C se compila **solo si el programa usa el módulo** y se enlaza con las bibliotecas del
   sistema: `user32` y `gdi32` en Windows, `X11` en Linux y Unix. macOS necesita su backend.
+
+
+### 18.44 Dibujo
+
+```aura
+ventana.limpiar(v, 0xFFFFFF)
+ventana.rectangulo(v, 10, 10, 100, 50, 0xFF0000)
+ventana.linea(v, 0, 200, 319, 200, 0x0000FF)
+ventana.escribir_texto(v, 20, 100, &saludo, 0x000000)
+ventana.presentar(v)
+variable color = ventana.color_en(v, 50, 30)
+```
+
+- Los colores son enteros `0xRRGGBB`.
+- `color_en(x, y)` devuelve el color del píxel: sirve para probar el dibujo, no solo para pintarlo.
+- La implementación es la del sistema: **GDI** en Windows y **X11** en Linux. No hay biblioteca de
+  gráficos añadida; si algún día hace falta antialiasing, Skia puede entrar detrás de esta misma API.

@@ -115,6 +115,7 @@ Sprint 76 ✅  Servidor de lenguaje `nooki lsp`
 Sprint 77 ✅  Biblioteca: archivos y fechas
 Sprint 78 ✅  Estabilización: API congelada y distribución
 Sprint 79 ✅  UI: ventanas nativas desde Nooki
+Sprint 80 ✅  UI: dibujo con GDI y X11
 ```
 
 **Ya compila y ejecuta:**

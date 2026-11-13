@@ -5,6 +5,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 80 — Dibujo (2026-11-12)
+
+El segundo pilar de la UI: **pintar dentro de la ventana**, sin añadir una dependencia.
+
+```aura
+ventana.limpiar(v, 0xFFFFFF)
+ventana.rectangulo(v, 10, 10, 100, 50, 0xFF0000)
+ventana.linea(v, 0, 200, 319, 200, 0x0000FF)
+ventana.escribir_texto(v, 20, 100, &saludo, 0x000000)
+ventana.presentar(v)
+```
+
+- **`limpiar`, `rectangulo`, `linea`, `escribir_texto` y `presentar`**, con colores `0xRRGGBB`.
+- **Implementado con lo que ya hay**: GDI en Windows (`FillRect`, `CreatePen`, `TextOut`) y X11 en
+  Linux (`XFillRectangle`, `XDrawLine`, `XDrawString`). Cero dependencias nuevas.
+- **`color_en(manejador, x, y)` lee un píxel** — es lo que hace que el dibujo se pueda probar de verdad:
+  `prueba_ventana` pinta un rectángulo rojo sobre fondo blanco y **comprueba los dos colores**.
+- `prueba_ventana` reporta ahora: «se abre, dibuja, atiende 20 fotogramas y se cierra» (escritorio) o
+  «sin entorno gráfico, la capa responde con 0» (contenedor). Verde en las tres cadenas.
+
+**La decisión de Skia**: el plan pedía Skia. Se ha empezado con GDI y X11 porque Skia son cientos de
+miles de líneas que romperían la regla de cero dependencias y multiplicarían el trabajo de
+distribución. La API está pensada para que Skia pueda entrar detrás sin cambiar los programas.
+
+**Fallos encontrados**: un `#include <stdlib.h>` que faltaba en la rama de X11 y dos funciones de color
+duplicadas al insertar el dibujo en las dos plataformas. Los detectó la cadena de Linux, que hasta
+ahora solo compilaba el compilador y no un programa con ventana.
+
 ### Sprint 79 — Ventanas (2026-11-12)
 
 El primer pilar de la UI: **una ventana de verdad desde Nooki**, con su bucle de eventos.

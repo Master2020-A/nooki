@@ -17,6 +17,7 @@ std::string_view fuente_runtime_ui() {
 
 typedef struct {
     HWND ventana;
+    HDC lienzo;
     int viva;
     int cerrada;
 } nooki_ventana_estado;
@@ -75,6 +76,7 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
     SetWindowLongPtrA(estado->ventana, GWLP_USERDATA, (LONG_PTR)estado);
     ShowWindow(estado->ventana, SW_SHOW);
     UpdateWindow(estado->ventana);
+    estado->lienzo = GetDC(estado->ventana);
     return (long long)(intptr_t)estado;
 }
 
@@ -122,14 +124,98 @@ void nooki_ui_ventana_esperar(long long milisegundos) {
     Sleep((DWORD)milisegundos);
 }
 
+/* --- Dibujo (GDI) --- */
+static COLORREF nooki_color_win(long long color) {
+    return RGB((BYTE)((color >> 16) & 0xFF), (BYTE)((color >> 8) & 0xFF),
+               (BYTE)(color & 0xFF));
+}
+
+void nooki_ui_dibujo_limpiar(long long manejador, long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->lienzo == NULL) {
+        return;
+    }
+    RECT area;
+    GetClientRect(estado->ventana, &area);
+    HBRUSH pincel = CreateSolidBrush(nooki_color_win(color));
+    FillRect(estado->lienzo, &area, pincel);
+    DeleteObject(pincel);
+}
+
+void nooki_ui_dibujo_rectangulo(long long manejador, long long x, long long y,
+                                long long ancho, long long alto, long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->lienzo == NULL) {
+        return;
+    }
+    RECT area;
+    area.left = (LONG)x;
+    area.top = (LONG)y;
+    area.right = (LONG)(x + ancho);
+    area.bottom = (LONG)(y + alto);
+    HBRUSH pincel = CreateSolidBrush(nooki_color_win(color));
+    FillRect(estado->lienzo, &area, pincel);
+    DeleteObject(pincel);
+}
+
+void nooki_ui_dibujo_linea(long long manejador, long long x1, long long y1, long long x2,
+                           long long y2, long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->lienzo == NULL) {
+        return;
+    }
+    HPEN lapiz = CreatePen(PS_SOLID, 1, nooki_color_win(color));
+    HGDIOBJ anterior = SelectObject(estado->lienzo, lapiz);
+    MoveToEx(estado->lienzo, (int)x1, (int)y1, NULL);
+    LineTo(estado->lienzo, (int)x2, (int)y2);
+    SelectObject(estado->lienzo, anterior);
+    DeleteObject(lapiz);
+}
+
+void nooki_ui_dibujo_texto(long long manejador, long long x, long long y, const char* contenido,
+                           long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->lienzo == NULL) {
+        return;
+    }
+    SetTextColor(estado->lienzo, nooki_color_win(color));
+    SetBkMode(estado->lienzo, TRANSPARENT);
+    TextOutA(estado->lienzo, (int)x, (int)y, contenido, (int)strlen(contenido));
+}
+
+void nooki_ui_dibujo_presentar(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->lienzo == NULL) {
+        return;
+    }
+    GdiFlush();
+}
+
+/* Color del píxel como 0xRRGGBB; -1 si no se puede leer. */
+long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->lienzo == NULL) {
+        return -1;
+    }
+    COLORREF color = GetPixel(estado->lienzo, (int)x, (int)y);
+    if (color == CLR_INVALID) {
+        return -1;
+    }
+    return (long long)((GetRValue(color) << 16) | (GetGValue(color) << 8) | GetBValue(color));
+}
+
 #else
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 typedef struct {
     Display* pantalla;
     Window ventana;
+    GC lienzo;
     int viva;
     int cerrada;
 } nooki_ventana_estado;
@@ -152,6 +238,7 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
                                           BlackPixel(pantalla, 0), WhitePixel(pantalla, 0));
     XStoreName(pantalla, estado->ventana, titulo);
     XSelectInput(pantalla, estado->ventana, ExposureMask | KeyPressMask | StructureNotifyMask);
+    estado->lienzo = XCreateGC(pantalla, estado->ventana, 0, NULL);
     XMapWindow(pantalla, estado->ventana);
     XFlush(pantalla);
     return (long long)(intptr_t)estado;
@@ -189,6 +276,9 @@ void nooki_ui_ventana_cerrar(long long manejador) {
         return;
     }
     if (estado->pantalla != NULL) {
+        if (estado->lienzo != NULL) {
+            XFreeGC(estado->pantalla, estado->lienzo);
+        }
         XDestroyWindow(estado->pantalla, estado->ventana);
         XCloseDisplay(estado->pantalla);
     }
@@ -197,6 +287,76 @@ void nooki_ui_ventana_cerrar(long long manejador) {
 
 void nooki_ui_ventana_esperar(long long milisegundos) {
     usleep((useconds_t)(milisegundos * 1000));
+}
+
+/* --- Dibujo (X11) --- */
+static unsigned long nooki_color_x11(long long color) {
+    return (unsigned long)(color & 0xFFFFFF);
+}
+
+void nooki_ui_dibujo_limpiar(long long manejador, long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->pantalla == NULL) {
+        return;
+    }
+    XSetForeground(estado->pantalla, estado->lienzo, nooki_color_x11(color));
+    XFillRectangle(estado->pantalla, estado->ventana, estado->lienzo, 0, 0, 4096, 4096);
+}
+
+void nooki_ui_dibujo_rectangulo(long long manejador, long long x, long long y,
+                                long long ancho, long long alto, long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->pantalla == NULL) {
+        return;
+    }
+    XSetForeground(estado->pantalla, estado->lienzo, nooki_color_x11(color));
+    XFillRectangle(estado->pantalla, estado->ventana, estado->lienzo, (int)x, (int)y,
+                   (unsigned)ancho, (unsigned)alto);
+}
+
+void nooki_ui_dibujo_linea(long long manejador, long long x1, long long y1, long long x2,
+                           long long y2, long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->pantalla == NULL) {
+        return;
+    }
+    XSetForeground(estado->pantalla, estado->lienzo, nooki_color_x11(color));
+    XDrawLine(estado->pantalla, estado->ventana, estado->lienzo, (int)x1, (int)y1, (int)x2,
+              (int)y2);
+}
+
+void nooki_ui_dibujo_texto(long long manejador, long long x, long long y, const char* contenido,
+                           long long color) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->pantalla == NULL) {
+        return;
+    }
+    XSetForeground(estado->pantalla, estado->lienzo, nooki_color_x11(color));
+    XDrawString(estado->pantalla, estado->ventana, estado->lienzo, (int)x, (int)y, contenido,
+                (int)strlen(contenido));
+}
+
+void nooki_ui_dibujo_presentar(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->pantalla == NULL) {
+        return;
+    }
+    XFlush(estado->pantalla);
+}
+
+long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->pantalla == NULL) {
+        return -1;
+    }
+    XImage* imagen =
+        XGetImage(estado->pantalla, estado->ventana, (int)x, (int)y, 1, 1, AllPlanes, ZPixmap);
+    if (imagen == NULL) {
+        return -1;
+    }
+    unsigned long pixel = XGetPixel(imagen, 0, 0);
+    XDestroyImage(imagen);
+    return (long long)(pixel & 0xFFFFFF);
 }
 
 #endif

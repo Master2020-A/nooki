@@ -41,6 +41,21 @@ funcion principal() -> entero {
     }
 
     imprimir("ventana creada")
+
+    // Dibujo: un fondo blanco y un rectángulo rojo. Se leen los píxeles para
+    // comprobar que el color llegó de verdad a la ventana.
+    ventana.limpiar(v, 0xFFFFFF)
+    ventana.rectangulo(v, 10, 10, 100, 50, 0xFF0000)
+    ventana.presentar(v)
+    variable dentro = ventana.color_en(v, 50, 30)
+    variable fuera = ventana.color_en(v, 5, 5)
+    si (dentro == 0xFF0000) {
+        imprimir("rectangulo rojo")
+    }
+    si (fuera == 0xFFFFFF) {
+        imprimir("fondo blanco")
+    }
+
     variable fotogramas = 0
     mientras (ventana.viva(v) && fotogramas < 20) {
         si (ventana.siguiente_evento(v) == 1) {
@@ -118,7 +133,12 @@ int main() {
             std::cout << "FALLO: la ventana se abrió pero no se cerró\n";
             return 1;
         }
-        std::cout << "ventana: se abre, atiende 20 fotogramas y se cierra\n";
+        if (obtenido.find("rectangulo rojo") == std::string::npos ||
+            obtenido.find("fondo blanco") == std::string::npos) {
+            std::cout << "FALLO: el dibujo no llegó a la ventana\n" << obtenido;
+            return 1;
+        }
+        std::cout << "ventana: se abre, dibuja, atiende 20 fotogramas y se cierra\n";
     } else {
         std::cout << "ventana: sin entorno gráfico, la capa responde con 0\n";
     }

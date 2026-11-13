@@ -119,6 +119,44 @@ publico funcion cerrar(manejador: entero) -> vacio {
 publico funcion pausa(milisegundos: entero) -> vacio {
     nooki_ui_ventana_esperar(milisegundos)
 }
+
+// --- Dibujo. Los colores son 0xRRGGBB. ---
+externo funcion nooki_ui_dibujo_limpiar(manejador: entero, color: entero) -> vacio
+externo funcion nooki_ui_dibujo_rectangulo(manejador: entero, x: entero, y: entero,
+                                           ancho: entero, alto: entero, color: entero) -> vacio
+externo funcion nooki_ui_dibujo_linea(manejador: entero, x1: entero, y1: entero,
+                                      x2: entero, y2: entero, color: entero) -> vacio
+externo funcion nooki_ui_dibujo_texto(manejador: entero, x: entero, y: entero,
+                                      contenido: &texto, color: entero) -> vacio
+externo funcion nooki_ui_dibujo_presentar(manejador: entero) -> vacio
+externo funcion nooki_ui_dibujo_color_en(manejador: entero, x: entero, y: entero) -> entero
+
+publico funcion limpiar(manejador: entero, color: entero) -> vacio {
+    nooki_ui_dibujo_limpiar(manejador, color)
+}
+
+publico funcion rectangulo(manejador: entero, x: entero, y: entero, ancho: entero,
+                           alto: entero, color: entero) -> vacio {
+    nooki_ui_dibujo_rectangulo(manejador, x, y, ancho, alto, color)
+}
+
+publico funcion linea(manejador: entero, x1: entero, y1: entero, x2: entero, y2: entero,
+                      color: entero) -> vacio {
+    nooki_ui_dibujo_linea(manejador, x1, y1, x2, y2, color)
+}
+
+publico funcion escribir_texto(manejador: entero, x: entero, y: entero, contenido: &texto,
+                      color: entero) -> vacio {
+    nooki_ui_dibujo_texto(manejador, x, y, *contenido, color)
+}
+
+publico funcion presentar(manejador: entero) -> vacio {
+    nooki_ui_dibujo_presentar(manejador)
+}
+
+publico funcion color_en(manejador: entero, x: entero, y: entero) -> entero {
+    retornar nooki_ui_dibujo_color_en(manejador, x, y)
+}
 )";
     }
     if (modulo == "archivo") {
