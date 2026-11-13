@@ -1,0 +1,53 @@
+// Una ventana con una interfaz colocada por el módulo de diseño.
+usar ventana
+usar diseno
+
+funcion principal() -> entero {
+    variable titulo = "Nooki — ejemplo de ventana" + ""
+    variable v = ventana.abrir(&titulo, 480, 320)
+
+    si (v == 0) {
+        imprimir("sin entorno grafico")
+        retornar 0
+    }
+
+    ventana.limpiar(v, 0x1E1E2E)
+
+    variable col = nuevo columna { x: 24, y: 24, ancho: 432, alto: 272, usado: 0, separacion: 12 }
+
+    variable bienvenida = "Hola desde Nooki" + ""
+    ventana.escribir_texto(v, 24, col.hueco(20), &bienvenida, 0xF5E0DC)
+
+    variable subtitulo = "ventana, dibujo y layout" + ""
+    ventana.escribir_texto(v, 24, col.hueco(18), &subtitulo, 0x9399B2)
+
+    variable fila_botones = nuevo fila { x: 24, y: 96, ancho: 432, alto: 48, usado: 0, separacion: 12 }
+    variable i = 0
+    mientras (i < 3) {
+        variable x = 24 + fila_botones.hueco(120)
+        ventana.rectangulo(v, x, 96, 120, 48, 0x89B4FA)
+        variable etiqueta = "Boton" + ""
+        ventana.escribir_texto(v, x + 16, 96 + 24, &etiqueta, 0x11111B)
+        i = i + 1
+    }
+
+    variable ancho_barra = 432
+    ventana.rectangulo(v, 24, 200, ancho_barra, 16, 0x313244)
+    variable relleno = diseno.repartir(ancho_barra, 3)
+    ventana.rectangulo(v, 24, 200, relleno, 16, 0xA6E3A1)
+
+    ventana.presentar(v)
+
+    variable fotogramas = 0
+    mientras (ventana.viva(v) && fotogramas < 120) {
+        si (ventana.siguiente_evento(v) == 1) {
+            romper
+        }
+        ventana.pausa(16)
+        fotogramas = fotogramas + 1
+    }
+
+    ventana.cerrar(v)
+    imprimir("ventana cerrada")
+    retornar 0
+}

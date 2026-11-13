@@ -91,6 +91,74 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "diseno") {
+        return R"(// Biblioteca estándar: colocación de cajas (layout) sin dibujar nada.
+// Es computación pura: se puede probar sin abrir una ventana.
+
+publico funcion centrar(disponible: entero, medida: entero) -> entero {
+    si (medida >= disponible) {
+        retornar 0
+    }
+    retornar (disponible - medida) / 2
+}
+
+publico funcion repartir(disponible: entero, partes: entero) -> entero {
+    si (partes <= 0) {
+        retornar 0
+    }
+    retornar disponible / partes
+}
+
+// Reparte hijos en vertical dentro de un marco.
+publico clase columna {
+    publico x: entero
+    publico y: entero
+    publico ancho: entero
+    publico alto: entero
+    publico usado: entero
+    publico separacion: entero
+
+    // Devuelve el desplazamiento vertical del siguiente hijo y avanza el cursor.
+    publico funcion hueco(alto_hijo: entero) -> entero {
+        variable posicion = este.usado
+        este.usado = este.usado + alto_hijo + este.separacion
+        retornar posicion
+    }
+
+    publico funcion cabe(alto_hijo: entero) -> booleano {
+        retornar este.usado + alto_hijo <= este.alto
+    }
+
+    publico funcion reiniciar() -> vacio {
+        este.usado = 0
+    }
+}
+
+// Reparte hijos en horizontal dentro de un marco.
+publico clase fila {
+    publico x: entero
+    publico y: entero
+    publico ancho: entero
+    publico alto: entero
+    publico usado: entero
+    publico separacion: entero
+
+    publico funcion hueco(ancho_hijo: entero) -> entero {
+        variable posicion = este.usado
+        este.usado = este.usado + ancho_hijo + este.separacion
+        retornar posicion
+    }
+
+    publico funcion cabe(ancho_hijo: entero) -> booleano {
+        retornar este.usado + ancho_hijo <= este.ancho
+    }
+
+    publico funcion reiniciar() -> vacio {
+        este.usado = 0
+    }
+}
+)";
+    }
     if (modulo == "ventana") {
         return R"(// Biblioteca estándar: ventanas y bucle de eventos.
 // Un manejador es un entero; 0 significa que no hay entorno gráfico.

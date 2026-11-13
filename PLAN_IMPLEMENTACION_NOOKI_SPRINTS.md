@@ -295,7 +295,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 |---|---|---|
 | **S79** | UI: ventanas | ✅ Módulo `ventana` (abrir, viva, siguiente_evento, cerrar, pausa) sobre una capa C con Win32 y X11, compilada solo si se usa. `prueba_ventana` acepta escritorio y contenedor. 16 suites |
 | **S80** | UI: dibujo | ✅ `limpiar`, `rectangulo`, `linea`, `escribir_texto`, `presentar` y `color_en`, con GDI y X11 (cero dependencias). `prueba_ventana` verifica los píxeles dibujados |
-| **S81** | Redes neuronales | Capas (densa, convolucional, pooling, normalización, dropout, embedding), activaciones, pérdidas, optimizadores; 60 tests |
+| **S81** | UI: layout | ✅ Módulos `columna` y `fila` con `hueco`, `cabe` y `reiniciar`, más `centrar` y `repartir`, en Nooki puro. Caso `0052-diseno` y ejemplo `05-ventana` que combina ventana, dibujo y layout |
 | **S82** | Entrenamiento y checkpoints | Entrenador, validación, callbacks, guardar/cargar; MNIST de punta a punta |
 | **S83** | MarcoDatos (estilo pandas) | Columnar, CSV/JSON/Excel, filtrar/agrupar/unir/pivotar, describir; 80 tests + benchmark vs pandas |
 | **S84** | ML clásico | Regresión, árboles, bosques, KMeans, PCA, métricas, validación cruzada; 80 tests |

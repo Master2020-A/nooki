@@ -75,6 +75,19 @@ Bip. Unidad R2
 
 `persona` y `robot` implementan `Saluda`; `presentar` recibe `&Saluda` y despacha a cada uno.
 
+### 05 — Ventana
+
+Una ventana real con una interfaz colocada por el módulo de diseño: título, subtítulo, tres botones y
+una barra de progreso. Se cierra sola a los dos segundos, o al cerrarla.
+
+```bash
+$ nooki ejecutar ejemplos/05-ventana/principal.oki
+ventana cerrada
+```
+
+Sin entorno gráfico (un servidor, un contenedor) imprime `sin entorno grafico` y termina bien: el
+programa decide qué hacer cuando no hay pantalla.
+
 ## Crear uno propio
 
 ```bash

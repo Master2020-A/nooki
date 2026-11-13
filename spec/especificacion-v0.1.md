@@ -1437,3 +1437,20 @@ variable color = ventana.color_en(v, 50, 30)
 - `color_en(x, y)` devuelve el color del píxel: sirve para probar el dibujo, no solo para pintarlo.
 - La implementación es la del sistema: **GDI** en Windows y **X11** en Linux. No hay biblioteca de
   gráficos añadida; si algún día hace falta antialiasing, Skia puede entrar detrás de esta misma API.
+
+
+### 18.45 Layout
+
+```aura
+usar diseno
+
+variable c = nuevo columna { x: 0, y: 0, ancho: 480, alto: 320, usado: 0, separacion: 8 }
+variable y = c.hueco(40)      // desplazamiento del siguiente hijo
+si (c.cabe(40)) { ... }
+```
+
+- `columna` y `fila` reparten hijos en su eje y llevan la cuenta de lo usado.
+- `hueco(medida)` devuelve el desplazamiento y avanza el cursor; `cabe(medida)` dice si queda sitio;
+  `reiniciar()` vuelve al principio.
+- `centrar(disponible, medida)` y `repartir(disponible, partes)`.
+- Es computación pura: se prueba sin abrir una ventana.

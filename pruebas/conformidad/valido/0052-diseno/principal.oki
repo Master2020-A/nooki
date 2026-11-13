@@ -1,0 +1,33 @@
+// Colocación de cajas: reparto vertical y horizontal, centrado y reparto.
+usar diseno
+
+funcion principal() -> entero {
+    variable c = nuevo columna { x: 0, y: 0, ancho: 480, alto: 320, usado: 0, separacion: 8 }
+
+    imprimir(c.hueco(40))
+    imprimir(c.hueco(40))
+    imprimir(c.hueco(40))
+    si (c.cabe(40)) {
+        imprimir("cabe otro")
+    } sino {
+        imprimir("no cabe")
+    }
+
+    c.reiniciar()
+    imprimir(c.usado)
+    imprimir(c.hueco(100))
+
+    variable f = nuevo fila { x: 0, y: 0, ancho: 300, alto: 60, usado: 0, separacion: 4 }
+    imprimir(f.hueco(100))
+    imprimir(f.hueco(100))
+    si (f.cabe(100)) {
+        imprimir("cabe")
+    } sino {
+        imprimir("no cabe")
+    }
+
+    imprimir(diseno.centrar(480, 100))
+    imprimir(diseno.repartir(480, 3))
+    imprimir(diseno.repartir(480, 0))
+    retornar 0
+}

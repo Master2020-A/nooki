@@ -5,6 +5,32 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 81 — Layout (2026-11-12)
+
+El tercer pilar de la UI: **colocar las cosas**. Y, a diferencia de los dos anteriores, esto es
+computación pura en Nooki: no toca C ni necesita ventana para probarse.
+
+```aura
+usar diseno
+
+variable c = nuevo columna { x: 0, y: 0, ancho: 480, alto: 320, usado: 0, separacion: 8 }
+variable y1 = c.hueco(40)   // 0
+variable y2 = c.hueco(40)   // 48
+si (c.cabe(40)) { ... }
+```
+
+- **`columna` y `fila`** como clases: reparten hijos en un eje, con separación, y llevan la cuenta de lo
+  usado.
+- **`hueco(medida)`** devuelve el desplazamiento del siguiente hijo y avanza el cursor; **`cabe`** dice
+  si queda sitio; **`reiniciar`** vuelve a empezar.
+- **`centrar(disponible, medida)`** y **`repartir(disponible, partes)`** para lo de todos los días.
+- Caso `0052-diseno`: doce comprobaciones de reparto, centrado y desbordamiento.
+- **Ejemplo `05-ventana`**: una ventana real con título, subtítulo, tres botones y una barra de
+  progreso, todo colocado con el módulo de diseño y dibujado con el de dibujo. Cierra sola.
+
+Es el primer sprint de UI que se prueba sin ventana: el layout es aritmética, y por eso entra en
+conformidad como cualquier otra función.
+
 ### Sprint 80 — Dibujo (2026-11-12)
 
 El segundo pilar de la UI: **pintar dentro de la ventana**, sin añadir una dependencia.
