@@ -297,7 +297,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S80** | UI: dibujo | ✅ `limpiar`, `rectangulo`, `linea`, `escribir_texto`, `presentar` y `color_en`, con GDI y X11 (cero dependencias). `prueba_ventana` verifica los píxeles dibujados |
 | **S81** | UI: layout | ✅ Módulos `columna` y `fila` con `hueco`, `cabe` y `reiniciar`, más `centrar` y `repartir`, en Nooki puro. Caso `0052-diseno` y ejemplo `05-ventana` que combina ventana, dibujo y layout |
 | **S82** | UI: controles | ✅ `control` con `contiene` semiabierto, y `etiqueta`, `boton` y `barra` que heredan y dibujan. Caso `0053-controles`. Corregidos `&objeto.campo`, el despacho de `este` y la distinción clase/estructura |
-| **S83** | MarcoDatos (estilo pandas) | Columnar, CSV/JSON/Excel, filtrar/agrupar/unir/pivotar, describir; 80 tests + benchmark vs pandas |
+| **S83** | UI: eventos | ✅ Cola de 64 eventos (movimiento, pulsación, liberación, tecla, cierre) en Win32 y X11, con API legible en Nooki. `presentar` ya no invalida el contexto. *A-16: `cmd /c` hace caer el programa con ventana* |
 | **S84** | ML clásico | Regresión, árboles, bosques, KMeans, PCA, métricas, validación cruzada; 80 tests |
 | **S85** | ONNX Runtime | Carga e inferencia de modelos ONNX; GPU opcional; 30 tests |
 | **S86** | PLN | Tokenizadores (BPE/SentencePiece), embeddings, sentimiento, entidades, resumen; 50 tests |

@@ -79,7 +79,8 @@ add_executable(prueba_ventana ventana.cpp)
 target_link_libraries(prueba_ventana PRIVATE nooki_nucleo)
 nooki_aplicar_opciones(prueba_ventana)
 add_test(NAME ventana COMMAND prueba_ventana)
-set_tests_properties(ventana PROPERTIES TIMEOUT 120)
+set_tests_properties(ventana PROPERTIES TIMEOUT 120
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:nooki>")
 
 # Manifiesto del proyecto: nooki.toml y dependencias.
 add_executable(prueba_manifiesto manifiesto.cpp)

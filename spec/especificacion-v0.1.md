@@ -1472,3 +1472,23 @@ si (b.pulsado(15, 20)) { ... }
 - `etiqueta`, `boton` y `barra` heredan de `control` y sobrescriben `dibujar(pantalla)`.
 - `boton.pulsado(px, py)` es lo mismo que `contiene`: la diferencia es de intención.
 - La geometría se prueba sin ventana; solo `dibujar` necesita una.
+
+
+### 18.47 Eventos
+
+```aura
+variable e = ventana.evento(v)
+mientras (e != 0) {
+    si (ventana.es_pulsacion(e)) {
+        variable x = ventana.evento_x(v)
+        variable y = ventana.evento_y(v)
+    }
+    e = ventana.evento(v)
+}
+```
+
+- Clases de evento: 0 nada, 1 cerrar, 2 movimiento, 3 pulsación, 4 liberación, 5 tecla.
+- `es_cerrar`, `es_movimiento`, `es_pulsacion`, `es_liberacion` y `es_tecla` evitan usar números
+  sueltos en el programa.
+- `evento_x`, `evento_y` y `evento_tecla` dan los datos del último evento entregado.
+- La cola guarda 64 eventos, así que no se pierde entrada entre fotogramas.

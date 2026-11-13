@@ -15,12 +15,45 @@ std::string_view fuente_runtime_ui() {
 #endif
 #include <windows.h>
 
+/* Clases de evento. */
+#define NOOKI_EVENTO_NADA 0
+#define NOOKI_EVENTO_CERRAR 1
+#define NOOKI_EVENTO_MOVIMIENTO 2
+#define NOOKI_EVENTO_PULSACION 3
+#define NOOKI_EVENTO_LIBERACION 4
+#define NOOKI_EVENTO_TECLA 5
+
+typedef struct {
+    int clase;
+    int x;
+    int y;
+    int tecla;
+} nooki_evento;
+
+#define NOOKI_COLA_EVENTOS 64
+
 typedef struct {
     HWND ventana;
     HDC lienzo;
     int viva;
     int cerrada;
+    nooki_evento cola[NOOKI_COLA_EVENTOS];
+    int cabeza;
+    int cuenta;
+    nooki_evento ultimo;
 } nooki_ventana_estado;
+
+static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y, int tecla) {
+    if (estado == NULL || estado->cuenta >= NOOKI_COLA_EVENTOS) {
+        return;
+    }
+    const int posicion = (estado->cabeza + estado->cuenta) % NOOKI_COLA_EVENTOS;
+    estado->cola[posicion].clase = clase;
+    estado->cola[posicion].x = x;
+    estado->cola[posicion].y = y;
+    estado->cola[posicion].tecla = tecla;
+    ++estado->cuenta;
+}
 
 static LRESULT CALLBACK nooki_ventana_proc(HWND ventana, UINT mensaje, WPARAM wparam,
                                            LPARAM lparam) {
@@ -32,6 +65,25 @@ static LRESULT CALLBACK nooki_ventana_proc(HWND ventana, UINT mensaje, WPARAM wp
         }
         DestroyWindow(ventana);
         return 0;
+    }
+    switch (mensaje) {
+        case WM_MOUSEMOVE:
+            nooki_encolar(estado, NOOKI_EVENTO_MOVIMIENTO, (int)LOWORD(lparam),
+                          (int)HIWORD(lparam), 0);
+            return 0;
+        case WM_LBUTTONDOWN:
+            nooki_encolar(estado, NOOKI_EVENTO_PULSACION, (int)LOWORD(lparam),
+                          (int)HIWORD(lparam), 0);
+            return 0;
+        case WM_LBUTTONUP:
+            nooki_encolar(estado, NOOKI_EVENTO_LIBERACION, (int)LOWORD(lparam),
+                          (int)HIWORD(lparam), 0);
+            return 0;
+        case WM_KEYDOWN:
+            nooki_encolar(estado, NOOKI_EVENTO_TECLA, 0, 0, (int)wparam);
+            return 0;
+        default:
+            break;
     }
     if (mensaje == WM_DESTROY) {
         if (estado != NULL) {
@@ -184,11 +236,41 @@ void nooki_ui_dibujo_texto(long long manejador, long long x, long long y, const 
 }
 
 void nooki_ui_dibujo_presentar(long long manejador) {
+    /* En GDI el dibujo llega a la ventana al hacerlo: no hay nada que presentar.
+     * Llamar a GdiFlush aquí invalidaba el contexto y hacía caer el programa al
+     * seguir con el bucle de mensajes. */
+    (void)manejador;
+}
+
+/* --- Eventos --- */
+/* Devuelve la clase del siguiente evento y lo deja como «último». */
+long long nooki_ui_evento_siguiente(long long manejador) {
     nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
-    if (estado == NULL || estado->lienzo == NULL) {
-        return;
+    if (estado == NULL) {
+        return NOOKI_EVENTO_NADA;
     }
-    GdiFlush();
+    if (estado->cuenta == 0) {
+        return NOOKI_EVENTO_NADA;
+    }
+    estado->ultimo = estado->cola[estado->cabeza];
+    estado->cabeza = (estado->cabeza + 1) % NOOKI_COLA_EVENTOS;
+    --estado->cuenta;
+    return estado->ultimo.clase;
+}
+
+long long nooki_ui_evento_x(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    return estado == NULL ? 0 : estado->ultimo.x;
+}
+
+long long nooki_ui_evento_y(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    return estado == NULL ? 0 : estado->ultimo.y;
+}
+
+long long nooki_ui_evento_tecla(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    return estado == NULL ? 0 : estado->ultimo.tecla;
 }
 
 /* Color del píxel como 0xRRGGBB; -1 si no se puede leer. */
@@ -208,6 +290,24 @@ long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/keysym.h>
+
+/* Clases de evento (las mismas que en la otra plataforma). */
+#define NOOKI_EVENTO_NADA 0
+#define NOOKI_EVENTO_CERRAR 1
+#define NOOKI_EVENTO_MOVIMIENTO 2
+#define NOOKI_EVENTO_PULSACION 3
+#define NOOKI_EVENTO_LIBERACION 4
+#define NOOKI_EVENTO_TECLA 5
+#define NOOKI_COLA_EVENTOS 64
+
+typedef struct {
+    int clase;
+    int x;
+    int y;
+    int tecla;
+} nooki_evento;
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -218,7 +318,23 @@ typedef struct {
     GC lienzo;
     int viva;
     int cerrada;
+    nooki_evento cola[NOOKI_COLA_EVENTOS];
+    int cabeza;
+    int cuenta;
+    nooki_evento ultimo;
 } nooki_ventana_estado;
+
+static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y, int tecla) {
+    if (estado == NULL || estado->cuenta >= NOOKI_COLA_EVENTOS) {
+        return;
+    }
+    const int posicion = (estado->cabeza + estado->cuenta) % NOOKI_COLA_EVENTOS;
+    estado->cola[posicion].clase = clase;
+    estado->cola[posicion].x = x;
+    estado->cola[posicion].y = y;
+    estado->cola[posicion].tecla = tecla;
+    ++estado->cuenta;
+}
 
 long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long alto) {
     Display* pantalla = XOpenDisplay(NULL);
@@ -237,7 +353,9 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
                                           (unsigned)ancho, (unsigned)alto, 0,
                                           BlackPixel(pantalla, 0), WhitePixel(pantalla, 0));
     XStoreName(pantalla, estado->ventana, titulo);
-    XSelectInput(pantalla, estado->ventana, ExposureMask | KeyPressMask | StructureNotifyMask);
+    XSelectInput(pantalla, estado->ventana,
+                 ExposureMask | KeyPressMask | StructureNotifyMask |
+                     PointerMotionMask | ButtonPressMask | ButtonReleaseMask);
     estado->lienzo = XCreateGC(pantalla, estado->ventana, 0, NULL);
     XMapWindow(pantalla, estado->ventana);
     XFlush(pantalla);
@@ -252,11 +370,32 @@ int nooki_ui_ventana_viva(long long manejador) {
     while (XPending(estado->pantalla) > 0) {
         XEvent evento;
         XNextEvent(estado->pantalla, &evento);
-        if (evento.type == DestroyNotify) {
-            estado->viva = 0;
-        }
-        if (evento.type == ClientMessage) {
-            estado->cerrada = 1;
+        switch (evento.type) {
+            case DestroyNotify:
+                estado->viva = 0;
+                break;
+            case ClientMessage:
+                estado->cerrada = 1;
+                break;
+            case MotionNotify:
+                nooki_encolar(estado, NOOKI_EVENTO_MOVIMIENTO, evento.xmotion.x,
+                              evento.xmotion.y, 0);
+                break;
+            case ButtonPress:
+                nooki_encolar(estado, NOOKI_EVENTO_PULSACION, evento.xbutton.x,
+                              evento.xbutton.y, 0);
+                break;
+            case ButtonRelease:
+                nooki_encolar(estado, NOOKI_EVENTO_LIBERACION, evento.xbutton.x,
+                              evento.xbutton.y, 0);
+                break;
+            case KeyPress: {
+                const KeySym simbolo = XLookupKeysym(&evento.xkey, 0);
+                nooki_encolar(estado, NOOKI_EVENTO_TECLA, 0, 0, (int)simbolo);
+                break;
+            }
+            default:
+                break;
         }
     }
     return estado->viva;
@@ -287,6 +426,33 @@ void nooki_ui_ventana_cerrar(long long manejador) {
 
 void nooki_ui_ventana_esperar(long long milisegundos) {
     usleep((useconds_t)(milisegundos * 1000));
+}
+
+/* --- Eventos (X11) --- */
+long long nooki_ui_evento_siguiente(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL || estado->cuenta == 0) {
+        return NOOKI_EVENTO_NADA;
+    }
+    estado->ultimo = estado->cola[estado->cabeza];
+    estado->cabeza = (estado->cabeza + 1) % NOOKI_COLA_EVENTOS;
+    --estado->cuenta;
+    return estado->ultimo.clase;
+}
+
+long long nooki_ui_evento_x(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    return estado == NULL ? 0 : estado->ultimo.x;
+}
+
+long long nooki_ui_evento_y(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    return estado == NULL ? 0 : estado->ultimo.y;
+}
+
+long long nooki_ui_evento_tecla(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    return estado == NULL ? 0 : estado->ultimo.tecla;
 }
 
 /* --- Dibujo (X11) --- */

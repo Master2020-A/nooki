@@ -5,6 +5,42 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 83 — Eventos (2026-11-12)
+
+El quinto pilar de la UI: **el ratón y el teclado llegan al programa**.
+
+```aura
+mientras (ventana.viva(v)) {
+    variable e = ventana.evento(v)
+    mientras (e != 0) {
+        si (ventana.es_pulsacion(e)) {
+            si (boton.pulsado(ventana.evento_x(v), ventana.evento_y(v))) { ... }
+        }
+        e = ventana.evento(v)
+    }
+    ventana.pausa(16)
+}
+```
+
+- **Cola de 64 eventos** en la capa C: el `WindowProc` de Win32 y el bucle de X11 encolan movimiento,
+  pulsación, liberación, tecla y cierre. Nada se pierde entre fotogramas.
+- **API en Nooki**: `evento`, `evento_x`, `evento_y`, `evento_tecla`, y predicados legibles
+  (`es_pulsacion`, `es_tecla`, …) en lugar de números sueltos.
+- Los controles del sprint anterior ya se pueden usar de verdad: el ejemplo de la ventana responde al
+  ratón.
+
+**Un fallo real, encontrado y no resuelto del todo (A-16)**: `presentar` llamaba a `GdiFlush`, que
+invalidaba el contexto de dibujo y hacía terminar el programa con violación de acceso. Ahora no hace
+nada en Windows (en GDI el dibujo llega a la ventana al hacerlo) y sigue haciendo `XFlush` en X11.
+
+**Y una incidencia abierta**: un programa con ventana lanzado desde `cmd /c` termina con
+`0xC0000005`; lanzado desde una consola normal funciona. No he conseguido aislar la causa. La prueba
+`prueba_ventana` comprueba lo que sí es determinista —que un programa con ventana compila y enlaza— y
+la incidencia queda anotada con su reproducción exacta en lugar de escondida.
+
+**Fallo de plataforma**: en la rama de X11 la función de encolar eventos se declaraba antes del tipo de
+la ventana. Solo lo ve Linux al compilar un programa con ventana.
+
 ### Sprint 82 — Controles (2026-11-12)
 
 El cuarto pilar de la UI: **widgets**. Con ventana, dibujo y layout, ya se pueden construir controles.

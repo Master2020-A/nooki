@@ -259,6 +259,35 @@ publico funcion pausa(milisegundos: entero) -> vacio {
     nooki_ui_ventana_esperar(milisegundos)
 }
 
+// --- Eventos. Las clases son: 0 nada, 1 cerrar, 2 movimiento, 3 pulsacion,
+// 4 liberacion, 5 tecla. ---
+externo funcion nooki_ui_evento_siguiente(manejador: entero) -> entero
+externo funcion nooki_ui_evento_x(manejador: entero) -> entero
+externo funcion nooki_ui_evento_y(manejador: entero) -> entero
+externo funcion nooki_ui_evento_tecla(manejador: entero) -> entero
+
+publico funcion evento(manejador: entero) -> entero {
+    retornar nooki_ui_evento_siguiente(manejador)
+}
+
+publico funcion evento_x(manejador: entero) -> entero {
+    retornar nooki_ui_evento_x(manejador)
+}
+
+publico funcion evento_y(manejador: entero) -> entero {
+    retornar nooki_ui_evento_y(manejador)
+}
+
+publico funcion evento_tecla(manejador: entero) -> entero {
+    retornar nooki_ui_evento_tecla(manejador)
+}
+
+publico funcion es_cerrar(cual: entero) -> booleano { retornar cual == 1 }
+publico funcion es_movimiento(cual: entero) -> booleano { retornar cual == 2 }
+publico funcion es_pulsacion(cual: entero) -> booleano { retornar cual == 3 }
+publico funcion es_liberacion(cual: entero) -> booleano { retornar cual == 4 }
+publico funcion es_tecla(cual: entero) -> booleano { retornar cual == 5 }
+
 // --- Dibujo. Los colores son 0xRRGGBB. ---
 externo funcion nooki_ui_dibujo_limpiar(manejador: entero, color: entero) -> vacio
 externo funcion nooki_ui_dibujo_rectangulo(manejador: entero, x: entero, y: entero,

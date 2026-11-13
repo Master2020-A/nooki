@@ -118,6 +118,7 @@ Sprint 79 ✅  UI: ventanas nativas desde Nooki
 Sprint 80 ✅  UI: dibujo con GDI y X11
 Sprint 81 ✅  UI: layout en Nooki puro
 Sprint 82 ✅  UI: controles (etiqueta, botón, barra)
+Sprint 83 ✅  UI: eventos de ratón y teclado
 ```
 
 **Ya compila y ejecuta:**
