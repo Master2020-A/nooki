@@ -4,6 +4,115 @@ namespace nooki::ui {
 
 std::string_view fuente_runtime_ui() {
     return R"(
+/* --- Imágenes: BMP de 24 o 32 bits sin comprimir ---
+ * Se lee el archivo entero y se guardan los píxeles como 0xRRGGBB. */
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int ancho;
+    int alto;
+    unsigned int* pixeles;
+} nooki_imagen;
+
+long long nooki_ui_imagen_cargar(const char* ruta) {
+    FILE* archivo = fopen(ruta, "rb");
+    if (archivo == NULL) {
+        return 0;
+    }
+    unsigned char cabecera[54];
+    if (fread(cabecera, 1, 54, archivo) != 54 || cabecera[0] != 'B' || cabecera[1] != 'M') {
+        fclose(archivo);
+        return 0;
+    }
+    const int inicio_datos = (int)(cabecera[10] | (cabecera[11] << 8) |
+                                   (cabecera[12] << 16) | (cabecera[13] << 24));
+    const int ancho = (int)(cabecera[18] | (cabecera[19] << 8));
+    const int alto = (int)(cabecera[22] | (cabecera[23] << 8));
+    const int bits = cabecera[28] | (cabecera[29] << 8);
+    const int compresion = cabecera[30];
+    if (ancho <= 0 || alto <= 0 || compresion != 0 || (bits != 24 && bits != 32)) {
+        fclose(archivo);
+        return 0;
+    }
+
+    nooki_imagen* imagen = (nooki_imagen*)malloc(sizeof(nooki_imagen));
+    if (imagen == NULL) {
+        fclose(archivo);
+        return 0;
+    }
+    imagen->ancho = ancho;
+    imagen->alto = alto;
+    imagen->pixeles = (unsigned int*)malloc((size_t)ancho * (size_t)alto * sizeof(unsigned int));
+    if (imagen->pixeles == NULL) {
+        free(imagen);
+        fclose(archivo);
+        return 0;
+    }
+
+    const int bytes_por_pixel = bits / 8;
+    const int relleno = (4 - (ancho * bytes_por_pixel) % 4) % 4;
+    const long linea = (long)ancho * bytes_por_pixel + relleno;
+    if (fseek(archivo, inicio_datos, SEEK_SET) != 0) {
+        free(imagen->pixeles);
+        free(imagen);
+        fclose(archivo);
+        return 0;
+    }
+
+    unsigned char* fila = (unsigned char*)malloc((size_t)linea);
+    if (fila == NULL) {
+        free(imagen->pixeles);
+        free(imagen);
+        fclose(archivo);
+        return 0;
+    }
+    /* El BMP guarda las filas de abajo arriba. */
+    for (int y = 0; y < alto; ++y) {
+        if (fread(fila, 1, (size_t)linea, archivo) != (size_t)linea) {
+            break;
+        }
+        const int destino = alto - 1 - y;
+        for (int x = 0; x < ancho; ++x) {
+            const unsigned char* p = fila + (size_t)x * bytes_por_pixel;
+            imagen->pixeles[(size_t)destino * ancho + x] =
+                ((unsigned int)p[2] << 16) | ((unsigned int)p[1] << 8) | p[0];
+        }
+    }
+    free(fila);
+    fclose(archivo);
+    return (long long)(intptr_t)imagen;
+}
+
+long long nooki_ui_imagen_ancho(long long manejador) {
+    nooki_imagen* imagen = (nooki_imagen*)(intptr_t)manejador;
+    return imagen == NULL ? 0 : imagen->ancho;
+}
+
+long long nooki_ui_imagen_alto(long long manejador) {
+    nooki_imagen* imagen = (nooki_imagen*)(intptr_t)manejador;
+    return imagen == NULL ? 0 : imagen->alto;
+}
+
+long long nooki_ui_imagen_color_en(long long manejador, long long x, long long y) {
+    nooki_imagen* imagen = (nooki_imagen*)(intptr_t)manejador;
+    if (imagen == NULL || x < 0 || y < 0 || x >= imagen->ancho || y >= imagen->alto) {
+        return -1;
+    }
+    return (long long)imagen->pixeles[(size_t)y * imagen->ancho + x];
+}
+
+void nooki_ui_imagen_soltar(long long manejador) {
+    nooki_imagen* imagen = (nooki_imagen*)(intptr_t)manejador;
+    if (imagen == NULL) {
+        return;
+    }
+    free(imagen->pixeles);
+    free(imagen);
+}
+
 /* --- Ventanas de Nooki (generado por el compilador) ---
  * Un manejador es un entero: el puntero a la estructura de la ventana. Las
  * funciones devuelven 0 cuando no hay pantalla disponible, así que un programa
@@ -280,6 +389,23 @@ long long nooki_ui_evento_tecla(long long manejador) {
     return estado == NULL ? 0 : estado->ultimo.tecla;
 }
 
+void nooki_ui_dibujo_imagen(long long manejador, long long imagen_manejador, long long x,
+                            long long y) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    nooki_imagen* imagen = (nooki_imagen*)(intptr_t)imagen_manejador;
+    if (estado == NULL || estado->lienzo == NULL || imagen == NULL) {
+        return;
+    }
+    for (int fila = 0; fila < imagen->alto; ++fila) {
+        for (int columna = 0; columna < imagen->ancho; ++columna) {
+            const unsigned int color = imagen->pixeles[(size_t)fila * imagen->ancho + columna];
+            SetPixelV(estado->lienzo, (int)x + columna, (int)y + fila,
+                      RGB((BYTE)((color >> 16) & 0xFF), (BYTE)((color >> 8) & 0xFF),
+                          (BYTE)(color & 0xFF)));
+        }
+    }
+}
+
 /* Color del píxel como 0xRRGGBB; -1 si no se puede leer. */
 long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y) {
     nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
@@ -521,6 +647,23 @@ void nooki_ui_dibujo_presentar(long long manejador) {
         return;
     }
     XFlush(estado->pantalla);
+}
+
+void nooki_ui_dibujo_imagen(long long manejador, long long imagen_manejador, long long x,
+                            long long y) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    nooki_imagen* imagen = (nooki_imagen*)(intptr_t)imagen_manejador;
+    if (estado == NULL || estado->pantalla == NULL || imagen == NULL) {
+        return;
+    }
+    for (int fila = 0; fila < imagen->alto; ++fila) {
+        for (int columna = 0; columna < imagen->ancho; ++columna) {
+            const unsigned int color = imagen->pixeles[(size_t)fila * imagen->ancho + columna];
+            XSetForeground(estado->pantalla, estado->lienzo, (unsigned long)color);
+            XDrawPoint(estado->pantalla, estado->ventana, estado->lienzo,
+                       (int)(x + columna), (int)(y + fila));
+        }
+    }
 }
 
 long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y) {

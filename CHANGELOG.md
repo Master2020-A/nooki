@@ -5,6 +5,37 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 86 — Imágenes (2026-11-13)
+
+El séptimo pilar de la UI: **cargar y dibujar imágenes**.
+
+```aura
+usar imagenes
+
+variable icono = imagenes.cargar(&ruta)
+si (imagenes.cargada(icono)) {
+    imprimir(imagenes.ancho(icono))
+    imprimir(imagenes.color_en(icono, 0, 0))
+    imagenes.dibujar(pantalla, icono, 10, 10)
+    imagenes.soltar(icono)
+}
+```
+
+- **BMP de 24 o 32 bits sin comprimir**, leído a mano: cabecera, filas de abajo arriba, relleno de
+  fila y píxeles en `0xRRGGBB`. Si el archivo no es BMP, devuelve 0 en lugar de fallar.
+- **`color_en(x, y)`** permite comprobar la imagen sin dibujarla: la prueba carga un BMP 4×3 generado al
+  vuelo y verifica los cuatro colores exactos (rojo, verde, azul, blanco), las dimensiones y que fuera
+  de rango devuelve -1.
+- **Y que un archivo que no es BMP se rechaza**, no se acepta a medias.
+- **Suite `imagenes`**: 17 suites.
+
+**La decisión del formato**: PNG habría costado un sprint entero solo para el decodificador (inflate y
+filtros) o una dependencia externa. BMP cabe en un sprint, no añade nada y deja la puerta abierta a PNG
+detrás de la misma API.
+
+**Un fallo de plataforma más**: el cargador usaba `intptr_t` sin incluir `<stdint.h>`, y las funciones
+quedaron `static`, invisibles desde el programa generado. Las dos cosas las señaló Linux.
+
 ### Sprint 85 — Accesibilidad (2026-11-13)
 
 El sexto pilar de la UI: que la interfaz se pueda leer y recorrer con el teclado.

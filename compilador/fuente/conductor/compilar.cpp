@@ -91,6 +91,46 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "imagenes") {
+        return R"(// Biblioteca estándar: imágenes BMP (24 o 32 bits, sin comprimir).
+externo funcion nooki_ui_imagen_cargar(ruta: &texto) -> entero
+externo funcion nooki_ui_imagen_ancho(imagen: entero) -> entero
+externo funcion nooki_ui_imagen_alto(imagen: entero) -> entero
+externo funcion nooki_ui_imagen_color_en(imagen: entero, x: entero, y: entero) -> entero
+externo funcion nooki_ui_imagen_soltar(imagen: entero) -> vacio
+externo funcion nooki_ui_dibujo_imagen(pantalla: entero, imagen: entero, x: entero,
+                                       y: entero) -> vacio
+
+// Carga una imagen. Devuelve 0 si no existe o no es un BMP válido.
+publico funcion cargar(ruta: &texto) -> entero {
+    retornar nooki_ui_imagen_cargar(*ruta)
+}
+
+publico funcion cargada(imagen: entero) -> booleano {
+    retornar imagen != 0
+}
+
+publico funcion ancho(imagen: entero) -> entero {
+    retornar nooki_ui_imagen_ancho(imagen)
+}
+
+publico funcion alto(imagen: entero) -> entero {
+    retornar nooki_ui_imagen_alto(imagen)
+}
+
+publico funcion color_en(imagen: entero, x: entero, y: entero) -> entero {
+    retornar nooki_ui_imagen_color_en(imagen, x, y)
+}
+
+publico funcion soltar(imagen: entero) -> vacio {
+    nooki_ui_imagen_soltar(imagen)
+}
+
+publico funcion dibujar(pantalla: entero, imagen: entero, x: entero, y: entero) -> vacio {
+    nooki_ui_dibujo_imagen(pantalla, imagen, x, y)
+}
+)";
+    }
     if (modulo == "accesibilidad") {
         return R"(// Biblioteca estándar: legibilidad y navegación por teclado.
 // Los colores son enteros 0xRRGGBB.
@@ -610,7 +650,8 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
         return true;  // ya cargado: un ciclo no duplica el módulo
     }
     cargados.push_back(clave);
-    if (clave == "ventana") {
+    // Los módulos que hablan con el sistema necesitan la capa C de UI.
+    if (clave == "ventana" || clave == "imagenes") {
         hace_falta_ui = true;
     }
 

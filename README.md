@@ -121,6 +121,7 @@ Sprint 82 ✅  UI: controles (etiqueta, botón, barra)
 Sprint 83 ✅  UI: eventos de ratón y teclado
 Sprint 84 ✅  A-16 resuelto: la cola de eventos sin inicializar
 Sprint 85 ✅  UI: accesibilidad y foco
+Sprint 86 ✅  UI: imágenes BMP
 ```
 
 **Ya compila y ejecuta:**

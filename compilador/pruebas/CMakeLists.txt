@@ -82,6 +82,14 @@ add_test(NAME ventana COMMAND prueba_ventana)
 set_tests_properties(ventana PROPERTIES TIMEOUT 120
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:nooki>")
 
+# Imágenes: carga de BMP y lectura de píxeles.
+add_executable(prueba_imagenes imagenes.cpp)
+target_link_libraries(prueba_imagenes PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_imagenes)
+add_test(NAME imagenes COMMAND prueba_imagenes)
+set_tests_properties(imagenes PROPERTIES TIMEOUT 120
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:nooki>")
+
 # Manifiesto del proyecto: nooki.toml y dependencias.
 add_executable(prueba_manifiesto manifiesto.cpp)
 target_link_libraries(prueba_manifiesto PRIVATE nooki_nucleo)

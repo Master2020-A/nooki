@@ -1512,3 +1512,21 @@ estado.siguiente()
 - `foco`: índice que envuelve entre controles para navegar con Tab y Mayús+Tab.
 - La regla de legibilidad es una **heurística**, no el contraste WCAG exacto: ese exige corrección
   gamma con potencias y aquí no se calcula con coma flotante.
+
+
+### 18.49 Imágenes
+
+```aura
+usar imagenes
+
+variable icono = imagenes.cargar(&ruta)
+si (imagenes.cargada(icono)) {
+    imagenes.dibujar(pantalla, icono, 10, 10)
+    imagenes.soltar(icono)
+}
+```
+
+- Formato: **BMP de 24 o 32 bits sin comprimir**. Cualquier otro archivo devuelve 0.
+- `ancho`, `alto`, `color_en(x, y)` (0xRRGGBB, o -1 fuera de rango) y `soltar`.
+- `cargar` devuelve un manejador; hay que llamar a `soltar` cuando ya no se use.
+- PNG queda pendiente: exige un decodificador entero (inflate y filtros) o una dependencia externa.
