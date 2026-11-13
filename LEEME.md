@@ -35,12 +35,12 @@ $ nooki ejecutar hola.oki
 | Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas`, `archivo`, `ventana`, `diseno`, `controles`, `accesibilidad`, `imagenes`, `tensor`, `pln`, `tabla`, `autograd`, `redes` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
-**Versión actual: 1.0.0.** La guía de interfaz gráfica está en [`docs/INTERFAZ.md`](docs/INTERFAZ.md). En Linux, compilar programas con ventana necesita `libx11-dev`; para ejecutarlos sin pantalla, `xvfb-run`. Biblioteca: `resultado`, `matematicas`, `textos`, `listas` y `fechas`, escritos en Nooki. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
+**Versión actual: 1.0.0.** La guía de interfaz gráfica está en [`docs/INTERFAZ.md`](docs/INTERFAZ.md). En Linux, compilar programas con ventana necesita `libx11-dev`; para ejecutarlos sin pantalla, `xvfb-run`. Dieciséis módulos de biblioteca, escritos en Nooki: los de datos y textos, los cinco de interfaz y los cinco de IA. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Probar sin instalar nada
 
-El repositorio trae cuatro programas listos en [`ejemplos/`](ejemplos/):
+El repositorio trae siete programas listos en [`ejemplos/`](ejemplos/):
 
 ```bash
 $ export PATH="$PWD/build/linux/compilador:$PATH"   # Windows: ver ejemplos/LEEME.md
@@ -132,15 +132,20 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 
 Cada cambio pasa por tres filtros:
 
-1. **Ocho suites unitarias** del compilador (léxico, parser, semántica, diagnósticos, CLI, expresión).
-2. **74 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
+1. **Diecisiete suites** del compilador: léxico, parser, semántica, diagnósticos, CLI, expresiones,
+   sentencias, panics, rutas, manifiestos, LSP, ventanas, imágenes, rendimiento y conformidad.
+2. **92 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
    la esperada; los inválidos pasan por léxico, parser y verificación y deben emitir exactamente los
    códigos que declaran.
-3. **Dieciséis suites**, entre ellas el fuzzing (entradas aleatorias contra todas las fases), los
-   benchmarks, la aritmética comprobada y la que comprueba que la documentación no se desincronice.
-4. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos.
+3. **Fuzzing** (entradas aleatorias contra todas las fases), **benchmarks**, la aritmética comprobada y
+   la que comprueba que la documentación no se desincronice.
+4. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos, más Linux con `gcc` y con
+   `AddressSanitizer` + `UndefinedBehaviorSanitizer`.
 
-Los diagnósticos también se prueban: cada código `NOK` tiene un caso que lo provoca.
+De los 46 códigos de diagnóstico, **40 tienen un caso que los provoca**. Los seis restantes necesitan
+escenarios que no caben en una prueba automática —una máquina sin compilador de C, uno roto, dos
+módulos para el símbolo privado y tres errores del analizador sin disparador estable— y están
+anotados con su motivo en `DECISIONES.md`.
 
 ## Licencia
 
