@@ -1,0 +1,67 @@
+usar tabla
+
+funcion principal() -> entero {
+    variable t = tabla.crear(4)
+    variable nombre = "producto" + ""
+    variable ciudad = "ciudad" + ""
+    variable ventas = "ventas" + ""
+
+    tabla.columna_texto(t, &nombre)
+    tabla.columna_texto(t, &ciudad)
+    tabla.columna_entero(t, &ventas)
+
+    variable p1 = "pan" + ""
+    variable p2 = "leche" + ""
+    variable p3 = "pan" + ""
+    variable p4 = "huevos" + ""
+    variable c1 = "Madrid" + ""
+    variable c2 = "Lima" + ""
+    variable c3 = "Lima" + ""
+    variable c4 = "Madrid" + ""
+
+    tabla.poner_texto(t, 0, 0, &p1)
+    tabla.poner_texto(t, 0, 1, &c1)
+    tabla.poner_entero(t, 0, 2, 10)
+
+    tabla.poner_texto(t, 1, 0, &p2)
+    tabla.poner_texto(t, 1, 1, &c2)
+    tabla.poner_entero(t, 1, 2, 20)
+
+    tabla.poner_texto(t, 2, 0, &p3)
+    tabla.poner_texto(t, 2, 1, &c3)
+    tabla.poner_entero(t, 2, 2, 30)
+
+    tabla.poner_texto(t, 3, 0, &p4)
+    tabla.poner_texto(t, 3, 1, &c4)
+    tabla.poner_entero(t, 3, 2, 40)
+
+    imprimir(tabla.filas(t))
+    imprimir(tabla.columnas(t))
+    imprimir(tabla.nombre_columna(t, 2))
+
+    imprimir(tabla.suma(t, 2))
+    imprimir(tabla.media(t, 2))
+    imprimir(tabla.minimo(t, 2))
+    imprimir(tabla.maximo(t, 2))
+
+    variable madrid = "Madrid" + ""
+    variable solo_madrid = tabla.filtrar(t, 1, &madrid)
+    imprimir(tabla.filas(solo_madrid))
+    imprimir(tabla.suma(solo_madrid, 2))
+
+    variable ordenada = tabla.ordenar(t, 2)
+    imprimir(tabla.valor_entero(ordenada, 0, 2))
+    imprimir(tabla.valor_entero(ordenada, 3, 2))
+
+    variable por_ciudad = tabla.contar_por(t, 1)
+    imprimir(tabla.filas(por_ciudad))
+    imprimir(tabla.valor_texto(por_ciudad, 0, 0))
+    imprimir(tabla.valor_entero(por_ciudad, 0, 1))
+
+    tabla.liberar(solo_madrid)
+    tabla.liberar(ordenada)
+    tabla.liberar(por_ciudad)
+    tabla.liberar(t)
+    imprimir("fin")
+    retornar 0
+}

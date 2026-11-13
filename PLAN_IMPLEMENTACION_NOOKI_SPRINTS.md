@@ -313,7 +313,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S89** | IA: estadística y activaciones | ✅ `minimo`, `maximo`, `media`, `varianza`, `desviacion`, `normalizar`, `relu`, `sigmoides` y `softmax` (todo por mil), con caso `0056` de valores calculables. Corregida la escala de la desviación |
 | **S90** | Flotantes | ✅ Tipo `flotante` (`double` en C): literales, variables, parámetros, retornos, aritmética, comparación, negación y `como` en las dos direcciones. Se imprime con coma. Caso `0057`. Prueba de ventana estabilizada |
 | **S91** | IA: PLN | ✅ `normalizar`, `tokenizar`, `contar`, `unicas`, `distintas`, `distancia` (edición) y `jaccard` (parecido por mil), todo en Nooki. Caso `0058`. Corregidos `(*x).método()`, el tipo de `&x`, los préstamos en argumentos y la asignación de colecciones (use-after-free) |
-| **S92** | Rendimiento final y "modo didáctico" | Optimización del compilador; benchmarks vs C/Rust/Go; mensajes de error pedagógicos para principiantes |
+| **S92** | IA: tablas | ✅ Módulo `tabla` (DataFrame): columnas con nombre numéricas y de texto, `filtrar`, `ordenar`, `contar_por`, `suma`, `media`, `minimo` y `maximo`. Caso `0059`. La FFI puede devolver `texto`. La UI de Linux se verifica con píxeles reales (WSLg) |
 | **S93** | Documentación completa | Especificación 1.0, libro en español, tutoriales, referencia de API, guía de contribución |
 | **S94** | Instaladores y distribución | MSI, DEB/RPM, Homebrew, WinGet; **PKG y notarización de macOS condicionados a un Mac o financiación** (D-17); firma de código; actualizador |
 | **S95** | *Release candidate* | RC congelado; pruebas en 3 sistemas; migración de proyectos piloto |

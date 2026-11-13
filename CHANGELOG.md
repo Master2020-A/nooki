@@ -5,6 +5,44 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 92 — Tablas: el DataFrame (2026-11-13)
+
+```aura
+usar tabla
+
+variable t = tabla.crear(4)
+tabla.columna_texto(t, &"producto")
+tabla.columna_entero(t, &"ventas")
+tabla.poner_texto(t, 0, 0, &"pan")
+tabla.poner_entero(t, 0, 1, 10)
+
+imprimir(tabla.suma(t, 1))        // 100
+imprimir(tabla.media(t, 1))       // 25000 → 25
+variable madrid = tabla.filtrar(t, 0, &"pan")
+variable ordenada = tabla.ordenar(t, 1)
+variable resumen = tabla.contar_por(t, 0)
+```
+
+- **Columnas con nombre**, numéricas o de texto, con `crear`, `columna_entero`, `columna_texto`,
+  `poner_*`, `valor_*`, `filas`, `columnas` y `nombre_columna`.
+- **Resúmenes**: `suma`, `media` (por mil), `minimo`, `maximo`.
+- **`filtrar`** por valor de texto, **`ordenar`** por columna numérica y **`contar_por`**, que devuelve
+  una tabla con «valor» y «cuenta».
+- Caso `0059-tabla`: cuatro filas, filtro por ciudad, orden y agrupación. **89 casos.**
+
+**Un rasgo nuevo del lenguaje**: **las funciones `externo` ya pueden devolver `texto`**. El generador
+copia la cadena de C a un texto de Nooki, porque el búfer puede ser de la biblioteca y no nuestro. Era
+la pieza que faltaba para que un módulo envuelva datos que vienen de C.
+
+**Y la interfaz en Linux funciona de verdad**: WSLg da un servidor X real, así que la cadena de Linux
+ahora abre ventanas y lee píxeles. Eso destapó tres cosas:
+
+1. **`XGetImage` abortaba el programa** cuando la ventana no estaba visible (`BadMatch`). Ahora hay un
+   manejador de errores de X y reintentos con `XSync`.
+2. **El primer `Expose` borraba lo pintado**: la prueba tiene que procesar los sucesos y volver a
+   dibujar antes de leer.
+3. **La prueba de ventana ya verifica píxeles en las dos plataformas**, no solo en Windows.
+
 ### Sprint 91 — PLN: lenguaje natural (2026-11-13)
 
 ```aura

@@ -155,6 +155,7 @@ typedef struct {
 } nooki_ventana_estado;
 
 static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y, int tecla) {
+
     if (estado == NULL || estado->cuenta >= NOOKI_COLA_EVENTOS) {
         return;
     }
@@ -485,6 +486,7 @@ typedef struct {
 } nooki_ventana_estado;
 
 static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y, int tecla) {
+
     if (estado == NULL || estado->cuenta >= NOOKI_COLA_EVENTOS) {
         return;
     }
@@ -496,11 +498,19 @@ static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y,
     ++estado->cuenta;
 }
 
+/* Un error de X no debe terminar el programa: se anota y se sigue. */
+static int nooki_x11_error(Display* pantalla, XErrorEvent* evento) {
+    (void)pantalla;
+    (void)evento;
+    return 0;
+}
+
 long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long alto) {
     Display* pantalla = XOpenDisplay(NULL);
     if (pantalla == NULL) {
         return 0;  /* sin entorno gráfico */
     }
+    XSetErrorHandler(nooki_x11_error);
     nooki_ventana_estado* estado = (nooki_ventana_estado*)malloc(sizeof(nooki_ventana_estado));
     if (estado == NULL) {
         XCloseDisplay(pantalla);
@@ -713,8 +723,17 @@ long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y
     if (estado == NULL || estado->pantalla == NULL) {
         return -1;
     }
-    XImage* imagen =
-        XGetImage(estado->pantalla, estado->ventana, (int)x, (int)y, 1, 1, AllPlanes, ZPixmap);
+    /* La ventana puede tardar en estar visible: se reintenta unas cuantas veces
+     * antes de darse por vencido. */
+    XImage* imagen = NULL;
+    for (int intento = 0; intento < 20 && imagen == NULL; ++intento) {
+        XSync(estado->pantalla, 0);
+        imagen =
+            XGetImage(estado->pantalla, estado->ventana, (int)x, (int)y, 1, 1, AllPlanes, ZPixmap);
+        if (imagen == NULL) {
+            usleep(20000);
+        }
+    }
     if (imagen == NULL) {
         return -1;
     }

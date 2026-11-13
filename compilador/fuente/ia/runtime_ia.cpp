@@ -468,6 +468,423 @@ long long nooki_ia_tensor_softmax(long long manejador) {
     return salida;
 }
 
+/* --- Tablas: columnas con nombre, como un DataFrame ---
+ * Cada columna es numérica o de texto. Las de texto guardan copias propias. */
+
+typedef struct {
+    char* nombre;
+    int es_texto;
+    long long* numeros;
+    char** textos;
+} nooki_columna;
+
+typedef struct {
+    int filas;
+    int columnas;
+    nooki_columna* columnas_datos;
+} nooki_tabla;
+
+void nooki_ia_tabla_liberar(long long manejador);
+
+static nooki_tabla* nooki_tabla_de(long long manejador) {
+    return (nooki_tabla*)(intptr_t)manejador;
+}
+
+static char* nooki_tabla_copiar(const char* texto) {
+    if (texto == NULL) {
+        texto = "";
+    }
+    const size_t largo = strlen(texto);
+    char* copia = (char*)malloc(largo + 1);
+    if (copia == NULL) {
+        return NULL;
+    }
+    memcpy(copia, texto, largo + 1);
+    return copia;
+}
+
+long long nooki_ia_tabla_crear(long long filas) {
+    if (filas < 0 || filas > 10000000) {
+        return 0;
+    }
+    nooki_tabla* tabla = (nooki_tabla*)malloc(sizeof(nooki_tabla));
+    if (tabla == NULL) {
+        return 0;
+    }
+    tabla->filas = (int)filas;
+    tabla->columnas = 0;
+    tabla->columnas_datos = NULL;
+    return (long long)(intptr_t)tabla;
+}
+
+/* Añade una columna y devuelve su índice, o -1 si no se puede. */
+static long long nooki_tabla_anadir(long long manejador, const char* nombre, int es_texto) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL) {
+        return -1;
+    }
+    const int cuantas = tabla->columnas + 1;
+    nooki_columna* columnas =
+        (nooki_columna*)realloc(tabla->columnas_datos, (size_t)cuantas * sizeof(nooki_columna));
+    if (columnas == NULL) {
+        return -1;
+    }
+    tabla->columnas_datos = columnas;
+    nooki_columna* columna = &columnas[tabla->columnas];
+    columna->nombre = nooki_tabla_copiar(nombre);
+    columna->es_texto = es_texto;
+    columna->numeros = NULL;
+    columna->textos = NULL;
+
+    const size_t filas = (size_t)tabla->filas;
+    if (es_texto) {
+        columna->textos = (char**)calloc(filas == 0 ? 1 : filas, sizeof(char*));
+        if (columna->textos == NULL) {
+            free(columna->nombre);
+            return -1;
+        }
+    } else {
+        columna->numeros = (long long*)calloc(filas == 0 ? 1 : filas, sizeof(long long));
+        if (columna->numeros == NULL) {
+            free(columna->nombre);
+            return -1;
+        }
+    }
+    ++tabla->columnas;
+    return tabla->columnas - 1;
+}
+
+long long nooki_ia_tabla_columna_entero(long long manejador, const char* nombre) {
+    return nooki_tabla_anadir(manejador, nombre, 0);
+}
+
+long long nooki_ia_tabla_columna_texto(long long manejador, const char* nombre) {
+    return nooki_tabla_anadir(manejador, nombre, 1);
+}
+
+long long nooki_ia_tabla_filas(long long manejador) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    return tabla == NULL ? 0 : tabla->filas;
+}
+
+long long nooki_ia_tabla_columnas(long long manejador) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    return tabla == NULL ? 0 : tabla->columnas;
+}
+
+/* Nombre de la columna; cadena vacía si no existe. */
+const char* nooki_ia_tabla_nombre(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
+        return "";
+    }
+    return tabla->columnas_datos[columna].nombre;
+}
+
+static nooki_columna* nooki_tabla_columna(nooki_tabla* tabla, long long fila, long long columna) {
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas || fila < 0 ||
+        fila >= tabla->filas) {
+        return NULL;
+    }
+    return &tabla->columnas_datos[columna];
+}
+
+void nooki_ia_tabla_poner_entero(long long manejador, long long fila, long long columna,
+                                 long long valor) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    nooki_columna* c = nooki_tabla_columna(tabla, fila, columna);
+    if (c == NULL || c->es_texto) {
+        return;
+    }
+    c->numeros[fila] = valor;
+}
+
+void nooki_ia_tabla_poner_texto(long long manejador, long long fila, long long columna,
+                                const char* valor) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    nooki_columna* c = nooki_tabla_columna(tabla, fila, columna);
+    if (c == NULL || !c->es_texto) {
+        return;
+    }
+    free(c->textos[fila]);
+    c->textos[fila] = nooki_tabla_copiar(valor);
+}
+
+long long nooki_ia_tabla_valor_entero(long long manejador, long long fila, long long columna) {
+    nooki_columna* c = nooki_tabla_columna(nooki_tabla_de(manejador), fila, columna);
+    if (c == NULL || c->es_texto) {
+        return 0;
+    }
+    return c->numeros[fila];
+}
+
+const char* nooki_ia_tabla_valor_texto(long long manejador, long long fila, long long columna) {
+    nooki_columna* c = nooki_tabla_columna(nooki_tabla_de(manejador), fila, columna);
+    if (c == NULL || !c->es_texto || c->textos[fila] == NULL) {
+        return "";
+    }
+    return c->textos[fila];
+}
+
+long long nooki_ia_tabla_suma(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (c->es_texto) {
+        return 0;
+    }
+    long long total = 0;
+    for (int i = 0; i < tabla->filas; ++i) {
+        total += c->numeros[i];
+    }
+    return total;
+}
+
+long long nooki_ia_tabla_minimo(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas || tabla->filas == 0) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (c->es_texto) {
+        return 0;
+    }
+    long long minimo = c->numeros[0];
+    for (int i = 1; i < tabla->filas; ++i) {
+        if (c->numeros[i] < minimo) {
+            minimo = c->numeros[i];
+        }
+    }
+    return minimo;
+}
+
+long long nooki_ia_tabla_maximo(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas || tabla->filas == 0) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (c->es_texto) {
+        return 0;
+    }
+    long long maximo = c->numeros[0];
+    for (int i = 1; i < tabla->filas; ++i) {
+        if (c->numeros[i] > maximo) {
+            maximo = c->numeros[i];
+        }
+    }
+    return maximo;
+}
+
+/* Media de la columna, por mil. */
+long long nooki_ia_tabla_media(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas || tabla->filas == 0) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (c->es_texto) {
+        return 0;
+    }
+    double suma = 0.0;
+    for (int i = 0; i < tabla->filas; ++i) {
+        suma += (double)c->numeros[i];
+    }
+    const double media = suma / (double)tabla->filas;
+    return (long long)(media < 0 ? media * 1000.0 - 0.5 : media * 1000.0 + 0.5);
+}
+
+/* Copia la estructura de la tabla y las columnas elegidas. */
+static nooki_tabla* nooki_tabla_nueva_de(const nooki_tabla* origen, int filas) {
+    const long long manejador = nooki_ia_tabla_crear(filas);
+    nooki_tabla* nueva = nooki_tabla_de(manejador);
+    if (nueva == NULL) {
+        return NULL;
+    }
+    for (int c = 0; c < origen->columnas; ++c) {
+        if (origen->columnas_datos[c].es_texto) {
+            nooki_ia_tabla_columna_texto((long long)(intptr_t)nueva,
+                                         origen->columnas_datos[c].nombre);
+        } else {
+            nooki_ia_tabla_columna_entero((long long)(intptr_t)nueva,
+                                          origen->columnas_datos[c].nombre);
+        }
+    }
+    return nueva;
+}
+
+/* Filas cuyo valor de texto coincide exactamente. */
+long long nooki_ia_tabla_filtrar_texto(long long manejador, long long columna,
+                                       const char* valor) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (!c->es_texto) {
+        return 0;
+    }
+    int cuantas = 0;
+    for (int i = 0; i < tabla->filas; ++i) {
+        if (c->textos[i] != NULL && strcmp(c->textos[i], valor) == 0) {
+            ++cuantas;
+        }
+    }
+    nooki_tabla* nueva = nooki_tabla_nueva_de(tabla, cuantas);
+    if (nueva == NULL) {
+        return 0;
+    }
+    int destino = 0;
+    for (int i = 0; i < tabla->filas; ++i) {
+        if (c->textos[i] == NULL || strcmp(c->textos[i], valor) != 0) {
+            continue;
+        }
+        for (int j = 0; j < tabla->columnas; ++j) {
+            nooki_columna* origen = &tabla->columnas_datos[j];
+            if (origen->es_texto) {
+                nooki_ia_tabla_poner_texto((long long)(intptr_t)nueva, destino, j,
+                                           origen->textos[i] == NULL ? "" : origen->textos[i]);
+            } else {
+                nooki_ia_tabla_poner_entero((long long)(intptr_t)nueva, destino, j,
+                                            origen->numeros[i]);
+            }
+        }
+        ++destino;
+    }
+    return (long long)(intptr_t)nueva;
+}
+
+/* Filas ordenadas de menor a mayor por una columna numérica. */
+long long nooki_ia_tabla_ordenar(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (c->es_texto) {
+        return 0;
+    }
+    nooki_tabla* nueva = nooki_tabla_nueva_de(tabla, tabla->filas);
+    if (nueva == NULL) {
+        return 0;
+    }
+    int* orden = (int*)malloc((size_t)tabla->filas * sizeof(int));
+    if (orden == NULL) {
+        nooki_ia_tabla_liberar((long long)(intptr_t)nueva);
+        return 0;
+    }
+    for (int i = 0; i < tabla->filas; ++i) {
+        orden[i] = i;
+    }
+    /* Orden por inserción: simple y suficiente para tablas de trabajo. */
+    for (int i = 1; i < tabla->filas; ++i) {
+        const int actual = orden[i];
+        int j = i - 1;
+        while (j >= 0 && c->numeros[orden[j]] > c->numeros[actual]) {
+            orden[j + 1] = orden[j];
+            --j;
+        }
+        orden[j + 1] = actual;
+    }
+    for (int i = 0; i < tabla->filas; ++i) {
+        for (int j = 0; j < tabla->columnas; ++j) {
+            nooki_columna* origen = &tabla->columnas_datos[j];
+            const int fila = orden[i];
+            if (origen->es_texto) {
+                nooki_ia_tabla_poner_texto((long long)(intptr_t)nueva, i, j,
+                                           origen->textos[fila] == NULL ? ""
+                                                                        : origen->textos[fila]);
+            } else {
+                nooki_ia_tabla_poner_entero((long long)(intptr_t)nueva, i, j,
+                                            origen->numeros[fila]);
+            }
+        }
+    }
+    free(orden);
+    return (long long)(intptr_t)nueva;
+}
+
+/* Cuántas filas de cada valor de una columna de texto. La tabla resultante
+ * tiene dos columnas: «valor» y «cuenta». */
+long long nooki_ia_tabla_contar_por(long long manejador, long long columna) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
+        return 0;
+    }
+    nooki_columna* c = &tabla->columnas_datos[columna];
+    if (!c->es_texto) {
+        return 0;
+    }
+    /* Valores distintos. */
+    char** valores = (char**)calloc((size_t)tabla->filas, sizeof(char*));
+    if (valores == NULL) {
+        return 0;
+    }
+    int cuantos = 0;
+    for (int i = 0; i < tabla->filas; ++i) {
+        const char* valor = c->textos[i] == NULL ? "" : c->textos[i];
+        int encontrado = -1;
+        for (int j = 0; j < cuantos; ++j) {
+            if (strcmp(valores[j], valor) == 0) {
+                encontrado = j;
+                break;
+            }
+        }
+        if (encontrado < 0) {
+            valores[cuantos] = nooki_tabla_copiar(valor);
+            ++cuantos;
+        }
+    }
+    const long long salida = nooki_ia_tabla_crear(cuantos);
+    nooki_tabla* nueva = nooki_tabla_de(salida);
+    if (nueva == NULL) {
+        for (int i = 0; i < cuantos; ++i) {
+            free(valores[i]);
+        }
+        free(valores);
+        return 0;
+    }
+    nooki_ia_tabla_columna_texto(salida, "valor");
+    nooki_ia_tabla_columna_entero(salida, "cuenta");
+    for (int i = 0; i < cuantos; ++i) {
+        int cuenta = 0;
+        for (int f = 0; f < tabla->filas; ++f) {
+            const char* valor = c->textos[f] == NULL ? "" : c->textos[f];
+            if (strcmp(valor, valores[i]) == 0) {
+                ++cuenta;
+            }
+        }
+        nooki_ia_tabla_poner_texto(salida, i, 0, valores[i]);
+        nooki_ia_tabla_poner_entero(salida, i, 1, cuenta);
+        free(valores[i]);
+    }
+    free(valores);
+    return salida;
+}
+
+void nooki_ia_tabla_liberar(long long manejador) {
+    nooki_tabla* tabla = nooki_tabla_de(manejador);
+    if (tabla == NULL) {
+        return;
+    }
+    for (int c = 0; c < tabla->columnas; ++c) {
+        nooki_columna* columna = &tabla->columnas_datos[c];
+        free(columna->nombre);
+        if (columna->es_texto) {
+            for (int i = 0; i < tabla->filas; ++i) {
+                free(columna->textos[i]);
+            }
+            free(columna->textos);
+        } else {
+            free(columna->numeros);
+        }
+    }
+    free(tabla->columnas_datos);
+    free(tabla);
+}
+
 /* 1 si las dos formas y todos los elementos coinciden. */
 long long nooki_ia_tensor_iguales(long long a_manejador, long long b_manejador) {
     nooki_tensor* a = nooki_tensor_de(a_manejador);

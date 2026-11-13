@@ -102,6 +102,106 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "tabla") {
+        return R"(// Biblioteca estándar: tablas con columnas con nombre, como un DataFrame.
+// Las columnas son numéricas o de texto. Los números con decimales van por mil.
+externo funcion nooki_ia_tabla_crear(filas: entero) -> entero
+externo funcion nooki_ia_tabla_columna_entero(t: entero, nombre: &texto) -> entero
+externo funcion nooki_ia_tabla_columna_texto(t: entero, nombre: &texto) -> entero
+externo funcion nooki_ia_tabla_filas(t: entero) -> entero
+externo funcion nooki_ia_tabla_columnas(t: entero) -> entero
+externo funcion nooki_ia_tabla_nombre(t: entero, columna: entero) -> texto
+externo funcion nooki_ia_tabla_poner_entero(t: entero, fila: entero, columna: entero,
+                                            valor: entero) -> vacio
+externo funcion nooki_ia_tabla_poner_texto(t: entero, fila: entero, columna: entero,
+                                           valor: &texto) -> vacio
+externo funcion nooki_ia_tabla_valor_entero(t: entero, fila: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_valor_texto(t: entero, fila: entero, columna: entero) -> texto
+externo funcion nooki_ia_tabla_suma(t: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_media(t: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_minimo(t: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_maximo(t: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_filtrar_texto(t: entero, columna: entero, valor: &texto) -> entero
+externo funcion nooki_ia_tabla_ordenar(t: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_contar_por(t: entero, columna: entero) -> entero
+externo funcion nooki_ia_tabla_liberar(t: entero) -> vacio
+
+publico funcion crear(filas: entero) -> entero {
+    retornar nooki_ia_tabla_crear(filas)
+}
+
+publico funcion columna_entero(t: entero, nombre: &texto) -> entero {
+    retornar nooki_ia_tabla_columna_entero(t, nombre)
+}
+
+publico funcion columna_texto(t: entero, nombre: &texto) -> entero {
+    retornar nooki_ia_tabla_columna_texto(t, nombre)
+}
+
+publico funcion filas(t: entero) -> entero {
+    retornar nooki_ia_tabla_filas(t)
+}
+
+publico funcion columnas(t: entero) -> entero {
+    retornar nooki_ia_tabla_columnas(t)
+}
+
+publico funcion nombre_columna(t: entero, columna: entero) -> texto {
+    retornar nooki_ia_tabla_nombre(t, columna)
+}
+
+publico funcion poner_entero(t: entero, fila: entero, columna: entero, valor: entero) -> vacio {
+    nooki_ia_tabla_poner_entero(t, fila, columna, valor)
+}
+
+publico funcion poner_texto(t: entero, fila: entero, columna: entero, valor: &texto) -> vacio {
+    nooki_ia_tabla_poner_texto(t, fila, columna, valor)
+}
+
+publico funcion valor_entero(t: entero, fila: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_valor_entero(t, fila, columna)
+}
+
+publico funcion valor_texto(t: entero, fila: entero, columna: entero) -> texto {
+    retornar nooki_ia_tabla_valor_texto(t, fila, columna)
+}
+
+publico funcion suma(t: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_suma(t, columna)
+}
+
+publico funcion media(t: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_media(t, columna)
+}
+
+publico funcion minimo(t: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_minimo(t, columna)
+}
+
+publico funcion maximo(t: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_maximo(t, columna)
+}
+
+// Filas cuyo valor de la columna de texto coincide.
+publico funcion filtrar(t: entero, columna: entero, valor: &texto) -> entero {
+    retornar nooki_ia_tabla_filtrar_texto(t, columna, valor)
+}
+
+// Filas ordenadas de menor a mayor por una columna numérica.
+publico funcion ordenar(t: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_ordenar(t, columna)
+}
+
+// Cuántas filas hay de cada valor. Devuelve una tabla con «valor» y «cuenta».
+publico funcion contar_por(t: entero, columna: entero) -> entero {
+    retornar nooki_ia_tabla_contar_por(t, columna)
+}
+
+publico funcion liberar(t: entero) -> vacio {
+    nooki_ia_tabla_liberar(t)
+}
+)";
+    }
     if (modulo == "pln") {
         return R"(// Biblioteca estándar: procesamiento de lenguaje natural.
 // Todo con textos, vectores de textos y mapas: nada de C.
@@ -1024,7 +1124,7 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     if (clave == "ventana" || clave == "imagenes") {
         hace_falta_ui = true;
     }
-    if (clave == "tensor") {
+    if (clave == "tensor" || clave == "tabla") {
         hace_falta_ia = true;
     }
 

@@ -1616,3 +1616,23 @@ imprimir(pln.jaccard(&f1, &f2))             // 0..1000
 - `distancia`: distancia de edición entre dos textos.
 - `jaccard`: parecido por mil, intersección sobre unión de palabras distintas.
 - Todo está escrito en Nooki: no hay C detrás.
+
+
+### 18.55 Tablas (DataFrame)
+
+```aura
+usar tabla
+
+variable t = tabla.crear(4)
+tabla.columna_texto(t, &"producto")
+tabla.columna_entero(t, &"ventas")
+tabla.poner_texto(t, 0, 0, &"pan")
+tabla.poner_entero(t, 0, 1, 10)
+imprimir(tabla.suma(t, 1))
+```
+
+- Columnas con nombre, numéricas o de texto.
+- `suma`, `media` (por mil), `minimo`, `maximo`.
+- `filtrar(t, columna, &valor)` por texto; `ordenar(t, columna)` por número; `contar_por(t, columna)`
+  devuelve una tabla con «valor» y «cuenta».
+- Las funciones `externo` **pueden devolver `texto`**: el generador copia la cadena de C.

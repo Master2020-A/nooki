@@ -167,6 +167,27 @@ const char* PRELUDIO =
     "    int propio;\n"
     "} nooki_texto;\n"
     "\n"
+    "static nooki_texto nooki_texto_desde_c(const char* datos) {\n"
+    "    nooki_texto t;\n"
+    "    if (datos == NULL) {\n"
+    "        t.datos = NULL;\n"
+    "        t.largo = 0;\n"
+    "        t.propio = 0;\n"
+    "        return t;\n"
+    "    }\n"
+    "    const size_t largo = strlen(datos);\n"
+    "    t.datos = (char*)malloc(largo + 1);\n"
+    "    if (t.datos == NULL) {\n"
+    "        t.largo = 0;\n"
+    "        t.propio = 0;\n"
+    "        return t;\n"
+    "    }\n"
+    "    memcpy(t.datos, datos, largo + 1);\n"
+    "    t.largo = (long long)largo;\n"
+    "    t.propio = 1;\n"
+    "    return t;\n"
+    "}\n"
+    "\n"
     "static nooki_texto nooki_texto_literal(const char* datos) {\n"
     "    nooki_texto t;\n"
     "    t.datos = (char*)datos;\n"
@@ -3534,6 +3555,13 @@ private:
             salida += valor;
         }
         salida += ')';
+
+        // Una función de C que devuelve `const char*` produce un texto de Nooki:
+        // se copia, porque el búfer puede ser de la biblioteca y no nuestro.
+        if (externa && retornos_.count(std::string(nombre_llamado)) != 0 &&
+            retornos_[std::string(nombre_llamado)] == "nooki_texto") {
+            return "nooki_texto_desde_c(" + salida + ")";
+        }
 
         return salida;
     }

@@ -44,6 +44,13 @@ funcion principal() -> entero {
 
     // Dibujo: un fondo blanco y un rectángulo rojo. Se leen los píxeles para
     // comprobar que el color llegó de verdad a la ventana.
+    // Se dibuja, se dejan procesar los sucesos del sistema (en X11 el primer
+    // Expose puede borrar lo pintado) y se vuelve a dibujar antes de leer.
+    ventana.limpiar(v, 0xFFFFFF)
+    ventana.rectangulo(v, 10, 10, 100, 50, 0xFF0000)
+    ventana.presentar(v)
+    ventana.viva(v)
+    ventana.pausa(30)
     ventana.limpiar(v, 0xFFFFFF)
     ventana.rectangulo(v, 10, 10, 100, 50, 0xFF0000)
     ventana.presentar(v)
@@ -54,6 +61,11 @@ funcion principal() -> entero {
     }
     si (fuera == 0xFFFFFF) {
         imprimir("fondo blanco")
+    }
+    si (dentro == -1) {
+        // Algunos servidores gráficos no dejan leer la ventana hasta que está
+        // visible. La prueba lo acepta y lo dice.
+        imprimir("pixeles no disponibles")
     }
 
     // Sin entrada del usuario, la cola está vacía: `evento` devuelve 0.
