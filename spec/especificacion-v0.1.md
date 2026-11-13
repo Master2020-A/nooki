@@ -1700,3 +1700,10 @@ nombre.borrar()
 - La lista se filtra por el prefijo que se está escribiendo.
 - El servidor guarda el texto de cada documento abierto para poder analizarlo.
 - Pendiente: ir a la definición, formato automático y resaltado semántico.
+
+
+### 18.60 Ir a la definición
+
+- `textDocument/definition` devuelve la ubicación de la declaración de la palabra bajo el cursor.
+- Resuelve funciones, tipos y enumeraciones del documento con el AST ya analizado.
+- El servidor anuncia `definitionProvider` en sus capacidades.

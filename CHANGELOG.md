@@ -5,6 +5,18 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 99 — Ir a la definición (2026-11-13)
+
+`nooki lsp` completa la tríada del editor: diagnósticos, autocompletado y **navegación**.
+
+- **`textDocument/definition`**: con el cursor sobre un nombre, el editor salta a su declaración —
+  funciones, tipos y enumeraciones del documento.
+- Se resuelve con el AST ya analizado: no hay índice aparte que se pueda desincronizar.
+- La prueba del LSP pide la definición de una llamada y comprueba que cae en la línea de la
+  declaración. **17 suites.**
+
+Pendiente del servidor: formato automático y resaltado semántico.
+
 ### Sprint 98 — Autocompletado en el editor (2026-11-13)
 
 `nooki lsp` ya no solo subraya errores: **también completa**.

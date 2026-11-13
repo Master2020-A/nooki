@@ -133,6 +133,48 @@ void recoger_nombres(const sintactico::Programa& programa, std::vector<std::stri
     }
 }
 
+/// Palabra completa que hay en esa posición del documento.
+std::string palabra_en(const std::string& texto, int linea, int columna) {
+    std::size_t inicio_linea = 0;
+    int linea_actual = 0;
+    for (std::size_t i = 0; i < texto.size(); ++i) {
+        if (texto[i] == '\n') {
+            if (linea_actual == linea) {
+                break;
+            }
+            ++linea_actual;
+            inicio_linea = i + 1;
+        }
+    }
+    if (linea_actual != linea) {
+        return {};
+    }
+    std::size_t fin_linea = texto.find('\n', inicio_linea);
+    if (fin_linea == std::string::npos) {
+        fin_linea = texto.size();
+    }
+    const auto vale = [](unsigned char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+               (c >= '0' && c <= '9') || c == '_' || c >= 0x80;
+    };
+    std::size_t centro = inicio_linea + static_cast<std::size_t>(columna);
+    if (centro > fin_linea) {
+        return {};
+    }
+    std::size_t desde = centro;
+    while (desde > inicio_linea && vale(static_cast<unsigned char>(texto[desde - 1]))) {
+        --desde;
+    }
+    std::size_t hasta = centro;
+    while (hasta < fin_linea && vale(static_cast<unsigned char>(texto[hasta]))) {
+        ++hasta;
+    }
+    if (desde == hasta) {
+        return {};
+    }
+    return texto.substr(desde, hasta - desde);
+}
+
 /// Prefijo que se está escribiendo antes del cursor.
 std::string prefijo_en(const std::string& texto, int linea, int columna) {
     int linea_actual = 0;
@@ -205,6 +247,7 @@ int servir(std::istream& entrada, std::ostream& salida) {
             Json completado = Json::objeto();
             completado.poner("triggerCharacters", Json::arreglo());
             capacidades.poner("completionProvider", std::move(completado));
+            capacidades.poner("definitionProvider", Json(true));
 
             Json servidor = Json::objeto();
             servidor.poner("name", Json("nooki-lsp"));
@@ -294,6 +337,83 @@ int servir(std::istream& entrada, std::ostream& salida) {
             }
 
             responder(std::move(lista));
+            continue;
+        }
+
+        if (metodo == "textDocument/definition") {
+            const Json& documento = parametros.campo("textDocument");
+            const Json& posicion = parametros.campo("position");
+            const std::string& uri = documento.campo("uri").cadena();
+            const auto guardado = documentos.find(uri);
+            if (guardado == documentos.end()) {
+                responder(Json());
+                continue;
+            }
+            const std::string& texto = guardado->second;
+            const std::string palabra = palabra_en(texto, posicion.campo("line").entero(),
+                                                   posicion.campo("character").entero());
+            if (palabra.empty()) {
+                responder(Json());
+                continue;
+            }
+
+            diagnostico::GestorFuentes fuentes;
+            diagnostico::Emisor emisor;
+            const auto archivo = fuentes.anadir("documento.oki", texto);
+            lexico::Lexer lexer(fuentes, archivo, emisor);
+            const auto tokens = lexer.todos();
+            diagnostico::Span encontrado{};
+            bool hay = false;
+            if (!emisor.hay_errores()) {
+                sintactico::Parser parser(fuentes, archivo, emisor, tokens);
+                const sintactico::Programa programa = parser.analizar();
+                for (const sintactico::Funcion& funcion : programa.funciones) {
+                    if (funcion.nombre == palabra) {
+                        encontrado = funcion.span;
+                        hay = true;
+                        break;
+                    }
+                }
+                if (!hay) {
+                    for (const sintactico::DefinicionTipo& tipo : programa.tipos) {
+                        if (tipo.nombre == palabra) {
+                            encontrado = tipo.span;
+                            hay = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hay) {
+                    for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
+                        if (enumeracion.nombre == palabra) {
+                            encontrado = enumeracion.span;
+                            hay = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!hay) {
+                responder(Json());
+                continue;
+            }
+
+            const auto inicio = fuentes.ubicar(archivo, encontrado.inicio);
+            const auto fin = fuentes.ubicar(archivo, encontrado.fin);
+            Json rango = Json::objeto();
+            Json desde = Json::objeto();
+            desde.poner("line", static_cast<int>(inicio.linea) - 1);
+            desde.poner("character", static_cast<int>(inicio.columna) - 1);
+            Json hasta = Json::objeto();
+            hasta.poner("line", static_cast<int>(fin.linea) - 1);
+            hasta.poner("character", static_cast<int>(fin.columna) - 1);
+            rango.poner("start", std::move(desde));
+            rango.poner("end", std::move(hasta));
+
+            Json ubicacion = Json::objeto();
+            ubicacion.poner("uri", documento.campo("uri"));
+            ubicacion.poner("range", std::move(rango));
+            responder(std::move(ubicacion));
             continue;
         }
 

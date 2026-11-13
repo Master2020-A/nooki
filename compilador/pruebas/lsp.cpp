@@ -167,8 +167,42 @@ int main() {
         }
     }
 
+    // Ir a la definición: `suma` se declara en la línea 0 del documento.
+    {
+        const std::string apertura_tres =
+            R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}})";
+        const std::string abrir =
+            R"({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":)"
+            R"({"uri":"file:///def.oki","text":"funcion suma(a: entero) -> entero {\n)"
+            R"(    retornar a\n}\n\nfuncion principal() -> entero {\n)"
+            R"(    retornar suma(1)\n}\n"}}})";
+        const std::string pedir =
+            R"({"jsonrpc":"2.0","id":7,"method":"textDocument/definition","params":{)"
+            R"("textDocument":{"uri":"file:///def.oki"},"position":{"line":5,"character":15}}})";
+        const std::string cerrar = R"({"jsonrpc":"2.0","id":8,"method":"shutdown"})";
+
+        std::istringstream entrada_tres(con_cabecera(apertura_tres) + con_cabecera(abrir) +
+                                        con_cabecera(pedir) + con_cabecera(cerrar) +
+                                        con_cabecera(salida_protocolo));
+        std::ostringstream salida_tres;
+        (void)nooki::lsp::servir(entrada_tres, salida_tres);
+        const std::vector<std::string> cuerpos_tres = cuerpos_de(salida_tres.str());
+
+        comprobar(cuerpos_tres.size() == 4, "se esperaban cuatro mensajes con la definición");
+
+        if (cuerpos_tres.size() >= 3) {
+            nooki::lsp::Json ubicacion;
+            comprobar(nooki::lsp::Json::leer(cuerpos_tres[2], ubicacion), "no es JSON");
+            comprobar(ubicacion.campo("id").entero() == 7, "la respuesta no lleva id 7");
+            const auto& resultado = ubicacion.campo("result");
+            comprobar(resultado.es_objeto(), "el resultado no es una ubicación");
+            comprobar(resultado.campo("range").campo("start").campo("line").entero() == 0,
+                      "la definición debería estar en la línea 0");
+        }
+    }
+
     if (fallos == 0) {
-        std::cout << "lsp: capacidades, diagnósticos, autocompletado y cierre correctos\n";
+        std::cout << "lsp: capacidades, diagnósticos, autocompletado, definición y cierre\n";
         return 0;
     }
     std::cout << fallos << " comprobación(es) fallida(s)\n";
