@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 101 — `nooki verificar` (2026-11-13)
+
+```bash
+$ nooki verificar ejemplos/01-hola/principal.oki
+correcto: ejemplos/01-hola/principal.oki
+
+$ nooki verificar roto.oki; echo $?
+error[NOK3001]: no se ha declarado «y»
+65
+```
+
+- Pasa el archivo por **léxico, parser y verificación**, sin generar C ni llamar al compilador.
+- Sale con **0** si está bien, **65** si hay errores y **64** si falta el archivo.
+- Es lo que necesita la integración continua para comprobar sin ensuciar el directorio con binarios.
+- La prueba de la CLI lo cubre: un archivo correcto, uno con error y la llamada sin argumentos.
+  **36 comprobaciones.**
+
+Como `formatear`, el comando estaba en la tabla desde el sprint 59 sin implementarse. Ahora el único
+comando pendiente es `documentar`.
+
 ### Sprint 100 — Formato: `nooki formatear` (2026-11-13)
 
 ```bash

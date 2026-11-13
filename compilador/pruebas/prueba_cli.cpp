@@ -54,6 +54,39 @@ void caso(std::string_view titulo) {
 }  // namespace
 
 int main() {
+    caso("verificar");
+    {
+        const std::filesystem::path directorio =
+            std::filesystem::temp_directory_path() / "nooki-verificar";
+        std::error_code ignorado;
+        std::filesystem::create_directories(directorio, ignorado);
+        const std::filesystem::path bueno = directorio / "bueno.oki";
+        const std::filesystem::path malo = directorio / "malo.oki";
+        {
+            std::ofstream flujo(bueno, std::ios::binary);
+            flujo << "funcion principal() -> entero {\n    retornar 0\n}\n";
+        }
+        {
+            std::ofstream flujo(malo, std::ios::binary);
+            flujo << "funcion principal() -> entero {\n    variable x = y + 1\n"
+                     "    retornar 0\n}\n";
+        }
+
+        const Resultado correcto = invocar({"verificar", nooki::ruta_a_utf8(bueno)});
+        comprobar(correcto.codigo == nooki::cli::EXITO, "un archivo correcto pasa");
+        comprobar(contiene(correcto.salida, "correcto"), "lo dice en la salida");
+
+        const Resultado con_error = invocar({"verificar", nooki::ruta_a_utf8(malo)});
+        comprobar(con_error.codigo == nooki::cli::DATOS_INCORRECTOS,
+                  "un archivo con error devuelve datos incorrectos");
+        comprobar(contiene(con_error.error, "NOK3001"), "señala el código del error");
+
+        const Resultado sin_archivo = invocar({"verificar"});
+        comprobar(sin_archivo.codigo == nooki::cli::USO_INCORRECTO, "sin archivo es uso incorrecto");
+
+        std::filesystem::remove_all(directorio, ignorado);
+    }
+
     caso("formatear");
     {
         const std::filesystem::path directorio =
@@ -158,9 +191,9 @@ int main() {
 
     caso("comando todavía no disponible");
     {
-        const Resultado resultado = invocar({"verificar", "hola.oki"});
+        const Resultado resultado = invocar({"documentar", "hola.oki"});
         comprobar(resultado.codigo == nooki::cli::NO_DISPONIBLE, "devuelve 69");
-        comprobar(contiene(resultado.error, "Sprint 59"), "indica en qué sprint llega");
+        comprobar(contiene(resultado.error, "Sprint 60"), "indica en qué sprint llega");
         comprobar(resultado.salida.empty(), "no escribe en la salida estándar");
     }
 

@@ -136,6 +136,9 @@ int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
     if (comando->nombre == "ast") {
         return comando_ast(argumentos.subspan(1), salida, error);
     }
+    if (comando->nombre == "verificar") {
+        return comando_verificar(argumentos.subspan(1), salida, error);
+    }
     if (comando->nombre == "formatear") {
         return comando_formatear(argumentos.subspan(1), salida, error);
     }

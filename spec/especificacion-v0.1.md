@@ -1719,3 +1719,12 @@ nooki formatear <archivo.oki> --comprobar   # 65 si cambiaría algo
   orden del código.
 - Las llaves dentro de textos y comentarios no cuentan para la profundidad.
 - Es idempotente y `--comprobar` sirve para la integración continua.
+
+### 18.62 Verificación
+
+``bash
+nooki verificar <archivo.oki>   # 0 correcto, 65 con errores, 64 sin archivo
+``
+
+- Pasa el archivo por léxico, parser y verificación semántica, **sin generar C**.
+- Sirve para la integración continua: comprueba sin dejar binarios.
