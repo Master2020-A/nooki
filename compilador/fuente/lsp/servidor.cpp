@@ -177,6 +177,31 @@ std::string palabra_en(const std::string& texto, int linea, int columna) {
     return texto.substr(desde, hasta - desde);
 }
 
+/// Declaraciones de variables y parámetros del documento, con su nombre.
+struct Declaracion {
+    std::string nombre;
+    diagnostico::Span span;
+};
+
+void recoger_declaraciones_de(const std::vector<sintactico::Sentencia>& cuerpo,
+                              std::vector<Declaracion>& salida) {
+    for (const sintactico::Sentencia& sentencia : cuerpo) {
+        if ((sentencia.tipo == sintactico::TipoSentencia::Variable ||
+             sentencia.tipo == sintactico::TipoSentencia::Constante) &&
+            !sentencia.nombre.empty()) {
+            salida.push_back({std::string(sentencia.nombre), sentencia.span});
+        }
+        if (sentencia.tipo == sintactico::TipoSentencia::Para && !sentencia.nombre.empty()) {
+            salida.push_back({std::string(sentencia.nombre), sentencia.span});
+        }
+        recoger_declaraciones_de(sentencia.cuerpo, salida);
+        recoger_declaraciones_de(sentencia.sino, salida);
+        for (const sintactico::Rama& rama : sentencia.ramas) {
+            recoger_declaraciones_de(rama.cuerpo, salida);
+        }
+    }
+}
+
 /// Prefijo que se está escribiendo antes del cursor.
 std::string prefijo_en(const std::string& texto, int linea, int columna) {
     int linea_actual = 0;
@@ -392,6 +417,32 @@ int servir(std::istream& entrada, std::ostream& salida) {
                             encontrado = enumeracion.span;
                             hay = true;
                             break;
+                        }
+                    }
+                }
+                if (!hay) {
+                    // Variables y parámetros: se queda con la declaración más
+                    // cercana por encima del cursor, que es la que está en juego.
+                    std::vector<Declaracion> declaraciones;
+                    for (const sintactico::Funcion& funcion : programa.funciones) {
+                        for (const sintactico::Parametro& parametro : funcion.parametros) {
+                            declaraciones.push_back(
+                                {std::string(parametro.nombre), parametro.span});
+                        }
+                        recoger_declaraciones_de(funcion.cuerpo, declaraciones);
+                    }
+                    const int linea_cursor = posicion.campo("line").entero();
+                    for (const Declaracion& declaracion : declaraciones) {
+                        if (declaracion.nombre != palabra) {
+                            continue;
+                        }
+                        const auto donde = fuentes.ubicar(archivo, declaracion.span.inicio);
+                        if (static_cast<int>(donde.linea) - 1 > linea_cursor) {
+                            continue;
+                        }
+                        if (!hay || declaracion.span.inicio > encontrado.inicio) {
+                            encontrado = declaracion.span;
+                            hay = true;
                         }
                     }
                 }

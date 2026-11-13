@@ -237,6 +237,38 @@ int main() {
         }
     }
 
+    // Definición de una variable: `total` se declara en la línea 1.
+    {
+        const std::string apertura_cinco =
+            R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}})";
+        const std::string abrir =
+            R"({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":)"
+            R"({"uri":"file:///var.oki","text":"funcion principal() -> entero {\n)"
+            R"(    variable total = 1\n    total = total + 1\n    retornar total\n}\n"}}})";
+        const std::string pedir =
+            R"({"jsonrpc":"2.0","id":11,"method":"textDocument/definition","params":{)"
+            R"("textDocument":{"uri":"file:///var.oki"},"position":{"line":2,"character":5}}})";
+        const std::string cerrar = R"({"jsonrpc":"2.0","id":12,"method":"shutdown"})";
+
+        std::istringstream entrada_cinco(con_cabecera(apertura_cinco) + con_cabecera(abrir) +
+                                         con_cabecera(pedir) + con_cabecera(cerrar) +
+                                         con_cabecera(salida_protocolo));
+        std::ostringstream salida_cinco;
+        (void)nooki::lsp::servir(entrada_cinco, salida_cinco);
+        const std::vector<std::string> cuerpos_cinco = cuerpos_de(salida_cinco.str());
+
+        comprobar(cuerpos_cinco.size() == 4, "se esperaban cuatro mensajes con la variable");
+        if (cuerpos_cinco.size() >= 3) {
+            nooki::lsp::Json ubicacion;
+            comprobar(nooki::lsp::Json::leer(cuerpos_cinco[2], ubicacion), "no es JSON");
+            comprobar(ubicacion.campo("id").entero() == 11, "la respuesta no lleva id 11");
+            const auto& resultado = ubicacion.campo("result");
+            comprobar(resultado.es_objeto(), "el resultado no es una ubicación");
+            comprobar(resultado.campo("range").campo("start").campo("line").entero() == 1,
+                      "la variable se declara en la línea 1");
+        }
+    }
+
     if (fallos == 0) {
         std::cout << "lsp: capacidades, diagnósticos, autocompletado, definición, formato y cierre\n";
         return 0;

@@ -5,6 +5,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 103 — Ir a la definición de variables (2026-11-13)
+
+El servidor ya resuelve también **variables, constantes y parámetros**.
+
+- Con el cursor sobre `total`, salta a la línea donde se declaró.
+- Entre varias declaraciones con el mismo nombre —posibles en bloques distintos— se queda con la
+  **más cercana por encima del cursor**, que es la que está en juego.
+- Cubre `variable`, `constante`, la variable de un `para` y los parámetros de función.
+- Caso en la prueba del LSP: la definición de `total` cae en su línea de declaración. **17 suites.**
+
 ### Sprint 102 — Formato desde el editor (2026-11-13)
 
 El formateador deja de ser solo un comando y pasa a ser un módulo reutilizable
