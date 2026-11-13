@@ -1598,3 +1598,21 @@ variable m = 3.9 como entero   // 3
   direcciones. Mezclarlos sin convertir es un error de tipo.
 - La división por cero de un flotante da infinito, no un pánico: es aritmética IEEE 754.
 - Se imprime con **coma decimal** y sin ceros de más.
+
+
+### 18.54 PLN
+
+```aura
+usar pln
+
+variable palabras = pln.tokenizar(&frase)
+variable cuentas = pln.contar(&palabras)
+imprimir(pln.distancia(&"casa", &"cama"))   // 1
+imprimir(pln.jaccard(&f1, &f2))             // 0..1000
+```
+
+- `normalizar`: minúsculas y un solo espacio entre palabras.
+- `tokenizar`, `contar` (frecuencias), `unicas`, `distintas`, `cuantas`, `contiene_texto`.
+- `distancia`: distancia de edición entre dos textos.
+- `jaccard`: parecido por mil, intersección sobre unión de palabras distintas.
+- Todo está escrito en Nooki: no hay C detrás.

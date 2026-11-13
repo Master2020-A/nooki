@@ -5,6 +5,42 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 91 — PLN: lenguaje natural (2026-11-13)
+
+```aura
+usar pln
+
+imprimir(pln.normalizar(&frase))        // minúsculas y un solo espacio
+variable palabras = pln.tokenizar(&frase)
+variable cuentas = pln.contar(&palabras)
+imprimir(pln.distancia(&"casa", &"cama"))   // 1
+imprimir(pln.jaccard(&f1, &f2))             // por mil
+```
+
+- **`normalizar`**, **`tokenizar`**, **`contar`** (mapa de frecuencias), **`unicas`**, **`distintas`**,
+  **`cuantas`**, **`contiene_texto`**.
+- **`distancia`**: distancia de edición entre dos textos.
+- **`jaccard`**: parecido por mil, intersección sobre unión de palabras distintas.
+- Caso `0058-pln`. **88 casos.**
+- Todo en Nooki, sin una línea de C.
+
+**Cuatro fallos del lenguaje que aparecieron al escribirlo**, todos arreglados:
+
+1. **`(*vector).largo()` no se traducía**: el generador no sabía sacar el tipo apuntado ni pasar el
+   puntero al runtime. Ahora un desreferenciado vale para cualquier préstamo, no solo para `texto`.
+2. **`&x` no tenía tipo puntero**, así que las comprobaciones de «este argumento es un préstamo» no
+   acertaban. Ahora `&x` tiene el tipo de `x` más `*`.
+3. **Los argumentos prestados a métodos de texto** llegaban como puntero donde el runtime espera el
+   valor; ahora se desreferencian.
+4. **Asignar un `Vector` era un fallo de memoria**: el generador copiaba la estructura y dejaba que la
+   limpieza del bloque liberara el búfer que el destino acababa de recibir. En Windows «funcionaba»; en
+   Linux daba resultados falsos. Lo encontró **AddressSanitizer**: *heap-use-after-free*. Ahora la
+   asignación **libera el destino, mueve y vacía el origen**, como manda la propiedad.
+
+**Incidencia A-17**: al reasignar una colección dentro de un bucle queda sin liberar el último búfer
+(64 bytes por llamada en `distancia`, detectado por LeakSanitizer). No corrompe nada y no afecta a los
+resultados, pero está anotada con su reproducción.
+
 ### Sprint 90 — Flotantes de verdad (2026-11-13)
 
 El lenguaje gana **coma flotante**. Era lo que faltaba para que el autograd y las redes puedan dar

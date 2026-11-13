@@ -114,6 +114,7 @@ Resueltas para poder escribir la gramática. **Tienen valor por defecto y se pue
 | A-07 | Conectar el repositorio a GitHub y comprobar la primera ejecución de CI | 🟡 Preparado (S68): pasos exactos en `PUBLICAR.md` y CI revisada. Falta ejecutarla | Antes de anunciar el proyecto |
 | A-08 | **¿`-2 ** 2` debe ser `(-2)**2` o `-(2**2)`?** La especificación dice lo primero; Python y Ruby dicen lo segundo | ⬜ Abierto (RFC) | Antes de la v1.0 |
 | A-16 | **Un programa con ventana lanzado desde `cmd /c` terminaba con `0xC0000005`** | ✅ Cerrado (S84): la cola de eventos no se inicializaba al crear la ventana; `cuenta` quedaba con basura del montículo. Encontrado con ASan + Xvfb | — |
+| A-17 | **Al reasignar una colección en un bucle se pierde el último búfer** (64 bytes por llamada, detectado por LeakSanitizer). La asignación ya libera el destino y mueve, pero la limpieza final no libera el valor movido | ⬜ Abierto (fuga) | Sin fecha |
 | A-15 | **macOS sin verificar**: no hay hardware Apple. Clang 18 en Linux compila y pasa las suites, que es la evidencia más cercana | ⬜ Abierto | Cuando haya un Mac o un runner de CI |
 | A-14 | **Mover un campo de un objeto a una colección** | ✅ Cerrado (S66): el campo se vacía de verdad (longitud a cero) y queda un texto vacío válido | — |
 | A-13 | **Un módulo nuevo de la biblioteca embebida no registraba sus funciones** | ✅ Cerrado (S62): no era un fallo del compilador; un archivo `build/textos.oki` olvidado tapaba al módulo. La búsqueda prefiere archivo a biblioteca | — |

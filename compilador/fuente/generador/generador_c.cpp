@@ -2724,10 +2724,18 @@ private:
                 if (expresion.lexema == "!") {
                     return "int";
                 }
+                // `&x` es un puntero a lo que sea x.
+                if ((expresion.lexema == "&" || expresion.lexema == "&mutable") &&
+                    expresion.izquierda) {
+                    return tipo_de(*expresion.izquierda) + "*";
+                }
                 // `*prestamo` de texto devuelve el texto prestado.
-                if (expresion.lexema == "*" && expresion.izquierda &&
-                    tipo_de(*expresion.izquierda) == "nooki_texto*") {
-                    return "nooki_texto";
+                // `*prestamo` da el tipo apuntado, sea texto, vector o mapa.
+                if (expresion.lexema == "*" && expresion.izquierda) {
+                    const std::string apuntado = tipo_de(*expresion.izquierda);
+                    if (!apuntado.empty() && apuntado.back() == '*') {
+                        return apuntado.substr(0, apuntado.size() - 1);
+                    }
                 }
                 if (expresion.izquierda && tipo_de(*expresion.izquierda) == "double") {
                     return "double";
@@ -3049,6 +3057,10 @@ private:
             if (tipo == "nooki_caja*") {
                 return "(*(*" + expresion(*nodo.izquierda) + ").datos)";
             }
+            // Un préstamo de cualquier otra cosa se lee con `(*x)`.
+            if (!tipo.empty() && tipo.back() == '*') {
+                return "(*" + expresion(*nodo.izquierda) + ")";
+            }
             // `*prestamo` de texto: el prestatario devuelve el valor prestado.
             if (tipo == "nooki_texto*") {
                 return "(*" + expresion(*nodo.izquierda) + ")";
@@ -3137,6 +3149,12 @@ private:
                expresion(*nodo.derecha) + ")";
     }
 
+    /// Vacía una colección para que su limpieza no libere lo que ya se movió.
+    static std::string vaciar_coleccion(const std::string& nombre) {
+        return "(" + nombre + ".datos = NULL, " + nombre + ".largo = 0, " + nombre +
+               ".capacidad = 0)";
+    }
+
     std::string asignacion(const sintactico::Expresion& nodo) {
         if (!nodo.izquierda || !nodo.derecha) {
             no_soportado("una asignación incompleta");
@@ -3151,8 +3169,24 @@ private:
             no_soportado("una asignación a algo que no es una variable ni un campo");
             return "0";
         }
-        return expresion(*nodo.izquierda) + " " + std::string(nodo.lexema) + " " +
-               expresion(*nodo.derecha);
+        // Asignar una colección la mueve: el origen queda vacío para que su
+        // limpieza al final del bloque no libere lo que ya tiene el destino.
+        const std::string destino = expresion(*nodo.izquierda);
+        const std::string origen = expresion(*nodo.derecha);
+        if (nodo.lexema == "=") {
+            const std::string tipo = tipo_de(*nodo.izquierda);
+            const bool coleccion = tipo.rfind("nooki_vector_", 0) == 0 ||
+                                   tipo.rfind("nooki_mapa_", 0) == 0;
+            if (coleccion &&
+                (nodo.derecha->tipo == sintactico::TipoExpresion::Identificador ||
+                 nodo.derecha->tipo == sintactico::TipoExpresion::Miembro)) {
+                // Se libera lo que tuviera el destino, se mueve el origen y se
+                // vacía el origen para que su limpieza no libere lo movido.
+                return "(" + tipo + "_soltar(&(" + destino + ")), " + destino + " = " +
+                       origen + ", " + vaciar_coleccion(origen) + ")";
+            }
+        }
+        return destino + " " + std::string(nodo.lexema) + " " + origen;
     }
 
     std::string llamada(const sintactico::Expresion& nodo) {
@@ -3223,7 +3257,15 @@ private:
                                 continue;
                             }
                             llamada += ", ";
-                            llamada += expresion(*argumento);
+                            // El runtime recibe el texto por valor: un préstamo se
+                            // desreferencia.
+                            if (argumento->tipo == sintactico::TipoExpresion::Unaria &&
+                                (argumento->lexema == "&" ||
+                                 argumento->lexema == "&mutable")) {
+                                llamada += "(*" + expresion(*argumento) + ")";
+                            } else {
+                                llamada += expresion(*argumento);
+                            }
                         }
                         llamada += ')';
                         return llamada;
@@ -3671,11 +3713,16 @@ private:
                 virtuales.end();
 
         // Expresión de C que da un puntero al objeto, sea `este` o un valor.
-        const std::string objeto_ptr =
+        std::string objeto_ptr =
             acceso.izquierda->tipo == sintactico::TipoExpresion::Este
                 ? "este"
                 : (objeto_puntero ? expresion(*acceso.izquierda)
                                   : "&" + expresion(*acceso.izquierda));
+        // `(*x).metodo()` sobre una referencia: el runtime quiere `x`.
+        if (acceso.izquierda->tipo == sintactico::TipoExpresion::Unaria &&
+            acceso.izquierda->lexema == "*" && acceso.izquierda->izquierda) {
+            objeto_ptr = expresion(*acceso.izquierda->izquierda);
+        }
 
         std::string salida;
         if (virtual_aqui) {

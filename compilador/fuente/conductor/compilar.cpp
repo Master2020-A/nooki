@@ -102,7 +102,225 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
 }
 )";
     }
-    if (modulo == "tensor") {
+    if (modulo == "pln") {
+        return R"(// Biblioteca estándar: procesamiento de lenguaje natural.
+// Todo con textos, vectores de textos y mapas: nada de C.
+
+// Pasa a minúsculas y deja un solo espacio entre palabras.
+publico funcion normalizar(frase: &texto) -> texto {
+    variable resto: texto = (*frase).minusculas().recortar()
+    variable resultado: texto = "" + ""
+    variable separador: texto = " " + ""
+
+    mientras (resto.largo() > 0) {
+        variable espacio: entero = resto.buscar(&separador)
+        si (espacio < 0) {
+            // La última palabra: también lleva separador delante.
+            si (resultado.largo() > 0) {
+                resultado = resultado + " " + ""
+            }
+            resultado = resultado + resto
+            romper
+        }
+        variable trozo: texto = resto.subtexto(0, espacio)
+        si (trozo.largo() > 0) {
+            si (resultado.largo() > 0) {
+                resultado = resultado + " " + ""
+            }
+            resultado = resultado + trozo
+        }
+        resto = resto.subtexto(espacio + 1, resto.largo() - espacio - 1)
+    }
+    retornar resultado
+}
+
+// Separa por palabras. No devuelve piezas vacías.
+publico funcion tokenizar(frase: &texto) -> Vector<texto> {
+    variable limpio: texto = normalizar(frase)
+    variable palabras: Vector<texto> = Vector<texto>.nuevo()
+    variable resto: texto = limpio
+    variable separador: texto = " " + ""
+
+    mientras (resto.largo() > 0) {
+        variable espacio: entero = resto.buscar(&separador)
+        si (espacio < 0) {
+            palabras.agregar(resto)
+            romper
+        }
+        variable trozo: texto = resto.subtexto(0, espacio)
+        si (trozo.largo() > 0) {
+            palabras.agregar(trozo)
+        }
+        resto = resto.subtexto(espacio + 1, resto.largo() - espacio - 1)
+    }
+    retornar palabras
+}
+
+// Cuenta cuántas veces aparece cada palabra.
+publico funcion contar(palabras: &Vector<texto>) -> Mapa<texto, entero> {
+    variable cuentas: Mapa<texto, entero> = Mapa<texto, entero>.nuevo()
+    variable i: entero = 0
+    mientras (i < (*palabras).largo()) {
+        variable palabra: texto = (*palabras).obtener(i)
+        variable veces: entero = 0
+        si (cuentas.contiene(&palabra)) {
+            veces = cuentas.obtener(&palabra)
+        }
+        cuentas.insertar(&palabra, veces + 1)
+        i = i + 1
+    }
+    retornar cuentas
+}
+
+// Palabras distintas, en el orden en que aparecen.
+publico funcion unicas(palabras: &Vector<texto>) -> Vector<texto> {
+    variable vistas: Mapa<texto, entero> = Mapa<texto, entero>.nuevo()
+    variable salida: Vector<texto> = Vector<texto>.nuevo()
+    variable i: entero = 0
+    mientras (i < (*palabras).largo()) {
+        variable palabra: texto = (*palabras).obtener(i)
+        si (!vistas.contiene(&palabra)) {
+            vistas.insertar(&palabra, 1)
+            salida.agregar(palabra)
+        }
+        i = i + 1
+    }
+    retornar salida
+}
+
+// Distancia de edición: cuántos cambios hacen falta para pasar de una a otra.
+publico funcion distancia(a: &texto, b: &texto) -> entero {
+    variable n: entero = (*a).largo()
+    variable m: entero = (*b).largo()
+    si (n == 0) {
+        retornar m
+    }
+    si (m == 0) {
+        retornar n
+    }
+
+    variable previa: Vector<entero> = Vector<entero>.nuevo()
+    variable j: entero = 0
+    mientras (j <= m) {
+        previa.agregar(j)
+        j = j + 1
+    }
+
+    variable i: entero = 1
+    mientras (i <= n) {
+        variable actual: Vector<entero> = Vector<entero>.nuevo()
+        actual.agregar(i)
+
+        variable jota: entero = 1
+        mientras (jota <= m) {
+            variable costo: entero = 1
+            si ((*a).caracter(i - 1) == (*b).caracter(jota - 1)) {
+                costo = 0
+            }
+            variable borrar: entero = previa.obtener(jota) + 1
+            variable insertar: entero = actual.obtener(jota - 1) + 1
+            variable cambiar: entero = previa.obtener(jota - 1) + costo
+            variable menor: entero = borrar
+            si (insertar < menor) {
+                menor = insertar
+            }
+            si (cambiar < menor) {
+                menor = cambiar
+            }
+            actual.agregar(menor)
+            jota = jota + 1
+        }
+        previa = actual
+        i = i + 1
+    }
+    retornar previa.obtener(m)
+}
+// ¿Está esta palabra en la lista?
+publico funcion contiene_texto(palabras: &Vector<texto>, buscada: &texto) -> booleano {
+    variable i: entero = 0
+    mientras (i < (*palabras).largo()) {
+        variable palabra: texto = (*palabras).obtener(i)
+        si (palabra == *buscada) {
+            retornar verdadero
+        }
+        i = i + 1
+    }
+    retornar falso
+}
+// ¿Esta palabra ya había salido antes de esa posición?
+funcion repetida(palabras: &Vector<texto>, posicion: entero) -> booleano {
+    variable i: entero = 0
+    mientras (i < posicion) {
+        variable anterior: texto = (*palabras).obtener(i)
+        variable actual: texto = (*palabras).obtener(posicion)
+        si (anterior == actual) {
+            retornar verdadero
+        }
+        i = i + 1
+    }
+    retornar falso
+}
+
+// Cuántas palabras distintas hay.
+publico funcion distintas(palabras: &Vector<texto>) -> entero {
+    variable total: entero = 0
+    variable i: entero = 0
+    mientras (i < (*palabras).largo()) {
+        si (!repetida(palabras, i)) {
+            total = total + 1
+        }
+        i = i + 1
+    }
+    retornar total
+}
+
+// Palabras distintas de la primera lista que también están en la segunda.
+funcion comunes(a: &Vector<texto>, b: &Vector<texto>) -> entero {
+    variable total: entero = 0
+    variable i: entero = 0
+    mientras (i < (*a).largo()) {
+        variable palabra: texto = (*a).obtener(i)
+        si (!repetida(a, i)) {
+            variable j: entero = 0
+            variable encontrada: booleano = falso
+            mientras (j < (*b).largo()) {
+                variable otra: texto = (*b).obtener(j)
+                si (otra == palabra) {
+                    encontrada = verdadero
+                }
+                j = j + 1
+            }
+            si (encontrada) {
+                total = total + 1
+            }
+        }
+        i = i + 1
+    }
+    retornar total
+}
+
+// Parecido entre dos frases, por mil: intersección sobre unión de palabras.
+publico funcion jaccard(a: &texto, b: &texto) -> entero {
+    variable trozos_a: Vector<texto> = tokenizar(a)
+    variable trozos_b: Vector<texto> = tokenizar(b)
+
+    variable distintas_a: entero = distintas(&trozos_a)
+    variable distintas_b: entero = distintas(&trozos_b)
+    variable en_comun: entero = comunes(&trozos_a, &trozos_b)
+
+    variable union_total: entero = distintas_a + distintas_b - en_comun
+    si (union_total == 0) {
+        retornar 1000
+    }
+    retornar en_comun * 1000 / union_total
+}
+
+// Cuántas palabras hay.
+publico funcion cuantas(palabras: &Vector<texto>) -> entero {
+    retornar (*palabras).largo()
+}
+)";
+    }    if (modulo == "tensor") {
         return R"(// Biblioteca estándar: tensores (matrices de enteros de 64 bits).
 externo funcion nooki_ia_tensor_ceros(filas: entero, columnas: entero) -> entero
 externo funcion nooki_ia_tensor_lleno(filas: entero, columnas: entero, valor: entero) -> entero

@@ -126,6 +126,7 @@ Sprint 87 ✅  UI: aplicación de ejemplo, captura y guía de interfaz
 Sprint 88 ✅  IA: tensores
 Sprint 89 ✅  IA: estadística y activaciones
 Sprint 90 ✅  Flotantes de verdad en el lenguaje
+Sprint 91 ✅  IA: PLN (lenguaje natural)
 ```
 
 **Ya compila y ejecuta:**

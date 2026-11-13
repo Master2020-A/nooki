@@ -1,0 +1,32 @@
+usar pln
+
+funcion principal() -> entero {
+    variable frase = "  Hola,   mundo. Hola    Nooki  " + ""
+
+    variable limpio = pln.normalizar(&frase)
+    imprimir(limpio)
+
+    variable palabras = pln.tokenizar(&frase)
+    imprimir(pln.cuantas(&palabras))
+    variable i = 0
+    mientras (i < palabras.largo()) {
+        imprimir(palabras.obtener(i))
+        i = i + 1
+    }
+
+    variable cuentas = pln.contar(&palabras)
+    imprimir(cuentas.largo())
+
+    variable unicas = pln.unicas(&palabras)
+    imprimir(unicas.largo())
+
+    variable a = "casa" + ""
+    variable b = "cama" + ""
+    imprimir(pln.distancia(&a, &b))
+    imprimir(pln.distancia(&a, &a))
+
+    variable f1 = "el gato duerme" + ""
+    variable f2 = "el perro duerme" + ""
+    imprimir(pln.jaccard(&f1, &f2))
+    retornar 0
+}
