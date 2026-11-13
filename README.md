@@ -137,6 +137,7 @@ Sprint 98 ✅  Autocompletado en el servidor de lenguaje
 Sprint 99 ✅  Ir a la definición
 Sprint 100 ✅  nooki formatear
 Sprint 101 ✅  nooki verificar
+Sprint 102 ✅  Formato desde el editor
 ```
 
 **Ya compila y ejecuta:**

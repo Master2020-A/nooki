@@ -1,5 +1,6 @@
 #include "nooki/lsp/servidor.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -8,6 +9,7 @@
 #include "nooki/diagnostico/catalogo.hpp"
 #include "nooki/diagnostico/emisor.hpp"
 #include "nooki/diagnostico/gestor_fuentes.hpp"
+#include "nooki/formato/formateador.hpp"
 #include "nooki/lexico/lexer.hpp"
 #include "nooki/lsp/json.hpp"
 #include "nooki/semantico/verificaciones.hpp"
@@ -248,6 +250,7 @@ int servir(std::istream& entrada, std::ostream& salida) {
             completado.poner("triggerCharacters", Json::arreglo());
             capacidades.poner("completionProvider", std::move(completado));
             capacidades.poner("definitionProvider", Json(true));
+            capacidades.poner("documentFormattingProvider", Json(true));
 
             Json servidor = Json::objeto();
             servidor.poner("name", Json("nooki-lsp"));
@@ -414,6 +417,43 @@ int servir(std::istream& entrada, std::ostream& salida) {
             ubicacion.poner("uri", documento.campo("uri"));
             ubicacion.poner("range", std::move(rango));
             responder(std::move(ubicacion));
+            continue;
+        }
+
+        if (metodo == "textDocument/formatting") {
+            const Json& documento = parametros.campo("textDocument");
+            const std::string& uri = documento.campo("uri").cadena();
+            const auto guardado = documentos.find(uri);
+            if (guardado == documentos.end()) {
+                responder(Json());
+                continue;
+            }
+            const std::string formateado = formato::formatear(guardado->second);
+            if (formateado == guardado->second) {
+                responder(Json::arreglo());
+                continue;
+            }
+
+            // Una sola edición: reemplaza el documento entero.
+            const int lineas = static_cast<int>(std::count(
+                guardado->second.begin(), guardado->second.end(), '\n'));
+            Json rango = Json::objeto();
+            Json desde = Json::objeto();
+            desde.poner("line", Json(0));
+            desde.poner("character", Json(0));
+            Json hasta = Json::objeto();
+            hasta.poner("line", Json(lineas + 1));
+            hasta.poner("character", Json(0));
+            rango.poner("start", std::move(desde));
+            rango.poner("end", std::move(hasta));
+
+            Json edicion = Json::objeto();
+            edicion.poner("range", std::move(rango));
+            edicion.poner("newText", Json(formateado));
+
+            Json lista = Json::arreglo();
+            lista.poner({}, std::move(edicion));
+            responder(std::move(lista));
             continue;
         }
 

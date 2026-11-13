@@ -1728,3 +1728,10 @@ nooki verificar <archivo.oki>   # 0 correcto, 65 con errores, 64 sin archivo
 
 - Pasa el archivo por léxico, parser y verificación semántica, **sin generar C**.
 - Sirve para la integración continua: comprueba sin dejar binarios.
+
+### 18.63 Formato en el editor
+
+- 	extDocument/formatting devuelve una edición que reemplaza el documento por su versión formateada.
+- El servidor y 
+ooki formatear comparten la misma implementación (\
+ooki::formato::formatear\).

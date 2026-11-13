@@ -201,8 +201,44 @@ int main() {
         }
     }
 
+    // Formato: un documento desordenado produce una edición que lo sangra.
+    {
+        const std::string apertura_cuatro =
+            R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}})";
+        const std::string abrir =
+            R"({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":)"
+            R"({"uri":"file:///fmt.oki","text":"funcion principal() -> entero {\n)"
+            R"(        variable x = 1\n   retornar x\n}\n"}}})";
+        const std::string pedir =
+            R"({"jsonrpc":"2.0","id":9,"method":"textDocument/formatting","params":{)"
+            R"("textDocument":{"uri":"file:///fmt.oki"}}})";
+        const std::string cerrar = R"({"jsonrpc":"2.0","id":10,"method":"shutdown"})";
+
+        std::istringstream entrada_cuatro(con_cabecera(apertura_cuatro) + con_cabecera(abrir) +
+                                          con_cabecera(pedir) + con_cabecera(cerrar) +
+                                          con_cabecera(salida_protocolo));
+        std::ostringstream salida_cuatro;
+        (void)nooki::lsp::servir(entrada_cuatro, salida_cuatro);
+        const std::vector<std::string> cuerpos_cuatro = cuerpos_de(salida_cuatro.str());
+
+        comprobar(cuerpos_cuatro.size() == 4, "se esperaban cuatro mensajes con el formato");
+        if (cuerpos_cuatro.size() >= 3) {
+            nooki::lsp::Json respuesta;
+            comprobar(nooki::lsp::Json::leer(cuerpos_cuatro[2], respuesta), "no es JSON");
+            comprobar(respuesta.campo("id").entero() == 9, "la respuesta no lleva id 9");
+            const auto& ediciones = respuesta.campo("result");
+            comprobar(ediciones.es_arreglo(), "el resultado no es una lista de ediciones");
+            comprobar(ediciones.elementos().size() == 1, "se esperaba una edición");
+            if (!ediciones.elementos().empty()) {
+                const std::string& nuevo = ediciones.elementos().front().campo("newText").cadena();
+                comprobar(nuevo.find("    variable x = 1") != std::string::npos,
+                          "la edición deja la sangría de cuatro espacios");
+            }
+        }
+    }
+
     if (fallos == 0) {
-        std::cout << "lsp: capacidades, diagnósticos, autocompletado, definición y cierre\n";
+        std::cout << "lsp: capacidades, diagnósticos, autocompletado, definición, formato y cierre\n";
         return 0;
     }
     std::cout << fallos << " comprobación(es) fallida(s)\n";

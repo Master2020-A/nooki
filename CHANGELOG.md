@@ -5,6 +5,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 102 — Formato desde el editor (2026-11-13)
+
+El formateador deja de ser solo un comando y pasa a ser un módulo reutilizable
+(`nooki::formato::formatear`), que usan **los dos**: la CLI y el servidor de lenguaje.
+
+- **`textDocument/formatting`**: el editor pide el formato y el servidor devuelve una edición que
+  reemplaza el documento; si ya está formateado, devuelve una lista vacía.
+- `nooki formatear` usa el mismo código, así que no hay dos formateadores que se puedan
+  desincronizar: es la misma función.
+- La prueba del LSP comprueba que la edición deja la sangría de cuatro espacios. **17 suites.**
+
 ### Sprint 101 — `nooki verificar` (2026-11-13)
 
 ```bash
