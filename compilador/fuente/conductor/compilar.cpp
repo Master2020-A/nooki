@@ -1,5 +1,6 @@
 #include "nooki/conductor/compilar.hpp"
 #include "nooki/rutas.hpp"
+#include "nooki/ia/runtime_ia.hpp"
 #include "nooki/ui/runtime_ui.hpp"
 
 #include <cstdio>
@@ -41,6 +42,16 @@ std::vector<std::filesystem::path> rutas_de_modulos;
 
 /// ¿El programa usa el módulo de ventanas? Entonces hay que compilar su capa C.
 bool hace_falta_ui = false;
+
+/// ¿El programa usa tensores? Entonces hay que compilar su capa C.
+bool hace_falta_ia = false;
+
+/// Cabeceras que se anteponen a todo archivo de runtime. Cada runtime se compila
+/// como una unidad aparte, así que tiene que bastarse a sí mismo; anteponerlas
+/// aquí evita el error de olvidar una (pasó tres veces).
+constexpr std::string_view CABECERAS_RUNTIME =
+    "#include <stddef.h>\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n"
+    "#include <string.h>\n";
 
 std::string_view fuente_biblioteca(std::string_view modulo) {
     if (modulo == "resultado") {
@@ -88,6 +99,91 @@ publico funcion contar(pieza: &texto, aguja: &texto) -> entero {
         resto = resto.subtexto(posicion + 1, resto.largo())
     }
     retornar total
+}
+)";
+    }
+    if (modulo == "tensor") {
+        return R"(// Biblioteca estándar: tensores (matrices de enteros de 64 bits).
+externo funcion nooki_ia_tensor_ceros(filas: entero, columnas: entero) -> entero
+externo funcion nooki_ia_tensor_lleno(filas: entero, columnas: entero, valor: entero) -> entero
+externo funcion nooki_ia_tensor_identidad(lado: entero) -> entero
+externo funcion nooki_ia_tensor_filas(t: entero) -> entero
+externo funcion nooki_ia_tensor_columnas(t: entero) -> entero
+externo funcion nooki_ia_tensor_leer(t: entero, fila: entero, columna: entero) -> entero
+externo funcion nooki_ia_tensor_poner(t: entero, fila: entero, columna: entero,
+                                      valor: entero) -> entero
+externo funcion nooki_ia_tensor_suma(a: entero, b: entero) -> entero
+externo funcion nooki_ia_tensor_resta(a: entero, b: entero) -> entero
+externo funcion nooki_ia_tensor_escalar(a: entero, factor: entero) -> entero
+externo funcion nooki_ia_tensor_producto(a: entero, b: entero) -> entero
+externo funcion nooki_ia_tensor_transpuesta(a: entero) -> entero
+externo funcion nooki_ia_tensor_determinante(a: entero) -> entero
+externo funcion nooki_ia_tensor_suma_total(a: entero) -> entero
+externo funcion nooki_ia_tensor_iguales(a: entero, b: entero) -> entero
+externo funcion nooki_ia_tensor_liberar(a: entero) -> vacio
+
+publico funcion ceros(filas: entero, columnas: entero) -> entero {
+    retornar nooki_ia_tensor_ceros(filas, columnas)
+}
+
+publico funcion lleno(filas: entero, columnas: entero, valor: entero) -> entero {
+    retornar nooki_ia_tensor_lleno(filas, columnas, valor)
+}
+
+publico funcion identidad(lado: entero) -> entero {
+    retornar nooki_ia_tensor_identidad(lado)
+}
+
+publico funcion filas(t: entero) -> entero {
+    retornar nooki_ia_tensor_filas(t)
+}
+
+publico funcion columnas(t: entero) -> entero {
+    retornar nooki_ia_tensor_columnas(t)
+}
+
+publico funcion leer(t: entero, fila: entero, columna: entero) -> entero {
+    retornar nooki_ia_tensor_leer(t, fila, columna)
+}
+
+publico funcion poner(t: entero, fila: entero, columna: entero, valor: entero) -> vacio {
+    nooki_ia_tensor_poner(t, fila, columna, valor)
+}
+
+publico funcion suma(a: entero, b: entero) -> entero {
+    retornar nooki_ia_tensor_suma(a, b)
+}
+
+publico funcion resta(a: entero, b: entero) -> entero {
+    retornar nooki_ia_tensor_resta(a, b)
+}
+
+publico funcion escalar(a: entero, factor: entero) -> entero {
+    retornar nooki_ia_tensor_escalar(a, factor)
+}
+
+publico funcion producto(a: entero, b: entero) -> entero {
+    retornar nooki_ia_tensor_producto(a, b)
+}
+
+publico funcion transpuesta(a: entero) -> entero {
+    retornar nooki_ia_tensor_transpuesta(a)
+}
+
+publico funcion determinante(a: entero) -> entero {
+    retornar nooki_ia_tensor_determinante(a)
+}
+
+publico funcion suma_total(a: entero) -> entero {
+    retornar nooki_ia_tensor_suma_total(a)
+}
+
+publico funcion iguales(a: entero, b: entero) -> booleano {
+    retornar nooki_ia_tensor_iguales(a, b) != 0
+}
+
+publico funcion liberar(a: entero) -> vacio {
+    nooki_ia_tensor_liberar(a)
 }
 )";
     }
@@ -661,6 +757,9 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     if (clave == "ventana" || clave == "imagenes") {
         hace_falta_ui = true;
     }
+    if (clave == "tensor") {
+        hace_falta_ia = true;
+    }
 
     // Se busca junto al archivo que importa, en su carpeta «biblioteca» y
     // subiendo por los directorios padre hasta encontrar una.
@@ -921,11 +1020,23 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
                           EXTENSION_BINARIO);
     }
 
+    // La capa de tensores, igual: aparte y solo si se usa.
+    std::filesystem::path ia_nativo;
+    if (hace_falta_ia) {
+        const std::string fuente_ia = std::string(CABECERAS_RUNTIME) +
+                                        std::string(ia::fuente_runtime_ia());
+        ia_nativo = std::filesystem::temp_directory_path() /
+                    ("nooki_ia_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) + ".c");
+        std::ofstream archivo_ia(ia_nativo, std::ios::binary | std::ios::trunc);
+        archivo_ia << fuente_ia;
+    }
+
     // La capa de ventanas se compila aparte, solo si el programa usa el módulo.
     std::filesystem::path ui_nativo;
     std::string fuente_ui;
     if (hace_falta_ui) {
-        fuente_ui = std::string(ui::fuente_runtime_ui());
+        fuente_ui = std::string(CABECERAS_RUNTIME) +
+                    std::string(ui::fuente_runtime_ui());
         ui_nativo = std::filesystem::temp_directory_path() /
                     ("nooki_ui_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) + ".c");
         std::ofstream archivo_ui(ui_nativo, std::ios::binary | std::ios::trunc);
@@ -939,6 +1050,9 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         entrecomillar_si_hace_falta(compilador) + " -O2 -o " +
         entrecomillar_si_hace_falta(ruta_a_utf8(binario_nativo.make_preferred())) + " " +
         entrecomillar_si_hace_falta(ruta_a_utf8(intermedio_nativo.make_preferred()));
+    if (hace_falta_ia) {
+        comando += " " + entrecomillar_si_hace_falta(ruta_a_utf8(ia_nativo.make_preferred()));
+    }
     if (hace_falta_ui) {
         comando += " " + entrecomillar_si_hace_falta(ruta_a_utf8(ui_nativo.make_preferred()));
         // Las bibliotecas del sistema que necesita la capa de ventanas.

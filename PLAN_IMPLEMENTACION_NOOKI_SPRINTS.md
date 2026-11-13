@@ -302,7 +302,7 @@ Leyenda: **DoD** = condición verificable de "terminado". Cada fila es un sprint
 | **S85** | UI: accesibilidad | ✅ `luminancia`, `legible` y `texto_sobre` (YIQ con enteros) y la clase `foco` para navegar con Tab. Caso `0054` y contorno de foco en el ejemplo |
 | **S86** | UI: imágenes | ✅ Módulo `imagenes` con carga de BMP 24/32 bits, `ancho`, `alto`, `color_en`, `dibujar` y `soltar`. Suite `imagenes` que genera el BMP, lee sus píxeles y comprueba que se rechaza lo que no es BMP |
 | **S87** | UI: cierre | ✅ `ejemplos/06-tareas` (lista de tareas con foco, ratón y teclado), captura real con `herramientas/capturar.ps1`, `docs/INTERFAZ.md` con las trampas y lo que falta, y capítulo de interfaz en la guía. Añade `ventana.repintar` al descubrir que la ventana no se repintaba |
-| **S88** | **Cierre v0.95: visión y GPU** | Imágenes, clasificación y detección vía ONNX; CUDA/Metal/Vulkan si hay recursos |
+| **S88** | IA: tensores | ✅ Módulo `tensor`: ceros, lleno, identidad, leer, poner, suma, resta, escalar, producto, transpuesta, determinante e iguales, con comprobación de formas. Caso `0055`. El conductor antepone las cabeceras a todo runtime |
 
 ---
 

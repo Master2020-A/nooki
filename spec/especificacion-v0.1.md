@@ -1545,3 +1545,22 @@ si (dibujar || pedido) {
   al descubierto, se redimensionó o se restauró) y limpia la marca.
 - Un programa con bucle **debe** redibujar cuando lo pide; si no, el contenido desaparece.
 - En Windows lo marca `WM_PAINT` y en X11 `Expose`.
+
+
+### 18.51 Tensores
+
+```aura
+usar tensor
+
+variable a = tensor.lleno(2, 3, 1)
+variable p = tensor.producto(a, tensor.transpuesta(a))
+imprimir(tensor.leer(p, 0, 0))
+```
+
+- Creación: `ceros(filas, columnas)`, `lleno(filas, columnas, valor)`, `identidad(lado)`.
+- Forma y acceso: `filas`, `columnas`, `leer(t, i, j)`, `poner(t, i, j, v)`.
+- Operaciones: `suma`, `resta`, `escalar`, `producto` (matricial), `transpuesta`, `suma_total`,
+  `iguales` y `determinante`.
+- Los elementos son enteros de 64 bits.
+- Si las formas no encajan, la operación devuelve 0 en lugar de fallar.
+- `liberar(t)` cuando ya no se use.

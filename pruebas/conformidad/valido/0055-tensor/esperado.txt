@@ -1,0 +1,19 @@
+2
+3
+6
+3
+2
+6
+2
+14
+32
+32
+77
+2
+15
+-2
+1
+0
+iguales
+distintas formas
+fin

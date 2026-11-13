@@ -1,0 +1,66 @@
+usar tensor
+
+funcion principal() -> entero {
+    // Una matriz 2x3 y su traspuesta.
+    variable a = tensor.lleno(2, 3, 1)
+    tensor.poner(a, 0, 0, 1)
+    tensor.poner(a, 0, 1, 2)
+    tensor.poner(a, 0, 2, 3)
+    tensor.poner(a, 1, 0, 4)
+    tensor.poner(a, 1, 1, 5)
+    tensor.poner(a, 1, 2, 6)
+
+    imprimir(tensor.filas(a))
+    imprimir(tensor.columnas(a))
+    imprimir(tensor.leer(a, 1, 2))
+
+    variable t = tensor.transpuesta(a)
+    imprimir(tensor.filas(t))
+    imprimir(tensor.columnas(t))
+    imprimir(tensor.leer(t, 2, 1))
+
+    // Producto: (2x3) por (3x2) = (2x2)
+    variable p = tensor.producto(a, t)
+    imprimir(tensor.filas(p))
+    imprimir(tensor.leer(p, 0, 0))
+    imprimir(tensor.leer(p, 0, 1))
+    imprimir(tensor.leer(p, 1, 0))
+    imprimir(tensor.leer(p, 1, 1))
+
+    // Suma y escalar
+    variable s = tensor.suma(a, a)
+    imprimir(tensor.leer(s, 0, 0))
+    variable e = tensor.escalar(a, 3)
+    imprimir(tensor.leer(e, 1, 1))
+
+    // Determinante de una 2x2
+    variable d = tensor.ceros(2, 2)
+    tensor.poner(d, 0, 0, 1)
+    tensor.poner(d, 0, 1, 2)
+    tensor.poner(d, 1, 0, 3)
+    tensor.poner(d, 1, 1, 4)
+    imprimir(tensor.determinante(d))
+
+    // Identidad e igualdad
+    variable i = tensor.identidad(3)
+    imprimir(tensor.leer(i, 1, 1))
+    imprimir(tensor.leer(i, 0, 1))
+    si (tensor.iguales(i, i)) {
+        imprimir("iguales")
+    }
+    si (tensor.iguales(a, t)) {
+        imprimir("iguales")
+    } sino {
+        imprimir("distintas formas")
+    }
+
+    tensor.liberar(a)
+    tensor.liberar(t)
+    tensor.liberar(p)
+    tensor.liberar(s)
+    tensor.liberar(e)
+    tensor.liberar(d)
+    tensor.liberar(i)
+    imprimir("fin")
+    retornar 0
+}

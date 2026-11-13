@@ -5,6 +5,36 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 88 — Tensores: empieza la fase de IA (2026-11-13)
+
+El primer pilar de la IA: **matrices con forma**.
+
+```aura
+usar tensor
+
+variable a = tensor.lleno(2, 3, 1)
+tensor.poner(a, 0, 0, 1)
+imprimir(tensor.leer(a, 1, 2))
+
+variable t = tensor.transpuesta(a)
+variable p = tensor.producto(a, t)      // (2x3) por (3x2) = (2x2)
+imprimir(tensor.determinante(d))
+```
+
+- **`ceros`, `lleno`, `identidad`**, y `filas`, `columnas`, `leer`, `poner`, `liberar`.
+- **`suma`, `resta`, `escalar`, `producto`, `transpuesta`**, `suma_total` e `iguales`.
+- **`determinante`** por eliminación de Gauss con pivoteo parcial.
+- **Todas las operaciones comprueban las formas**: si no encajan devuelven 0 en vez de leer fuera de
+  sitio. Un tensor de tamaño absurdo tampoco se crea.
+- Enteros de 64 bits: es aritmética exacta, sin sorpresas de coma flotante. Cuando haga falta
+  precisión real, se añadirá un tipo de coma flotante.
+- Caso `0055-tensor`: forma, traspuesta, producto, determinante, identidad e igualdad. **85 casos.**
+
+**El arreglo de raíz**: el runtime de tensores se compila aparte y le faltaban las cabeceras — el mismo
+error que en la capa de ventanas y en la de imágenes, tres veces. Ahora el conductor **antepone
+`<stdint.h>`, `<stdlib.h>`, `<stdio.h>`, `<string.h>` y `<stddef.h>` a todo archivo de runtime**, así
+que la clase de fallo desaparece en lugar de repetirse.
+
 ### Sprint 87 — Cierre de la interfaz: una aplicación de verdad (2026-11-13)
 
 El último sprint de UI no añade funciones: demuestra que lo construido sirve.
