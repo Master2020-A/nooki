@@ -122,6 +122,7 @@ Sprint 83 ✅  UI: eventos de ratón y teclado
 Sprint 84 ✅  A-16 resuelto: la cola de eventos sin inicializar
 Sprint 85 ✅  UI: accesibilidad y foco
 Sprint 86 ✅  UI: imágenes BMP
+Sprint 87 ✅  UI: aplicación de ejemplo, captura y guía de interfaz
 ```
 
 **Ya compila y ejecuta:**

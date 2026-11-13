@@ -1,0 +1,205 @@
+// Lista de tareas: una aplicación completa de Nooki.
+//
+// Usa los cinco módulos de interfaz: ventana, dibujo, diseño, controles y
+// accesibilidad. Se maneja con el ratón y con el teclado:
+//
+//   ratón  → pulsar una tarea la marca o la desmarca; los botones de abajo actúan
+//   Tab    → pasa el foco a la siguiente tarea
+//   Intro  → marca o desmarca la tarea que tiene el foco
+//   Esc    → cierra
+usar ventana
+usar diseno
+usar controles
+usar accesibilidad
+
+funcion total_tareas() -> entero {
+    retornar 5
+}
+
+funcion tarea(numero: entero) -> texto {
+    si (numero == 0) {
+        retornar "Comprar pan" + ""
+    }
+    si (numero == 1) {
+        retornar "Escribir la guia" + ""
+    }
+    si (numero == 2) {
+        retornar "Llamar al fontanero" + ""
+    }
+    si (numero == 3) {
+        retornar "Regar las plantas" + ""
+    }
+    retornar "Pagar la luz" + ""
+}
+
+// Dibuja una tarea: casilla, texto y, si está hecha, el texto tachado.
+funcion dibujar_tarea(pantalla: entero, numero: entero, hecha: booleano,
+                      con_foco: booleano) -> vacio {
+    variable alto = 44
+    variable y = 96 + numero * (alto + 8)
+    variable fondo = 0x313244
+    si (hecha) {
+        fondo = 0x1E3A2F
+    }
+
+    ventana.rectangulo(pantalla, 24, y, 472, alto, fondo)
+
+    // Casilla: rellena si está hecha.
+    variable color_casilla = 0x6C7086
+    si (hecha) {
+        color_casilla = 0xA6E3A1
+    }
+    ventana.rectangulo(pantalla, 36, y + 14, 16, 16, color_casilla)
+
+    variable texto_tarea = tarea(numero)
+    variable color_texto = accesibilidad.texto_sobre(fondo)
+    si (hecha) {
+        color_texto = 0xA6E3A1
+    }
+    ventana.escribir_texto(pantalla, 64, y + 28, &texto_tarea, color_texto)
+
+    // El foco se ve: contorno de dos píxeles.
+    si (con_foco) {
+        variable color_foco = 0xF9E2AF
+        ventana.rectangulo(pantalla, 22, y - 2, 476, 2, color_foco)
+        ventana.rectangulo(pantalla, 22, y + alto, 476, 2, color_foco)
+        ventana.rectangulo(pantalla, 22, y, 2, alto, color_foco)
+        ventana.rectangulo(pantalla, 496, y, 2, alto, color_foco)
+    }
+}
+
+funcion principal() -> entero {
+    variable titulo = "Nooki - Tareas" + ""
+    variable v = ventana.abrir(&titulo, 520, 460)
+
+    si (v == 0) {
+        imprimir("sin entorno grafico")
+        retornar 0
+    }
+
+    // Estado: cinco tareas, las dos primeras hechas.
+    variable hechas = 2
+    variable h0 = verdadero
+    variable h1 = verdadero
+    variable h2 = falso
+    variable h3 = falso
+    variable h4 = falso
+
+    variable foco_tarea = nuevo foco { indice: 0, total: total_tareas() }
+
+    variable dibujar = verdadero
+    mientras (ventana.viva(v)) {
+        // Se vuelve a dibujar si algo cambió o si el sistema pide repintar.
+        variable pedido = ventana.repintar(v)
+        si (dibujar || pedido) {
+            ventana.limpiar(v, 0x1E1E2E)
+
+            variable cabecera = "Mis tareas" + ""
+            ventana.escribir_texto(v, 24, 40, &cabecera, 0xF5E0DC)
+
+            variable resumen = "progreso" + ""
+            ventana.escribir_texto(v, 24, 66, &resumen, 0x9399B2)
+
+            variable progreso = nuevo barra { x: 360, y: 34, ancho: 136, alto: 12,
+                                             fondo: 0x313244, relleno: 0xA6E3A1,
+                                             tanto: hechas * 100 / total_tareas() }
+            progreso.dibujar(v)
+
+            dibujar_tarea(v, 0, h0, foco_tarea.es_actual(0))
+            dibujar_tarea(v, 1, h1, foco_tarea.es_actual(1))
+            dibujar_tarea(v, 2, h2, foco_tarea.es_actual(2))
+            dibujar_tarea(v, 3, h3, foco_tarea.es_actual(3))
+            dibujar_tarea(v, 4, h4, foco_tarea.es_actual(4))
+
+            variable pie = "Tab: siguiente   Intro: marcar   Esc: salir" + ""
+            ventana.escribir_texto(v, 24, 380, &pie, 0x6C7086)
+
+            ventana.presentar(v)
+            dibujar = falso
+        }
+
+        variable cual_evento = ventana.evento(v)
+        mientras (cual_evento != 0) {
+            si (ventana.es_cerrar(cual_evento)) {
+                ventana.cerrar(v)
+                imprimir(hechas)
+                retornar 0
+            }
+
+            si (ventana.es_pulsacion(cual_evento)) {
+                variable x = ventana.evento_x(v)
+                variable y = ventana.evento_y(v)
+
+                // ¿Ha pulsado una tarea?
+                variable i = 0
+                mientras (i < total_tareas()) {
+                    variable alto = 44
+                    variable arriba = 96 + i * (alto + 8)
+                    si (x >= 24 && x < 496 && y >= arriba && y < arriba + alto) {
+                        si (i == 0) {
+                            h0 = !h0
+                        }
+                        si (i == 1) {
+                            h1 = !h1
+                        }
+                        si (i == 2) {
+                            h2 = !h2
+                        }
+                        si (i == 3) {
+                            h3 = !h3
+                        }
+                        si (i == 4) {
+                            h4 = !h4
+                        }
+                        foco_tarea.indice = i
+                        i = total_tareas()
+                    } sino {
+                        i = i + 1
+                    }
+                }
+                dibujar = verdadero
+            }
+
+            si (ventana.es_tecla(cual_evento)) {
+                variable tecla = ventana.evento_tecla(v)
+                // Tab = 9, Intro = 13, Espacio = 32, Esc = 27.
+                si (tecla == 9) {
+                    foco_tarea.siguiente()
+                    dibujar = verdadero
+                }
+                si (tecla == 13 || tecla == 32) {
+                    variable cual = foco_tarea.indice
+                    si (cual == 0) {
+                        h0 = !h0
+                    }
+                    si (cual == 1) {
+                        h1 = !h1
+                    }
+                    si (cual == 2) {
+                        h2 = !h2
+                    }
+                    si (cual == 3) {
+                        h3 = !h3
+                    }
+                    si (cual == 4) {
+                        h4 = !h4
+                    }
+                    dibujar = verdadero
+                }
+                si (tecla == 27) {
+                    ventana.cerrar(v)
+                    imprimir(hechas)
+                    retornar 0
+                }
+            }
+
+            cual_evento = ventana.evento(v)
+        }
+
+        ventana.pausa(16)
+    }
+
+    ventana.cerrar(v)
+    imprimir(hechas)
+    retornar 0
+}

@@ -88,6 +88,20 @@ ventana cerrada
 Sin entorno gráfico (un servidor, un contenedor) imprime `sin entorno grafico` y termina bien: el
 programa decide qué hacer cuando no hay pantalla.
 
+### 06 — Tareas
+
+Una aplicación completa: lista de tareas con casillas, barra de progreso, foco que se recorre con
+**Tab**, marcar con **Intro** y salir con **Esc**. Usa los cinco módulos de interfaz.
+
+```bash
+$ nooki ejecutar ejemplos/06-tareas/principal.oki
+```
+
+![La aplicación de tareas](../docs/captura-tareas.png)
+
+La captura la genera `herramientas/capturar.ps1`, que abre el programa, espera a su ventana, la
+fotografía y lo cierra.
+
 ## Crear uno propio
 
 ```bash

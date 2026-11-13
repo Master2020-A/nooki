@@ -1530,3 +1530,18 @@ si (imagenes.cargada(icono)) {
 - `ancho`, `alto`, `color_en(x, y)` (0xRRGGBB, o -1 fuera de rango) y `soltar`.
 - `cargar` devuelve un manejador; hay que llamar a `soltar` cuando ya no se use.
 - PNG queda pendiente: exige un decodificador entero (inflate y filtros) o una dependencia externa.
+
+
+### 18.50 Repintado
+
+```aura
+variable pedido = ventana.repintar(v)
+si (dibujar || pedido) {
+    // volver a dibujar todo
+}
+```
+
+- `repintar(manejador)` devuelve verdadero cuando el sistema pide volver a dibujar (la ventana quedó
+  al descubierto, se redimensionó o se restauró) y limpia la marca.
+- Un programa con bucle **debe** redibujar cuando lo pide; si no, el contenido desaparece.
+- En Windows lo marca `WM_PAINT` y en X11 `Expose`.

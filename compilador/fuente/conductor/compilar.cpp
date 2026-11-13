@@ -349,6 +349,7 @@ externo funcion nooki_ui_ventana_viva(manejador: entero) -> booleano
 externo funcion nooki_ui_ventana_evento(manejador: entero) -> entero
 externo funcion nooki_ui_ventana_cerrar(manejador: entero) -> vacio
 externo funcion nooki_ui_ventana_esperar(milisegundos: entero) -> vacio
+externo funcion nooki_ui_ventana_repintar(manejador: entero) -> entero
 
 publico funcion abrir(titulo: &texto, ancho: entero, alto: entero) -> entero {
     retornar nooki_ui_ventana_crear(*titulo, ancho, alto)
@@ -368,6 +369,12 @@ publico funcion cerrar(manejador: entero) -> vacio {
 
 publico funcion pausa(milisegundos: entero) -> vacio {
     nooki_ui_ventana_esperar(milisegundos)
+}
+
+// Verdadero cuando el sistema pide repintar (la ventana quedó al descubierto,
+// se redimensionó o se restauró). Un programa con bucle debe volver a dibujar.
+publico funcion repintar(manejador: entero) -> booleano {
+    retornar nooki_ui_ventana_repintar(manejador) != 0
 }
 
 // --- Eventos. Las clases son: 0 nada, 1 cerrar, 2 movimiento, 3 pulsacion,

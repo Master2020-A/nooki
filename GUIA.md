@@ -356,7 +356,64 @@ Fíjate en la diferencia con la herencia del paso 8: allí había una jerarquía
 
 ---
 
-## 12. La biblioteca estándar
+## 12. Una ventana
+
+Nooki trae una interfaz gráfica sencilla: ventana, dibujo, colocación, controles, accesibilidad e
+imágenes. Todo en la biblioteca estándar, sin dependencias externas.
+
+```aura
+usar ventana
+usar controles
+
+funcion principal() -> entero {
+    variable titulo = "Hola" + ""
+    variable v = ventana.abrir(&titulo, 400, 300)
+
+    si (v == 0) {
+        imprimir("sin entorno grafico")
+        retornar 0
+    }
+
+    variable boton = nuevo boton { x: 20, y: 20, ancho: 160, alto: 44,
+                                   contenido: "Pulsame" + "",
+                                   fondo: 0x89B4FA, color: 0x11111B }
+
+    variable dibujar = verdadero
+    mientras (ventana.viva(v)) {
+        si (dibujar || ventana.repintar(v)) {
+            ventana.limpiar(v, 0x1E1E2E)
+            boton.dibujar(v)
+            ventana.presentar(v)
+            dibujar = falso
+        }
+
+        variable e = ventana.evento(v)
+        mientras (e != 0) {
+            si (ventana.es_pulsacion(e)) {
+                si (boton.pulsado(ventana.evento_x(v), ventana.evento_y(v))) {
+                    imprimir("pulsado")
+                }
+                dibujar = verdadero
+            }
+            e = ventana.evento(v)
+        }
+        ventana.pausa(16)
+    }
+
+    ventana.cerrar(v)
+    retornar 0
+}
+```
+
+En Windows funciona directamente. En Linux necesita `libx11-dev` para compilar y, si no hay pantalla,
+`xvfb-run` para ejecutar.
+
+La guía completa de interfaz —los cinco módulos, las trampas y lo que todavía no hay— está en
+[`docs/INTERFAZ.md`](docs/INTERFAZ.md), con una captura de la aplicación de ejemplo.
+
+---
+
+## 13. La biblioteca estándar
 
 Nooki trae cinco módulos escritos en Nooki. Se usan con `usar`, sin copiar archivos:
 

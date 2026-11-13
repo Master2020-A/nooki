@@ -5,6 +5,32 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 87 — Cierre de la interfaz: una aplicación de verdad (2026-11-13)
+
+El último sprint de UI no añade funciones: demuestra que lo construido sirve.
+
+**`ejemplos/06-tareas`**: una lista de tareas con cinco tareas, casillas, barra de progreso, foco que
+se recorre con **Tab**, marcar con **Intro** y salir con **Esc**. Usa `ventana`, `diseno`, `controles`,
+`accesibilidad` y el ratón. ~200 líneas de Nooki.
+
+**La captura es real**: `herramientas/capturar.ps1` abre el programa, espera su ventana, la fotografía
+con `PrintWindow` y lo cierra. La imagen está en `docs/captura-tareas.png` y en el LEEME de ejemplos.
+
+**Y al hacerla apareció un fallo de verdad**: la ventana no se repintaba. El programa dibujaba una vez
+y, si algo tapaba la ventana o el sistema pedía `WM_PAINT`, el área quedaba en blanco. La captura salió
+vacía la primera vez, que es exactamente lo que le pasaría a un usuario al mover la ventana.
+
+- **Nuevo**: `ventana.repintar(v)` devuelve verdadero cuando hay que volver a dibujar. En Win32 lo marca
+  `WM_PAINT` (validando la región con `BeginPaint`/`EndPaint`); en X11, `Expose`.
+- La aplicación de ejemplo redibuja cuando hace falta y solo entonces.
+
+**`docs/INTERFAZ.md`**: la guía de interfaz con los cinco módulos, el esqueleto, **las cinco trampas**
+(repintar, `presentar` inerte en Windows, `abrir` puede devolver 0, `libx11-dev`/`xvfb-run` y las
+palabras reservadas que chocan con nombres de controles) y una tabla honesta de lo que falta: entrada
+de texto, PNG, recolocación al redimensionar, varias ventanas, antialiasing y macOS.
+
+**`GUIA.md`** gana el capítulo 12, «Una ventana», con un programa completo y ejecutable.
+
 ### Sprint 86 — Imágenes (2026-11-13)
 
 El séptimo pilar de la UI: **cargar y dibujar imágenes**.

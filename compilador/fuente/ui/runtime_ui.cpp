@@ -150,6 +150,8 @@ typedef struct {
     int cabeza;
     int cuenta;
     nooki_evento ultimo;
+    /* El sistema pide repintar (la ventana quedó al descubierto o la redibujó). */
+    int sucio;
 } nooki_ventana_estado;
 
 static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y, int tecla) {
@@ -176,6 +178,17 @@ static LRESULT CALLBACK nooki_ventana_proc(HWND ventana, UINT mensaje, WPARAM wp
         return 0;
     }
     switch (mensaje) {
+        case WM_PAINT: {
+            /* Se valida la región para que no se repita el mensaje y se avisa al
+             * programa de que tiene que volver a dibujar. */
+            PAINTSTRUCT pintura;
+            BeginPaint(ventana, &pintura);
+            EndPaint(ventana, &pintura);
+            if (estado != NULL) {
+                estado->sucio = 1;
+            }
+            return 0;
+        }
         case WM_MOUSEMOVE:
             nooki_encolar(estado, NOOKI_EVENTO_MOVIMIENTO, (int)LOWORD(lparam),
                           (int)HIWORD(lparam), 0);
@@ -230,6 +243,7 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
     // La cola de eventos empieza vacía: sin esto, `cuenta` queda con basura.
     estado->cabeza = 0;
     estado->cuenta = 0;
+    estado->sucio = 0;
     estado->ultimo.clase = 0;
     estado->ultimo.x = 0;
     estado->ultimo.y = 0;
@@ -290,6 +304,17 @@ void nooki_ui_ventana_cerrar(long long manejador) {
 
 void nooki_ui_ventana_esperar(long long milisegundos) {
     Sleep((DWORD)milisegundos);
+}
+
+/* Devuelve 1 si el sistema pide repintar, y limpia la marca. */
+int nooki_ui_ventana_repintar(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL) {
+        return 0;
+    }
+    const int sucio = estado->sucio;
+    estado->sucio = 0;
+    return sucio;
 }
 
 /* --- Dibujo (GDI) --- */
@@ -455,6 +480,8 @@ typedef struct {
     int cabeza;
     int cuenta;
     nooki_evento ultimo;
+    /* El sistema pide repintar (la ventana quedó al descubierto o la redibujó). */
+    int sucio;
 } nooki_ventana_estado;
 
 static void nooki_encolar(nooki_ventana_estado* estado, int clase, int x, int y, int tecla) {
@@ -484,6 +511,7 @@ long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long 
     estado->cerrada = 0;
     estado->cabeza = 0;
     estado->cuenta = 0;
+    estado->sucio = 0;
     estado->ultimo.clase = 0;
     estado->ultimo.x = 0;
     estado->ultimo.y = 0;
@@ -515,6 +543,9 @@ int nooki_ui_ventana_viva(long long manejador) {
                 break;
             case ClientMessage:
                 estado->cerrada = 1;
+                break;
+            case Expose:
+                estado->sucio = 1;
                 break;
             case MotionNotify:
                 nooki_encolar(estado, NOOKI_EVENTO_MOVIMIENTO, evento.xmotion.x,
@@ -592,6 +623,17 @@ long long nooki_ui_evento_y(long long manejador) {
 long long nooki_ui_evento_tecla(long long manejador) {
     nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
     return estado == NULL ? 0 : estado->ultimo.tecla;
+}
+
+/* Devuelve 1 si el sistema pide repintar, y limpia la marca. */
+int nooki_ui_ventana_repintar(long long manejador) {
+    nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
+    if (estado == NULL) {
+        return 0;
+    }
+    const int sucio = estado->sucio;
+    estado->sucio = 0;
+    return sucio;
 }
 
 /* --- Dibujo (X11) --- */
