@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 105 — Publicación: CI, macOS y el formateador arreglado (2026-11-13)
+
+Un sprint de cierre que encontró dos fallos reales.
+
+- **`verificar` no cargaba los módulos**: daba un falso error («no se ha declarado `ventana`») en
+  cualquier programa que usara la biblioteca. Ahora usa el conductor, que carga los módulos igual que
+  al compilar, y para antes de generar C. Lo destapó probar el **paquete de distribución**, no la suite.
+- **El formateador rompía los textos multilínea**: añadía sangría a las líneas de dentro de un
+  `"""..."""`, y esa sangría es contenido del texto. Lo encontró el caso de conformidad `0049-archivo`,
+  que lee un archivo con dos líneas. Ahora, dentro de un texto multilínea no se toca nada, y hay una
+  prueba que lo cubre.
+- **La CI gana la cadena de saneamiento** (ASan + UBSan con avisos como errores) y se le quitan los
+  comentarios de sprints viejos. Se comprobaron los presets que referencia: los cuatro existen.
+- **macOS compila**: no hay backend de ventanas todavía, así que la capa de UI tiene una rama para
+  `__APPLE__` con funciones que devuelven 0 —igual que en una máquina sin pantalla—. Así un programa con
+  ventana compila y se prueba en macOS, y la CI no se cae por algo que aún no existe. La rama se
+  comprobó con `gcc -fsyntax-only -D__APPLE__`.
+- **El código Nooki del repositorio pasa su propio formateador**: ejemplos y los 92 casos de
+  conformidad, 107 archivos, formateados y verificados con `--comprobar`.
+
 ### Sprint 104 — `nooki documentar` (2026-11-13)
 
 ```bash

@@ -4,8 +4,8 @@ usar controles
 
 funcion principal() -> entero {
     variable c = nuevo campo { x: 0, y: 0, ancho: 200, alto: 40,
-                               contenido: "" + "", fondo: 0x313244, color: 0xFFFFFF,
-                               marcador: "Escribe" + "" }
+        contenido: "" + "", fondo: 0x313244, color: 0xFFFFFF,
+        marcador: "Escribe" + "" }
 
     imprimir(c.contenido.largo())
     si (c.contiene(10, 10)) {

@@ -17,15 +17,15 @@ funcion principal() -> entero {
     }
 
     variable nombre = nuevo campo { x: 32, y: 80, ancho: 300, alto: 44,
-                                    contenido: "" + "", fondo: 0x313244, color: 0xF5E0DC,
-                                    marcador: "Escribe tu nombre" + "" }
+        contenido: "" + "", fondo: 0x313244, color: 0xF5E0DC,
+        marcador: "Escribe tu nombre" + "" }
 
     variable saludar = nuevo boton { x: 348, y: 80, ancho: 100, alto: 44,
-                                     contenido: "Saludar" + "",
-                                     fondo: 0x89B4FA, color: 0x11111B }
+        contenido: "Saludar" + "",
+        fondo: 0x89B4FA, color: 0x11111B }
 
     variable respuesta = nuevo etiqueta { x: 32, y: 160, ancho: 416, alto: 32,
-                                          contenido: "" + "", color: 0xA6E3A1 }
+        contenido: "" + "", color: 0xA6E3A1 }
 
     variable foco_actual = nuevo foco { indice: 0, total: 2 }
     variable dibujar = verdadero

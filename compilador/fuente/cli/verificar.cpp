@@ -39,22 +39,17 @@ int comando_verificar(std::span<const std::string_view> argumentos, std::ostream
     std::ostringstream contenido;
     contenido << flujo.rdbuf();
 
+    // Se usa el conductor para que cargue los módulos igual que al compilar: si
+    // no, cualquier programa que use la biblioteca daría falsos errores.
+    conductor::Opciones opciones;
+    opciones.fuente = fuente;
+    opciones.solo_verificar = true;
+
     diagnostico::GestorFuentes fuentes;
     diagnostico::Emisor emisor;
-    const auto archivo = fuentes.anadir(ruta_a_utf8(fuente), contenido.str());
-
-    // Solo el front end: léxico, parser y verificación. No se genera C ni se
-    // invoca al compilador: es lo que hace útil a `verificar` en la integración
-    // continua, donde no hace falta un binario.
-    lexico::Lexer lexer(fuentes, archivo, emisor);
-    const auto tokens = lexer.todos();
-    if (!emisor.hay_errores()) {
-        sintactico::Parser parser(fuentes, archivo, emisor, tokens);
-        const sintactico::Programa programa = parser.analizar();
-        if (!emisor.hay_errores()) {
-            semantico::verificar(programa, emisor);
-        }
-    }
+    std::ostringstream descartado;
+    const conductor::Resultado resultado =
+        conductor::compilar(opciones, fuentes, emisor, descartado, descartado);
 
     if (emisor.cantidad() > 0) {
         diagnostico::OpcionesRender render;
@@ -62,7 +57,7 @@ int comando_verificar(std::span<const std::string_view> argumentos, std::ostream
         diagnostico::renderizar_texto(emisor.diagnosticos(), fuentes, error, render);
     }
 
-    if (emisor.hay_errores()) {
+    if (resultado.codigo != 0 || emisor.hay_errores()) {
         return DATOS_INCORRECTOS;
     }
     salida << "correcto: " << argumentos.front() << '\n';

@@ -140,6 +140,7 @@ Sprint 101 ✅  nooki verificar
 Sprint 102 ✅  Formato desde el editor
 Sprint 103 ✅  Ir a la definición de variables
 Sprint 104 ✅  nooki documentar
+Sprint 105 ✅  Publicación: CI, macOS y dos fallos arreglados
 ```
 
 **Ya compila y ejecuta:**

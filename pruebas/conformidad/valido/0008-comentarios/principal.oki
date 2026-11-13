@@ -1,6 +1,6 @@
 // Comentario de línea.
 /* Comentario de bloque
-   que ocupa varias líneas. */
+que ocupa varias líneas. */
 /* Anidado: /* dentro */ sigue fuera */
 /// Documentación del elemento siguiente.
 //! Documentación del módulo.

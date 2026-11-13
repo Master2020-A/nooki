@@ -16,6 +16,8 @@ struct Opciones {
     std::filesystem::path salida;
     /// Solo genera el C y lo escribe en el flujo de salida; no invoca nada.
     bool solo_c = false;
+    /// Se detiene tras la verificación semántica: ni genera C ni compila.
+    bool solo_verificar = false;
     /// No borra el archivo .c intermedio.
     bool conservar_intermedios = false;
     /// Carpetas adicionales donde buscar módulos (las dependencias del manifiesto).

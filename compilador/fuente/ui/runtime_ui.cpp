@@ -450,6 +450,115 @@ long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y
     return (long long)((GetRValue(color) << 16) | (GetGValue(color) << 8) | GetBValue(color));
 }
 
+#elif defined(__APPLE__)
+
+/* macOS todavía no tiene backend. Las funciones existen para que un programa con
+ * ventana compile y pueda probarse: `nooki_ui_ventana_crear` devuelve 0, que es
+ * lo mismo que en una máquina sin pantalla. */
+
+static long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long alto) {
+    (void)titulo;
+    (void)ancho;
+    (void)alto;
+    return 0;
+}
+
+static int nooki_ui_ventana_viva(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static int nooki_ui_ventana_evento(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static void nooki_ui_ventana_cerrar(long long manejador) {
+    (void)manejador;
+}
+
+static void nooki_ui_ventana_esperar(long long milisegundos) {
+    (void)milisegundos;
+}
+
+static int nooki_ui_ventana_repintar(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static long long nooki_ui_evento_siguiente(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static long long nooki_ui_evento_x(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static long long nooki_ui_evento_y(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static long long nooki_ui_evento_tecla(long long manejador) {
+    (void)manejador;
+    return 0;
+}
+
+static void nooki_ui_dibujo_limpiar(long long manejador, long long color) {
+    (void)manejador;
+    (void)color;
+}
+
+static void nooki_ui_dibujo_rectangulo(long long manejador, long long x, long long y,
+                                       long long ancho, long long alto, long long color) {
+    (void)manejador;
+    (void)x;
+    (void)y;
+    (void)ancho;
+    (void)alto;
+    (void)color;
+}
+
+static void nooki_ui_dibujo_linea(long long manejador, long long x1, long long y1, long long x2,
+                                  long long y2, long long color) {
+    (void)manejador;
+    (void)x1;
+    (void)y1;
+    (void)x2;
+    (void)y2;
+    (void)color;
+}
+
+static void nooki_ui_dibujo_texto(long long manejador, long long x, long long y,
+                                  const char* contenido, long long color) {
+    (void)manejador;
+    (void)x;
+    (void)y;
+    (void)contenido;
+    (void)color;
+}
+
+static void nooki_ui_dibujo_presentar(long long manejador) {
+    (void)manejador;
+}
+
+static long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y) {
+    (void)manejador;
+    (void)x;
+    (void)y;
+    return -1;
+}
+
+static void nooki_ui_dibujo_imagen(long long manejador, long long imagen, long long x,
+                                   long long y) {
+    (void)manejador;
+    (void)imagen;
+    (void)x;
+    (void)y;
+}
+
 #else
 
 #include <X11/Xlib.h>

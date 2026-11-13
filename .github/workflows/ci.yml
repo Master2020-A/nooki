@@ -72,8 +72,31 @@ jobs:
           "$bin" ayuda > /dev/null
 
   # ---------------------------------------------------------------------------
-  # Formato. Por ahora es informativo: se vuelve bloqueante en el Sprint 7,
-  # cuando el estilo del código esté estabilizado.
+  # Saneamiento: la misma batería con AddressSanitizer y UndefinedBehaviorSanitizer,
+  # y avisos del compilador tratados como errores.
+  # ---------------------------------------------------------------------------
+  saneamiento:
+    name: Linux · ASan + UBSan
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar X11
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev
+
+      - name: Configurar
+        run: cmake --preset saneamiento
+
+      - name: Compilar
+        run: cmake --build --preset saneamiento
+
+      - name: Probar
+        run: ctest --preset saneamiento
+
+  # ---------------------------------------------------------------------------
+  # Formato: informativo. Hay código escrito antes de fijar el estilo, así que
+  # no bloquea; sirve para ver cuánto se desvía.
   # ---------------------------------------------------------------------------
   formato:
     name: Formato (clang-format)
@@ -94,7 +117,7 @@ jobs:
             | xargs -0 -r clang-format --dry-run --Werror
 
   # ---------------------------------------------------------------------------
-  # Análisis estático. También informativo hasta el Sprint 7.
+  # Análisis estático: también informativo.
   # ---------------------------------------------------------------------------
   analisis:
     name: Análisis (clang-tidy)

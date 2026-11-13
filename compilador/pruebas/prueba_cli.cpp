@@ -113,6 +113,21 @@ int main() {
                   "un archivo con error devuelve datos incorrectos");
         comprobar(contiene(con_error.error, "NOK3001"), "señala el código del error");
 
+        // Un programa que usa la biblioteca: si `verificar` no cargara los
+        // módulos, daría un falso error por «ventana» no declarado.
+        const std::filesystem::path con_modulo = directorio / "modulo.oki";
+        {
+            std::ofstream flujo(con_modulo, std::ios::binary);
+            flujo << "usar matematicas\n\n"
+                     "funcion principal() -> entero {\n"
+                     "    imprimir(matematicas.maximo(1, 2))\n"
+                     "    retornar 0\n"
+                     "}\n";
+        }
+        const Resultado con_biblioteca = invocar({"verificar", nooki::ruta_a_utf8(con_modulo)});
+        comprobar(con_biblioteca.codigo == nooki::cli::EXITO,
+                  "un programa con biblioteca pasa la verificación");
+
         const Resultado sin_archivo = invocar({"verificar"});
         comprobar(sin_archivo.codigo == nooki::cli::USO_INCORRECTO, "sin archivo es uso incorrecto");
 
@@ -147,6 +162,30 @@ int main() {
                   "deja la variable con cuatro espacios");
         comprobar(texto.find("    retornar x") != std::string::npos,
                   "deja el retorno al mismo nivel");
+
+        // Un texto multilínea no se toca: su sangría es contenido.
+        {
+            std::ofstream flujo(archivo, std::ios::binary | std::ios::trunc);
+            flujo << "funcion principal() -> entero {\n"
+                     "    variable t = \"\"\"linea uno\n"
+                     "  linea dos\"\"\"\n"
+                     "    retornar 0\n"
+                     "}\n";
+        }
+        (void)invocar({"formatear", ruta});
+        std::ifstream lectura_texto(archivo, std::ios::binary);
+        std::ostringstream con_texto;
+        con_texto << lectura_texto.rdbuf();
+        comprobar(con_texto.str().find("  linea dos") != std::string::npos,
+                  "el texto multilínea conserva su sangría");
+        {
+            std::ofstream flujo(archivo, std::ios::binary | std::ios::trunc);
+            flujo << "funcion principal() -> entero {\n"
+                     "        variable x = 1\n"
+                     "   retornar x\n"
+                     "}\n";
+        }
+        (void)invocar({"formatear", ruta});
 
         // Formatear dos veces no cambia nada, y `--comprobar` lo detecta.
         const Resultado segunda = invocar({"formatear", ruta, "--comprobar"});

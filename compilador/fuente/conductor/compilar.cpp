@@ -1489,6 +1489,12 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
         return Resultado{1, {}, {}};
     }
 
+    // `verificar` se detiene aquí: ya se cargaron los módulos y se comprobó todo,
+    // pero no hace falta generar C ni llamar al compilador.
+    if (opciones.solo_verificar) {
+        return resultado;
+    }
+
     const generador::ResultadoGeneracion generado = generador::generar_c(programa);
     if (!generado.soportado) {
         emisor.error(diagnostico::codigos::BACKEND_NO_SOPORTA, diagnostico::Span{})

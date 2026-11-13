@@ -34,7 +34,7 @@ funcion tarea(numero: entero) -> texto {
 
 // Dibuja una tarea: casilla, texto y, si está hecha, el texto tachado.
 funcion dibujar_tarea(pantalla: entero, numero: entero, hecha: booleano,
-                      con_foco: booleano) -> vacio {
+con_foco: booleano) -> vacio {
     variable alto = 44
     variable y = 96 + numero * (alto + 8)
     variable fondo = 0x313244
@@ -101,8 +101,8 @@ funcion principal() -> entero {
             ventana.escribir_texto(v, 24, 66, &resumen, 0x9399B2)
 
             variable progreso = nuevo barra { x: 360, y: 34, ancho: 136, alto: 12,
-                                             fondo: 0x313244, relleno: 0xA6E3A1,
-                                             tanto: hechas * 100 / total_tareas() }
+                fondo: 0x313244, relleno: 0xA6E3A1,
+                tanto: hechas * 100 / total_tareas() }
             progreso.dibujar(v)
 
             dibujar_tarea(v, 0, h0, foco_tarea.es_actual(0))

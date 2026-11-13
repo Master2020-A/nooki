@@ -61,14 +61,38 @@ std::pair<int, int> llaves_de(const std::string& linea) {
 
 }  // namespace
 
+/// Cuenta las apariciones de `"""` en una línea, que abren o cierran un texto
+/// multilínea.
+int comillas_triples(const std::string& linea) {
+    int cuantas = 0;
+    for (std::size_t i = 0; i + 2 < linea.size(); ++i) {
+        if (linea[i] == '"' && linea[i + 1] == '"' && linea[i + 2] == '"') {
+            ++cuantas;
+            i += 2;
+        }
+    }
+    return cuantas;
+}
+
 std::string formatear(std::string_view texto) {
     std::istringstream entrada{std::string(texto)};
     std::ostringstream salida;
     std::string linea;
     int profundidad = 0;
+    // Dentro de un texto multilínea no se toca nada: la sangría forma parte del
+    // contenido del texto y cambiarla cambiaría el programa.
+    bool en_texto_largo = false;
 
     while (std::getline(entrada, linea)) {
         const std::string limpia = sin_espacios_finales(linea);
+
+        if (en_texto_largo) {
+            salida << limpia << '\n';
+            if (comillas_triples(limpia) % 2 == 1) {
+                en_texto_largo = false;
+            }
+            continue;
+        }
 
         // Las líneas vacías se respetan tal cual.
         if (limpia.find_first_not_of(" \t") == std::string::npos) {
@@ -90,6 +114,9 @@ std::string formatear(std::string_view texto) {
         profundidad += abre - cierra;
         if (profundidad < 0) {
             profundidad = 0;
+        }
+        if (comillas_triples(limpia) % 2 == 1) {
+            en_texto_largo = true;
         }
     }
     return salida.str();
