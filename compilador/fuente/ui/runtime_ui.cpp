@@ -3,7 +3,8 @@
 namespace nooki::ui {
 
 std::string_view fuente_runtime_ui() {
-    return R"(
+    return R"nooki(
+
 /* --- Imágenes: BMP de 24 o 32 bits sin comprimir ---
  * Se lee el archivo entero y se guardan los píxeles como 0xRRGGBB. */
 #include <stdint.h>
@@ -224,6 +225,7 @@ static LRESULT CALLBACK nooki_ventana_proc(HWND ventana, UINT mensaje, WPARAM wp
 }
 
 long long nooki_ui_ventana_crear(const char* titulo, long long ancho, long long alto) {
+)nooki" R"nooki(
     static int registrada = 0;
     HINSTANCE instancia = GetModuleHandleA(NULL);
     if (!registrada) {
@@ -425,6 +427,7 @@ void nooki_ui_dibujo_imagen(long long manejador, long long imagen_manejador, lon
     nooki_ventana_estado* estado = (nooki_ventana_estado*)(intptr_t)manejador;
     nooki_imagen* imagen = (nooki_imagen*)(intptr_t)imagen_manejador;
     if (estado == NULL || estado->lienzo == NULL || imagen == NULL) {
+)nooki" R"nooki(
         return;
     }
     for (int fila = 0; fila < imagen->alto; ++fila) {
@@ -670,6 +673,7 @@ int nooki_ui_ventana_viva(long long manejador) {
                 estado->cerrada = 1;
                 break;
             case Expose:
+)nooki" R"nooki(
                 estado->sucio = 1;
                 break;
             case MotionNotify:
@@ -845,6 +849,7 @@ void nooki_ui_dibujo_imagen(long long manejador, long long imagen_manejador, lon
     for (int fila = 0; fila < imagen->alto; ++fila) {
         for (int columna = 0; columna < imagen->ancho; ++columna) {
             const unsigned int color = imagen->pixeles[(size_t)fila * imagen->ancho + columna];
+)nooki" R"nooki(
             XSetForeground(estado->pantalla, estado->lienzo, (unsigned long)color);
             XDrawPoint(estado->pantalla, estado->ventana, estado->lienzo,
                        (int)(x + columna), (int)(y + fila));
@@ -877,7 +882,8 @@ long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y
 }
 
 #endif
-)";
+
+)nooki";
 }
 
 }  // namespace nooki::ui

@@ -5,6 +5,30 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 106 — Lo que la CI habría encontrado (2026-11-14)
+
+Antes de publicar compilé con **el preset exacto que usa la CI** (`windows-msvc`, Visual Studio 17
+2022). Falló, y el fallo era real:
+
+```
+error C2026: cadena demasiado grande; caracteres finales truncados
+```
+
+**MSVC limita cada literal de cadena a 16 KB.** Los runtimes de interfaz y de IA viven en literales de
+30 y 45 KB, así que el compilador **no compilaba con MSVC 2022**, solo con MSVC 2026 (que subió el
+límite) y con GCC/Clang. Alguien con Visual Studio 2022 habría encontrado el código sin compilar.
+
+- Los dos literales se parten en trozos de ~7 KB que C++ vuelve a unir al traducir: el contenido es
+  idéntico, el límite por token ya no se toca.
+- Verificado con los dos MSVC (17 y 18), MinGW, Linux y ASan+UBSan. **17 suites en las cinco cadenas.**
+
+**Las notas de la versión, reescritas.** [NOTAS_DE_VERSION.md](NOTAS_DE_VERSION.md) decía «74 programas,
+9 suites, 5 módulos» y listaba la interfaz gráfica y la IA como *pendientes* — cuando ya estaban
+hechas. Ahora describe lo que la 1.0 es de verdad: 92 casos, 17 suites, 16 módulos, 13 comandos, y una
+tabla honesta de lo que no hay (macOS sin ventanas, PNG, diseñador visual).
+
+Todos los números de ese documento se comprobaron contra el repositorio uno por uno.
+
 ### Sprint 105 — Publicación: CI, macOS y el formateador arreglado (2026-11-13)
 
 Un sprint de cierre que encontró dos fallos reales.

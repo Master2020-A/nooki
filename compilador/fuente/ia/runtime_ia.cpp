@@ -3,7 +3,8 @@
 namespace nooki::ia {
 
 std::string_view fuente_runtime_ia() {
-    return R"(
+    return R"nooki(
+
 /* --- Tensores de Nooki (generado por el compilador) ---
  * Matrices de enteros de 64 bits con forma (filas x columnas). Todas las
  * operaciones comprueban las dimensiones: si no encajan devuelven 0 en lugar de
@@ -215,6 +216,7 @@ long long nooki_ia_tensor_determinante(long long manejador) {
             }
         }
         const double valor = copia[(size_t)pivote * n + columna];
+)nooki" R"nooki(
         if (valor == 0.0) {
             free(copia);
             return 0;
@@ -435,6 +437,7 @@ long long nooki_ia_tensor_softmax(long long manejador) {
     const long long salida = nooki_tensor_nuevo(a->filas, a->columnas, 0);
     nooki_tensor* s = nooki_tensor_de(salida);
     if (s == NULL) {
+)nooki" R"nooki(
         return 0;
     }
     /* Se resta el máximo para que la exponencial no se dispare. */
@@ -654,6 +657,7 @@ void nooki_ia_auto_atras(long long manejador) {
             case 1:
                 if (nodo->izquierda) nodo->izquierda->gradiente += g;
                 if (nodo->derecha) nodo->derecha->gradiente += g;
+)nooki" R"nooki(
                 break;
             case 2:
                 if (nodo->izquierda) nodo->izquierda->gradiente += g;
@@ -841,6 +845,7 @@ static nooki_auto_nodo* nooki_red_adelante(nooki_red* red, const double* fila) {
             nooki_auto_nodo* producto = nooki_auto_nodo_de(
                 (long long)(intptr_t)nooki_auto_crear(
                     entrada->valor * red->pesos1[i * red->ocultas + h]->valor, 3,
+)nooki" R"nooki(
                     red->pesos1[i * red->ocultas + h], entrada));
             z = nooki_auto_nodo_de((long long)(intptr_t)nooki_auto_crear(
                 z->valor + producto->valor, 1, z, producto));
@@ -1044,6 +1049,7 @@ void nooki_ia_tabla_poner_texto(long long manejador, long long fila, long long c
     }
     free(c->textos[fila]);
     c->textos[fila] = nooki_tabla_copiar(valor);
+)nooki" R"nooki(
 }
 
 long long nooki_ia_tabla_valor_entero(long long manejador, long long fila, long long columna) {
@@ -1245,6 +1251,7 @@ long long nooki_ia_tabla_ordenar(long long manejador, long long columna) {
 /* Cuántas filas de cada valor de una columna de texto. La tabla resultante
  * tiene dos columnas: «valor» y «cuenta». */
 long long nooki_ia_tabla_contar_por(long long manejador, long long columna) {
+)nooki" R"nooki(
     nooki_tabla* tabla = nooki_tabla_de(manejador);
     if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
         return 0;
@@ -1336,7 +1343,8 @@ long long nooki_ia_tensor_iguales(long long a_manejador, long long b_manejador) 
     }
     return 1;
 }
-)";
+
+)nooki";
 }
 
 }  // namespace nooki::ia
