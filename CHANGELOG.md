@@ -5,6 +5,24 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 115 — Guardar y cargar la red (2026-11-14)
+
+Entrenar cuesta tiempo y al cerrar el programa se perdía todo. Ahora:
+
+```
+redes.guardar(red, &ruta) -> booleano
+redes.cargar(&ruta) -> entero      // la red, o 0 si el archivo no sirve
+```
+
+- **Formato binario** con cabecera `NOOKIRED`, una versión, la forma de la red, los pesos, los sesgos
+  y **las muestras**. Un XOR entrenado ocupa 320 bytes.
+- Se guardan **también los ejemplos**, así que al cargar se puede **seguir entrenando** donde se dejó.
+- Cargar un archivo que no existe, está truncado o no es de Nooki devuelve `0`, sin romper nada.
+- Ejemplo `08-red` guarda y recarga la red y comprueba que predice lo mismo; caso `0067-red-guardar`
+  para la suite (incluido el rechazo de un archivo ajeno). **97 casos.**
+
+### Sprint 114 — Una red que aprende de verdad (2026-11-14)
+
 ### Sprint 114 — Una red que aprende de verdad (2026-11-14)
 
 **El entrenamiento no terminaba.** Escribiendo el ejemplo del círculo, `redes.entrenar(red, 3000, 0.5)`

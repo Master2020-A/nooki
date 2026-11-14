@@ -115,6 +115,8 @@ externo funcion nooki_ia_red_predecir(red: entero, x1: flotante, x2: flotante,
                                       x3: flotante, x4: flotante) -> flotante
 externo funcion nooki_ia_red_error(red: entero) -> flotante
 externo funcion nooki_ia_red_liberar(red: entero) -> vacio
+externo funcion nooki_ia_red_guardar(red: entero, ruta: &texto) -> entero
+externo funcion nooki_ia_red_cargar(ruta: &texto) -> entero
 
 // Crea una red con esas entradas (1 a 4) y neuronas ocultas.
 publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
@@ -129,6 +131,16 @@ publico funcion ejemplo(red: entero, x1: flotante, x2: flotante, x3: flotante, x
 
 publico funcion ejemplos(red: entero) -> entero {
     retornar nooki_ia_red_ejemplos(red)
+}
+
+// Guarda la red, con sus pesos y sus ejemplos, en un archivo.
+publico funcion guardar(red: entero, ruta: &texto) -> booleano {
+    retornar nooki_ia_red_guardar(red, ruta) != 0
+}
+
+// Carga una red guardada. Devuelve 0 si el archivo no sirve.
+publico funcion cargar(ruta: &texto) -> entero {
+    retornar nooki_ia_red_cargar(ruta)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.

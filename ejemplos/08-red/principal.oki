@@ -103,6 +103,23 @@ funcion principal() -> entero {
     imprimir("Lo que ve la red (# dentro, . fuera, X error):")
     dibujar(red)
 
+    // Guardar y volver a cargar: los pesos y los ejemplos viajan en el archivo.
+    variable archivo = "red_circulo.red" + ""
+    si (redes.guardar(red, &archivo)) {
+        variable copia = redes.cargar(&archivo)
+        si (copia != 0) {
+            variable antes = redes.predecir(red, 0.5, 0.5, 0.0, 0.0)
+            variable despues = redes.predecir(copia, 0.5, 0.5, 0.0, 0.0)
+            si (antes == despues) {
+                imprimir("")
+                imprimir("Guardada en red_circulo.red y cargada: predice lo mismo.")
+                imprimir("Ejemplos recuperados: " + "")
+                imprimir(redes.ejemplos(copia))
+            }
+            redes.liberar(copia)
+        }
+    }
+
     redes.liberar(red)
     retornar 0
 }

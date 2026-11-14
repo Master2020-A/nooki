@@ -343,6 +343,23 @@ Ver [§9](#9-módulos-y-visibilidad).
 | `largo` | `() -> entero` | cuántas claves |
 | `claves` | `() -> Vector<texto>` | las claves, para recorrerlas |
 
+### `redes`
+
+| Miembro | Firma | Qué hace |
+|---|---|---|
+| `nueva` | `(entradas: entero, ocultas: entero) -> entero` | red nueva; entradas 1..4, ocultas 1..64 |
+| `ejemplo` | `(red, x1, x2, x3, x4, esperado: flotante) -> vacio` | añade una muestra |
+| `ejemplos` | `(red: entero) -> entero` | cuántas muestras tiene |
+| `entrenar` | `(red, vueltas: entero, tasa: flotante) -> vacio` | descenso de gradiente |
+| `predecir` | `(red, x1, x2, x3, x4: flotante) -> flotante` | salida entre 0 y 1 |
+| `error` | `(red: entero) -> flotante` | error cuadrático medio |
+| `guardar` | `(red: entero, ruta: &texto) -> booleano` | pesos **y ejemplos** a un archivo |
+| `cargar` | `(ruta: &texto) -> entero` | devuelve la red, o `0` si el archivo no sirve |
+| `liberar` | `(red: entero) -> vacio` | libera la memoria |
+
+El archivo de `guardar` es binario y lleva una cabecera `NOOKIRED`: una versión, la forma de la red,
+los pesos, los sesgos y las muestras. Cargar un archivo que no es de Nooki devuelve `0`.
+
 ### `Caja<T>`
 
 | Miembro | Firma | Qué hace |

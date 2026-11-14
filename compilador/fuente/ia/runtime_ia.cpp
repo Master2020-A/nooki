@@ -916,6 +916,155 @@ void nooki_ia_red_entrenar(long long manejador, long long vueltas, double tasa) 
     }
 }
 
+/* --- Guardar y cargar una red ---
+ *
+ * Formato binario, en el orden en que se escribe y se lee:
+ *   "NOOKIRED" (8 bytes) · version, entradas, ocultas, cuantas (4 int de 32 bits)
+ *   pesos1[entradas*ocultas] · sesgos1[ocultas] · pesos2[ocultas] · sesgo2
+ *   muestras[cuantas*5]
+ * Todo en double de 64 bits. Guarda también los ejemplos, para poder seguir
+ * entrenando mañana donde se dejó. */
+
+/* Se declara antes porque `cargar` la usa y está definida más abajo. */
+void nooki_ia_red_liberar(long long manejador);
+
+static int nooki_red_escribir_dobles(FILE* flujo, const double* valores, int cuantos) {
+    return fwrite(valores, sizeof(double), (size_t)cuantos, flujo) == (size_t)cuantos;
+}
+
+static int nooki_red_leer_dobles(FILE* flujo, double* valores, int cuantos) {
+    return fread(valores, sizeof(double), (size_t)cuantos, flujo) == (size_t)cuantos;
+}
+
+int nooki_ia_red_guardar(long long manejador, const char* ruta) {
+    nooki_red* red = nooki_red_de(manejador);
+    if (red == NULL || ruta == NULL) {
+        return 0;
+    }
+    FILE* flujo = fopen(ruta, "wb");
+    if (flujo == NULL) {
+        return 0;
+    }
+
+    int bien = fwrite("NOOKIRED", 1, 8, flujo) == 8;
+    const int32_t cabecera[4] = {1, red->entradas, red->ocultas, red->cuantas};
+    bien = bien && fwrite(cabecera, sizeof(int32_t), 4, flujo) == 4;
+
+    double* valores = (double*)malloc((size_t)(red->entradas * red->ocultas) * sizeof(double));
+    if (valores != NULL) {
+        for (int i = 0; i < red->entradas * red->ocultas; ++i) {
+            valores[i] = red->pesos1[i]->valor;
+        }
+        bien = bien && nooki_red_escribir_dobles(flujo, valores, red->entradas * red->ocultas);
+        free(valores);
+    } else {
+        bien = 0;
+    }
+
+    double* sesgos = (double*)malloc((size_t)red->ocultas * sizeof(double));
+    if (sesgos != NULL) {
+        for (int h = 0; h < red->ocultas; ++h) {
+            sesgos[h] = red->sesgos1[h]->valor;
+        }
+        bien = bien && nooki_red_escribir_dobles(flujo, sesgos, red->ocultas);
+        for (int h = 0; h < red->ocultas; ++h) {
+            sesgos[h] = red->pesos2[h]->valor;
+        }
+        bien = bien && nooki_red_escribir_dobles(flujo, sesgos, red->ocultas);
+        free(sesgos);
+    } else {
+        bien = 0;
+    }
+
+    const double salida = red->sesgo2->valor;
+    bien = bien && nooki_red_escribir_dobles(flujo, &salida, 1);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->muestras, red->cuantas * 5);
+
+    if (fclose(flujo) != 0) {
+        bien = 0;
+    }
+    return bien;
+}
+
+long long nooki_ia_red_cargar(const char* ruta) {
+    if (ruta == NULL) {
+        return 0;
+    }
+    FILE* flujo = fopen(ruta, "rb");
+    if (flujo == NULL) {
+        return 0;
+    }
+
+    char magia[8];
+    int32_t cabecera[4] = {0, 0, 0, 0};
+    long long resultado = 0;
+    if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKIRED", 8) == 0 &&
+        fread(cabecera, sizeof(int32_t), 4, flujo) == 4 && cabecera[0] == 1 &&
+        cabecera[1] >= 1 && cabecera[1] <= 4 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
+        cabecera[3] >= 0) {
+        const int entradas = cabecera[1];
+        const int ocultas = cabecera[2];
+        const int cuantas = cabecera[3];
+
+        const long long manejador = nooki_ia_red_nueva(entradas, ocultas);
+        nooki_red* red = nooki_red_de(manejador);
+        if (red != NULL) {
+            double* valores = (double*)malloc((size_t)(entradas * ocultas) * sizeof(double));
+            double* sesgos = (double*)malloc((size_t)ocultas * sizeof(double));
+            double salida = 0.0;
+
+            int bien = valores != NULL && sesgos != NULL;
+            if (bien) {
+                bien = nooki_red_leer_dobles(flujo, valores, entradas * ocultas);
+                for (int i = 0; bien && i < entradas * ocultas; ++i) {
+                    red->pesos1[i]->valor = valores[i];
+                }
+                bien = bien && nooki_red_leer_dobles(flujo, sesgos, ocultas);
+                for (int h = 0; bien && h < ocultas; ++h) {
+                    red->sesgos1[h]->valor = sesgos[h];
+                }
+                bien = bien && nooki_red_leer_dobles(flujo, sesgos, ocultas);
+                for (int h = 0; bien && h < ocultas; ++h) {
+                    red->pesos2[h]->valor = sesgos[h];
+                }
+                bien = bien && nooki_red_leer_dobles(flujo, &salida, 1);
+                if (bien) {
+                    red->sesgo2->valor = salida;
+                }
+            }
+            free(valores);
+            free(sesgos);
+
+            // Los ejemplos: si no caben, se pide memoria a medida.
+            if (bien && cuantas > 0) {
+                if (cuantas > red->capacidad) {
+                    double* muestras =
+                        (double*)realloc(red->muestras, (size_t)cuantas * 5 * sizeof(double));
+                    if (muestras == NULL) {
+                        bien = 0;
+                    } else {
+                        red->muestras = muestras;
+                        red->capacidad = cuantas;
+                    }
+                }
+                bien = bien && nooki_red_leer_dobles(flujo, red->muestras, cuantas * 5);
+                if (bien) {
+                    red->cuantas = cuantas;
+                }
+            }
+
+            if (bien) {
+                resultado = manejador;
+            } else {
+                nooki_ia_red_liberar(manejador);
+            }
+        }
+    }
+
+    fclose(flujo);
+    return resultado;
+}
+
 void nooki_ia_red_liberar(long long manejador) {
     nooki_red* red = nooki_red_de(manejador);
     if (red == NULL) {

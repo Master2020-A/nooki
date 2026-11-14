@@ -1744,7 +1744,40 @@ funcion principal() -> entero {
 }
 ```
 
-Eso aprende XOR. Los detalles de cada módulo están en la especificación.
+Eso aprende XOR. Los detalles de cada módulo están en la referencia.
+
+### Guardar lo aprendido
+
+Entrenar cuesta tiempo; el resultado se puede guardar y recuperar:
+
+```nooki
+usar redes
+
+funcion principal() -> entero {
+    variable archivo = "modelo.red" + ""
+
+    variable red = redes.cargar(&archivo)
+    si (red == 0) {
+        // La primera vez: se crea y se entrena.
+        red = redes.nueva(2, 4)
+        redes.ejemplo(red, 0.0, 0.0, 0.0, 0.0, 0.0)
+        redes.ejemplo(red, 0.0, 1.0, 0.0, 0.0, 1.0)
+        redes.ejemplo(red, 1.0, 0.0, 0.0, 0.0, 1.0)
+        redes.ejemplo(red, 1.0, 1.0, 0.0, 0.0, 0.0)
+        redes.entrenar(red, 1500, 1.0)
+        si (!redes.guardar(red, &archivo)) {
+            imprimir("no se pudo guardar")
+        }
+    }
+
+    imprimir(redes.predecir(red, 1.0, 0.0, 0.0, 0.0))
+    redes.liberar(red)
+    retornar 0
+}
+```
+
+La segunda vez que se ejecuta, la red ya viene entrenada del archivo. Con los pesos viajan también los
+ejemplos, así que se puede **seguir entrenando** donde se dejó.
 
 ---
 

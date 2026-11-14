@@ -1,0 +1,47 @@
+// Guardar una red entrenada y volver a cargarla: los pesos y los ejemplos
+// sobreviven, y la red cargada predice lo mismo.
+usar redes
+
+funcion principal() -> entero {
+    variable red = redes.nueva(2, 4)
+
+    redes.ejemplo(red, 0.0, 0.0, 0.0, 0.0, 0.0)
+    redes.ejemplo(red, 0.0, 1.0, 0.0, 0.0, 1.0)
+    redes.ejemplo(red, 1.0, 0.0, 0.0, 0.0, 1.0)
+    redes.ejemplo(red, 1.0, 1.0, 0.0, 0.0, 0.0)
+    redes.entrenar(red, 1500, 1.0)
+
+    variable ruta = "red_conformidad.red" + ""
+    si (!redes.guardar(red, &ruta)) {
+        imprimir("no se pudo guardar")
+        retornar 1
+    }
+
+    variable copia = redes.cargar(&ruta)
+    si (copia == 0) {
+        imprimir("no se pudo cargar")
+        retornar 1
+    }
+
+    // Los ejemplos viajan con la red.
+    imprimir(redes.ejemplos(copia))
+
+    // Y las predicciones son las mismas que antes de guardar.
+    variable antes = redes.predecir(red, 1.0, 1.0, 0.0, 0.0)
+    variable despues = redes.predecir(copia, 1.0, 1.0, 0.0, 0.0)
+    si (antes == despues) {
+        imprimir("igual")
+    } sino {
+        imprimir("distinto")
+    }
+
+    // Un archivo que no es de Nooki no se carga: devuelve 0.
+    variable otro = "no_existe.red" + ""
+    si (redes.cargar(&otro) == 0) {
+        imprimir("archivo ajeno rechazado")
+    }
+
+    redes.liberar(copia)
+    redes.liberar(red)
+    retornar 0
+}
