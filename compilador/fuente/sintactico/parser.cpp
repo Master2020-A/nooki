@@ -287,7 +287,8 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
         }
     }
 
-    // Herencia simple: `clase cuadrado hereda figura`.
+    // Herencia simple: `clase cuadrado hereda figura`. Puede ir antes o después
+    // de `implementa`.
     if (actual().lexema == "hereda") {
         avanzar();
         if (const Token& base = actual();
@@ -296,6 +297,22 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
             avanzar();
         } else {
             error_en(base, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de clase");
+        }
+        // Y los rasgos, si vienen después.
+        while (actual().lexema == "implementa") {
+            avanzar();
+            for (;;) {
+                if (const Token& rasgo = actual();
+                    rasgo.es(TipoToken::Identificador) || rasgo.es(TipoToken::PalabraClave)) {
+                    definicion.rasgos.push_back(rasgo.lexema);
+                    avanzar();
+                    if (actual().lexema == ",") {
+                        avanzar();
+                        continue;
+                    }
+                }
+                break;
+            }
         }
     }
 
