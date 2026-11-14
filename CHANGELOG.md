@@ -5,6 +5,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 108 — Manual del lenguaje (2026-11-14)
+
+El manual completo de Nooki: 25 capítulos, de «hola, mundo» a los rasgos, la memoria y la IA. Está en
+[MANUAL.md](MANUAL.md).
+
+**Y es verificable**: sus **65 programas** son bloques `nooki` que la suite extrae y compila en cada
+`ctest`. Si el lenguaje cambia y un ejemplo se rompe, falla `manual`. La documentación no puede mentir.
+
+Escribirlo destapó **cuatro fallos del lenguaje**, todos arreglados:
+
+1. **`x como flotante` no tenía tipo** en el verificador: cualquier uso de una conversión daba un error
+   de tipo falso.
+2. **La variable de un `para` sobre `Vector<texto>` se trataba como entero**, así que `para (nombre en
+   nombres)` no dejaba usar `nombre` como texto.
+3. **`coincide` no contaba la forma `enumeracion.variante`** al comprobar que cubre todos los casos: un
+   emparejamiento exhaustivo se rechazaba con `NOK4006`.
+4. **Una variante sin datos dentro de una enumeración con datos** generaba C inválido al usarla como
+   valor (`forma.sin_forma`). Ahora se construye la estructura con su etiqueta.
+
+Y uno de sintaxis: **`hereda` e `implementa` solo valían en un orden**; ahora valen los dos.
+
 ### Sprint 107 — Tres fallos de memoria que destapó el manual (2026-11-14)
 
 Empezando a escribir el manual compilé un programa de muestra con un `Mapa`. **Corrompía el montículo**

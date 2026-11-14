@@ -82,6 +82,14 @@ add_test(NAME ventana COMMAND prueba_ventana)
 set_tests_properties(ventana PROPERTIES TIMEOUT 120
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:nooki>")
 
+# Documentación verificada: cada ejemplo del manual compila.
+add_executable(prueba_manual manual.cpp)
+target_link_libraries(prueba_manual PRIVATE nooki_nucleo)
+nooki_aplicar_opciones(prueba_manual)
+add_test(NAME manual COMMAND prueba_manual)
+set_tests_properties(manual PROPERTIES TIMEOUT 180
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:nooki>")
+
 # Imágenes: carga de BMP y lectura de píxeles.
 add_executable(prueba_imagenes imagenes.cpp)
 target_link_libraries(prueba_imagenes PRIVATE nooki_nucleo)

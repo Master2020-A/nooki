@@ -776,7 +776,16 @@ private:
                     exigir(Tipo::Entero, tipo_de(*sentencia.paso), sentencia.paso->span);
                 }
                 abrir_ambito();
-                declarar(sentencia.nombre, Tipo::Entero);
+                // La variable de un `para` sobre una colección toma el tipo del
+                // elemento: texto si el vector es de textos, entero si no.
+                const bool sobre_textos =
+                    sentencia.expresion &&
+                    sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                    es_vector_texto(sentencia.expresion->lexema);
+                declarar(sentencia.nombre, sobre_textos ? Tipo::Texto : Tipo::Entero);
+                if (sobre_textos) {
+                    declarar_vector_texto(sentencia.nombre);
+                }
                 for (const Sentencia& hija : sentencia.cuerpo) {
                     revisar_sentencia(hija, funcion);
                 }
@@ -931,12 +940,18 @@ private:
             const sintactico::Enumeracion* con_datos = nullptr;
             std::set<std::string> cubiertas;
             for (const Rama& rama : sentencia.ramas) {
-                if (rama.patron.clase != Patron::Clase::Variante ||
-                    rama.patron.enumeracion != rama.patron.valor) {
+                if (rama.patron.clase != Patron::Clase::Variante) {
                     continue;
                 }
+                // Dos formas de nombrar una variante: `Variante(datos)` —donde el
+                // nombre hace de enumeración— o `Enumeracion.variante`, que es la
+                // única para las variantes sin datos.
                 const auto variante = variantes_.find(std::string(rama.patron.valor));
                 if (variante == variantes_.end()) {
+                    continue;
+                }
+                if (rama.patron.enumeracion != rama.patron.valor &&
+                    variante->second.first->nombre != rama.patron.enumeracion) {
                     continue;
                 }
                 con_datos = variante->second.first;
@@ -1037,6 +1052,15 @@ private:
                 return Tipo::Desconocido;
             case TipoExpresion::Flotante:
                 return Tipo::Flotante;
+            case TipoExpresion::Como: {
+                // `x como tipo`: el resultado tiene el tipo pedido, si existe.
+                const Tipo destino = desde_nombre(expresion.anotacion);
+                if (destino == Tipo::Desconocido) {
+                    error(diagnostico::codigos::TIPO_DESCONOCIDO, expresion.span)
+                        .parametro("nombre", std::string(expresion.anotacion));
+                }
+                return destino;
+            }
             default:
                 // Caracteres, índices y conversiones: el generador los rechaza con
                 // NOK6003 cuando llegue el momento.

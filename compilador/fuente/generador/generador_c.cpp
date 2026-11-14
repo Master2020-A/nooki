@@ -3212,6 +3212,24 @@ private:
             const auto enumeracion =
                 enumeraciones_.find(std::string(nodo.izquierda->lexema));
             if (enumeracion != enumeraciones_.end()) {
+                // Una variante sin datos de una enumeración con datos es una
+                // estructura con su etiqueta, no un número suelto.
+                for (std::size_t i = 0; i < enumeracion->second->variantes.size(); ++i) {
+                    if (enumeracion->second->variantes[i].nombre == nodo.anotacion) {
+                        if (!enumeracion->second->variantes[i].campos.empty()) {
+                            break;
+                        }
+                        const bool tiene_datos = std::any_of(
+                            enumeracion->second->variantes.begin(),
+                            enumeracion->second->variantes.end(),
+                            [](const sintactico::Variante& v) { return !v.campos.empty(); });
+                        if (tiene_datos) {
+                            return "(nooki_" + std::string(enumeracion->first) +
+                                   "){ .etiqueta = " + std::to_string(i) + " }";
+                        }
+                        break;
+                    }
+                }
                 return constante_enum(enumeracion->first, nodo.anotacion);
             }
         }
