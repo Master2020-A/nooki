@@ -1,0 +1,13 @@
+funcion principal() -> entero {
+    imprimir("empieza")
+    retornar 0empieza
+}
+
+
+//Tipos
+estructura punti{
+    publico x: entero
+    publico y: entero
+}
+
+funcion principal() -> entero { variable entero_pequeno = 42 variable grande = 9_000_000_000 // los guiones bajos son para leerlo mejor variable decimal = 3.1416 variable cierto = verdadero variable frase = "hola" imprimir(entero_pequeno) imprimir(grande) imprimir(decimal) imprimir(cierto) imprimir(frase) retornar 0}

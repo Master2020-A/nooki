@@ -1,0 +1,40 @@
+// Los miembros de texto, Vector, Mapa y Caja, con sus valores de borde.
+funcion principal() -> entero {
+    variable t = "Hola Mundo" + ""
+    imprimir(t.largo())
+    imprimir(t.mayusculas())
+    imprimir(t.minusculas())
+    imprimir(t.caracter(0))
+    imprimir(t.caracter(999))
+
+    variable o = "o" + ""
+    imprimir(t.buscar(&o))
+    imprimir(t.sin_ultimo())
+
+    variable n = "42" + ""
+    imprimir(n.a_entero())
+
+    variable e = "  hola  " + ""
+    imprimir(e.recortar())
+
+    variable v = Vector<entero>.nuevo()
+    v.agregar(4)
+    v.modificar(0, 9)
+    imprimir(v.obtener(0))
+    // Fuera de rango devuelve el valor cero, no falla.
+    imprimir(v.obtener(99))
+    v.vaciar()
+    imprimir(v.largo())
+
+    variable caja = Caja<entero>.nuevo(1)
+    caja.poner(caja.sacar() + 6)
+    imprimir(caja.sacar())
+
+    variable m = Mapa<texto, entero>.nuevo()
+    variable k = "a" + ""
+    m.insertar(&k, 3)
+    imprimir(m.obtener(&k))
+    imprimir(m.quitar(&k))
+    imprimir(m.quitar(&k))
+    retornar 0
+}

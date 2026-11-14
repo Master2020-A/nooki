@@ -1,0 +1,28 @@
+// Operadores de bits, desplazamientos y asignaciones compuestas.
+funcion principal() -> entero {
+    variable a = 5
+    variable b = 3
+
+    imprimir(a & b)
+    imprimir(a | b)
+    imprimir(a ^ b)
+    imprimir(a << 2)
+    imprimir(a >> 1)
+
+    // Y en asignación compuesta, que ya funcionaba antes.
+    variable c = 5
+    c |= 8
+    imprimir(c)
+    c ^= 1
+    imprimir(c)
+    c <<= 1
+    imprimir(c)
+    c &= 12
+    imprimir(c)
+    c >>= 1
+    imprimir(c)
+
+    // Los desplazamientos usan el operador de C tal cual: desplazar más de 63
+    // bits es comportamiento indefinido, no un error de Nooki.
+    retornar 0
+}

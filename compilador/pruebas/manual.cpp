@@ -20,11 +20,11 @@ namespace fs = std::filesystem;
 
 namespace {
 
-/// Ruta del manual: se busca subiendo desde el directorio actual.
-fs::path ruta_del_manual() {
+/// Ruta de un documento de la raíz, subiendo desde el directorio actual.
+fs::path ruta_del_documento(const std::string& nombre) {
     fs::path actual = fs::current_path();
     for (int subida = 0; subida < 6; ++subida) {
-        const fs::path candidato = actual / "MANUAL.md";
+        const fs::path candidato = actual / nombre;
         std::error_code error_fs;
         if (fs::exists(candidato, error_fs)) {
             return candidato;
@@ -70,16 +70,20 @@ std::vector<std::string> ejemplos_de(const fs::path& manual) {
 }  // namespace
 
 int main() {
-    const fs::path manual = ruta_del_manual();
-    if (manual.empty()) {
-        std::cout << "FALLO: no se encontró MANUAL.md\n";
-        return 1;
-    }
-
-    const std::vector<std::string> ejemplos = ejemplos_de(manual);
-    if (ejemplos.empty()) {
-        std::cout << "FALLO: el manual no tiene ejemplos marcados como nooki\n";
-        return 1;
+    // El manual y la referencia: los dos llevan programas que deben compilar.
+    std::vector<std::string> ejemplos;
+    for (const std::string_view documento : {"MANUAL.md", "REFERENCIA.md"}) {
+        const fs::path ruta = ruta_del_documento(std::string(documento));
+        if (ruta.empty()) {
+            std::cout << "FALLO: no se encontró " << documento << "\n";
+            return 1;
+        }
+        const std::vector<std::string> suyos = ejemplos_de(ruta);
+        if (suyos.empty()) {
+            std::cout << "FALLO: " << documento << " no tiene ejemplos nooki\n";
+            return 1;
+        }
+        ejemplos.insert(ejemplos.end(), suyos.begin(), suyos.end());
     }
 
     const fs::path directorio = fs::temp_directory_path() / "nooki-manual";
@@ -120,6 +124,6 @@ int main() {
         std::cout << fallos << " ejemplo(s) del manual no compilan\n";
         return 1;
     }
-    std::cout << "manual: " << ejemplos.size() << " ejemplos compilan\n";
+    std::cout << "documentación: " << ejemplos.size() << " ejemplos compilan (manual y referencia)\n";
     return 0;
 }

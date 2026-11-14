@@ -1826,22 +1826,34 @@ Estas palabras **no** pueden usarse como nombres:
 
 ```text
 variable  constante  funcion  clase  estructura  rasgo  interfaz
-enumeracion  tipo  modulo  importar  exportar  implementar  externo
+enumeracion  tipo  modulo  importar  exportar  implementar  externo  usar
 
 si  sino  mientras  para  en  hacer  romper  continuar  retornar
-coincide  caso  defecto
+coincide  caso
 
 nuevo  este  Este  super  hereda  implementa
 constructor  destructor  propiedad  obtener  establecer
 
-publico  privado  protegido  interna
+publico  privado  protegido  interna  mutable  estatico  abstracta
 
-inseguro  asm  usar
+inseguro  asm
+
+como
 
 verdadero  falso  nulo
 
-entero  flotante  booleano  texto  caracter  vacio  lista  tamano  esperar
+entero  entero8  entero16  entero32  entero64  entero128
+natural  natural8  natural16  natural32  natural64  natural128
+flotante  flotante32  booleano  texto  caracter  vacio  byte
+tamano  tamano_signado
+
+# Reservadas pero sin uso todavía: asincrono atrapar bucle donde es esperar
+# finalmente intentar lanzar macro mixin paso union sinosi
 ```
+
+Son **85**. La lista exacta, agrupada y generada desde el compilador, está en
+[`docs/referencia/palabras.md`](docs/referencia/palabras.md); y la tabla completa de los 46
+diagnósticos, en [`docs/referencia/diagnosticos.md`](docs/referencia/diagnosticos.md).
 
 Los **identificadores sí pueden llevar tildes**: `año`, `número`, `más`. Lo que no puede es tener una
 palabra reservada con tilde donde el lenguaje espera una sin ella —`variable` sin tilde es la palabra;

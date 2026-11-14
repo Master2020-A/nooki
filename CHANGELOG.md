@@ -5,6 +5,38 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 111 — Colores variados y referencia del lenguaje (2026-11-14)
+
+**Los colores.** `funcion` y `variable` salían del mismo token, así que el editor los pintaba igual.
+Ahora cada construcción tiene su categoría y su color: la palabra y el nombre de una función, la de una
+variable, los tipos declarados, los tipos primitivos, los genéricos, las llamadas, los métodos, los
+campos, las etiquetas de un literal, los literales, los modificadores, los módulos y las referencias
+(`&`, `&mutable`, `?`). El plugin pasó de 15 a **26 categorías**, y cada una se puede ajustar en
+*Settings → Editor → Color Scheme → Nooki*, con una vista previa que las muestra todas.
+
+**La referencia.** `REFERENCIA.md`: 12 secciones con el léxico, los tipos y sus rangos, la tabla de
+precedencia **real** del parser, las sentencias, las declaraciones, los miembros de `texto`/`Vector`/
+`Mapa`/`Caja`, la biblioteca (152 firmas), la memoria, los diagnósticos y las herramientas. Las tablas
+de palabras reservadas, diagnósticos y biblioteca las **genera** `herramientas/generar-referencia.py`
+desde el compilador, así que no pueden desincronizarse.
+
+**Seis fallos que destapó la referencia**, todos arreglados:
+
+1. Los operadores de bits y desplazamientos estaban en el parser y en las asignaciones compuestas, pero
+   **no en las expresiones**: `a & b` daba `NOK6003`.
+2. `Vector.modificar` y `Vector.vaciar` **no existían** en el runtime: el generador emitía llamadas a
+   funciones inexistentes y el C no compilaba. (El manual ya los documentaba: mentía.)
+3. `Caja.sacar` y `Caja.poner` tampoco existían, y `imprimir(caja.sacar())` no sabía el tipo.
+4. `texto.sin_ultimo()` y `texto.agregar_codigo()` no estaban en la lista de métodos que devuelven
+   texto, así que `imprimir(t.sin_ultimo())` generaba C inválido.
+5. Los métodos de un mapa o de una caja no tenían tipo, así que no se podían imprimir ni asignar.
+6. **Un tipo inventado se aceptaba en silencio**: `variable n: natural = 1` compilaba como `entero`.
+   Ahora da `NOK3003`, que es lo que el lenguaje promete: lo que no se puede garantizar se rechaza.
+
+Y dos casos nuevos: `0064-operadores-bits` y `0065-miembros`. **96 casos.**
+
+### Sprint 110 — Plugin de verdad para RustRover (2026-11-14)
+
 ### Sprint 110 — Plugin de verdad para RustRover (2026-11-14)
 
 El bundle TextMate no servía en RustRover: **no trae el soporte de TextMate**. Lo comprobé mirando dentro

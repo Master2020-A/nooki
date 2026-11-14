@@ -448,6 +448,17 @@ const char* PRELUDIO =
     "    return v->largo;\n"
     "}\n"
     "\n"
+    "static void nooki_vector_entero_modificar(nooki_vector_entero* v, long long indice, long long valor) {\n"
+    "    if (indice < 0 || indice >= v->largo) {\n"
+    "        return;\n"
+    "    }\n"
+    "    v->datos[indice] = valor;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_entero_vaciar(nooki_vector_entero* v) {\n"
+    "    v->largo = 0;\n"
+    "}\n"
+    "\n"
     "static void nooki_vector_entero_soltar(nooki_vector_entero* v) {\n"
     "    free(v->datos);\n"
     "    v->datos = NULL;\n"
@@ -499,6 +510,22 @@ const char* PRELUDIO =
     "\n"
     "static long long nooki_vector_texto_largo(nooki_vector_texto* v) {\n"
     "    return v->largo;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_texto_modificar(nooki_vector_texto* v, long long indice, nooki_texto valor) {\n"
+    "    if (indice < 0 || indice >= v->largo) {\n"
+    "        return;\n"
+    "    }\n"
+    "    nooki_texto_soltar(&v->datos[indice]);\n"
+    "    v->datos[indice] = valor;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_texto_vaciar(nooki_vector_texto* v) {\n"
+    "    for (long long i = 0; i < v->largo; ++i) {\n"
+    "        nooki_texto_soltar(&v->datos[i]);\n"
+    "        v->datos[i] = nooki_texto_literal(\"\");\n"
+    "    }\n"
+    "    v->largo = 0;\n"
     "}\n"
     "\n"
     "static void nooki_vector_texto_soltar(nooki_vector_texto* v) {\n"
@@ -754,6 +781,17 @@ const char* PRELUDIO =
     "        *caja.datos = valor;\n"
     "    }\n"
     "    return caja;\n"
+    "}\n"
+    "\n"
+    "/* Leer y escribir el valor de la caja: los dos métodos de Caja. */\n"
+    "static long long nooki_caja_sacar(nooki_caja* caja) {\n"
+    "    return caja->datos != NULL ? *caja->datos : 0;\n"
+    "}\n"
+    "\n"
+    "static void nooki_caja_poner(nooki_caja* caja, long long valor) {\n"
+    "    if (caja->datos != NULL) {\n"
+    "        *caja->datos = valor;\n"
+    "    }\n"
     "}\n"
     "\n"
     "static void nooki_caja_soltar(nooki_caja* caja) {\n"
@@ -2780,7 +2818,8 @@ private:
                             return "nooki_vector_texto";
                         }
                         if (metodo == "subtexto" || metodo == "mayusculas" ||
-                            metodo == "minusculas" || metodo == "recortar") {
+                            metodo == "minusculas" || metodo == "recortar" ||
+                            metodo == "sin_ultimo" || metodo == "agregar_codigo") {
                             return "nooki_texto";
                         }
                         if (metodo == "contiene" || metodo == "empieza_con") {
@@ -2790,7 +2829,9 @@ private:
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
-                        if (acceso.anotacion == "agregar") {
+                        if (acceso.anotacion == "agregar" ||
+                            acceso.anotacion == "modificar" ||
+                            acceso.anotacion == "vaciar") {
                             return "void";
                         }
                         // El elemento de un `Vector<texto>` es un texto.
@@ -2801,6 +2842,42 @@ private:
                                        : "long long";
                         }
                         return "long long";
+                    }
+                    // Una variable de tipo `Caja<entero>` o `Caja<texto>`.
+                    if (acceso.izquierda &&
+                        tipo_de(*acceso.izquierda).rfind("nooki_caja", 0) == 0) {
+                        if (acceso.anotacion == "poner") {
+                            return "void";
+                        }
+                        if (acceso.anotacion == "sacar") {
+                            return tipo_de(*acceso.izquierda).find("texto") !=
+                                           std::string::npos
+                                       ? "nooki_texto"
+                                       : "long long";
+                        }
+                        // Cualquier otro método sigue su camino: puede ser de una
+                        // clase del usuario que también se llama Caja.
+                    }
+                    // Una variable de tipo mapa.
+                    if (acceso.izquierda &&
+                        tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
+                        if (acceso.anotacion == "insertar") {
+                            return "void";
+                        }
+                        // `quitar` dice si quitó algo: 1 o 0.
+                        if (acceso.anotacion == "quitar") {
+                            return "int";
+                        }
+                        if (acceso.anotacion == "contiene") {
+                            return "int";
+                        }
+                        if (acceso.anotacion == "obtener") {
+                            return tipo_de(*acceso.izquierda).find("texto_entero") !=
+                                           std::string::npos
+                                       ? "long long"
+                                       : "nooki_texto";
+                        }
+                        // `claves()` y lo demás lo resuelve el código de más abajo.
                     }
                     if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
@@ -2842,7 +2919,9 @@ private:
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
-                        if (acceso.anotacion == "agregar") {
+                        if (acceso.anotacion == "agregar" ||
+                            acceso.anotacion == "modificar" ||
+                            acceso.anotacion == "vaciar") {
                             return "void";
                         }
                         // El elemento de un `Vector<texto>` es un texto.
@@ -3318,6 +3397,9 @@ private:
 
         static constexpr std::string_view OPERADORES[] = {
             "+",  "-",  "*",  "/",  "%",  "==", "!=", "<", ">",  "<=", ">=", "&&", "||",
+            // De bits y desplazamientos: el parser los acepta y las asignaciones
+            // compuestas ya los usaban, pero en una expresión se rechazaban.
+            "&",  "|",  "^",  "<<", ">>",
         };
         bool conocido = false;
         for (const std::string_view conocido_operador : OPERADORES) {

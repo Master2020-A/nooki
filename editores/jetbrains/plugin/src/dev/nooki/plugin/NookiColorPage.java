@@ -11,45 +11,93 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * La página de colores del esquema: permite ver y cambiar los colores de Nooki
- * desde Settings → Editor → Color Scheme → Nooki.
+ * La página de colores: permite ver y cambiar cada color de Nooki desde
+ * Settings → Editor → Color Scheme → Nooki.
  */
 public final class NookiColorPage implements ColorSettingsPage {
 
     private static final AttributesDescriptor[] ATRIBUTOS = new AttributesDescriptor[]{
-            new AttributesDescriptor("Comentario", NookiSyntaxHighlighter.COMENTARIO),
+            new AttributesDescriptor("Comentario de línea", NookiSyntaxHighlighter.COMENTARIO),
+            new AttributesDescriptor("Comentario de bloque", NookiSyntaxHighlighter.COMENTARIO_BLOQUE),
             new AttributesDescriptor("Texto", NookiSyntaxHighlighter.TEXTO),
             new AttributesDescriptor("Número", NookiSyntaxHighlighter.NUMERO),
-            new AttributesDescriptor("Declaración", NookiSyntaxHighlighter.DECLARACION),
+            new AttributesDescriptor("Función (declaración)", NookiSyntaxHighlighter.FUNCION),
+            new AttributesDescriptor("Variable y constante", NookiSyntaxHighlighter.VARIABLE),
+            new AttributesDescriptor("Tipo declarado", NookiSyntaxHighlighter.TIPO_DECLARADO),
             new AttributesDescriptor("Control de flujo", NookiSyntaxHighlighter.CONTROL),
-            new AttributesDescriptor("Tipo", NookiSyntaxHighlighter.TIPO),
-            new AttributesDescriptor("Genérico", NookiSyntaxHighlighter.GENERICO),
-            new AttributesDescriptor("Visibilidad", NookiSyntaxHighlighter.VISIBILIDAD),
+            new AttributesDescriptor("Patrones", NookiSyntaxHighlighter.PATRON),
+            new AttributesDescriptor("Módulos", NookiSyntaxHighlighter.MODULO),
+            new AttributesDescriptor("Inseguro y asm", NookiSyntaxHighlighter.META),
+            new AttributesDescriptor("Modificador de acceso", NookiSyntaxHighlighter.MODIFICADOR),
             new AttributesDescriptor("Objeto", NookiSyntaxHighlighter.OBJETO),
-            new AttributesDescriptor("Meta", NookiSyntaxHighlighter.META),
+            new AttributesDescriptor("Tipo primitivo", NookiSyntaxHighlighter.TIPO_PRIMITIVO),
+            new AttributesDescriptor("Tipo genérico", NookiSyntaxHighlighter.TIPO_GENERICO),
             new AttributesDescriptor("Literal", NookiSyntaxHighlighter.LITERAL),
-            new AttributesDescriptor("Operador", NookiSyntaxHighlighter.OPERADOR),
-            new AttributesDescriptor("Puntuación", NookiSyntaxHighlighter.PUNTUACION),
+            new AttributesDescriptor("Llamada a función", NookiSyntaxHighlighter.LLAMADA),
+            new AttributesDescriptor("Método", NookiSyntaxHighlighter.METODO),
+            new AttributesDescriptor("Campo", NookiSyntaxHighlighter.CAMPO),
+            new AttributesDescriptor("Nombre de campo en un literal", NookiSyntaxHighlighter.ETIQUETA),
             new AttributesDescriptor("Identificador", NookiSyntaxHighlighter.IDENTIFICADOR),
+            new AttributesDescriptor("Operador", NookiSyntaxHighlighter.OPERADOR),
+            new AttributesDescriptor("Referencia y propagación", NookiSyntaxHighlighter.REFERENCIA),
+            new AttributesDescriptor("Puntuación", NookiSyntaxHighlighter.LLAVE),
+            new AttributesDescriptor("Punto", NookiSyntaxHighlighter.PUNTO),
+            new AttributesDescriptor("Coma", NookiSyntaxHighlighter.COMA),
     };
 
     private static final String EJEMPLO = """
-            // Un programa de Nooki
+            // Un poco de todo: cada cosa de un color
             usar matematicas
+            usar pln
 
             estructura punto {
                 publico x: entero
                 publico y: entero
             }
 
-            funcion principal() -> entero {
-                variable saludo = "hola"
-                variable n = 42
-                constante pi = 3.1416
+            rasgo Describible {
+                funcion describir() -> texto
+            }
 
-                si (n > 0 && verdadero) {
-                    imprimir(saludo)
+            clase figura implementa Describible {
+                publico nombre: texto
+
+                publico funcion describir() -> texto {
+                    retornar "figura " + este.nombre
                 }
+            }
+
+            funcion distancia(a: punto, b: punto) -> entero {
+                variable dx = a.x - b.x
+                variable dy = a.y - b.y
+                constante cero = 0
+                imprimir(matematicas.cuadrado(dx) + matematicas.cuadrado(dy))
+                retornar cero
+            }
+
+            funcion principal() -> entero {
+                variable p = punto { x: 1, y: 2 }
+                variable q = punto { x: 4, y: 6 }
+                variable nombre = "Nooki"
+                variable largo = 1_000
+
+                si (largo > 0 && verdadero) {
+                    mientras (largo > 990) {
+                        largo = largo - 1
+                    }
+                }
+
+                coincide (largo) {
+                    caso 0 => imprimir("cero")
+                    caso _ => imprimir("otro")
+                }
+
+                variable caja = Caja<entero>.nuevo(0)
+                variable referencia: &mutable Caja<entero> = &mutable caja
+                variable texto = \"\"\"línea uno
+                línea dos\"\"\"
+
+                imprimir(distancia(p, q))
                 retornar 0
             }
             """;

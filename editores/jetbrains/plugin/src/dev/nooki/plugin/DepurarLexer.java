@@ -58,6 +58,16 @@ public final class DepurarLexer {
 
         System.out.println();
         System.out.println("tokens: " + cuantos + " · desconocidos: " + errores);
+
+        // Lo que el usuario notó: «funcion» y «variable» salían del mismo color.
+        final IElementType deFuncion = NookiTokens.PALABRAS.get("funcion");
+        final IElementType deVariable = NookiTokens.PALABRAS.get("variable");
+        if (deFuncion == deVariable) {
+            System.out.println("FALLO: funcion y variable comparten tipo de token");
+            System.exit(1);
+        }
+        System.out.println("funcion -> " + deFuncion + " · variable -> " + deVariable);
+
         if (errores > 0) {
             System.exit(1);
         }

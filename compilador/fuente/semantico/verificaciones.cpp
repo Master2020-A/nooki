@@ -588,6 +588,44 @@ private:
         cerrar_ambito();
     }
 
+    /// Comprueba que un tipo escrito existe: primitivo, declarado o genérico.
+    void revisar_tipo_declarado(std::string_view tipo, diagnostico::Span span) {
+        if (tipo.empty()) {
+            return;
+        }
+        std::string_view base = tipo;
+        if (base.rfind("&mutable ", 0) == 0) {
+            base.remove_prefix(9);
+        } else if (base.rfind("&", 0) == 0) {
+            base.remove_prefix(1);
+        }
+        const std::size_t angulo = base.find('<');
+        if (angulo != std::string_view::npos) {
+            base = base.substr(0, angulo);
+        }
+        if (base.empty()) {
+            return;
+        }
+
+        // Primitivos que el lenguaje implementa de verdad.
+        if (base == "entero" || base == "flotante" || base == "booleano" || base == "texto" ||
+            base == "vacio" || base == "nulo") {
+            return;
+        }
+        // Genéricos de la biblioteca.
+        if (base == "Vector" || base == "Mapa" || base == "Caja" || base == "resultado") {
+            return;
+        }
+        // Tipos que declara el programa.
+        const std::string nombre(base);
+        if (tipos_.count(nombre) != 0 || enumeraciones_.count(nombre) != 0 ||
+            rasgos_.count(nombre) != 0) {
+            return;
+        }
+        error(diagnostico::codigos::TIPO_DESCONOCIDO, span)
+            .parametro("nombre", std::string(base));
+    }
+
     void revisar_sentencia(const Sentencia& sentencia, const Funcion& funcion) {
         switch (sentencia.tipo) {
             case TipoSentencia::Expresion:
@@ -608,6 +646,9 @@ private:
                 if (!sentencia.expresion) {
                     return;
                 }
+                // El tipo que se escribe tiene que existir. Sin esto, `variable n:
+                // natural = 1` se aceptaba y acababa siendo un `entero` en C.
+                revisar_tipo_declarado(sentencia.tipo_declarado, sentencia.span);
                 const Tipo real = tipo_de(*sentencia.expresion);
 
                 // Un préstamo no se puede guardar, salvo como referencia a un rasgo.
