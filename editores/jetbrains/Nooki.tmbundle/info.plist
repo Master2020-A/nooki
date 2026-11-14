@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>contactName</key>
+	<string>Nooki</string>
+	<key>description</key>
+	<string>Resaltado de sintaxis para el lenguaje Nooki (.oki)</string>
+	<key>name</key>
+	<string>Nooki</string>
+	<key>uuid</key>
+	<string>74e6d09a-b7fc-555b-af9f-38437b1135ef</string>
+</dict>
+</plist>

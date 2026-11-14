@@ -6,8 +6,15 @@ lenguaje: palabras reservadas, tipos, textos, comentarios y nombres de funciones
 | Editor | Carpeta |
 |---|---|
 | Visual Studio Code | [`vscode/`](vscode/) |
+| **JetBrains** (RustRover, IntelliJ, CLion…) | [`jetbrains/`](jetbrains/) |
 | Vim y Neovim | [`vim/`](vim/) |
 | Sublime Text, TextMate, Zed y cualquier editor con gramáticas TextMate | [`vscode/syntaxes/nooki.tmLanguage.json`](vscode/syntaxes/nooki.tmLanguage.json) |
+
+Las gramáticas de los tres editores se generan de una sola definición, para que resalten lo mismo:
+
+```bash
+python herramientas/generar-gramaticas.py
+```
 
 ---
 

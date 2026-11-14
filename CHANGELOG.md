@@ -5,6 +5,32 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 109 — Resaltado para JetBrains (2026-11-14)
+
+Nooki se colorea en **RustRover, IntelliJ, CLion y el resto de IDEs de JetBrains**, con un bundle
+TextMate que funciona en todos ellos sin compilar nada:
+
+```
+editores/jetbrains/
+├── Nooki.tmbundle/          la carpeta que se le pasa al IDE
+│   ├── info.plist
+│   └── Syntaxes/Nooki.tmLanguage
+├── Nooki.tmbundle.zip       lo mismo, para moverlo
+└── LEEME.md                 instalación en cuatro pasos
+```
+
+- **Una sola definición, tres editores**: `herramientas/generar-gramaticas.py` escribe el JSON de VS
+  Code y los dos `.plist` de JetBrains desde la misma tabla de palabras y patrones, así que no pueden
+  resaltar cosas distintas.
+- **Verificada, no solo generada**: `herramientas/verificar-gramatica.py` comprueba que las **26
+  expresiones regulares compilan** y que doce construcciones reales caen en su regla. Se ejecuta sola
+  al generar; una expresión mal escrita fallaría en silencio dentro del editor.
+- **Las palabras clave son las del lenguaje de verdad**: se quitaron `sinosi`, `intentar`, `atrapar`,
+  `asincrono`, `mixin`… que venían del plan original y no existen, y entraron `inseguro`, `asm`,
+  `&mutable` y `"""…"""`. El resaltado de Vim tenía el mismo desfase y también se corrigió.
+- El `LEEME` de JetBrains explica además cómo conectar **`nooki lsp`** con LSP4IJ para tener errores
+  subrayados, autocompletado e ir a la definición.
+
 ### Sprint 108 — Manual del lenguaje (2026-11-14)
 
 El manual completo de Nooki: 25 capítulos, de «hola, mundo» a los rasgos, la memoria y la IA. Está en

@@ -28,12 +28,12 @@ highlight default link nookiNumero Number
 highlight default link nookiFlotante Float
 
 " Palabras reservadas
-syntax keyword nookiDeclaracion variable constante funcion clase estructura rasgo interfaz enumeracion tipo union modulo propiedad constructor destructor macro mixin
-syntax keyword nookiModificador publico privado protegido interna estatico abstracta mutable
-syntax keyword nookiControl si sino sinosi mientras para en hacer bucle romper continuar retornar coincide caso defecto intentar atrapar finalmente lanzar asincrono esperar
-syntax keyword nookiModulo usar importar exportar externo implementar implementa hereda como donde
-syntax keyword nookiTipo entero entero8 entero16 entero32 entero64 entero128 natural natural8 natural16 natural32 natural64 natural128 flotante flotante32 flotante64 booleano caracter texto vacio byte tamano tamano_signado nulo
-syntax keyword nookiObjeto nuevo este Este super
+syntax keyword nookiDeclaracion variable constante funcion clase estructura rasgo interfaz enumeracion tipo modulo importar exportar externo implementar
+syntax keyword nookiModificador publico privado protegido interna mutable
+syntax keyword nookiControl si sino mientras para en hacer romper continuar retornar coincide caso defecto
+syntax keyword nookiModulo usar externo implementa hereda inseguro asm como
+syntax keyword nookiTipo entero flotante booleano texto caracter vacio lista tamano esperar nulo
+syntax keyword nookiObjeto nuevo este Este super Vector Mapa Caja resultado
 syntax keyword nookiBooleano verdadero falso
 syntax keyword nookiReservada asm inseguro es obtener paso establecer
 

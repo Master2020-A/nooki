@@ -2,20 +2,49 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Nooki",
   "scopeName": "source.nooki",
-  "fileTypes": ["oki"],
+  "fileTypes": [
+    "oki"
+  ],
   "patterns": [
-    { "include": "#comentarios" },
-    { "include": "#textos" },
-    { "include": "#caracteres" },
-    { "include": "#numeros" },
-    { "include": "#declaraciones" },
-    { "include": "#control" },
-    { "include": "#tipos" },
-    { "include": "#literales" },
-    { "include": "#modulos" },
-    { "include": "#objeto" },
-    { "include": "#llamadas" },
-    { "include": "#operadores" }
+    {
+      "include": "#comentarios"
+    },
+    {
+      "include": "#texto_multilinea"
+    },
+    {
+      "include": "#textos"
+    },
+    {
+      "include": "#numeros"
+    },
+    {
+      "include": "#declaraciones"
+    },
+    {
+      "include": "#control"
+    },
+    {
+      "include": "#tipos"
+    },
+    {
+      "include": "#literales"
+    },
+    {
+      "include": "#modulos"
+    },
+    {
+      "include": "#objeto"
+    },
+    {
+      "include": "#llamadas"
+    },
+    {
+      "include": "#referencias"
+    },
+    {
+      "include": "#operadores"
+    }
   ],
   "repository": {
     "comentarios": {
@@ -23,6 +52,20 @@
         {
           "name": "comment.line.double-slash.nooki",
           "match": "//.*$"
+        },
+        {
+          "name": "comment.block.nooki",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "texto_multilinea": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.nooki",
+          "begin": "\"\"\"",
+          "end": "\"\"\""
         }
       ]
     },
@@ -41,26 +84,15 @@
         }
       ]
     },
-    "caracteres": {
-      "patterns": [
-        {
-          "name": "string.quoted.single.nooki",
-          "begin": "'",
-          "end": "'",
-          "patterns": [
-            {
-              "name": "constant.character.escape.nooki",
-              "match": "\\\\."
-            }
-          ]
-        }
-      ]
-    },
     "numeros": {
       "patterns": [
         {
           "name": "constant.numeric.float.nooki",
           "match": "\\b[0-9][0-9_]*\\.[0-9][0-9_]*\\b"
+        },
+        {
+          "name": "constant.numeric.hex.nooki",
+          "match": "\\b0x[0-9A-Fa-f][0-9A-Fa-f_]*\\b"
         },
         {
           "name": "constant.numeric.integer.nooki",
@@ -73,35 +105,43 @@
         {
           "match": "\\b(funcion)\\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
           "captures": {
-            "1": { "name": "storage.type.function.nooki" },
-            "2": { "name": "entity.name.function.nooki" }
+            "1": {
+              "name": "storage.type.function.nooki"
+            },
+            "2": {
+              "name": "entity.name.function.nooki"
+            }
           }
         },
         {
-          "match": "\\b(clase|estructura|rasgo|interfaz|enumeracion|union|tipo)\\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
+          "match": "\\b(clase|estructura|rasgo|interfaz|enumeracion|tipo)\\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
           "captures": {
-            "1": { "name": "storage.type.class.nooki" },
-            "2": { "name": "entity.name.type.nooki" }
+            "1": {
+              "name": "storage.type.class.nooki"
+            },
+            "2": {
+              "name": "entity.name.type.nooki"
+            }
           }
         },
         {
-          "match": "\\b(variable|constante)\\b",
-          "name": "storage.type.variable.nooki"
+          "match": "\\b(funcion|variable|constante|clase|estructura|rasgo|interfaz|enumeracion|tipo|modulo|importar|exportar|implementar|externo)\\b",
+          "name": "keyword.declaration.nooki"
         },
         {
-          "match": "\\b(publico|privado|protegido|interna|estatico|abstracta|mutable)\\b",
+          "match": "\\b(publico|privado|protegido|interna)\\b",
           "name": "storage.modifier.nooki"
         },
         {
-          "match": "\\b(hereda|implementa|implementar|como|donde)\\b",
-          "name": "keyword.other.herencia.nooki"
+          "match": "\\b&mutable\\b",
+          "name": "storage.modifier.mutable.nooki"
         }
       ]
     },
     "control": {
       "patterns": [
         {
-          "match": "\\b(si|sino|sinosi|mientras|para|en|hacer|bucle|romper|continuar|retornar|coincide|caso|defecto|intentar|atrapar|finalmente|lanzar|asincrono|esperar)\\b",
+          "match": "\\b(si|sino|mientras|para|en|hacer|romper|continuar|retornar|coincide|caso|defecto)\\b",
           "name": "keyword.control.nooki"
         }
       ]
@@ -109,11 +149,11 @@
     "tipos": {
       "patterns": [
         {
-          "match": "\\b(entero|entero8|entero16|entero32|entero64|entero128|natural|natural8|natural16|natural32|natural64|natural128|flotante|flotante32|flotante64|booleano|caracter|texto|vacio|byte|tamano|tamano_signado|nulo)\\b",
+          "match": "\\b(entero|flotante|booleano|texto|caracter|vacio|lista|tamano|esperar)\\b",
           "name": "storage.type.primitivo.nooki"
         },
         {
-          "match": "\\b(Caja|Vector|Mapa|resultado)\\b",
+          "match": "\\b(Vector|Mapa|Caja|resultado)\\b",
           "name": "support.type.nooki"
         }
       ]
@@ -121,31 +161,23 @@
     "literales": {
       "patterns": [
         {
-          "match": "\\b(verdadero|falso)\\b",
-          "name": "constant.language.boolean.nooki"
+          "match": "\\b(verdadero|falso|nulo)\\b",
+          "name": "constant.language.nooki"
         }
       ]
     },
     "modulos": {
       "patterns": [
         {
-          "match": "\\b(usar|importar|exportar|externo|modulo)\\b",
-          "name": "keyword.control.importar.nooki"
-        },
-        {
-          "match": "\\b([a-záéíóúüñ_][a-záéíóúüñ0-9_]*)(\\.)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)",
-          "captures": {
-            "1": { "name": "entity.name.namespace.nooki" },
-            "2": { "name": "punctuation.accessor.nooki" },
-            "3": { "name": "entity.name.function.nooki" }
-          }
+          "match": "\\b(inseguro|asm|usar)\\b",
+          "name": "keyword.other.nooki"
         }
       ]
     },
     "objeto": {
       "patterns": [
         {
-          "match": "\\b(nuevo|este|Este|super)\\b",
+          "match": "\\b(nuevo|este|Este|super|hereda|implementa)\\b",
           "name": "variable.language.nooki"
         }
       ]
@@ -153,15 +185,45 @@
     "llamadas": {
       "patterns": [
         {
+          "match": "\\b([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)(\\.)([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)(\\s*)(?=\\()",
+          "captures": {
+            "1": {
+              "name": "entity.name.namespace.nooki"
+            },
+            "2": {
+              "name": "punctuation.accessor.nooki"
+            },
+            "3": {
+              "name": "entity.name.function.nooki"
+            }
+          }
+        },
+        {
           "match": "\\b([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9_]*)\\s*(?=\\()",
           "name": "entity.name.function.llamada.nooki"
+        }
+      ]
+    },
+    "referencias": {
+      "patterns": [
+        {
+          "match": "&(mutable\\b)?",
+          "name": "keyword.operator.referencia.nooki"
+        },
+        {
+          "match": "\\*(?=\\s*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ_])",
+          "name": "keyword.operator.desreferencia.nooki"
+        },
+        {
+          "match": "\\?",
+          "name": "keyword.operator.propagacion.nooki"
         }
       ]
     },
     "operadores": {
       "patterns": [
         {
-          "match": "\\+\\+|--|==|!=|<=|>=|&&|\\|\\||\\.\\.=|->|\\?|!|\\+|-|\\*|/|%|=|<|>|&",
+          "match": "\\*\\*|==|!=|<=|>=|&&|\\|\\||\\.\\.=|\\.\\.|->|[+\\-*/%<>=!]",
           "name": "keyword.operator.nooki"
         },
         {

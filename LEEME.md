@@ -125,6 +125,7 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
   sentencias, códigos de diagnóstico.
 - **[Decisiones](DECISIONES.md)** — índice de los 25 ADR y de los asuntos abiertos.
 - **[Plan de sprints](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md)** — qué está hecho y qué falta.
+- **[Editores](editores/LEEME.md)** — resaltado para VS Code, JetBrains (RustRover, IntelliJ…) y Vim, y cómo conectar el servidor de lenguaje.
 - **[Manual](MANUAL.md)** — el lenguaje completo, capítulo a capítulo, con 65 programas que la suite compila.
 - **[Cambios](CHANGELOG.md)** — qué entró en cada versión.
 - **[Notas de la 1.0](NOTAS_DE_VERSION.md)** — qué incluye, qué no y para quién es.
