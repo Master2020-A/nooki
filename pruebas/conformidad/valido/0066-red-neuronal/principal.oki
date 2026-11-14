@@ -1,0 +1,41 @@
+// Una red que aprende XOR: el caso que no se resuelve sin capa oculta.
+usar redes
+
+funcion principal() -> entero {
+    variable red = redes.nueva(2, 4)
+
+    redes.ejemplo(red, 0.0, 0.0, 0.0, 0.0, 0.0)
+    redes.ejemplo(red, 0.0, 1.0, 0.0, 0.0, 1.0)
+    redes.ejemplo(red, 1.0, 0.0, 0.0, 0.0, 1.0)
+    redes.ejemplo(red, 1.0, 1.0, 0.0, 0.0, 0.0)
+
+    imprimir(redes.ejemplos(red))
+    redes.entrenar(red, 1500, 1.0)
+
+    // El error baja de 0,25 a casi cero: aprendió.
+    variable error = redes.error(red)
+    si (error < 0.05) {
+        imprimir("aprendio")
+    } sino {
+        imprimir("no aprendio")
+    }
+
+    // Y acierta las cuatro combinaciones.
+    variable aciertos = 0
+    si (redes.predecir(red, 0.0, 0.0, 0.0, 0.0) < 0.5) {
+        aciertos = aciertos + 1
+    }
+    si (redes.predecir(red, 0.0, 1.0, 0.0, 0.0) >= 0.5) {
+        aciertos = aciertos + 1
+    }
+    si (redes.predecir(red, 1.0, 0.0, 0.0, 0.0) >= 0.5) {
+        aciertos = aciertos + 1
+    }
+    si (redes.predecir(red, 1.0, 1.0, 0.0, 0.0) < 0.5) {
+        aciertos = aciertos + 1
+    }
+    imprimir(aciertos)
+
+    redes.liberar(red)
+    retornar 0
+}

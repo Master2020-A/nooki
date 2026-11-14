@@ -22,6 +22,17 @@ Para dejarlo fijo, añade esa carpeta al `PATH` de tu sistema.
 
 ## Los ejemplos
 
+| Carpeta | Qué muestra |
+|---|---|
+| `01-hola` | lo mínimo: imprimir y salir |
+| `02-notas` | textos, colecciones y funciones |
+| `03-inventario` | estructuras, mapas y módulos |
+| `04-saludos` | rasgos y despacho dinámico |
+| `05-ventana` | una ventana con dibujo |
+| `06-tareas` | aplicación con ratón y teclado |
+| `07-formulario` | campo de texto editable |
+| **`08-red`** | **una red neuronal que aprende un círculo** |
+
 ### 01 — Hola
 
 ```bash

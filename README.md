@@ -149,6 +149,7 @@ Sprint 110 ✅  Plugin nativo para RustRover (RustRover no trae TextMate)
 Sprint 111 ✅  Colores variados y REFERENCIA.md
 Sprint 112 ✅  Instalador y mensaje de error de «construir»
 Sprint 113 ✅  «construir» entiende carpetas y lista los programas de al lado
+Sprint 114 ✅  La red neuronal aprende (autograd liberado) y nooki.toml documentado
 ```
 
 **Ya compila y ejecuta:**

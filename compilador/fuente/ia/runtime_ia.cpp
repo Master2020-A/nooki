@@ -509,6 +509,21 @@ static nooki_auto_nodo* nooki_auto_crear(double valor, int operacion, nooki_auto
     return nodo;
 }
 
+/* Marca el principio del grafo de una pasada: lo creado después se puede
+ * liberar al terminar, dejando vivos los parámetros. */
+long long nooki_ia_auto_marca(void) {
+    return (long long)(intptr_t)nooki_auto_todos;
+}
+
+void nooki_ia_auto_soltar_hasta(long long marca) {
+    nooki_auto_nodo* limite = (nooki_auto_nodo*)(intptr_t)marca;
+    while (nooki_auto_todos != NULL && nooki_auto_todos != limite) {
+        nooki_auto_nodo* siguiente = nooki_auto_todos->siguiente_global;
+        free(nooki_auto_todos);
+        nooki_auto_todos = siguiente;
+    }
+}
+
 long long nooki_ia_auto_dato(double valor) {
     return (long long)(intptr_t)nooki_auto_crear(valor, 0, NULL, NULL);
 }
@@ -890,9 +905,13 @@ void nooki_ia_red_entrenar(long long manejador, long long vueltas, double tasa) 
     for (long long vuelta = 0; vuelta < vueltas; ++vuelta) {
         for (int m = 0; m < red->cuantas; ++m) {
             const double* fila = red->muestras + (size_t)m * 5;
+            // Los nodos de esta pasada se liberan al terminarla: si no, el grafo
+            // crecería sin límite y el entrenamiento se volvería cuadrático.
+            const long long marca = nooki_ia_auto_marca();
             nooki_auto_nodo* perdida = nooki_red_adelante(red, fila);
             nooki_ia_auto_atras((long long)(intptr_t)perdida);
             nooki_red_actualizar(red, tasa);
+            nooki_ia_auto_soltar_hasta(marca);
         }
     }
 }

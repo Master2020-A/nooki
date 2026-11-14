@@ -1357,7 +1357,7 @@ demo/
 └── pruebas/            aquí van las pruebas
 ```
 
-El manifiesto:
+El manifiesto (explicado a fondo en [`docs/PROYECTO.md`](docs/PROYECTO.md)):
 
 ```text
 [proyecto]

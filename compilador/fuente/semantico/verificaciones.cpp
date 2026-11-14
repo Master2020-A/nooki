@@ -1198,6 +1198,15 @@ private:
         }
         if (operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
             operador == "<=" || operador == ">=") {
+            // Dos booleanos se comparan con `==` y `!=`; el orden no tiene sentido.
+            if (izquierda == Tipo::Booleano && derecha == Tipo::Booleano) {
+                if (operador != "==" && operador != "!=") {
+                    error(diagnostico::codigos::TIPO_INCOMPATIBLE, expresion.span)
+                        .parametro("esperado", "un valor comparable por orden")
+                        .parametro("encontrado", "booleano");
+                }
+                return Tipo::Booleano;
+            }
             // Solo entre enteros: comparar textos necesita el tipo texto de verdad.
             exigir(Tipo::Entero, izquierda, expresion.span);
             exigir(Tipo::Entero, derecha, expresion.span);

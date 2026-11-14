@@ -468,6 +468,8 @@ Desactiva **solo** las comprobaciones aritméticas. La propiedad y los tipos se 
 - Solo lo marcado `publico` es visible desde fuera; el resto es privado del módulo.
 - La búsqueda de módulos, en orden: junto al archivo, `biblioteca/`, carpetas padre, dependencias del
   `nooki.toml`, biblioteca estándar.
+- El **`nooki.toml`** es el manifiesto del proyecto: nombre, versión y dependencias (rutas a otras
+  carpetas). Está explicado en [`docs/PROYECTO.md`](docs/PROYECTO.md).
 
 ---
 

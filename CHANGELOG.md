@@ -5,6 +5,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 114 — Una red que aprende de verdad (2026-11-14)
+
+**El entrenamiento no terminaba.** Escribiendo el ejemplo del círculo, `redes.entrenar(red, 3000, 0.5)`
+con 81 ejemplos no acababa en más de diez minutos. La causa: **cada nodo del grafo de autograd se
+apilaba en una lista global y no se liberaba nunca**, así que cada pasada creaba decenas de nodos y
+`auto_atras` los recorría **todos** para poner los gradientes a cero. Memoria y tiempo crecían de forma
+cuadrática: 243 000 pasadas = millones de nodos.
+
+Ahora el entrenamiento marca el principio del grafo antes de cada pasada y lo libera al terminarla, sin
+tocar los parámetros. **De más de 10 minutos a 5,7 segundos** el mismo entrenamiento.
+
+Y con eso la red aprende: `ejemplos/08-red` clasifica puntos dentro de un círculo —una frontera que
+**ninguna recta separa**, así que hace falta la capa oculta— con error **0,000022** y **81 de 81**
+aciertos en 14 segundos. El programa dibuja la frontera que ha aprendido en ASCII.
+
+**Dos fallos más, de paso:**
+
+1. **`booleano == booleano` no compilaba** (`NOK4001`): comparar dos condiciones era imposible.
+   Ahora `==` y `!=` funcionan entre booleanos, y el orden (`<`, `>`) sigue siendo un error, que es lo
+   correcto.
+2. **`nooki.toml` no estaba documentado.** Está en [`docs/PROYECTO.md`](docs/PROYECTO.md): qué es,
+   cuándo hace falta, el formato exacto que acepta el parser, cómo resuelve los módulos y lo que
+   todavía no hace (versiones, descarga, dependencias transitivas).
+
+Caso nuevo `0066-red-neuronal` (XOR en 2 s, para la suite). **96 casos.**
+
+### Sprint 113 — `construir` entiende las carpetas (2026-11-14)
+
 ### Sprint 113 — `construir` entiende las carpetas (2026-11-14)
 
 Estar en `ejemplos/` y escribir `nooki construir` daba «aquí no hay un proyecto», que es verdad y no

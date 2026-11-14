@@ -1,4 +1,0 @@
-funcion principal() -> entero {
-    imprimir("empieza")
-    retornar 0
-}

@@ -1,0 +1,108 @@
+// Una red neuronal que aprende una frontera que no es una recta.
+//
+// El problema: dado un punto (x, y) entre -1 y 1, decidir si está dentro del
+// círculo de radio 1. Ninguna recta separa «dentro» de «fuera», así que hace
+// falta una capa oculta.
+//
+//   nooki ejecutar ejemplos/08-red/principal.oki
+
+usar redes
+
+// ¿Cuántos aciertos da la red sobre la misma rejilla con la que aprendió?
+funcion aciertos(red: entero, cuantas: entero) -> entero {
+    variable bien = 0
+    variable i = 0
+    mientras (i < cuantas) {
+        variable j = 0
+        mientras (j < cuantas) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+
+            variable esperado = 0.0
+            si (x * x + y * y <= 1.0) {
+                esperado = 1.0
+            }
+
+            variable predicho = redes.predecir(red, x, y, 0.0, 0.0)
+            si ((predicho >= 0.5) == (esperado >= 0.5)) {
+                bien = bien + 1
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+    retornar bien
+}
+
+funcion dibujar(red: entero) -> vacio {
+    variable i = 0
+    mientras (i < 9) {
+        variable linea = "" + ""
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+
+            variable dentro = 0.0
+            si (x * x + y * y <= 1.0) {
+                dentro = 1.0
+            }
+            variable predicho = redes.predecir(red, x, y, 0.0, 0.0)
+
+            // «#» dentro, «.» fuera; en mayúscula si la red se equivoca.
+            variable simbolo = "." + ""
+            si (predicho >= 0.5) {
+                simbolo = "#" + ""
+            }
+            si ((predicho >= 0.5) != (dentro >= 0.5)) {
+                simbolo = "X" + ""
+            }
+            linea = linea + simbolo + " "
+            j = j + 1
+        }
+        imprimir(linea)
+        i = i + 1
+    }
+}
+
+funcion principal() -> entero {
+    // Dos entradas (x, y) y dieciséis neuronas ocultas.
+    variable red = redes.nueva(2, 16)
+
+    // Una rejilla de 9x9 puntos: el conjunto de entrenamiento.
+    variable i = 0
+    mientras (i < 9) {
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+
+            variable etiqueta = 0.0
+            si (x * x + y * y <= 1.0) {
+                etiqueta = 1.0
+            }
+            redes.ejemplo(red, x, y, 0.0, 0.0, etiqueta)
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    imprimir("ejemplos de entrenamiento: " + "")
+    imprimir(redes.ejemplos(red))
+
+    // 8000 vueltas con tasa 2,0: baja el error de 0,6 a casi cero.
+    redes.entrenar(red, 8000, 2.0)
+    imprimir("error final: " + "")
+    imprimir(redes.error(red))
+
+    imprimir("aciertos: " + "")
+    imprimir(aciertos(red, 9))
+    imprimir("de 81")
+
+    imprimir("")
+    imprimir("Lo que ve la red (# dentro, . fuera, X error):")
+    dibujar(red)
+
+    redes.liberar(red)
+    retornar 0
+}
