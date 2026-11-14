@@ -1,0 +1,10 @@
+2
+10
+2
+contiene uno
+no contiene tres
+1
+dos fuera
+uno
+dos
+3

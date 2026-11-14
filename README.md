@@ -142,6 +142,7 @@ Sprint 103 ✅  Ir a la definición de variables
 Sprint 104 ✅  nooki documentar
 Sprint 105 ✅  Publicación: CI, macOS y dos fallos arreglados
 Sprint 106 ✅  Lo que la CI habría encontrado: MSVC 2022 no compilaba
+Sprint 107 ✅  Tres fallos de memoria que destapó el manual
 ```
 
 **Ya compila y ejecuta:**

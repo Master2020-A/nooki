@@ -1,0 +1,43 @@
+// Mapa con claves de texto locales: insertar, buscar, contar y quitar.
+// Este caso destapó una doble liberación de la clave.
+usar pln
+
+funcion principal() -> entero {
+    variable m = Mapa<texto, entero>.nuevo()
+
+    variable uno = "uno" + ""
+    variable dos = "dos" + ""
+
+    m.insertar(&uno, 1)
+    m.insertar(&dos, 2)
+    // La misma clave otra vez: actualiza, no duplica.
+    m.insertar(&uno, 10)
+
+    imprimir(m.largo())
+    imprimir(m.obtener(&uno))
+    imprimir(m.obtener(&dos))
+    si (m.contiene(&uno)) {
+        imprimir("contiene uno")
+    }
+    variable tres = "tres" + ""
+    si (!m.contiene(&tres)) {
+        imprimir("no contiene tres")
+    }
+    m.quitar(&dos)
+    imprimir(m.largo())
+    si (!m.contiene(&dos)) {
+        imprimir("dos fuera")
+    }
+
+    // Las claves siguen siendo del programa, no del mapa.
+    imprimir(uno)
+    imprimir(dos)
+
+    // Un mapa de frecuencias, que es el uso normal.
+    variable frase = "a b a c a" + ""
+    variable palabras = pln.tokenizar(&frase)
+    variable cuentas = pln.contar(&palabras)
+    variable letra_a = "a" + ""
+    imprimir(cuentas.obtener(&letra_a))
+    retornar 0
+}

@@ -5,6 +5,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 107 — Tres fallos de memoria que destapó el manual (2026-11-14)
+
+Empezando a escribir el manual compilé un programa de muestra con un `Mapa`. **Corrompía el montículo**
+y no imprimía nada. Tirando de ese hilo salieron tres fallos de propiedad distintos:
+
+1. **`Mapa.insertar` se quedaba con la clave sin copiarla** y, si la clave ya existía, **liberaba la del
+   llamante**. Doble liberación segura. Ahora el mapa guarda su propia copia y nunca libera la ajena.
+2. **Asignar un texto nuevo no liberaba el viejo**: `resultado = resultado + " "` filtrada cada vuelta.
+   Ahora la asignación pasa por `nooki_texto_asignar`, que libera el búfer anterior — evaluando el valor
+   nuevo antes de liberar, que es el orden que importa.
+3. **`variable x = *prestamo` aliaseaba el búfer** en lugar de copiarlo, así que los dos lo liberaban.
+   Ahora se copia.
+
+Con los tres, los casos de texto y de mapa pasan con ASan **sin una sola marca de corrupción**.
+
+- **Caso `0063-mapa`**: insertar, actualizar la misma clave, buscar, quitar y comprobar que las claves
+  siguen siendo del programa. **93 casos.**
+- **Limitación anotada**: quedan fugas de unos pocos bytes por **temporales de expresión** —el resultado
+  de `textos.unir(...)` pasado directo a `imprimir` no se libera—. No corrompe nada y se cierra el
+  programa con memoria del sistema. Está en `DECISIONES.md` (A-18).
+
 ### Sprint 106 — Lo que la CI habría encontrado (2026-11-14)
 
 Antes de publicar compilé con **el preset exacto que usa la CI** (`windows-msvc`, Visual Studio 17

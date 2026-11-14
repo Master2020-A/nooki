@@ -188,6 +188,36 @@ const char* PRELUDIO =
     "    return t;\n"
     "}\n"
     "\n"
+    "/* Asigna un texto liberando el búfer que tuviera: sin fugas al reasignar. */\n"
+    "static void nooki_texto_asignar(nooki_texto* destino, nooki_texto nuevo) {\n"
+    "    if (destino->propio && destino->datos != NULL && destino->datos != nuevo.datos) {\n"
+    "        free(destino->datos);\n"
+    "    }\n"
+    "    *destino = nuevo;\n"
+    "}\n"
+    "\n"
+    "/* Copia un texto: el resultado tiene su propio búfer. */\n"
+    "static nooki_texto nooki_texto_copiar(nooki_texto t) {\n"
+    "    nooki_texto salida;\n"
+    "    if (t.datos == NULL || t.largo <= 0) {\n"
+    "        salida.datos = NULL;\n"
+    "        salida.largo = 0;\n"
+    "        salida.propio = 0;\n"
+    "        return salida;\n"
+    "    }\n"
+    "    salida.datos = (char*)malloc((size_t)t.largo + 1);\n"
+    "    if (salida.datos == NULL) {\n"
+    "        salida.largo = 0;\n"
+    "        salida.propio = 0;\n"
+    "        return salida;\n"
+    "    }\n"
+    "    memcpy(salida.datos, t.datos, (size_t)t.largo);\n"
+    "    salida.datos[t.largo] = '\\0';\n"
+    "    salida.largo = t.largo;\n"
+    "    salida.propio = 1;\n"
+    "    return salida;\n"
+    "}\n"
+    "\n"
     "/* Añade un código de carácter (UTF-8) al final del texto. */\n"
     "static nooki_texto nooki_texto_agregar_codigo(nooki_texto t, long long codigo) {\n"
     "    char bytes[5];\n"
@@ -524,8 +554,8 @@ const char* PRELUDIO =
     "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
     "    for (nooki_mapa_entrada* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
+    "            /* La clave es del llamante: aquí no se libera. */\n"
     "            e->valor = valor;\n"
-    "            nooki_texto_soltar(&clave);  /* la clave nueva no se usa: el mapa ya la tiene */\n"
     "            return;\n"
     "        }\n"
     "    }\n"
@@ -533,7 +563,8 @@ const char* PRELUDIO =
     "    if (nueva == NULL) {\n"
     "        return;\n"
     "    }\n"
-    "    nueva->clave = clave;\n"
+    "    /* El mapa guarda su propia copia: la clave del llamante sigue siendo suya. */\n"
+    "    nueva->clave = nooki_texto_copiar(clave);\n"
     "    nueva->valor = valor;\n"
     "    nueva->siguiente = m->cubetas[indice];\n"
     "    m->cubetas[indice] = nueva;\n"
@@ -2451,7 +2482,17 @@ private:
                     tipo_objeto + "_" + rasgo + "_tabla }";
         }
 
-        salida_ << tipo << ' ' << sentencia.nombre << " = " << valor << ";\n";
+        // `variable x = *prestamo` copia: compartir el búfer del prestamista haría
+        // que los dos lo liberaran.
+        std::string valor_inicial = valor;
+        const bool copia_de_prestamo =
+            tipo == "nooki_texto" && sentencia.expresion->tipo == sintactico::TipoExpresion::Unaria &&
+            sentencia.expresion->lexema == "*" && sentencia.expresion->izquierda &&
+            tipo_de(*sentencia.expresion->izquierda) == "nooki_texto*";
+        if (copia_de_prestamo) {
+            valor_inicial = "nooki_texto_copiar(" + valor + ")";
+        }
+        salida_ << tipo << ' ' << sentencia.nombre << " = " << valor_inicial << ";\n";
 
         // Una construcción con variables con dueño se queda con ellas.
         if (sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion) {
@@ -3314,10 +3355,21 @@ private:
             no_soportado("una asignación a algo que no es una variable ni un campo");
             return "0";
         }
-        // Asignar una colección la mueve: el origen queda vacío para que su
-        // limpieza al final del bloque no libere lo que ya tiene el destino.
+        // Asignar un texto libera el búfer viejo del destino. Se hace con una
+        // función porque el valor nuevo tiene que evaluarse antes de liberar.
         const std::string destino = expresion(*nodo.izquierda);
         const std::string origen = expresion(*nodo.derecha);
+        if (nodo.lexema == "=" && tipo_de(*nodo.izquierda) == "nooki_texto") {
+            const bool a_si_mismo =
+                nodo.derecha->tipo == sintactico::TipoExpresion::Identificador &&
+                nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+                nodo.izquierda->lexema == nodo.derecha->lexema;
+            if (!a_si_mismo) {
+                return "nooki_texto_asignar(&(" + destino + "), " + origen + ")";
+            }
+        }
+
+        // Asignar una colección la mueve: el origen queda vacío para que su
         if (nodo.lexema == "=") {
             const std::string tipo = tipo_de(*nodo.izquierda);
             const bool coleccion = tipo.rfind("nooki_vector_", 0) == 0 ||
