@@ -1,0 +1,38 @@
+<idea-plugin>
+  <id>dev.nooki.language</id>
+  <name>Nooki</name>
+  <version>1.0.0</version>
+  <vendor>Nooki</vendor>
+
+  <description><![CDATA[
+    <p>Resaltado de sintaxis, comentarios y emparejado de llaves para el lenguaje
+    <b>Nooki</b>, que se escribe en español y compila a nativo.</p>
+    <p>Reconoce los archivos <code>.oki</code>: palabras clave, tipos, textos
+    (incluidos los de tres comillas), números, comentarios y operadores.</p>
+    <p>Para diagnósticos, autocompletado e ir a la definición, conecta el servidor de
+    lenguaje del compilador (<code>nooki lsp</code>) con LSP4IJ.</p>
+  ]]></description>
+
+  <idea-version since-build="243"/>
+  <depends>com.intellij.modules.platform</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <lang.parserDefinition language="Nooki"
+                           implementationClass="dev.nooki.plugin.NookiParserDefinition"/>
+    <lang.syntaxHighlighterFactory language="Nooki"
+                                   implementationClass="dev.nooki.plugin.NookiSyntaxHighlighter$Fabrica"/>
+    <lang.commenter language="Nooki"
+                    implementationClass="dev.nooki.plugin.NookiCommenter"/>
+    <lang.braceMatcher language="Nooki"
+                       implementationClass="dev.nooki.plugin.NookiBraceMatcher"/>
+
+    <fileType name="Nooki"
+              language="Nooki"
+              implementationClass="dev.nooki.plugin.NookiFileType"
+              fieldName="INSTANCIA"
+              extensions="oki"/>
+
+    <colorSettingsPage implementation="dev.nooki.plugin.NookiColorPage"/>
+    <notificationGroup id="Nooki" displayType="BALLOON"/>
+  </extensions>
+</idea-plugin>

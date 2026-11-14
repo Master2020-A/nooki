@@ -1,42 +1,118 @@
 # Nooki para JetBrains
 
-Resaltado de sintaxis para RustRover, IntelliJ IDEA, CLion, PyCharm, WebStorm, GoLand, PhpStorm,
-RubyMine, DataGrip y cualquier otro IDE de JetBrains. Funciona en todos porque usa el mecanismo
-**TextMate**, que la plataforma soporta de serie.
+Resaltado de sintaxis para **RustRover**, IntelliJ IDEA, CLion, PyCharm, WebStorm, GoLand y el resto de
+IDEs de JetBrains.
 
-## Instalar
+Hay tres caminos. Cuál usar depende de una cosa que comprobé instalando RustRover 2026.1 y mirando
+dentro: **RustRover no trae el soporte de TextMate** (`plugins/textmate` no existe en su distribución),
+así que la página *Settings → Editor → TextMate Bundles* **no aparece** y el bundle no sirve ahí.
 
-### Opción rápida (recomendada)
+| Tu IDE | Camino |
+|---|---|
+| **RustRover** | **A** — el plugin `.jar` |
+| IntelliJ IDEA, CLion, PyCharm… (traen TextMate) | B — el bundle |
+| Cualquiera, sin instalar nada | C — tipos de archivo |
 
-1. Abre **Settings → Plugins → Marketplace** y busca **TextMate Bundles**. Instálalo y reinicia.
-2. **Settings → Editor → TextMate Bundles** (o *Appearance & Behavior → TextMate Bundles*).
-3. Pulsa **+** y elige la carpeta `Nooki.tmbundle` de este directorio.
-4. Abre cualquier archivo `.oki`: ya sale coloreado.
+---
 
-Si prefieres no descargar nada de la tienda, también vale el plugin **TextMate** de terceros, o
-cualquiera que cargue bundles `.tmbundle`.
+## Camino A — El plugin (para RustRover)
 
-### Opción con el zip
+`Nooki-1.0.0.jar` es un plugin de verdad: lexer propio, colores, comentarios con Ctrl+/ y emparejado de
+llaves.
 
-`Nooki.tmbundle.zip` contiene lo mismo, para moverlo a otra máquina:
+1. **Settings** (Ctrl+Alt+S) → **Plugins**.
+2. Pulsa el engranaje ⚙ → **Install Plugin from Disk…**
+3. Elige `Nooki-1.0.0.jar` de este directorio.
+4. **Apply** y reinicia el IDE cuando lo pida.
+5. Abre cualquier `.oki`: ya sale coloreado.
 
-```bash
-unzip Nooki.tmbundle.zip -d ~/Libros/TextMate      # macOS y Linux
+Comprobado sobre **RustRover 2026.1** (build 261.22158.331): el registro del IDE dice
+`Loaded custom plugins: Nooki (1.0.0)` y el lexer clasifica un programa de prueba con 59 tokens y
+**cero desconocidos**.
+
+### Si el IDE lo rechaza
+
+El plugin está compilado para **Java 21 o más nuevo**, que es lo que usan los IDEs desde 2024. En
+RustRover 2024.3 y anteriores (Java 17) hay que recompilarlo contra ese IDE:
+
+```powershell
+cd editores\jetbrains\plugin
+.\compilar.ps1 -Ide "C:\Program Files\JetBrains\RustRover 2024.3"
 ```
 
-Y en Windows, descomprímelo donde quieras y apunta ahí el paso 3.
+Y volver a instalarlo.
 
-### Comprobar que carga
+### Recompilar el plugin
 
-Abre `ejemplos/06-tareas/principal.oki`. Deberías ver:
+No hace falta Gradle ni descargar nada: se compila contra las bibliotecas del IDE que ya tienes.
 
-- `funcion`, `variable`, `mientras` en un color de palabra clave;
-- `entero`, `texto`, `booleano` en otro (son tipos);
-- los textos entre comillas en verde, y los comentarios en gris;
-- `nuevo`, `este` y `super` como palabras del lenguaje.
+```powershell
+cd editores\jetbrains\plugin
+.\compilar.ps1                    # elige RustRover y el JDK más nuevos que encuentre
+.\probar-carga.ps1                # arranca un IDE aislado y comprueba que carga
+```
 
-Si no aparece nada, el bundle no se cargó: revisa que apuntaste a la **carpeta** `Nooki.tmbundle` y no
-al archivo de dentro.
+`probar-carga.ps1` usa una configuración temporal, así que **no toca tu instalación**: arranca, lee el
+registro, dice si cargó y cierra.
+
+---
+
+## Camino B — TextMate Bundles (IntelliJ, CLion, PyCharm…)
+
+Estos IDEs traen el soporte de TextMate de fábrica; no hay que instalar ningún plugin de la tienda.
+
+1. **Settings** → **Editor → TextMate Bundles**.
+2. Pulsa **+** y elige la **carpeta** `Nooki.tmbundle` de este directorio.
+3. **OK** y abre un `.oki`.
+
+Si la página no aparece, el plugin **TextMate** está desactivado: *Settings → Plugins → Installed*,
+búscalo y actívalo.
+
+---
+
+## Camino C — Tipos de archivo (sin instalar nada)
+
+Funciona en todos los IDEs, pero solo da un color a las palabras clave; no distingue tipos, textos ni
+comentarios.
+
+1. **Settings → Editor → File Types** → **+**.
+2. Nombre **Nooki**, descripción «Lenguaje Nooki».
+3. **File name patterns**: `*.oki`
+4. **Keywords**: pega esta lista:
+
+```text
+funcion variable constante clase estructura rasgo interfaz enumeracion tipo modulo
+importar exportar implementar externo usar
+si sino mientras para en hacer romper continuar retornar coincide caso defecto
+nuevo este Este super hereda implementa
+publico privado protegido interna
+inseguro asm
+verdadero falso nulo
+entero flotante booleano texto caracter vacio lista tamano esperar
+Vector Mapa Caja resultado
+```
+
+5. **OK**.
+
+---
+
+## Errores subrayados y autocompletado
+
+El color es solo color. Para **diagnósticos**, **autocompletado**, **ir a la definición** y
+**formato**, conecta el servidor de lenguaje del compilador:
+
+1. **Settings → Plugins → Marketplace** → instala **LSP4IJ** y reinicia.
+2. **Settings → Languages & Frameworks → LSP4IJ** → **+** → *User-defined*.
+3. Rellena:
+   - **Name**: `Nooki`
+   - **Command**: `nooki lsp` (o la ruta completa si no está en el `PATH`)
+   - **File patterns**: `*.oki`
+   - **Transport**: `stdio`
+4. Abre un `.oki`.
+
+Con eso, un `NOK5001` aparece subrayado en su línea mientras escribes, con la explicación en español.
+
+---
 
 ## Qué resalta
 
@@ -55,27 +131,20 @@ al archivo de dentro.
 | Operadores | `**`, `..=`, `->`, `&&`, `\|\|`, y el `?` de propagación |
 | Referencias | `&`, `&mutable`, `*` de desreferencia |
 
-## Errores y autocompletado, además del color
+Además, con el plugin: **Ctrl+/** comenta la línea, y las llaves, paréntesis y corchetes se emparejan.
 
-El resaltado es solo color. Para **subrayar errores** y tener **autocompletado** e **ir a la
-definición**, hace falta conectar el servidor de lenguaje:
+## Contenido de esta carpeta
 
-1. Instala el plugin **LSP4IJ** (o cualquier cliente LSP para JetBrains).
-2. Añade un servidor nuevo:
-   - **Comando**: `nooki lsp`
-   - **Archivos**: `*.oki`
-   - **Transporte**: stdio (el que usa por defecto)
-3. Abre un `.oki`: los errores aparecerán subrayados mientras escribes, con su código `NOK` y su
-   explicación en español.
+| Archivo | Qué es |
+|---|---|
+| `Nooki-1.0.0.jar` | El plugin, listo para instalar (RustRover y cualquier IDE con Java 21+) |
+| `plugin/` | Su código fuente y los dos scripts: `compilar.ps1` y `probar-carga.ps1` |
+| `Nooki.tmbundle/` | El bundle TextMate, para los IDEs que lo soportan |
+| `Nooki.tmbundle.zip` | Lo mismo, para moverlo a otra máquina |
 
-## Regenerar el bundle
-
-El bundle se genera desde una definición única —la misma que usa VS Code— para que los dos editores no
-se desincronicen:
+El bundle se genera desde una definición única que también escribe la gramática de VS Code, para que
+los editores no se desincronicen:
 
 ```bash
 python herramientas/generar-gramaticas.py
 ```
-
-Escribe el JSON de VS Code y los dos `.plist` de aquí. Después, vuelve a comprimir la carpeta si quieres
-actualizar el zip.

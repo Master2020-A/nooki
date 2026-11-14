@@ -1,5 +1,6 @@
 # Artefactos de compilación
 dist/
+editores/jetbrains/plugin/build/
 build/
 out/
 cmake-build-*/
@@ -22,6 +23,10 @@ compile_commands.json
 .vscode/
 *.user
 
-# Salidas de las pruebas que compilan y ejecutan programas`npanico/`nrutas/`n`n# Sistema
+# Salidas de las pruebas que compilan y ejecutan programas
+panico/
+rutas/
+
+# Sistema
 Thumbs.db
 .DS_Store

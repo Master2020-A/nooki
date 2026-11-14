@@ -5,6 +5,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 110 — Plugin de verdad para RustRover (2026-11-14)
+
+El bundle TextMate no servía en RustRover: **no trae el soporte de TextMate**. Lo comprobé mirando dentro
+de un RustRover 2026.1 instalado —`plugins/textmate` no existe—, así que la página *Settings → Editor →
+TextMate Bundles* no aparece y no hay nada que instalar desde la tienda.
+
+Así que hay un **plugin de verdad**: `editores/jetbrains/Nooki-1.0.0.jar` (16 KB), con lexer propio,
+colores, `Ctrl+/` para comentar y emparejado de llaves.
+
+**Verificado, no supuesto:**
+
+- `.probar-carga.ps1` arranca un RustRover con configuración temporal (sin tocar la del usuario), lee su
+  registro y lo cierra. El registro dice `Loaded custom plugins: Nooki (1.0.0)`.
+- El lexer se prueba fuera del IDE con `DepurarLexer`: un programa de muestra da **59 tokens y cero
+  desconocidos**, con comentarios, textos de tres comillas, `0x1F`, `&&`, `->` y las tildes.
+- Se compila **sin Gradle ni descargar el SDK**, contra las bibliotecas del IDE instalado
+  (`.\plugin\compilar.ps1`), y el script elige el RustRover y el JDK más nuevos que encuentre.
+
+Un fallo de paso: el `.gitignore` tenía `` `n `` literales en vez de saltos de línea desde hacía tiempo,
+así que las reglas `panico/` y `rutas/` no funcionaban. Corregido.
+
 ### Sprint 109 — Resaltado para JetBrains (2026-11-14)
 
 Nooki se colorea en **RustRover, IntelliJ, CLion y el resto de IDEs de JetBrains**, con un bundle

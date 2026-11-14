@@ -145,6 +145,7 @@ Sprint 106 ✅  Lo que la CI habría encontrado: MSVC 2022 no compilaba
 Sprint 107 ✅  Tres fallos de memoria que destapó el manual
 Sprint 108 ✅  Manual del lenguaje, con 65 programas verificados
 Sprint 109 ✅  Resaltado para JetBrains y Vim alineado
+Sprint 110 ✅  Plugin nativo para RustRover (RustRover no trae TextMate)
 ```
 
 **Ya compila y ejecuta:**
