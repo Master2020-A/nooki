@@ -118,8 +118,14 @@ int comando_construir(std::span<const std::string_view> argumentos, std::ostream
             ? std::string("principal.oki")
             : std::string("fuente/principal.oki");
     if (!std::filesystem::exists(fuente)) {
-        error << "error[NOK0001]: no se encontró el punto de entrada del proyecto\n"
-                 "   = ayuda: cree «principal.oki» o «fuente/principal.oki»\n";
+        // Sin manifiesto ni fuente no hay proyecto: el error más probable es
+        // haberse puesto a construir en una carpeta cualquiera.
+        const bool hay_manifiesto = std::filesystem::exists("nooki.toml");
+        error << "error[NOK0001]: aquí no hay un proyecto de Nooki\n"
+                 "   = ayuda: no se encontró «principal.oki»"
+              << (hay_manifiesto ? "" : " ni «nooki.toml»") << "\n"
+                 "   = ayuda: «nooki nuevo demo» crea uno; «nooki compilar archivo.oki»\n"
+                 "            compila un archivo suelto\n";
         return USO_INCORRECTO;
     }
 

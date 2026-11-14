@@ -147,6 +147,7 @@ Sprint 108 ✅  Manual del lenguaje, con 65 programas verificados
 Sprint 109 ✅  Resaltado para JetBrains y Vim alineado
 Sprint 110 ✅  Plugin nativo para RustRover (RustRover no trae TextMate)
 Sprint 111 ✅  Colores variados y REFERENCIA.md
+Sprint 112 ✅  Instalador y mensaje de error de «construir»
 ```
 
 **Ya compila y ejecuta:**

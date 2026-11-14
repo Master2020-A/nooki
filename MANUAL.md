@@ -59,8 +59,16 @@ incluye, porque usa el que ya tengas.
 ```bash
 # comprobar que está
 cc --version
+```
 
-# comprobar que Nooki está
+Y el compilador. Si tienes el paquete de la distribución, un comando lo deja en el `PATH`:
+
+```powershell
+.\herramientas\instalar.ps1
+```
+
+```bash
+# comprobar que Nooki está (después de cerrar y abrir la terminal)
 nooki version
 ```
 

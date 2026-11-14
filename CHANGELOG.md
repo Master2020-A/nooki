@@ -5,6 +5,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 112 — Instalar de verdad (2026-11-14)
+
+`nooki construir` no funcionaba porque **`nooki` no estaba en el `PATH`**: el binario vivía en
+`build\windows-mingw\compilador\`, y la documentación daba por hecho que estaba instalado sin decir
+cómo. Dos arreglos:
+
+1. **`herramientas\instalar.ps1`**: copia el ejecutable a `%LOCALAPPDATA%\Nooki\bin`, añade esa carpeta
+   al `PATH` del usuario (sin administrador, respetando el tipo del valor de registro) y comprueba que
+   responde. `-Compilar` compila antes; `-Desinstalar` lo quita y deja el `PATH` **exactamente** como
+   estaba (comprobado). El paquete de distribución ahora lo incluye y `INSTALAR.txt` lo usa.
+2. **El mensaje de `construir` fuera de un proyecto**: decía «no se encontró el punto de entrada» y
+   sugería crear `principal.oki`, sin mencionar `nooki nuevo`. Ahora dice «aquí no hay un proyecto de
+   Nooki», distingue si falta el manifiesto, y propone las dos salidas: `nooki nuevo demo` o
+   `nooki compilar archivo.oki`.
+
+De paso: el paquete **no incluía `MANUAL.md` ni `REFERENCIA.md`**. Ahora sí (12 documentos).
+
+### Sprint 111 — Colores variados y referencia del lenguaje (2026-11-14)
+
 ### Sprint 111 — Colores variados y referencia del lenguaje (2026-11-14)
 
 **Los colores.** `funcion` y `variable` salían del mismo token, así que el editor los pintaba igual.

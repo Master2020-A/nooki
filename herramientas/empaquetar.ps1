@@ -46,7 +46,8 @@ New-Item -ItemType Directory -Force -Path $destino | Out-Null
 # Binario y documentación.
 Copy-Item $binario "$destino/nooki$(if ($binario.EndsWith('.exe')) { '.exe' })"
 $documentos = @(
-    "LEEME.md", "GUIA.md", "NOTAS_DE_VERSION.md", "CHANGELOG.md", "DECISIONES.md",
+    "LEEME.md", "GUIA.md", "MANUAL.md", "REFERENCIA.md", "NOTAS_DE_VERSION.md",
+    "CHANGELOG.md", "DECISIONES.md",
     "LICENCIA.md", "LICENCIA-MIT.txt", "LICENCIA-APACHE.txt", "CONTRIBUIR.md", "PUBLICAR.md"
 )
 foreach ($documento in $documentos) {
@@ -54,6 +55,9 @@ foreach ($documento in $documentos) {
 }
 
 # Ejemplos, editores y especificación.
+# El instalador, para que el PATH se arregle con un comando y no a mano.
+New-Item -ItemType Directory -Force -Path "$destino/herramientas" | Out-Null
+Copy-Item "herramientas/instalar.ps1" "$destino/herramientas/instalar.ps1"
 Copy-Item -Recurse "ejemplos" "$destino/ejemplos"
 Copy-Item -Recurse "editores" "$destino/editores"
 New-Item -ItemType Directory -Force -Path "$destino/spec" | Out-Null
@@ -65,16 +69,18 @@ Nooki $version ($plataforma)
 ============================
 
 1. Copia esta carpeta donde quieras.
-2. Añade al PATH la ruta de esta carpeta:
+2. Instálalo en el PATH con un comando:
 
-   Windows (PowerShell):
-     [Environment]::SetEnvironmentVariable(
-         "Path", `$env:Path + ";`$(Resolve-Path .)", "User")
+   Windows (PowerShell), desde esta carpeta:
+     .\herramientas\instalar.ps1
 
    Linux y macOS:
      echo "export PATH=`"`$PWD:`$PATH`"" >> ~/.bashrc
 
-3. Comprueba la instalación:
+   (El script copia el binario a una carpeta estable y añade esa carpeta al
+   PATH del usuario; no pide permisos de administrador.)
+
+3. Cierra y abre la terminal, y comprueba la instalación:
 
      nooki --version
      nooki ejecutar ejemplos/01-hola/principal.oki
