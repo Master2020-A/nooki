@@ -33,7 +33,7 @@ desde el compilador, así que no pueden desincronizarse.
 6. **Un tipo inventado se aceptaba en silencio**: `variable n: natural = 1` compilaba como `entero`.
    Ahora da `NOK3003`, que es lo que el lenguaje promete: lo que no se puede garantizar se rechaza.
 
-Y dos casos nuevos: `0064-operadores-bits` y `0065-miembros`. **96 casos.**
+Y dos casos nuevos: `0064-operadores-bits` y `0065-miembros`. **95 casos.**
 
 ### Sprint 110 — Plugin de verdad para RustRover (2026-11-14)
 
