@@ -5,6 +5,28 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 113 — `construir` entiende las carpetas (2026-11-14)
+
+Estar en `ejemplos/` y escribir `nooki construir` daba «aquí no hay un proyecto», que es verdad y no
+ayuda: esa carpeta contiene **siete** programas, uno por subcarpeta. Ahora:
+
+- Si la carpeta tiene subcarpetas con `principal.oki`, el error **las lista** y dice el comando exacto:
+
+```
+error[NOK0001]: aquí no hay un proyecto de Nooki
+   = ayuda: esta carpeta contiene 7 programas, cada uno en su carpeta:
+            01-hola/principal.oki
+            …
+   = ayuda: «nooki construir 01-hola» construye ese;
+            «nooki ejecutar 01-hola/principal.oki» lo ejecuta
+```
+
+- **`nooki construir [carpeta]`** acepta una carpeta: construye ese proyecto y deja el ejecutable
+  dentro. Ya no hay que cambiar de directorio.
+
+Y de paso: el archivo `ejemplos/hola.oki` que se había quedado con la salida del programa pegada dentro
+(`retornar 0empieza`) se ha reparado.
+
 ### Sprint 112 — Instalar de verdad (2026-11-14)
 
 `nooki construir` no funcionaba porque **`nooki` no estaba en el `PATH`**: el binario vivía en

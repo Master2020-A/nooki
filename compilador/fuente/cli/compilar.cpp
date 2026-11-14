@@ -3,10 +3,14 @@
 #include "nooki/manifiesto.hpp"
 #include "nooki/rutas.hpp"
 
+#include <algorithm>
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <system_error>
+#include <vector>
 #include <vector>
 
 #include "nooki/cli/orden.hpp"
@@ -112,20 +116,57 @@ int comando_lsp(std::span<const std::string_view>, std::ostream& salida,
 /// `nooki construir`: compila el proyecto del directorio actual.
 int comando_construir(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error) {
+    // `nooki construir [carpeta]`: sin argumento, el proyecto del directorio
+    // actual; con uno, el de esa carpeta.
+    std::filesystem::path raiz = std::filesystem::current_path();
+    if (!argumentos.empty()) {
+        raiz = std::filesystem::path(std::string(argumentos.front()));
+        if (!std::filesystem::is_directory(raiz)) {
+            error << "error[NOK0001]: «" << argumentos.front() << "» no es una carpeta\n";
+            return USO_INCORRECTO;
+        }
+    }
+
     // Entrada: `principal.oki` junto al manifiesto, o dentro de `fuente/`.
-    const std::string fuente =
-        std::filesystem::exists("principal.oki")
-            ? std::string("principal.oki")
-            : std::string("fuente/principal.oki");
+    const std::filesystem::path fuente =
+        std::filesystem::exists(raiz / "principal.oki")
+            ? raiz / "principal.oki"
+            : raiz / "fuente" / "principal.oki";
     if (!std::filesystem::exists(fuente)) {
-        // Sin manifiesto ni fuente no hay proyecto: el error más probable es
-        // haberse puesto a construir en una carpeta cualquiera.
-        const bool hay_manifiesto = std::filesystem::exists("nooki.toml");
+        // Sin manifiesto ni fuente no hay proyecto. Antes de dar el error, se
+        // miran las carpetas de al lado: lo normal es estar un nivel por encima
+        // de los programas, como en `ejemplos/`.
+        std::vector<std::string> programas;
+        std::error_code error_fs;
+        for (const auto& entrada : std::filesystem::directory_iterator(raiz, error_fs)) {
+            if (!entrada.is_directory(error_fs)) {
+                continue;
+            }
+            const std::filesystem::path dentro = entrada.path() / "principal.oki";
+            if (std::filesystem::exists(dentro)) {
+                programas.push_back(entrada.path().filename().string());
+            }
+        }
+        std::sort(programas.begin(), programas.end());
+
+        const bool hay_manifiesto = std::filesystem::exists(raiz / "nooki.toml");
         error << "error[NOK0001]: aquí no hay un proyecto de Nooki\n"
                  "   = ayuda: no se encontró «principal.oki»"
-              << (hay_manifiesto ? "" : " ni «nooki.toml»") << "\n"
-                 "   = ayuda: «nooki nuevo demo» crea uno; «nooki compilar archivo.oki»\n"
-                 "            compila un archivo suelto\n";
+              << (hay_manifiesto ? "" : " ni «nooki.toml»") << "\n";
+        if (!programas.empty()) {
+            error << "   = ayuda: esta carpeta contiene " << programas.size()
+                  << (programas.size() == 1 ? " programa" : " programas")
+                  << ", cada uno en su carpeta:\n";
+            for (std::size_t i = 0; i < programas.size() && i < 8; ++i) {
+                error << "            " << programas[i] << "/principal.oki\n";
+            }
+            error << "   = ayuda: «nooki construir " << programas.front()
+                  << "» construye ese; «nooki ejecutar " << programas.front()
+                  << "/principal.oki» lo ejecuta\n";
+        } else {
+            error << "   = ayuda: «nooki nuevo demo» crea uno; «nooki compilar archivo.oki»\n"
+                     "            compila un archivo suelto\n";
+        }
         return USO_INCORRECTO;
     }
 
@@ -133,17 +174,21 @@ int comando_construir(std::span<const std::string_view> argumentos, std::ostream
     nooki::Manifiesto manifiesto;
     std::string motivo;
     std::vector<std::filesystem::path> rutas;
-    if (nooki::leer_manifiesto(std::filesystem::current_path(), manifiesto, motivo)) {
+    if (nooki::leer_manifiesto(raiz, manifiesto, motivo)) {
         rutas = manifiesto.rutas_de_busqueda();
-    } else if (std::filesystem::exists("nooki.toml")) {
+    } else if (std::filesystem::exists(raiz / "nooki.toml")) {
         error << "nooki: no se pudo leer nooki.toml: " << motivo << "\n";
         return USO_INCORRECTO;
     }
 
+    // El primer argumento, si lo había, ya se usó como carpeta: el resto pasa
+    // tal cual (por ejemplo, `-o`).
+    const std::size_t desde = argumentos.empty() ? 0 : 1;
+    const std::string fuente_texto = fuente.string();
     std::vector<std::string_view> nuevos;
-    nuevos.push_back(fuente);
-    for (const std::string_view argumento : argumentos) {
-        nuevos.push_back(argumento);
+    nuevos.push_back(fuente_texto);
+    for (std::size_t i = desde; i < argumentos.size(); ++i) {
+        nuevos.push_back(argumentos[i]);
     }
     return compilar_con_rutas(nuevos, rutas, salida, error);
 }

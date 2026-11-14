@@ -500,7 +500,7 @@ Rangos:
 | Comando | Qué hace | Opciones |
 |---|---|---|
 | `nooki nuevo <nombre>` | crea un proyecto | |
-| `nooki construir` | compila el proyecto actual | |
+| `nooki construir [carpeta]` | compila el proyecto actual, o el de esa carpeta | `-o <salida>` |
 | `nooki compilar <archivo>` | compila | `-o <salida>`, `--emitir-c` |
 | `nooki ejecutar <archivo>` | compila y ejecuta | |
 | `nooki probar` | pruebas del proyecto | |
