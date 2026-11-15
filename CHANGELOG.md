@@ -5,6 +5,28 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 119 — Las guías, comprobadas y dentro del paquete (2026-11-14)
+
+Las cuatro guías por audiencia (usuario, administrador, desarrollador y referencia del lenguaje) entran
+en el repositorio, en el paquete y en el LEEME, con sus PDF.
+
+**Y se comprueban.** `herramientas/verificar-guia.ps1` extrae los bloques `nooki` de una guía y prueba
+cada uno de tres formas —tal cual, metido en un `principal` y con un `principal` añadido—; solo canta
+cuando **ninguna** funciona. Resultado:
+
+| Guía | Bloques | Fallos reales |
+|---|---|---|
+| Usuario | 59 | 0 |
+| Desarrollador | — | 0 |
+| Administrador | — | 0 |
+| Referencia del lenguaje | — | 0 (las plantillas de sintaxis no son código) |
+
+Los únicos bloques que no compilan son fragmentos que usan variables del texto que los rodea, ejemplos
+de dos archivos, plantillas de gramática y bloques que enseñan un error a propósito (marcados con
+`// error[NOK...]`); el script los distingue.
+
+### Sprint 118 — `Vector<flotante>` y redes de hasta 64 entradas (2026-11-14)
+
 ### Sprint 118 — `Vector<flotante>` y redes de hasta 64 entradas (2026-11-14)
 
 **El lenguaje no tenía vectores de decimales.** Solo `Vector<entero>` y `Vector<texto>`, y sin eso no se

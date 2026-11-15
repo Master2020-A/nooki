@@ -120,6 +120,10 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 
 ## Documentación
 
+- **[Guías por audiencia](docs/guias/LEEME.md)** — usuario, administrador, desarrollador y referencia
+  del lenguaje. También en PDF: [usuario](GUIA_DEL_USUARIO.pdf),
+  [administrador](GUIA_DEL_ADMINISTRADOR.pdf), [desarrollador](GUIA_DEL_DESARROLLADOR.pdf),
+  [referencia](REFERENCIA_DEL_LENGUAJE.pdf).
 - **[Guía](GUIA.md)** — aprender el lenguaje desde cero.
 - **[Especificación](spec/especificacion-v0.1.md)** — el documento normativo: gramática, tipos,
   sentencias, códigos de diagnóstico.

@@ -1,8 +1,8 @@
 # NOOKI — Lenguaje de programación en español
 
-> **Estado: fase de diseño.** Todavía no hay código. Lo que existe es el plan de implementación, las decisiones de arquitectura y la especificación del lenguaje.
+> **Estado: implementación 1.0.0 (edición 2026).** El compilador ya compila y ejecuta programas `.oki` con un backend de C. Este README conserva el mapa y el plan del proyecto; el estado actual, la instalación y las guías están en [LEEME.md](LEEME.md) y en las [guías por audiencia](docs/guias/LEEME.md).
 
-**Nooki** es un lenguaje compilado, escrito en C++20 con backend LLVM, multiplataforma (Windows, macOS, Linux), con:
+**Nooki** es un lenguaje compilado, escrito en C++20 con backend de C (ADR-014), multiplataforma (Windows, Linux y, con limitaciones, macOS), con:
 poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python · OOP completa · y todo —tipos, palabras clave, errores y documentación— **en español**.
 
 | | |
@@ -11,7 +11,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | **Versión** | 1.0.0 |
 | **Extensión de fuentes** | `.oki` |
 | **CLI** | `nooki` |
-| **Implementación** | C++20 + LLVM |
+| **Implementación** | C++20 + backend de C (ADR-014) |
 | **Licencia** | MIT OR Apache-2.0 + excepción de runtime |
 
 ---
@@ -21,12 +21,13 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | Documento | Qué contiene |
 |---|---|
 | **[PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md)** | Plan de 96 sprints en 12 fases, con criterio de terminado por sprint, riesgos y calendario real |
-| **[DECISIONES.md](DECISIONES.md)** | Las 13 ADR aprobadas + nomenclatura + decisiones de alcance + asuntos abiertos |
+| **[DECISIONES.md](DECISIONES.md)** | Las 26 ADR + nomenclatura + decisiones de alcance + asuntos abiertos |
 | **[spec/especificacion-v0.1.md](spec/especificacion-v0.1.md)** | Especificación normativa: léxico, tipos, OOP, memoria, errores, FFI |
 | **[spec/gramatica.ebnf](spec/gramatica.ebnf)** | Gramática formal completa (EBNF), normativa |
-| **[docs/adr/](docs/adr/)** | 13 Architecture Decision Records: el *porqué* de cada decisión |
+| **[docs/adr/](docs/adr/)** | 26 Architecture Decision Records: el *porqué* de cada decisión |
 | **[CHANGELOG.md](CHANGELOG.md)** | Qué cambió en cada sprint |
 | **[CONTRIBUIR.md](CONTRIBUIR.md)** | Requisitos, cómo compilar, estilo y proceso de RFC |
+| **[docs/guias/](docs/guias/LEEME.md)** | Guías de usuario, administrador, desarrollador y referencia del lenguaje |
 
 ### Documentos históricos
 
@@ -170,8 +171,10 @@ funcion principal() -> entero {
 Un ejemplo completo (estructura, método, caja y préstamo mutable) está en
 [`pruebas/conformidad/valido/0014-amortizacion`](pruebas/conformidad/valido/0014-amortizacion/principal.oki).
 
-El binario `nooki` ya existe y responde (`--version`, `ayuda`), pero **todavía no compila `.oki`**:
-eso llega en el Sprint 6.
+El binario `nooki` compila y ejecuta programas `.oki`. La suite actual tiene **18 suites**
+de `ctest` y **99 casos de conformidad** (81 válidos y 18 inválidos en esta copia). Para el
+recorrido completo, empieza por [LEEME.md](LEEME.md) y por la
+[guía del usuario](docs/guias/GUIA_DEL_USUARIO.md).
 
 ### Compilar y probar
 
@@ -192,16 +195,21 @@ Requisitos y estilo en [CONTRIBUIR.md](CONTRIBUIR.md). Historial en [CHANGELOG.m
 
 ## Realidad del proyecto
 
+> **Nota de estado.** Las cifras de esta sección son el calendario del plan original. La
+> implementación actual ya está en **1.0.0** e incluye UI e IA básicas; lo que sigue pendiente
+> son ampliaciones (macOS nativo, PNG, paquetes, etc.). El estado real está en
+> [NOTAS_DE_VERSION.md](NOTAS_DE_VERSION.md) y en las [guías](docs/guias/LEEME.md).
+
 El proyecto lo desarrolla **una sola persona**. Eso no cambia el orden de los sprints, pero sí el calendario y el alcance:
 
 | Hito | Cuándo |
 |---|---|
 | Demo "Hola, Nooki" nativo en Windows, Linux y macOS | **~5–6 meses** |
 | Lenguaje completo (ownership incluido) | ~3,75–4 años |
-| **v1.0** (lenguaje + tooling + librería estándar, **sin UI ni IA**) | **~5,5–6 años** |
-| UI e IA (post-1.0) | ~7–7,5 años |
+| **v1.0** (lenguaje + tooling + biblioteca estándar, con UI e IA básicas) | **~5,5–6 años** |
+| UI nativa completa e IA ampliada (post-1.0) | ~7–7,5 años |
 
-- **UI e IA no son parte de la v1.0**: se entregan después como paquetes sobre FFI (Skia, ONNX, BLAS), no reimplementadas.
+- La 1.0.0 incluye **UI e IA básicas** en la biblioteca estándar; el plan original las situaba después de la 1.0. La UI nativa completa (macOS, PNG, recolocación) y las bibliotecas de IA equivalentes a pandas/PyTorch siguen pendientes.
 - **Registro de paquetes por Git** en lugar de servidor propio, hasta que haya usuarios.
 - **macOS se valida en CI**; la notarización queda condicionada a un Mac o a financiación.
 

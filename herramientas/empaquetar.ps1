@@ -55,6 +55,16 @@ foreach ($documento in $documentos) {
 }
 
 # Ejemplos, editores y especificación.
+# Las guías por audiencia y sus PDF, si están.
+if (Test-Path "docs/guias") {
+    Copy-Item -Recurse "docs/guias" "$destino/guias"
+}
+# Solo los PDF al día; en la raíz puede haber versiones antiguas.
+foreach ($pdf in @("GUIA_DEL_USUARIO.pdf", "GUIA_DEL_ADMINISTRADOR.pdf",
+                   "GUIA_DEL_DESARROLLADOR.pdf", "REFERENCIA_DEL_LENGUAJE.pdf")) {
+    if (Test-Path $pdf) { Copy-Item $pdf "$destino/guias/" }
+}
+
 # El instalador, para que el PATH se arregle con un comando y no a mano.
 New-Item -ItemType Directory -Force -Path "$destino/herramientas" | Out-Null
 Copy-Item "herramientas/instalar.ps1" "$destino/herramientas/instalar.ps1"
