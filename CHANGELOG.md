@@ -21,7 +21,14 @@ anterior. Con eso:
 |---|---|---|
 | Paridad de 4 bits | **8 de 16** (clase mayoritaria) con toda configuración probada | **16 de 16** |
 
-Caso nuevo `0075-lotes-momento`. **105 casos.**
+**Y los números se pueden meter en un texto.** `"" + 42` era un error de tipo, así que no había forma de
+componer un mensaje con un número dentro. Ahora `textos.de_entero(42)` da `"42"` y
+`textos.de_flotante(2.5)` da `"2,5"`, con el mismo formato que `imprimir`: coma decimal, sin ceros de más.
+Están escritos **en Nooki**, no en C, para que funcionen en cualquier plataforma.
+
+Casos nuevos `0075-lotes-momento` y `0076-formato-numeros`. **106 casos.** La CI, además, enseñó que
+`macos-14` no está disponible para esta cuenta: el trabajo se cancela antes de arrancar, así que pasa a
+`macos-13` y como opcional, para que no tumbe la ejecución.
 
 ### Sprint 120 — Leer CSV y red de dos capas (2026-11-14)
 

@@ -1,0 +1,20 @@
+// Los números se pueden meter en un texto, con el mismo formato que al imprimir.
+usar textos
+
+funcion principal() -> entero {
+    variable edad = 42
+    variable precio = 2.5
+    variable cero = 0.0
+
+    imprimir("Edad: " + textos.de_entero(edad))
+    imprimir("Precio: " + textos.de_flotante(precio))
+    imprimir("Cero: " + textos.de_flotante(cero))
+
+    imprimir(textos.de_entero(0))
+    imprimir(textos.de_entero(0 - 7))
+    imprimir(textos.de_flotante(3.0))
+    imprimir(textos.de_flotante(0.001))
+    imprimir(textos.de_flotante(1.234567))
+    imprimir(textos.de_flotante(0.0 - 2.75))
+    retornar 0
+}

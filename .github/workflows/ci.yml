@@ -17,6 +17,7 @@ jobs:
   compilar:
     name: ${{ matrix.nombre }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.opcional || false }}
     strategy:
       fail-fast: false
       matrix:
@@ -27,9 +28,12 @@ jobs:
           - nombre: Linux · GCC
             os: ubuntu-24.04
             preset: linux
+          # `macos-14` no está disponible para esta cuenta: el trabajo se cancela
+          # antes de arrancar. Se prueba con la imagen anterior y sin bloquear.
           - nombre: macOS · Clang
-            os: macos-14
+            os: macos-13
             preset: macos
+            opcional: true
     steps:
       - name: Descargar el código
         uses: actions/checkout@v4

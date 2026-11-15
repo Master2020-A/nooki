@@ -64,6 +64,92 @@ publico enumeracion resultado {
     }
     if (modulo == "textos") {
         return R"(// Biblioteca estándar: utilidades sobre listas de textos.
+// Convierte un número en texto, para poder componer mensajes: 42 -> "42".
+publico funcion de_entero(valor: entero) -> texto {
+    si (valor == 0) {
+        retornar "0" + ""
+    }
+    variable negativo = valor < 0
+    variable resto = valor
+    si (negativo) {
+        resto = 0 - resto
+    }
+
+    // Los dígitos salen del revés; se guardan y luego se componen al derecho.
+    variable digitos = Vector<entero>.nuevo()
+    mientras (resto > 0) {
+        digitos.agregar(resto % 10)
+        resto = resto / 10
+    }
+
+    variable salida = "" + ""
+    si (negativo) {
+        salida = "-" + ""
+    }
+    variable i = digitos.largo() - 1
+    mientras (i >= 0) {
+        salida = salida.agregar_codigo(48 + digitos.obtener(i))
+        i = i - 1
+    }
+    retornar salida
+}
+
+// Un flotante sale con coma decimal y sin ceros de más: 2,5 y 3.
+publico funcion de_flotante(valor: flotante) -> texto {
+    variable negativo = valor < 0.0
+    variable magnitud = valor
+    si (negativo) {
+        magnitud = 0.0 - magnitud
+    }
+
+    variable entera = magnitud como entero
+    variable fraccion = magnitud - (entera como flotante)
+
+    variable salida = de_entero(entera)
+    si (negativo) {
+        salida = "-" + salida
+    }
+
+    // Seis decimales redondeados; si no queda fracción, no se pone coma.
+    variable milesimas = (fraccion * 1000000.0 + 0.5) como entero
+    si (milesimas >= 1000000) {
+        milesimas = 999999
+    }
+    si (milesimas == 0) {
+        retornar salida
+    }
+
+    variable cuantos = 6
+    mientras (cuantos > 0 && milesimas % 10 == 0) {
+        milesimas = milesimas / 10
+        cuantos = cuantos - 1
+    }
+
+    // Los dígitos de la fracción, con ceros a la izquierda hasta `cuantos`.
+    variable cifras = Vector<entero>.nuevo()
+    variable resto = milesimas
+    mientras (resto > 0) {
+        cifras.agregar(resto % 10)
+        resto = resto / 10
+    }
+    variable relleno = cuantos - cifras.largo()
+
+    variable decimales = "" + ""
+    variable rellenos = 0
+    mientras (rellenos < relleno) {
+        decimales = decimales.agregar_codigo(48)
+        rellenos = rellenos + 1
+    }
+    variable i = cifras.largo() - 1
+    mientras (i >= 0) {
+        decimales = decimales.agregar_codigo(48 + cifras.obtener(i))
+        i = i - 1
+    }
+
+    variable coma = "," + ""
+    retornar salida + coma + decimales
+}
+
 publico funcion unir(partes: &Vector<texto>, separador: texto) -> texto {
     variable junto = ""
     variable i = 0
