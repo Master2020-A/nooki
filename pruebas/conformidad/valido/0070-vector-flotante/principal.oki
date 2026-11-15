@@ -1,0 +1,24 @@
+// Vector<flotante>: crear, añadir, leer, modificar, recorrer y vaciar.
+funcion principal() -> entero {
+    variable v = Vector<flotante>.nuevo()
+    v.agregar(1.5)
+    v.agregar(2.25)
+    v.agregar(4.0)
+
+    imprimir(v.largo())
+    imprimir(v.obtener(0))
+    imprimir(v.obtener(99))
+
+    v.modificar(0, 9.5)
+    imprimir(v.obtener(0))
+
+    variable suma = 0.0
+    para (x en v) {
+        suma = suma + x
+    }
+    imprimir(suma)
+
+    v.vaciar()
+    imprimir(v.largo())
+    retornar 0
+}

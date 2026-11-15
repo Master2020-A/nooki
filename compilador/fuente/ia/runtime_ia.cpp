@@ -1028,7 +1028,7 @@ long long nooki_ia_red_cargar(const char* ruta) {
     if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKIRED", 8) == 0 &&
         fread(cabecera, sizeof(int32_t), 4, flujo) == 4 && cabecera[0] == 1 &&
 )nooki" R"nooki(
-        cabecera[1] >= 1 && cabecera[1] <= 4 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
+        cabecera[1] >= 1 && cabecera[1] <= 64 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
         cabecera[3] >= 0) {
         const int entradas = cabecera[1];
         const int ocultas = cabecera[2];
@@ -1150,7 +1150,7 @@ static double nooki_clases_aleatorio(nooki_red_clases* red) {
 }
 
 long long nooki_ia_clases_nueva(long long entradas, long long ocultas, long long clases) {
-    if (entradas < 1 || entradas > 4 || ocultas < 1 || ocultas > 64 || clases < 2 ||
+    if (entradas < 1 || entradas > 64 || ocultas < 1 || ocultas > 64 || clases < 2 ||
         clases > 16) {
         return 0;
     }
@@ -1169,7 +1169,7 @@ long long nooki_ia_clases_nueva(long long entradas, long long ocultas, long long
     red->b1 = (double*)malloc((size_t)ocultas * sizeof(double));
     red->w2 = (double*)malloc((size_t)(ocultas * clases) * sizeof(double));
     red->b2 = (double*)malloc((size_t)clases * sizeof(double));
-    red->xs = (double*)malloc((size_t)red->capacidad * 4 * sizeof(double));
+    red->xs = (double*)malloc((size_t)red->capacidad * (size_t)entradas * sizeof(double));
     red->etiquetas = (int*)malloc((size_t)red->capacidad * sizeof(int));
     if (red->w1 == NULL || red->b1 == NULL || red->w2 == NULL || red->b2 == NULL ||
         red->xs == NULL || red->etiquetas == NULL) {
@@ -1205,7 +1205,7 @@ void nooki_ia_clases_ejemplo(long long manejador, double x1, double x2, double x
     }
     if (red->cuantas >= red->capacidad) {
         const int nueva = red->capacidad * 2;
-        double* xs = (double*)realloc(red->xs, (size_t)nueva * 4 * sizeof(double));
+        double* xs = (double*)realloc(red->xs, (size_t)nueva * (size_t)red->entradas * sizeof(double));
         int* etiquetas = (int*)realloc(red->etiquetas, (size_t)nueva * sizeof(int));
         if (xs == NULL || etiquetas == NULL) {
             return;
@@ -1214,11 +1214,20 @@ void nooki_ia_clases_ejemplo(long long manejador, double x1, double x2, double x
         red->etiquetas = etiquetas;
         red->capacidad = nueva;
     }
-    double* fila = red->xs + (size_t)red->cuantas * 4;
+    double* fila = red->xs + (size_t)red->cuantas * (size_t)red->entradas;
+    for (int i = 0; i < red->entradas; ++i) {
+        fila[i] = 0.0;
+    }
     fila[0] = x1;
-    fila[1] = x2;
-    fila[2] = x3;
-    fila[3] = x4;
+    if (red->entradas > 1) {
+        fila[1] = x2;
+    }
+    if (red->entradas > 2) {
+        fila[2] = x3;
+    }
+    if (red->entradas > 3) {
+        fila[3] = x4;
+    }
     red->etiquetas[red->cuantas] = (int)clase;
     red->cuantas += 1;
 }
@@ -1319,7 +1328,7 @@ void nooki_ia_clases_entrenar(long long manejador, long long vueltas, double tas
 
     for (long long vuelta = 0; vuelta < vueltas; ++vuelta) {
         for (int m = 0; m < red->cuantas; ++m) {
-            const double* x = red->xs + (size_t)m * 4;
+            const double* x = red->xs + (size_t)m * (size_t)red->entradas;
             const int etiqueta = red->etiquetas[m];
             nooki_clases_adelante(red, x, h, p);
 
@@ -1365,7 +1374,7 @@ long long nooki_ia_clases_aciertos(long long manejador) {
     double p[16];
     long long bien = 0;
     for (int m = 0; m < red->cuantas; ++m) {
-        const double* x = red->xs + (size_t)m * 4;
+        const double* x = red->xs + (size_t)m * (size_t)red->entradas;
         nooki_clases_adelante(red, x, h, p);
         int mejor = 0;
         for (int c = 1; c < red->clases; ++c) {
@@ -1856,7 +1865,7 @@ int nooki_ia_clases_guardar(long long manejador, const char* ruta) {
     bien = bien && nooki_red_escribir_dobles(flujo, red->b1, red->ocultas);
     bien = bien && nooki_red_escribir_dobles(flujo, red->w2, red->ocultas * red->clases);
     bien = bien && nooki_red_escribir_dobles(flujo, red->b2, red->clases);
-    bien = bien && nooki_red_escribir_dobles(flujo, red->xs, red->cuantas * 4);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->xs, red->cuantas * red->entradas);
     if (red->cuantas > 0) {
         bien = bien && fwrite(red->etiquetas, sizeof(int32_t), (size_t)red->cuantas, flujo) ==
                            (size_t)red->cuantas;
@@ -1882,7 +1891,7 @@ long long nooki_ia_clases_cargar(const char* ruta) {
     long long resultado = 0;
     if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKICLS", 8) == 0 &&
         fread(cabecera, sizeof(int32_t), 5, flujo) == 5 && cabecera[0] == 1 &&
-        cabecera[1] >= 1 && cabecera[1] <= 4 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
+        cabecera[1] >= 1 && cabecera[1] <= 64 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
         cabecera[3] >= 2 && cabecera[3] <= 16 && cabecera[4] >= 0) {
         const int entradas = cabecera[1];
         const int ocultas = cabecera[2];
@@ -1899,7 +1908,7 @@ long long nooki_ia_clases_cargar(const char* ruta) {
 
             if (bien && cuantas > 0) {
                 if (cuantas > red->capacidad) {
-                    double* xs = (double*)realloc(red->xs, (size_t)cuantas * 4 * sizeof(double));
+                    double* xs = (double*)realloc(red->xs, (size_t)cuantas * (size_t)entradas * sizeof(double));
                     int* etiquetas = (int*)realloc(red->etiquetas, (size_t)cuantas * sizeof(int));
                     if (xs == NULL || etiquetas == NULL) {
                         free(xs);
@@ -1911,7 +1920,7 @@ long long nooki_ia_clases_cargar(const char* ruta) {
                         red->capacidad = cuantas;
                     }
                 }
-                bien = bien && nooki_red_leer_dobles(flujo, red->xs, cuantas * 4);
+                bien = bien && nooki_red_leer_dobles(flujo, red->xs, cuantas * entradas);
                 int32_t* leidas = (int32_t*)malloc((size_t)cuantas * sizeof(int32_t));
                 if (leidas == NULL) {
                     bien = 0;
@@ -1942,6 +1951,96 @@ long long nooki_ia_clases_cargar(const char* ruta) {
 
     fclose(flujo);
     return resultado;
+}
+
+
+/* --- Entradas de cualquier tamaño ---
+ *
+ * El runtime no puede ver el tipo `Vector<flotante>` del lenguaje (vive en el
+ * preludio, en otro archivo), así que se declara aquí una vista con los mismos
+ * tres campos y en el mismo orden. Es un contrato entre los dos archivos y está
+ * comprobado por la suite. */
+
+typedef struct {
+    double* datos;
+    long long largo;
+    long long capacidad;
+} nooki_ia_vector_flotante;
+
+static const double* nooki_ia_clases_fila(const nooki_ia_vector_flotante* x, const nooki_red_clases* red) {
+    if (x == NULL || x->datos == NULL || x->largo != (long long)red->entradas) {
+        return NULL;
+    }
+    return x->datos;
+}
+
+int nooki_ia_clases_ejemplo_datos(long long manejador, const nooki_ia_vector_flotante* x,
+                                 long long cual) {
+    nooki_red_clases* red = nooki_clases_de(manejador);
+    if (red == NULL || cual < 0 || cual >= red->clases) {
+        return 0;
+    }
+    const double* datos = nooki_ia_clases_fila(x, red);
+    if (datos == NULL) {
+        return 0;
+    }
+    if (red->cuantas >= red->capacidad) {
+        const int nueva = red->capacidad * 2;
+        double* xs = (double*)realloc(red->xs,
+                                      (size_t)nueva * (size_t)red->entradas * sizeof(double));
+        int* etiquetas = (int*)realloc(red->etiquetas, (size_t)nueva * sizeof(int));
+        if (xs == NULL || etiquetas == NULL) {
+            return 0;
+        }
+        red->xs = xs;
+        red->etiquetas = etiquetas;
+        red->capacidad = nueva;
+    }
+    double* fila = red->xs + (size_t)red->cuantas * (size_t)red->entradas;
+    for (int i = 0; i < red->entradas; ++i) {
+        fila[i] = datos[i];
+    }
+    red->etiquetas[red->cuantas] = (int)cual;
+    red->cuantas += 1;
+    return 1;
+}
+
+long long nooki_ia_clases_predecir_datos(long long manejador, const nooki_ia_vector_flotante* x) {
+    nooki_red_clases* red = nooki_clases_de(manejador);
+    if (red == NULL) {
+        return -1;
+    }
+    const double* datos = nooki_ia_clases_fila(x, red);
+    if (datos == NULL) {
+        return -1;
+    }
+    double h[64];
+    double p[16];
+    nooki_clases_adelante(red, datos, h, p);
+
+    int mejor = 0;
+    for (int c = 1; c < red->clases; ++c) {
+        if (p[c] > p[mejor]) {
+            mejor = c;
+        }
+    }
+    return mejor;
+}
+
+double nooki_ia_clases_probabilidad_datos(long long manejador,
+                                          const nooki_ia_vector_flotante* x, long long cual) {
+    nooki_red_clases* red = nooki_clases_de(manejador);
+    if (red == NULL || cual < 0 || cual >= red->clases) {
+        return 0.0;
+    }
+    const double* datos = nooki_ia_clases_fila(x, red);
+    if (datos == NULL) {
+        return 0.0;
+    }
+    double h[64];
+    double p[16];
+    nooki_clases_adelante(red, datos, h, p);
+    return p[cual];
 }
 
 )nooki";

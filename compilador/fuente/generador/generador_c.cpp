@@ -44,8 +44,13 @@ std::string tipo_c(std::string_view escrito) {
     }
 
     if (escrito.rfind("Vector<", 0) == 0) {
-        return escrito.find("texto") != std::string_view::npos ? "nooki_vector_texto"
-                                                              : "nooki_vector_entero";
+        if (escrito.find("texto") != std::string_view::npos) {
+            return "nooki_vector_texto";
+        }
+        if (escrito.find("flotante") != std::string_view::npos) {
+            return "nooki_vector_flotante";
+        }
+        return "nooki_vector_entero";
     }
     switch (nooki::semantico::desde_nombre(escrito)) {
         case nooki::semantico::Tipo::Texto:
@@ -134,6 +139,17 @@ std::string mayusculas(std::string_view texto) {
         }
     }
     return salida;
+}
+
+/// El tipo en C del elemento de un vector, a partir del tipo del vector.
+std::string elemento_de_vector(const std::string& tipo_vector) {
+    if (tipo_vector.rfind("nooki_vector_texto", 0) == 0) {
+        return "nooki_texto";
+    }
+    if (tipo_vector.rfind("nooki_vector_flotante", 0) == 0) {
+        return "double";
+    }
+    return "long long";
 }
 
 std::string constante_enum(std::string_view enumeracion, std::string_view variante) {
@@ -526,6 +542,64 @@ const char* PRELUDIO =
     "        v->datos[i] = nooki_texto_literal(\"\");\n"
     "    }\n"
     "    v->largo = 0;\n"
+    "}\n"
+    "\n"
+    "/* Vector<flotante>: como el de enteros, con elementos de doble precision. */\n"
+    "typedef struct {\n"
+    "    double* datos;\n"
+    "    long long largo;\n"
+    "    long long capacidad;\n"
+    "} nooki_vector_flotante;\n"
+    "\n"
+    "static nooki_vector_flotante nooki_vector_flotante_nuevo(void) {\n"
+    "    nooki_vector_flotante v;\n"
+    "    v.datos = NULL;\n"
+    "    v.largo = 0;\n"
+    "    v.capacidad = 0;\n"
+    "    return v;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_flotante_agregar(nooki_vector_flotante* v, double valor) {\n"
+    "    if (v->largo >= v->capacidad) {\n"
+    "        const long long nueva = v->capacidad == 0 ? 8 : v->capacidad * 2;\n"
+    "        double* datos = (double*)realloc(v->datos, (size_t)nueva * sizeof(double));\n"
+    "        if (datos == NULL) {\n"
+    "            return;\n"
+    "        }\n"
+    "        v->datos = datos;\n"
+    "        v->capacidad = nueva;\n"
+    "    }\n"
+    "    v->datos[v->largo] = valor;\n"
+    "    v->largo += 1;\n"
+    "}\n"
+    "\n"
+    "static double nooki_vector_flotante_obtener(nooki_vector_flotante* v, long long indice) {\n"
+    "    if (indice < 0 || indice >= v->largo) {\n"
+    "        return 0.0;\n"
+    "    }\n"
+    "    return v->datos[indice];\n"
+    "}\n"
+    "\n"
+    "static long long nooki_vector_flotante_largo(nooki_vector_flotante* v) {\n"
+    "    return v->largo;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_flotante_modificar(nooki_vector_flotante* v, long long indice, double valor) {\n"
+    "    if (indice < 0 || indice >= v->largo) {\n"
+    "        return;\n"
+    "    }\n"
+    "    v->datos[indice] = valor;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_flotante_vaciar(nooki_vector_flotante* v) {\n"
+    "    v->largo = 0;\n"
+    "}\n"
+    "\n"
+    "static void nooki_vector_flotante_soltar(nooki_vector_flotante* v) {\n"
+    "    free(v->datos);\n"
+    "    v->datos = NULL;\n"
+    "    v->largo = 0;\n"
+    "    v->capacidad = 0;\n"
     "}\n"
     "\n"
     "static void nooki_vector_texto_soltar(nooki_vector_texto* v) {\n"
@@ -2147,6 +2221,16 @@ private:
                 return dentro + "*";
             }
         }
+        // Un vector viaja como puntero a su estructura de C.
+        if (escrito.rfind("Vector<", 0) == 0) {
+            if (escrito.find("flotante") != std::string_view::npos) {
+                return "nooki_vector_flotante";
+            }
+            if (escrito.find("texto") != std::string_view::npos) {
+                return "nooki_vector_texto";
+            }
+            return "nooki_vector_entero";
+        }
         if (escrito == "entero") {
             return "long long";
         }
@@ -2639,8 +2723,7 @@ private:
     void emitir_para_coleccion(const sintactico::Sentencia& sentencia,
                                const std::string& tipo) {
         const std::string nombre(sentencia.nombre);
-        const std::string elemento =
-            tipo.rfind("nooki_vector_texto", 0) == 0 ? "nooki_texto" : "long long";
+        const std::string elemento = elemento_de_vector(tipo);
         const std::string indice = "__nooki_i" + std::to_string(contador_temporal_++);
         const std::string coleccion = expresion(*sentencia.expresion);
 
@@ -2834,12 +2917,9 @@ private:
                             acceso.anotacion == "vaciar") {
                             return "void";
                         }
-                        // El elemento de un `Vector<texto>` es un texto.
+                        // El elemento depende del vector: texto, flotante o entero.
                         if (acceso.anotacion == "obtener") {
-                            return tipo_de(*acceso.izquierda).find("texto") !=
-                                           std::string::npos
-                                       ? "nooki_texto"
-                                       : "long long";
+                            return elemento_de_vector(tipo_de(*acceso.izquierda));
                         }
                         return "long long";
                     }
@@ -2902,10 +2982,18 @@ private:
                     if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
                         acceso.izquierda->lexema == "Vector") {
-                        const bool de_texto =
-                            !acceso.izquierda->tipos_aplicados.empty() &&
-                            acceso.izquierda->tipos_aplicados.front() == "texto";
-                        return de_texto ? "nooki_vector_texto" : "nooki_vector_entero";
+                        // `Vector<T>.nuevo()`: el tipo del vector sale del tipo aplicado.
+                        const std::string_view elemento =
+                            acceso.izquierda->tipos_aplicados.empty()
+                                ? std::string_view{}
+                                : acceso.izquierda->tipos_aplicados.front();
+                        if (elemento == "texto") {
+                            return "nooki_vector_texto";
+                        }
+                        if (elemento == "flotante") {
+                            return "nooki_vector_flotante";
+                        }
+                        return "nooki_vector_entero";
                     }
                     if (acceso.izquierda &&
                         tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
@@ -2924,12 +3012,9 @@ private:
                             acceso.anotacion == "vaciar") {
                             return "void";
                         }
-                        // El elemento de un `Vector<texto>` es un texto.
+                        // El elemento depende del vector: texto, flotante o entero.
                         if (acceso.anotacion == "obtener") {
-                            return tipo_de(*acceso.izquierda).find("texto") !=
-                                           std::string::npos
-                                       ? "nooki_texto"
-                                       : "long long";
+                            return elemento_de_vector(tipo_de(*acceso.izquierda));
                         }
                         return "long long";
                     }
@@ -3577,10 +3662,16 @@ private:
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
                 acceso.izquierda->lexema == "Vector" && acceso.anotacion == "nuevo") {
-                const bool de_texto = !acceso.izquierda->tipos_aplicados.empty() &&
-                                      acceso.izquierda->tipos_aplicados.front() == "texto";
-                return de_texto ? "nooki_vector_texto_nuevo()"
-                                : "nooki_vector_entero_nuevo()";
+                const std::string_view elemento = acceso.izquierda->tipos_aplicados.empty()
+                                                      ? std::string_view{}
+                                                      : acceso.izquierda->tipos_aplicados.front();
+                if (elemento == "texto") {
+                    return "nooki_vector_texto_nuevo()";
+                }
+                if (elemento == "flotante") {
+                    return "nooki_vector_flotante_nuevo()";
+                }
+                return "nooki_vector_entero_nuevo()";
             }
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&

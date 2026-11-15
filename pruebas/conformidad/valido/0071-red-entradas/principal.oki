@@ -1,0 +1,54 @@
+// Red de clases con ocho entradas, pasadas en un Vector<flotante>.
+usar redes
+
+funcion muestra(primeras: flotante, ultimas: flotante) -> Vector<flotante> {
+    variable v = Vector<flotante>.nuevo()
+    variable k = 0
+    mientras (k < 4) {
+        v.agregar(primeras)
+        k = k + 1
+    }
+    k = 0
+    mientras (k < 4) {
+        v.agregar(ultimas)
+        k = k + 1
+    }
+    retornar v
+}
+
+funcion principal() -> entero {
+    variable red = redes.nueva_clases(8, 16, 2)
+
+    variable i = 0
+    mientras (i < 20) {
+        variable t = i como flotante / 19.0
+        variable a = muestra(0.5 + t * 0.5, 0.0 + t * 0.3)
+        variable b = muestra(0.0 + t * 0.3, 0.5 + t * 0.5)
+        si (!redes.ejemplo_datos(red, &a, 0)) {
+            imprimir("no acepta la muestra")
+        }
+        si (!redes.ejemplo_datos(red, &b, 1)) {
+            imprimir("no acepta la muestra")
+        }
+        i = i + 1
+    }
+
+    imprimir(redes.total_clase(red))
+    redes.entrenar_clases(red, 3000, 0.5)
+    imprimir(redes.aciertos_clase(red))
+
+    variable alta = muestra(0.9, 0.1)
+    variable baja = muestra(0.1, 0.9)
+    imprimir(redes.predecir_datos(red, &alta))
+    imprimir(redes.predecir_datos(red, &baja))
+
+    // Un vector con el tamaño equivocado no se acepta.
+    variable corta = Vector<flotante>.nuevo()
+    corta.agregar(1.0)
+    si (!redes.ejemplo_datos(red, &corta, 0)) {
+        imprimir("tamaño equivocado rechazado")
+    }
+
+    redes.liberar_clase(red)
+    retornar 0
+}

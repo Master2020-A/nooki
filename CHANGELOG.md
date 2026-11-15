@@ -5,6 +5,35 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 118 — `Vector<flotante>` y redes de hasta 64 entradas (2026-11-14)
+
+**El lenguaje no tenía vectores de decimales.** Solo `Vector<entero>` y `Vector<texto>`, y sin eso no se
+pueden pasar datos reales a una red. Ahora `Vector<flotante>` funciona entero: crear, `agregar`,
+`obtener`, `modificar`, `largo`, `vaciar`, recorrerlo con `para` y devolverlo de una función. Su elemento
+es un `flotante` también para el verificador, así que `suma = suma + x` dentro de un `para` compila.
+
+**Y con eso la red pasa de 4 entradas a 64:**
+
+```
+redes.nueva_clases(entradas, ocultas, clases)   // entradas: 1 a 64
+redes.ejemplo_datos(red, &v, cual)              // v mide `entradas`
+redes.predecir_datos(red, &v)
+redes.probabilidad_datos(red, &v, cual)
+```
+
+El runtime va en un archivo aparte y no ve el tipo del lenguaje, así que declara una **vista** con los
+mismos tres campos (`datos`, `largo`, `capacidad`) y comprueba la longitud antes de leer nada: un vector
+con el tamaño equivocado se rechaza con `false` en vez de leer fuera de rango.
+
+Comprobado con una red de **8 entradas y 2 clases: 40 de 40**. Casos nuevos `0070-vector-flotante` y
+`0071-red-entradas`. **101 casos.**
+
+De paso se arregló el `para` sobre vectores, que declaraba la variable del bucle como `long long` y
+**truncaba los decimales** sin avisar, y las funciones propias que devuelven una colección ahora se
+pueden prestar con `&` (antes daba `NOK4008`).
+
+### Sprint 117 — Guardar también la red de clases (2026-11-14)
+
 ### Sprint 117 — Guardar también la red de clases (2026-11-14)
 
 > **Incidente, y cómo se cerró.** La herramienta de troceado de literales

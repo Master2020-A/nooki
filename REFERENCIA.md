@@ -322,6 +322,8 @@ Ver [§9](#9-módulos-y-visibilidad).
 
 ### `Vector<T>`
 
+`T` puede ser `entero`, `flotante` o `texto`.
+
 | Miembro | Firma | Qué hace |
 |---|---|---|
 | `nuevo` | `Vector<T>.nuevo() -> Vector<T>` | vector vacío |

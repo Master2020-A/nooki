@@ -131,6 +131,11 @@ externo funcion nooki_ia_clases_total(red: entero) -> entero
 externo funcion nooki_ia_clases_liberar(red: entero) -> vacio
 externo funcion nooki_ia_clases_guardar(red: entero, ruta: &texto) -> entero
 externo funcion nooki_ia_clases_cargar(ruta: &texto) -> entero
+externo funcion nooki_ia_clases_ejemplo_datos(red: entero, x: &Vector<flotante>,
+                                               cual: entero) -> entero
+externo funcion nooki_ia_clases_predecir_datos(red: entero, x: &Vector<flotante>) -> entero
+externo funcion nooki_ia_clases_probabilidad_datos(red: entero, x: &Vector<flotante>,
+                                                    cual: entero) -> flotante
 
 // Crea una red con esas entradas (1 a 4) y neuronas ocultas.
 publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
@@ -208,6 +213,23 @@ publico funcion guardar_clase(red: entero, ruta: &texto) -> booleano {
 // Carga una red de clases guardada. Devuelve 0 si el archivo no sirve.
 publico funcion cargar_clase(ruta: &texto) -> entero {
     retornar nooki_ia_clases_cargar(ruta)
+}
+
+/* Entradas de cualquier tamaño: en vez de x1..x4 se pasa un `Vector<flotante>`
+ * con tantos valores como entradas tenga la red. */
+
+// Añade una muestra con su clase. El vector tiene que tener `entradas` valores.
+publico funcion ejemplo_datos(red: entero, x: &Vector<flotante>, cual: entero) -> booleano {
+    retornar nooki_ia_clases_ejemplo_datos(red, x, cual) != 0
+}
+
+// La clase más probable para esos valores.
+publico funcion predecir_datos(red: entero, x: &Vector<flotante>) -> entero {
+    retornar nooki_ia_clases_predecir_datos(red, x)
+}
+
+publico funcion probabilidad_datos(red: entero, x: &Vector<flotante>, cual: entero) -> flotante {
+    retornar nooki_ia_clases_probabilidad_datos(red, x, cual)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.

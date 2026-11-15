@@ -111,6 +111,7 @@ private:
         std::set<std::string> referencias;
         std::set<std::string> compuestos;
         std::set<std::string> vectores_texto;
+        std::set<std::string> vectores_flotante;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
@@ -205,6 +206,19 @@ private:
         if (!ambitos_.empty()) {
             ambitos_.back().vectores_texto.insert(std::string(nombre));
         }
+    }
+    void declarar_vector_flotante(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().vectores_flotante.insert(std::string(nombre));
+        }
+    }
+    bool es_vector_flotante(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->vectores_flotante.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
     }
     bool es_vector_texto(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
@@ -675,6 +689,43 @@ private:
                     es_llamada_mapa(*sentencia.expresion)) {
                     declarar_prestable(sentencia.nombre);
                 }
+                // Un `Vector<flotante>` se recuerda para saber que su elemento es
+                // un flotante, tanto al obtener como al recorrerlo.
+                if (sentencia.tipo_declarado.find("Vector<flotante>") != std::string_view::npos ||
+                    (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                     sentencia.expresion->izquierda &&
+                     sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                     sentencia.expresion->izquierda->izquierda &&
+                     sentencia.expresion->izquierda->izquierda->tipo ==
+                         TipoExpresion::Identificador &&
+                     sentencia.expresion->izquierda->izquierda->lexema == "Vector" &&
+                     sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 1 &&
+                     sentencia.expresion->izquierda->izquierda->tipos_aplicados.front() ==
+                         "flotante")) {
+                    declarar_vector_flotante(sentencia.nombre);
+                }
+                // Una función propia que devuelve una colección deja un valor
+                // prestable, igual que si se hubiera creado aquí.
+                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                    sentencia.expresion->izquierda &&
+                    sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
+                    const auto propia =
+                        funciones_.find(std::string(sentencia.expresion->izquierda->lexema));
+                    if (propia != funciones_.end()) {
+                        const std::string_view devuelto = propia->second->tipo_retorno;
+                        if (devuelto.rfind("Vector<", 0) == 0 ||
+                            devuelto.rfind("Mapa<", 0) == 0 ||
+                            devuelto.rfind("Caja<", 0) == 0) {
+                            declarar_prestable(sentencia.nombre);
+                        }
+                        if (devuelto.find("Vector<flotante>") != std::string_view::npos) {
+                            declarar_vector_flotante(sentencia.nombre);
+                        }
+                        if (devuelto.find("Vector<texto>") != std::string_view::npos) {
+                            declarar_vector_texto(sentencia.nombre);
+                        }
+                    }
+                }
                 // Una llamada a un módulo que devuelve una colección también se presta.
                 if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
                     sentencia.expresion->izquierda &&
@@ -823,9 +874,18 @@ private:
                     sentencia.expresion &&
                     sentencia.expresion->tipo == TipoExpresion::Identificador &&
                     es_vector_texto(sentencia.expresion->lexema);
-                declarar(sentencia.nombre, sobre_textos ? Tipo::Texto : Tipo::Entero);
+                const bool sobre_flotantes =
+                    sentencia.expresion &&
+                    sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                    es_vector_flotante(sentencia.expresion->lexema);
+                declarar(sentencia.nombre, sobre_textos ? Tipo::Texto
+                                            : sobre_flotantes ? Tipo::Flotante
+                                                              : Tipo::Entero);
                 if (sobre_textos) {
                     declarar_vector_texto(sentencia.nombre);
+                }
+                if (sobre_flotantes) {
+                    declarar_vector_flotante(sentencia.nombre);
                 }
                 for (const Sentencia& hija : sentencia.cuerpo) {
                     revisar_sentencia(hija, funcion);
@@ -1422,6 +1482,12 @@ private:
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
             es_vector_texto(acceso.izquierda->lexema)) {
             return Tipo::Texto;
+        }
+        // `Vector<flotante>.obtener(i)` devuelve un flotante.
+        if (acceso.anotacion == "obtener" && acceso.izquierda &&
+            acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            es_vector_flotante(acceso.izquierda->lexema)) {
+            return Tipo::Flotante;
         }
         if ((acceso.anotacion == "obtener" || acceso.anotacion == "largo") &&
             acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
