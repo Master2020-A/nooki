@@ -5,9 +5,6 @@ on:
     branches: [principal, main]
   pull_request:
     branches: [principal, main]
-  # A mano, desde la pestaña Actions: es como se lanza el trabajo de macOS, que
-  # no se ejecuta en cada push porque los ejecutores no están disponibles aquí.
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,8 +17,6 @@ jobs:
   compilar:
     name: ${{ matrix.nombre }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.opcional || false }}
-    if: ${{ !matrix.opcional || github.event_name == 'workflow_dispatch' }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,19 +24,14 @@ jobs:
           - nombre: Windows · MSVC 2022
             os: windows-2022
             preset: windows-msvc
-            opcional: false
           - nombre: Linux · GCC
             os: ubuntu-24.04
             preset: linux
-            opcional: false
-          # Los ejecutores de macOS no están disponibles para esta cuenta: el
-          # trabajo se queda en cola para siempre y deja toda la ejecución
-          # «en cola». Se deja definido pero solo corre a mano, desde la pestaña
-          # Actions. Con un plan que los incluya, basta con quitar el `if`.
-          - nombre: macOS · Clang
-            os: macos-13
-            preset: macos
-            opcional: true
+          # macOS no está aquí: los ejecutores no están disponibles para esta
+          # cuenta y el trabajo se queda en cola para siempre, dejando toda la
+          # ejecución en ese estado. El idioma tiene rama de macOS (sin backend
+          # de ventanas) y se compila a mano con el preset `macos`. Con un plan
+          # que incluya esos ejecutores, se añade la entrada y listo.
     steps:
       - name: Descargar el código
         uses: actions/checkout@v4
