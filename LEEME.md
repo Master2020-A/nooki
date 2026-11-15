@@ -56,11 +56,12 @@ campo de texto, lista y persistencia. Se ejecuta con `nooki ejecutar ejemplos/06
 | Control de hardware (`inseguro`, `asm!`) | `asm!` sí; lo demás, fase posterior |
 | **Verificación** | **111 casos de conformidad · 18 suites · Windows, Linux y ASan+UBSan** |
 
-**Versión actual: 1.0.1.**son error de compilación. Lo que falta son características planificadas, no fallos.
+**Versión actual: 1.0.1.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o son
+error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Probar sin instalar nada
 
-El repositorio trae siete programas listos en [`ejemplos/`](ejemplos/):
+El repositorio trae nueve programas listos en [`ejemplos/`](ejemplos/):
 
 ```bash
 $ export PATH="$PWD/build/linux/compilador:$PATH"   # Windows: ver ejemplos/LEEME.md
@@ -140,10 +141,6 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 
 ## Documentación
 
-- **[Manual](MANUAL.md)** — el lenguaje capítulo a capítulo, con 69 programas que la suite compila.
-- **[Referencia](REFERENCIA.md)** — para consultar: tipos, operadores con su precedencia, miembros y los
-  46 diagnósticos. Las tablas se generan desde el compilador.
-
 - **[Guías por audiencia](docs/guias/LEEME.md)** — usuario, administrador, desarrollador y referencia
   del lenguaje. También en PDF: [usuario](GUIA_DEL_USUARIO.pdf),
   [administrador](GUIA_DEL_ADMINISTRADOR.pdf), [desarrollador](GUIA_DEL_DESARROLLADOR.pdf),
@@ -151,11 +148,12 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 - **[Guía](GUIA.md)** — aprender el lenguaje desde cero.
 - **[Especificación](spec/especificacion-v0.1.md)** — el documento normativo: gramática, tipos,
   sentencias, códigos de diagnóstico.
-- **[Decisiones](DECISIONES.md)** — índice de los 25 ADR y de los asuntos abiertos.
+- **[Decisiones](DECISIONES.md)** — índice de los 26 ADR y de los asuntos abiertos.
 - **[Plan de sprints](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md)** — qué está hecho y qué falta.
 - **[Editores](editores/LEEME.md)** — resaltado para VS Code, JetBrains (RustRover, IntelliJ…) y Vim, y cómo conectar el servidor de lenguaje.
-- **[Referencia](REFERENCIA.md)** — el lenguaje completo para consulta: tipos, operadores con su precedencia, sentencias, miembros y diagnósticos, con las tablas generadas del compilador.
-- **[Manual](MANUAL.md)** — el lenguaje completo, capítulo a capítulo, con 65 programas que la suite compila.
+- **[Manual](MANUAL.md)** — el lenguaje capítulo a capítulo, con 69 programas que la suite compila.
+- **[Referencia](REFERENCIA.md)** — para consultar: tipos, operadores con su precedencia, miembros y los
+  46 diagnósticos. Las tablas se generan desde el compilador.
 - **[Cambios](CHANGELOG.md)** — qué entró en cada versión.
 - **[Notas de la 1.0](NOTAS_DE_VERSION.md)** — qué incluye, qué no y para quién es.
 
@@ -163,7 +161,7 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 
 Cada cambio pasa por tres filtros:
 
-1. **Diecisiete suites** del compilador: léxico, parser, semántica, diagnósticos, CLI, expresiones,
+1. **Dieciocho suites** del compilador: léxico, parser, semántica, diagnósticos, CLI, expresiones,
    sentencias, panics, rutas, manifiestos, LSP, ventanas, imágenes, rendimiento y conformidad.
 2. **92 programas de conformidad**: los válidos se compilan, se ejecutan y su salida se compara con
    la esperada; los inválidos pasan por léxico, parser y verificación y deben emitir exactamente los
