@@ -1,0 +1,27 @@
+funcion principal() -> entero {
+    variable notas = Mapa<texto, flotante>.nuevo()
+
+    variable ana = "Ana" + ""
+    variable luis = "Luis" + ""
+    notas.insertar(&ana, 7.5)
+    notas.insertar(&luis, 8.25)
+    notas.insertar(&ana, 9.75)
+
+    imprimir(notas.largo())
+    imprimir(notas.obtener(&ana))
+    imprimir(notas.obtener(&luis))
+
+    si (notas.contiene(&ana)) {
+        imprimir("está Ana")
+    }
+
+    variable suma = notas.obtener(&ana) + notas.obtener(&luis)
+    imprimir(suma)
+
+    imprimir(notas.quitar(&luis))
+    imprimir(notas.largo())
+
+    variable claves = notas.claves()
+    imprimir(claves.largo())
+    retornar 0
+}

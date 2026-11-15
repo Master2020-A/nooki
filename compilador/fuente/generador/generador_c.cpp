@@ -40,6 +40,10 @@ std::string tipo_c(std::string_view escrito) {
         return "nooki_caja";
     }
     if (escrito.rfind("Mapa<", 0) == 0) {
+        // El valor del mapa puede ser entero o flotante.
+        if (escrito.find("flotante") != std::string_view::npos) {
+            return "nooki_mapa_texto_flotante";
+        }
         return "nooki_mapa_texto_entero";
     }
 
@@ -832,6 +836,164 @@ const char* PRELUDIO =
     "    }\n"
     "    for (long long i = 0; i < m->capacidad; ++i) {\n"
     "        for (nooki_mapa_entrada* e = m->cubetas[i]; e != NULL; e = e->siguiente) {\n"
+    "            nooki_texto vista = e->clave;\n"
+    "            vista.propio = 0;  /* el dueno sigue siendo el mapa */\n"
+    "            nooki_vector_texto_agregar(&claves, vista);\n"
+    "        }\n"
+    "    }\n"
+    "    return claves;\n"
+    "}\n"
+    "/* Mapa<texto, flotante>: tabla hash con encadenamiento (S29). */\n"
+    "typedef struct nooki_mapa_entrada_flotante {\n"
+    "    nooki_texto clave;\n"
+    "    double valor;\n"
+    "    struct nooki_mapa_entrada_flotante* siguiente;\n"
+    "} nooki_mapa_entrada_flotante;\n"
+    "\n"
+    "typedef struct {\n"
+    "    nooki_mapa_entrada_flotante** cubetas;\n"
+    "    long long capacidad;\n"
+    "    long long largo;\n"
+    "} nooki_mapa_texto_flotante;\n"
+    "\n"
+    "static nooki_mapa_texto_flotante nooki_mapa_texto_flotante_nuevo(void) {\n"
+    "    nooki_mapa_texto_flotante m;\n"
+    "    m.capacidad = 16;\n"
+    "    m.largo = 0;\n"
+    "    m.cubetas = (nooki_mapa_entrada_flotante**)calloc((size_t)m.capacidad, sizeof(nooki_mapa_entrada_flotante*));\n"
+    "    return m;\n"
+    "}\n"
+    "\n"
+    "static void nooki_mapa_texto_flotante_rehash(nooki_mapa_texto_flotante* m);\n"
+    "\n"
+    "static void nooki_mapa_texto_flotante_insertar(nooki_mapa_texto_flotante* m, nooki_texto clave, double valor) {\n"
+    "    if (m->cubetas == NULL) {\n"
+    "        return;\n"
+    "    }\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
+    "        if (nooki_texto_igual(e->clave, clave)) {\n"
+    "            /* La clave es del llamante: aquí no se libera. */\n"
+    "            e->valor = valor;\n"
+    "            return;\n"
+    "        }\n"
+    "    }\n"
+    "    nooki_mapa_entrada_flotante* nueva = (nooki_mapa_entrada_flotante*)malloc(sizeof(nooki_mapa_entrada_flotante));\n"
+    "    if (nueva == NULL) {\n"
+    "        return;\n"
+    "    }\n"
+    "    /* El mapa guarda su propia copia: la clave del llamante sigue siendo suya. */\n"
+    "    nueva->clave = nooki_texto_copiar(clave);\n"
+    "    nueva->valor = valor;\n"
+    "    nueva->siguiente = m->cubetas[indice];\n"
+    "    m->cubetas[indice] = nueva;\n"
+    "    m->largo += 1;\n"
+    "    if (m->largo * 4 > m->capacidad * 3) {\n"
+    "        nooki_mapa_texto_flotante_rehash(m);\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "static double nooki_mapa_texto_flotante_obtener(nooki_mapa_texto_flotante* m, nooki_texto clave) {\n"
+    "    if (m->cubetas == NULL) {\n"
+    "        return 0.0;\n"
+    "    }\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
+    "        if (nooki_texto_igual(e->clave, clave)) {\n"
+    "            return e->valor;\n"
+    "        }\n"
+    "    }\n"
+    "    return 0.0;\n"
+    "}\n"
+    "\n"
+    "static int nooki_mapa_texto_flotante_contiene(nooki_mapa_texto_flotante* m, nooki_texto clave) {\n"
+    "    if (m->cubetas == NULL) {\n"
+    "        return 0.0;\n"
+    "    }\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
+    "        if (nooki_texto_igual(e->clave, clave)) {\n"
+    "            return 1;\n"
+    "        }\n"
+    "    }\n"
+    "    return 0.0;\n"
+    "}\n"
+    "\n"
+    "static void nooki_mapa_texto_flotante_rehash(nooki_mapa_texto_flotante* m) {\n"
+    "    const long long nueva = m->capacidad * 2;\n"
+    "    nooki_mapa_entrada_flotante** cubetas = (nooki_mapa_entrada_flotante**)calloc((size_t)nueva, sizeof(nooki_mapa_entrada_flotante*));\n"
+    "    if (cubetas == NULL) {\n"
+    "        return;\n"
+    "    }\n"
+    "    for (long long i = 0; i < m->capacidad; ++i) {\n"
+    "        nooki_mapa_entrada_flotante* e = m->cubetas[i];\n"
+    "        while (e != NULL) {\n"
+    "            nooki_mapa_entrada_flotante* siguiente = e->siguiente;\n"
+    "            const unsigned long long indice = nooki_mapa_hash(e->clave) % (unsigned long long)nueva;\n"
+    "            e->siguiente = cubetas[indice];\n"
+    "            cubetas[indice] = e;\n"
+    "            e = siguiente;\n"
+    "        }\n"
+    "    }\n"
+    "    free(m->cubetas);\n"
+    "    m->cubetas = cubetas;\n"
+    "    m->capacidad = nueva;\n"
+    "}\n"
+    "\n"
+    "static nooki_vector_texto nooki_mapa_texto_flotante_claves(nooki_mapa_texto_flotante* m);\n"
+    "\n"
+    "static int nooki_mapa_texto_flotante_quitar(nooki_mapa_texto_flotante* m, nooki_texto clave) {\n"
+    "    if (m->cubetas == NULL) {\n"
+    "        return 0.0;\n"
+    "    }\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    nooki_mapa_entrada_flotante* anterior = NULL;\n"
+    "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
+    "        if (nooki_texto_igual(e->clave, clave)) {\n"
+    "            if (anterior == NULL) {\n"
+    "                m->cubetas[indice] = e->siguiente;\n"
+    "            } else {\n"
+    "                anterior->siguiente = e->siguiente;\n"
+    "            }\n"
+    "            nooki_texto_soltar(&e->clave);\n"
+    "            free(e);\n"
+    "            m->largo -= 1;\n"
+    "            return 1;\n"
+    "        }\n"
+    "        anterior = e;\n"
+    "    }\n"
+    "    return 0.0;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_mapa_texto_flotante_largo(nooki_mapa_texto_flotante* m) {\n"
+    "    return m->largo;\n"
+    "}\n"
+    "\n"
+    "static void nooki_mapa_texto_flotante_soltar(nooki_mapa_texto_flotante* m) {\n"
+    "    if (m->cubetas != NULL) {\n"
+    "        for (long long i = 0; i < m->capacidad; ++i) {\n"
+    "            nooki_mapa_entrada_flotante* e = m->cubetas[i];\n"
+    "            while (e != NULL) {\n"
+    "                nooki_mapa_entrada_flotante* siguiente = e->siguiente;\n"
+    "                nooki_texto_soltar(&e->clave);\n"
+    "                free(e);\n"
+    "                e = siguiente;\n"
+    "            }\n"
+    "        }\n"
+    "        free(m->cubetas);\n"
+    "        m->cubetas = NULL;\n"
+    "    }\n"
+    "    m->largo = 0;\n"
+    "    m->capacidad = 0;\n"
+    "}\n"
+    "\n"
+    "static nooki_vector_texto nooki_mapa_texto_flotante_claves(nooki_mapa_texto_flotante* m) {\n"
+    "    nooki_vector_texto claves = nooki_vector_texto_nuevo();\n"
+    "    if (m->cubetas == NULL) {\n"
+    "        return claves;\n"
+    "    }\n"
+    "    for (long long i = 0; i < m->capacidad; ++i) {\n"
+    "        for (nooki_mapa_entrada_flotante* e = m->cubetas[i]; e != NULL; e = e->siguiente) {\n"
     "            nooki_texto vista = e->clave;\n"
     "            vista.propio = 0;  /* el dueno sigue siendo el mapa */\n"
     "            nooki_vector_texto_agregar(&claves, vista);\n"
@@ -3048,6 +3210,11 @@ private:
                         if (acceso.anotacion == "insertar") {
                             return "void";
                         }
+                        // `obtener` de un mapa de flotantes devuelve un flotante.
+                        if (acceso.anotacion == "obtener" &&
+                            tipo_de(*acceso.izquierda).find("flotante") != std::string::npos) {
+                            return "double";
+                        }
                         // `quitar` dice si quitó algo: 1 o 0.
                         if (acceso.anotacion == "quitar") {
                             return "int";
@@ -3081,7 +3248,12 @@ private:
                     if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
                         acceso.izquierda->lexema == "Mapa") {
-                        return "nooki_mapa_texto_entero";
+                        // `Mapa<texto, flotante>.nuevo()`: el valor manda.
+                        const bool de_flotante =
+                            acceso.izquierda->tipos_aplicados.size() == 2 &&
+                            acceso.izquierda->tipos_aplicados[1] == "flotante";
+                        return de_flotante ? "nooki_mapa_texto_flotante"
+                                           : "nooki_mapa_texto_entero";
                     }
                     if (acceso.izquierda &&
                         acceso.izquierda->tipo == TipoExpresion::Identificador &&
@@ -3103,6 +3275,11 @@ private:
                         tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
                         if (acceso.anotacion == "insertar") {
                             return "void";
+                        }
+                        // `obtener` de un mapa de flotantes devuelve un flotante.
+                        if (acceso.anotacion == "obtener" &&
+                            tipo_de(*acceso.izquierda).find("flotante") != std::string::npos) {
+                            return "double";
                         }
                         if (acceso.anotacion == "claves") {
                             return "nooki_vector_texto";
@@ -3516,7 +3693,24 @@ private:
             if (!nodo.izquierda) {
                 return "0";
             }
-            return "&" + expresion(*nodo.izquierda);
+            // Prestar algo que no es una variable (el resultado de una llamada)
+            // necesita un sitio donde vivir. En C, un literal compuesto de una
+            // matriz de un elemento da justo eso: memoria automática que dura lo
+            // que el bloque, y una dirección válida que pasar.
+            const bool es_sitio =
+                nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador ||
+                nodo.izquierda->tipo == sintactico::TipoExpresion::Miembro ||
+                nodo.izquierda->tipo == sintactico::TipoExpresion::Indice ||
+                nodo.izquierda->tipo == sintactico::TipoExpresion::Este;
+            if (es_sitio) {
+                return "&" + expresion(*nodo.izquierda);
+            }
+            const std::string tipo = tipo_de(*nodo.izquierda);
+            if (tipo.empty() || tipo == "void") {
+                no_soportado("prestar el resultado de una llamada sin tipo");
+                return "0";
+            }
+            return "(&((" + tipo + "[]){ " + expresion(*nodo.izquierda) + " })[0])";
         }
         if (nodo.lexema == "*") {
             if (!nodo.izquierda) {
@@ -3763,7 +3957,11 @@ private:
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
                 acceso.izquierda->lexema == "Mapa" && acceso.anotacion == "nuevo") {
-                return "nooki_mapa_texto_entero_nuevo()";
+                const bool de_flotante =
+                    acceso.izquierda->tipos_aplicados.size() == 2 &&
+                    acceso.izquierda->tipos_aplicados[1] == "flotante";
+                return de_flotante ? "nooki_mapa_texto_flotante_nuevo()"
+                                   : "nooki_mapa_texto_entero_nuevo()";
             }
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&

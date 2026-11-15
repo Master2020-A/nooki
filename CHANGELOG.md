@@ -5,6 +5,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 123 — El mapa de flotantes y prestar una llamada (2026-11-15)
+
+**`Mapa<texto, flotante>`.** Solo había mapas de enteros, así que una tabla de notas o de precios había
+que escalarla a mano. Ahora el valor puede ser `entero` o `flotante`, con el mismo juego de operaciones
+(`insertar`, `obtener`, `contiene`, `quitar`, `largo`, `claves`) y sin truncar: `notas.obtener(&ana)`
+devuelve `9,75`, no `9`.
+
+**Prestar el resultado de una llamada.** `&campos.obtener(1)` era `NOK4008` («solo se puede prestar una
+Caja»), así que había que guardar el campo en una variable antes de pasarlo. Ahora vale cualquier
+expresión: el compilador le da un sitio temporal donde vivir. Ese rodeo me lo encontré dos veces
+escribiendo el ejemplo de CSV, y era la comodidad que más estorbaba.
+
+Casos nuevos `0080-mapa-flotante` y `0081-prestamo-llamada`. **111 casos.**
+
+### Sprint 122 — Cerrar la API de IA y dos comodidades del lenguaje (2026-11-15)
+
 ### Sprint 122 — Cerrar la API de IA y dos comodidades del lenguaje (2026-11-15)
 
 **Guardar la red profunda.** `guardar_profunda` / `cargar_profunda`, con cabecera propia (`NOOKIPRF`):

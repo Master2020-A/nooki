@@ -336,13 +336,13 @@ Ver [§9](#9-módulos-y-visibilidad).
 | `largo` | `() -> entero` | cuántos hay |
 | `vaciar` | `() -> vacio` | los quita todos (libera los textos) |
 
-### `Mapa<texto, entero>`
+### `Mapa<texto, entero>` y `Mapa<texto, flotante>`
 
 | Miembro | Firma | Qué hace |
 |---|---|---|
-| `nuevo` | `Mapa<texto, entero>.nuevo() -> Mapa` | mapa vacío |
-| `insertar` | `(clave: texto, valor: entero) -> vacio` | **copia** la clave; si existía, actualiza |
-| `obtener` | `(clave: texto) -> entero` | valor, o `0` si no está |
+| `nuevo` | `Mapa<texto, T>.nuevo() -> Mapa` | mapa vacío, con valores `entero` o `flotante` |
+| `insertar` | `(clave: texto, valor: T) -> vacio` | **copia** la clave; si existía, actualiza |
+| `obtener` | `(clave: texto) -> T` | valor, o `0` si no está |
 | `contiene` | `(clave: texto) -> booleano` | |
 | `quitar` | `(clave: texto) -> entero` | `1` si estaba, `0` si no |
 | `largo` | `() -> entero` | cuántas claves |
@@ -460,6 +460,7 @@ dentro del compilador.
 | Un valor con dueño tiene un solo dueño | `NOK5004` al copiarlo |
 | Pasar por valor **mueve** | usar el original da `NOK5001` |
 | `&` presta para leer y no mueve | — |
+| Se puede prestar una variable, un campo o **el resultado de una llamada** | — |
 | `&mutable` presta para escribir | — |
 | No se mueve mientras hay un préstamo vivo | `NOK5007` |
 | Un préstamo no se guarda en una variable | `NOK5002` |

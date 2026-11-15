@@ -112,6 +112,7 @@ private:
         std::set<std::string> compuestos;
         std::set<std::string> vectores_texto;
         std::set<std::string> vectores_flotante;
+        std::set<std::string> mapas_flotante;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
@@ -206,6 +207,19 @@ private:
         if (!ambitos_.empty()) {
             ambitos_.back().vectores_texto.insert(std::string(nombre));
         }
+    }
+    void declarar_mapa_flotante(std::string_view nombre) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().mapas_flotante.insert(std::string(nombre));
+        }
+    }
+    bool es_mapa_flotante(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->mapas_flotante.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
     }
     void declarar_vector_flotante(std::string_view nombre) {
         if (!ambitos_.empty()) {
@@ -691,6 +705,24 @@ private:
                 }
                 // Un `Vector<flotante>` se recuerda para saber que su elemento es
                 // un flotante, tanto al obtener como al recorrerlo.
+                if (sentencia.tipo_declarado.find("Mapa<") != std::string_view::npos &&
+                    sentencia.tipo_declarado.find("flotante") != std::string_view::npos) {
+                    declarar_mapa_flotante(sentencia.nombre);
+                }
+                // `variable m = Mapa<texto, flotante>.nuevo()`: el tipo está en
+                // los tipos aplicados, no en una anotación.
+                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                    sentencia.expresion->izquierda &&
+                    sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                    sentencia.expresion->izquierda->izquierda &&
+                    sentencia.expresion->izquierda->izquierda->tipo ==
+                        TipoExpresion::Identificador &&
+                    sentencia.expresion->izquierda->izquierda->lexema == "Mapa" &&
+                    sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 2 &&
+                    sentencia.expresion->izquierda->izquierda->tipos_aplicados[1] ==
+                        "flotante") {
+                    declarar_mapa_flotante(sentencia.nombre);
+                }
                 if (sentencia.tipo_declarado.find("Vector<flotante>") != std::string_view::npos ||
                     (sentencia.expresion->tipo == TipoExpresion::Llamada &&
                      sentencia.expresion->izquierda &&
@@ -1226,7 +1258,11 @@ private:
                 tipo_de(*expresion.izquierda);
                 return Tipo::Texto;
             }
-            if (!caja) {
+            // El resultado de una llamada también se puede prestar: el
+            // compilador le da un sitio temporal donde vivir.
+            const bool llamada = expresion.izquierda &&
+                                 expresion.izquierda->tipo == TipoExpresion::Llamada;
+            if (!caja && !llamada) {
                 error(diagnostico::codigos::PRESTAMO_INVALIDO, expresion.span);
             }
             return Tipo::Desconocido;
@@ -1506,6 +1542,12 @@ private:
         if (acceso.anotacion == "obtener" && acceso.izquierda &&
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
             es_vector_flotante(acceso.izquierda->lexema)) {
+            return Tipo::Flotante;
+        }
+        // `Mapa<texto, flotante>.obtener(clave)` también.
+        if (acceso.anotacion == "obtener" && acceso.izquierda &&
+            acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            es_mapa_flotante(acceso.izquierda->lexema)) {
             return Tipo::Flotante;
         }
         if ((acceso.anotacion == "obtener" || acceso.anotacion == "largo") &&
