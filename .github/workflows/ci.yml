@@ -29,9 +29,11 @@ jobs:
           - nombre: Windows · MSVC 2022
             os: windows-2022
             preset: windows-msvc
+            opcional: false
           - nombre: Linux · GCC
             os: ubuntu-24.04
             preset: linux
+            opcional: false
           # Los ejecutores de macOS no están disponibles para esta cuenta: el
           # trabajo se queda en cola para siempre y deja toda la ejecución
           # «en cola». Se deja definido pero solo corre a mano, desde la pestaña
