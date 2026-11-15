@@ -7,6 +7,14 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ### Sprint 117 — Guardar también la red de clases (2026-11-14)
 
+> **Incidente, y cómo se cerró.** La herramienta de troceado de literales
+> (`herramientas/partir-literales.ps1`) **borró código del fuente**: al reescribir `runtime_ia.cpp` se
+> perdió el bloque que acababa de añadir, y con él la corrección del `exp`. Se detectó porque el binario
+> de MSVC no encontraba `nooki_ia_clases_guardar` al enlazar, y se comprobó buscando la cadena
+> `NOOKICLS` dentro del ejecutable. Se restauró el fuente desde el repositorio, se reinsertó el bloque y
+> la herramienta ahora **compara el contenido antes y después** y se niega a escribir si el troceado
+> cambiaría una sola línea.
+
 ```
 redes.guardar_clase(red, &ruta) -> booleano
 redes.cargar_clase(&ruta) -> entero
