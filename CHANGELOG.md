@@ -5,6 +5,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 122 — Cerrar la API de IA y dos comodidades del lenguaje (2026-11-15)
+
+**Guardar la red profunda.** `guardar_profunda` / `cargar_profunda`, con cabecera propia (`NOOKIPRF`):
+pesos de las dos capas, sesgos, muestras y etiquetas. Cargar el archivo de otra red devuelve `0`. Las
+tres redes tienen ya su archivo y no se confunden entre ellas (`NOOKIRED`, `NOOKICLS`, `NOOKIPRF`).
+
+**Medir con datos que no vio.** `evaluar_profunda(red, &p, cual)` dice si acierta una muestra concreta,
+que es lo que hace falta para separar entrenamiento de prueba. En el ejemplo: entrena con 63 muestras y
+acierta **18 de 18** en las 18 que no usó.
+
+**`sino si`.** Encadenar condiciones ya no obliga a anidar bloques; es azúcar sobre el `sino`.
+
+Casos nuevos `0077-red-profunda-guardar`, `0078-sino-si` y `0079-particion`. **109 casos.**
+
+Queda pendiente de la lista: `Mapa<texto, flotante>` (sólo hay mapas de enteros) y poder prestar el
+resultado de una llamada (`&lista.obtener(0)`), que hoy obliga a guardarlo antes en una variable.
+
+### Sprint 121 — Publicado, y entrenar por lotes (2026-11-14)
+
 ### Sprint 121 — Publicado, y entrenar por lotes (2026-11-14)
 
 **El proyecto está en GitHub**: <https://github.com/Master2020-A/nooki>, público, 130 commits. La primera

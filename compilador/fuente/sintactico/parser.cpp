@@ -980,7 +980,12 @@ Sentencia Parser::analizar_rama_si(Sentencia sentencia) {
         sentencia.sino.push_back(analizar_rama_si(std::move(rama)));
     } else if (actual().lexema == "sino") {
         avanzar();
-        sentencia.sino = analizar_bloque();
+        // `sino si (...) { ... }` es azúcar: el `sino` lleva dentro otro `si`.
+        if (actual().lexema == "si") {
+            sentencia.sino.push_back(analizar_si());
+        } else {
+            sentencia.sino = analizar_bloque();
+        }
     }
 
     return sentencia;

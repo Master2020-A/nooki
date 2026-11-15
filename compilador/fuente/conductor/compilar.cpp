@@ -233,6 +233,10 @@ externo funcion nooki_ia_profunda_confianza(red: entero, x: &Vector<flotante>) -
 externo funcion nooki_ia_profunda_aciertos(red: entero) -> entero
 externo funcion nooki_ia_profunda_total(red: entero) -> entero
 externo funcion nooki_ia_profunda_liberar(red: entero) -> vacio
+externo funcion nooki_ia_profunda_evaluar(red: entero, x: &Vector<flotante>,
+                                          cual: entero) -> entero
+externo funcion nooki_ia_profunda_guardar(red: entero, ruta: &texto) -> entero
+externo funcion nooki_ia_profunda_cargar(ruta: &texto) -> entero
 externo funcion nooki_ia_profunda_entrenar_lote(red: entero, vueltas: entero, tasa: flotante,
                                                  lote: entero, momento: flotante) -> vacio
 
@@ -372,6 +376,21 @@ publico funcion liberar_profunda(red: entero) -> vacio {
 publico funcion entrenar_profunda_lote(red: entero, vueltas: entero, tasa: flotante,
                                        lote: entero, momento: flotante) -> vacio {
     nooki_ia_profunda_entrenar_lote(red, vueltas, tasa, lote, momento)
+}
+
+// ¿Acierta esta muestra? Para medir con datos que no se usaron al entrenar.
+publico funcion evaluar_profunda(red: entero, x: &Vector<flotante>, cual: entero) -> booleano {
+    retornar nooki_ia_profunda_evaluar(red, x, cual) != 0
+}
+
+// Guarda la red profunda, con sus pesos y sus muestras.
+publico funcion guardar_profunda(red: entero, ruta: &texto) -> booleano {
+    retornar nooki_ia_profunda_guardar(red, ruta) != 0
+}
+
+// Carga una red profunda guardada. Devuelve 0 si el archivo no sirve.
+publico funcion cargar_profunda(ruta: &texto) -> entero {
+    retornar nooki_ia_profunda_cargar(ruta)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.

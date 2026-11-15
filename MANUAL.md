@@ -519,12 +519,10 @@ funcion principal() -> entero {
     // Encadenar es tan simple como anidar
     si (edad < 13) {
         imprimir("niño")
+    } sino si (edad < 18) {
+        imprimir("adolescente")
     } sino {
-        si (edad < 18) {
-            imprimir("adolescente")
-        } sino {
-            imprimir("adulto")
-        }
+        imprimir("adulto")
     }
     retornar 0
 }

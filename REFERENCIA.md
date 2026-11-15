@@ -183,7 +183,7 @@ Cada sentencia ocupa su línea. No hay `;` al final.
 |---|---|
 | Declaración | `variable nombre: tipo = expresion` · `constante nombre: tipo = expresion` (el tipo y el valor se pueden omitir, no los dos) |
 | Asignación | `destino = expresion` · `destino += expresion` (y `-=` `*=` `/=` `%=` `&=` `\|=` `^=` `<<=` `>>=`) |
-| Condicional | `si (condicion) { ... } sino { ... }` — el `sino` es opcional; no hay `sino si` |
+| Condicional | `si (condicion) { ... } sino { ... }` — el `sino` es opcional, y `sino si (condicion) { ... }` encadena sin anidar |
 | Bucle mientras | `mientras (condicion) { ... }` |
 | Bucle hacer | `hacer { ... } mientras (condicion)` |
 | Bucle para | `para (nombre en inicio..fin) { ... }` · `para (nombre en inicio..=fin)` · `para (nombre en coleccion)` |

@@ -1,0 +1,71 @@
+// Guardar y cargar la red de dos capas: vuelven los pesos y las muestras.
+usar redes
+
+funcion punto(x: flotante, y: flotante) -> Vector<flotante> {
+    variable v = Vector<flotante>.nuevo()
+    v.agregar(x)
+    v.agregar(y)
+    retornar v
+}
+
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (y < x - 0.3) {
+        retornar 0
+    }
+    si (y > x + 0.3) {
+        retornar 1
+    }
+    retornar 2
+}
+
+funcion principal() -> entero {
+    variable red = redes.nueva_profunda(2, 12, 3)
+
+    variable i = 0
+    mientras (i < 9) {
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+            variable p = punto(x, y)
+            redes.ejemplo_profunda(red, &p, clase_de(x, y))
+            j = j + 1
+        }
+        i = i + 1
+    }
+    redes.entrenar_profunda(red, 10000, 0.3)
+
+    variable archivo = "profunda.modelo" + ""
+    si (!redes.guardar_profunda(red, &archivo)) {
+        imprimir("no se pudo guardar")
+        retornar 1
+    }
+
+    variable copia = redes.cargar_profunda(&archivo)
+    si (copia == 0) {
+        imprimir("no se pudo cargar")
+        retornar 1
+    }
+
+    // Vuelven las muestras y los aciertos.
+    imprimir(redes.total_profunda(copia))
+    imprimir(redes.aciertos_profunda(copia))
+
+    // Y predice lo mismo que la original.
+    variable centro = punto(0.0, 0.0)
+    variable antes = redes.predecir_profunda(red, &centro)
+    variable despues = redes.predecir_profunda(copia, &centro)
+    si (antes == despues) {
+        imprimir("igual")
+    }
+
+    // Un archivo de otra red no vale aquí.
+    variable otro = "no_existe.modelo" + ""
+    si (redes.cargar_profunda(&otro) == 0) {
+        imprimir("archivo ajeno rechazado")
+    }
+
+    redes.liberar_profunda(copia)
+    redes.liberar_profunda(red)
+    retornar 0
+}

@@ -2356,6 +2356,19 @@ long long nooki_ia_profunda_aciertos(long long manejador) {
     return bien;
 }
 
+/* ¿Acierta esta muestra? Sirve para medir con datos que no se usaron al
+ * entrenar: se guarda una parte del conjunto y se comprueba aquí. */
+int nooki_ia_profunda_evaluar(long long manejador, const nooki_ia_vector_flotante* x,
+                             long long cual) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || x == NULL || x->datos == NULL ||
+        x->largo != (long long)red->entradas) {
+        return 0;
+    }
+    const int adivinada = nooki_profunda_clase(red, x->datos, NULL);
+    return adivinada == (int)cual ? 1 : 0;
+}
+
 void nooki_ia_profunda_liberar(long long manejador) {
     nooki_red_profunda* red = nooki_profunda_de(manejador);
     if (red == NULL) {
@@ -2535,6 +2548,126 @@ void nooki_ia_profunda_entrenar_lote(long long manejador, long long vueltas, dou
     free(gw1); free(gb1); free(gw2); free(gb2); free(gw3); free(gb3);
     free(vw1); free(vb1); free(vw2); free(vb2); free(vw3); free(vb3);
     free(h1); free(h2); free(p); free(dz); free(d2); free(d1);
+}
+
+
+/* --- Guardar y cargar la red de dos capas ---
+ *
+ * Tercer formato, con su cabecera para no confundirlo con los otros dos:
+ *   "NOOKIPRF" (8 bytes) · versión, entradas, ocultas, clases y cuántas (5 int de 32)
+ *   w1, b1, w2, b2, w3, b3 · xs[cuantas*entradas] · etiquetas[cuantas] */
+
+int nooki_ia_profunda_guardar(long long manejador, const char* ruta) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || ruta == NULL) {
+        return 0;
+    }
+    FILE* flujo = fopen(ruta, "wb");
+    if (flujo == NULL) {
+        return 0;
+    }
+
+    const int e = red->entradas;
+    const int h = red->ocultas;
+    const int c = red->clases;
+    int bien = fwrite("NOOKIPRF", 1, 8, flujo) == 8;
+    const int32_t cabecera[5] = {1, e, h, c, red->cuantas};
+    bien = bien && fwrite(cabecera, sizeof(int32_t), 5, flujo) == 5;
+    bien = bien && nooki_red_escribir_dobles(flujo, red->w1, e * h);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->b1, h);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->w2, h * h);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->b2, h);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->w3, h * c);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->b3, c);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->xs, red->cuantas * e);
+    if (red->cuantas > 0) {
+        bien = bien && fwrite(red->etiquetas, sizeof(int32_t), (size_t)red->cuantas, flujo) ==
+                           (size_t)red->cuantas;
+    }
+
+    if (fclose(flujo) != 0) {
+        bien = 0;
+    }
+    return bien;
+}
+
+long long nooki_ia_profunda_cargar(const char* ruta) {
+    if (ruta == NULL) {
+        return 0;
+    }
+    FILE* flujo = fopen(ruta, "rb");
+    if (flujo == NULL) {
+        return 0;
+    }
+
+    char magia[8];
+    int32_t cabecera[5] = {0, 0, 0, 0, 0};
+    long long resultado = 0;
+    if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKIPRF", 8) == 0 &&
+        fread(cabecera, sizeof(int32_t), 5, flujo) == 5 && cabecera[0] == 1 &&
+        cabecera[1] >= 1 && cabecera[1] <= 64 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
+        cabecera[3] >= 2 && cabecera[3] <= 16 && cabecera[4] >= 0) {
+        const int e = cabecera[1];
+        const int h = cabecera[2];
+        const int c = cabecera[3];
+        const int cuantas = cabecera[4];
+
+        const long long manejador = nooki_ia_profunda_nueva(e, h, c);
+        nooki_red_profunda* red = nooki_profunda_de(manejador);
+        if (red != NULL) {
+            int bien = nooki_red_leer_dobles(flujo, red->w1, e * h) &&
+                       nooki_red_leer_dobles(flujo, red->b1, h) &&
+                       nooki_red_leer_dobles(flujo, red->w2, h * h) &&
+                       nooki_red_leer_dobles(flujo, red->b2, h) &&
+                       nooki_red_leer_dobles(flujo, red->w3, h * c) &&
+                       nooki_red_leer_dobles(flujo, red->b3, c);
+
+            if (bien && cuantas > 0) {
+                if (cuantas > red->capacidad) {
+                    double* xs = (double*)realloc(red->xs, (size_t)cuantas * (size_t)e *
+                                                               sizeof(double));
+                    int* etiquetas = (int*)realloc(red->etiquetas, (size_t)cuantas * sizeof(int));
+                    if (xs == NULL || etiquetas == NULL) {
+                        free(xs);
+                        free(etiquetas);
+                        bien = 0;
+                    } else {
+                        red->xs = xs;
+                        red->etiquetas = etiquetas;
+                        red->capacidad = cuantas;
+                    }
+                }
+                bien = bien && nooki_red_leer_dobles(flujo, red->xs, cuantas * e);
+                int32_t* leidas = (int32_t*)malloc((size_t)cuantas * sizeof(int32_t));
+                if (leidas == NULL) {
+                    bien = 0;
+                } else {
+                    bien = bien && fread(leidas, sizeof(int32_t), (size_t)cuantas, flujo) ==
+                                       (size_t)cuantas;
+                    for (int m = 0; bien && m < cuantas; ++m) {
+                        if (leidas[m] < 0 || leidas[m] >= c) {
+                            bien = 0;
+                            break;
+                        }
+                        red->etiquetas[m] = (int)leidas[m];
+                    }
+                    free(leidas);
+                }
+                if (bien) {
+                    red->cuantas = cuantas;
+                }
+            }
+
+            if (bien) {
+                resultado = manejador;
+            } else {
+                nooki_ia_profunda_liberar(manejador);
+            }
+        }
+    }
+
+    fclose(flujo);
+    return resultado;
 }
 
 )nooki";

@@ -1,0 +1,61 @@
+usar redes
+
+funcion punto(x: flotante, y: flotante) -> Vector<flotante> {
+    variable v = Vector<flotante>.nuevo()
+    v.agregar(x)
+    v.agregar(y)
+    retornar v
+}
+
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (y < x - 0.3) {
+        retornar 0
+    }
+    si (y > x + 0.3) {
+        retornar 1
+    }
+    retornar 2
+}
+
+funcion principal() -> entero {
+    variable red = redes.nueva_profunda(2, 12, 3)
+
+    // Entrena con una parte de la rejilla.
+    variable i = 0
+    mientras (i < 7) {
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+            variable p = punto(x, y)
+            redes.ejemplo_profunda(red, &p, clase_de(x, y))
+            j = j + 1
+        }
+        i = i + 1
+    }
+    redes.entrenar_profunda(red, 10000, 0.3)
+    imprimir(redes.aciertos_profunda(red))
+
+    // Y mide con las dos filas que no vio.
+    variable bien = 0
+    variable total = 0
+    i = 7
+    mientras (i < 9) {
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+            variable p = punto(x, y)
+            si (redes.evaluar_profunda(red, &p, clase_de(x, y))) {
+                bien = bien + 1
+            }
+            total = total + 1
+            j = j + 1
+        }
+        i = i + 1
+    }
+    imprimir(bien)
+    imprimir(total)
+    redes.liberar_profunda(red)
+    retornar 0
+}

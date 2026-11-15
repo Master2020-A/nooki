@@ -1,0 +1,7 @@
+niño
+adolescente
+adulto
+mayor
+cero
+uno
+otro

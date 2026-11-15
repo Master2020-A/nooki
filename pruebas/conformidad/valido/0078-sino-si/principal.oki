@@ -1,0 +1,33 @@
+// `sino si` encadena condiciones sin anidar bloques.
+funcion clasificar(edad: entero) -> texto {
+    si (edad < 13) {
+        retornar "niño"
+    } sino si (edad < 18) {
+        retornar "adolescente"
+    } sino si (edad < 65) {
+        retornar "adulto"
+    } sino {
+        retornar "mayor"
+    }
+}
+
+funcion principal() -> entero {
+    imprimir(clasificar(8))
+    imprimir(clasificar(15))
+    imprimir(clasificar(30))
+    imprimir(clasificar(70))
+
+    // Y con más de dos ramas encadenadas encima de un bucle.
+    variable i = 0
+    mientras (i < 3) {
+        si (i == 0) {
+            imprimir("cero")
+        } sino si (i == 1) {
+            imprimir("uno")
+        } sino {
+            imprimir("otro")
+        }
+        i = i + 1
+    }
+    retornar 0
+}
