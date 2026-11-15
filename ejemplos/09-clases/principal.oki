@@ -1,0 +1,94 @@
+// Clasificar en tres clases: tres bandas diagonales.
+//
+// Un punto (x, y) cae en una de tres bandas según dónde esté respecto a la
+// diagonal y = x:
+//
+//   clase 0: y < x - 0,3   (por debajo)
+//   clase 1: y > x + 0,3   (por encima)
+//   clase 2: en medio
+//
+// Una recta sola no basta: hacen falta dos fronteras. La red aprende las dos.
+//
+//   nooki ejecutar ejemplos/09-clases/principal.oki
+
+usar redes
+
+// Devuelve la clase que le toca a un punto.
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (y < x - 0.3) {
+        retornar 0
+    }
+    si (y > x + 0.3) {
+        retornar 1
+    }
+    retornar 2
+}
+
+funcion principal() -> entero {
+    // Dos entradas, doce neuronas ocultas, tres clases.
+    variable red = redes.nueva_clases(2, 12, 3)
+
+    // Una rejilla de 15x15 puntos entre -1 y 1.
+    variable i = 0
+    mientras (i < 15) {
+        variable j = 0
+        mientras (j < 15) {
+            variable x = (i como flotante - 7.0) / 7.0
+            variable y = (j como flotante - 7.0) / 7.0
+            redes.ejemplo_clase(red, x, y, 0.0, 0.0, clase_de(x, y))
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    imprimir("ejemplos: ")
+    imprimir(redes.total_clase(red))
+
+    redes.entrenar_clases(red, 4000, 0.5)
+
+    imprimir("aciertos: ")
+    imprimir(redes.aciertos_clase(red))
+    imprimir("de 225")
+
+    imprimir("")
+    imprimir("Cada casilla es la clase que predice (x = error):")
+    i = 0
+    mientras (i < 15) {
+        variable linea = "" + ""
+        variable j = 0
+        mientras (j < 15) {
+            variable x = (i como flotante - 7.0) / 7.0
+            variable y = (j como flotante - 7.0) / 7.0
+
+            variable adivinada = redes.predecir_clase(red, x, y, 0.0, 0.0)
+            variable simbolo = "x" + ""
+            si (adivinada == 0) {
+                simbolo = "-" + ""
+            }
+            si (adivinada == 1) {
+                simbolo = "+" + ""
+            }
+            si (adivinada == 2) {
+                simbolo = "o" + ""
+            }
+            si (adivinada == clase_de(x, y)) {
+                linea = linea + simbolo + " "
+            } sino {
+                linea = linea + "X" + ""
+            }
+            j = j + 1
+        }
+        imprimir(linea)
+        i = i + 1
+    }
+
+    // Las probabilidades de un punto del centro: ¿está seguro?
+    imprimir("")
+    imprimir("Probabilidades de (0, 0) en la clase 2, 0 y 1:")
+    imprimir(redes.probabilidad(red, 0.0, 0.0, 0.0, 0.0, 2))
+    imprimir(redes.probabilidad(red, 0.0, 0.0, 0.0, 0.0, 0))
+    imprimir(redes.probabilidad(red, 0.0, 0.0, 0.0, 0.0, 1))
+
+    redes.liberar_clase(red)
+    retornar 0
+}

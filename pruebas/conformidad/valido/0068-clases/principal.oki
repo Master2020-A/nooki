@@ -1,0 +1,48 @@
+// Red de tres clases: aprende dos fronteras a la vez (bandas diagonales).
+usar redes
+
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (y < x - 0.3) {
+        retornar 0
+    }
+    si (y > x + 0.3) {
+        retornar 1
+    }
+    retornar 2
+}
+
+funcion principal() -> entero {
+    variable red = redes.nueva_clases(2, 12, 3)
+
+    variable i = 0
+    mientras (i < 9) {
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+            redes.ejemplo_clase(red, x, y, 0.0, 0.0, clase_de(x, y))
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    imprimir(redes.total_clase(red))
+    redes.entrenar_clases(red, 3000, 0.5)
+    imprimir(redes.aciertos_clase(red))
+
+    // Los tres puntos extremos caen en su clase.
+    imprimir(redes.predecir_clase(red, 0.75, 0.75, 0.0, 0.0))
+    imprimir(redes.predecir_clase(red, 0.75, -0.75, 0.0, 0.0))
+    imprimir(redes.predecir_clase(red, 0.0, 0.0, 0.0, 0.0))
+
+    // La probabilidad de la clase acertada pasa de la mitad.
+    variable p = redes.probabilidad(red, 0.0, 0.0, 0.0, 0.0, 2)
+    si (p > 0.5) {
+        imprimir("segura")
+    } sino {
+        imprimir("dudosa")
+    }
+
+    redes.liberar_clase(red)
+    retornar 0
+}

@@ -118,6 +118,18 @@ externo funcion nooki_ia_red_liberar(red: entero) -> vacio
 externo funcion nooki_ia_red_guardar(red: entero, ruta: &texto) -> entero
 externo funcion nooki_ia_red_cargar(ruta: &texto) -> entero
 
+externo funcion nooki_ia_clases_nueva(entradas: entero, ocultas: entero, clases: entero) -> entero
+externo funcion nooki_ia_clases_ejemplo(red: entero, x1: flotante, x2: flotante,
+                                         x3: flotante, x4: flotante, cual: entero) -> vacio
+externo funcion nooki_ia_clases_entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio
+externo funcion nooki_ia_clases_predecir(red: entero, x1: flotante, x2: flotante,
+                                         x3: flotante, x4: flotante) -> entero
+externo funcion nooki_ia_clases_probabilidad(red: entero, x1: flotante, x2: flotante,
+                                             x3: flotante, x4: flotante, cual: entero) -> flotante
+externo funcion nooki_ia_clases_aciertos(red: entero) -> entero
+externo funcion nooki_ia_clases_total(red: entero) -> entero
+externo funcion nooki_ia_clases_liberar(red: entero) -> vacio
+
 // Crea una red con esas entradas (1 a 4) y neuronas ocultas.
 publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
     retornar nooki_ia_red_nueva(entradas, ocultas)
@@ -141,6 +153,49 @@ publico funcion guardar(red: entero, ruta: &texto) -> booleano {
 // Carga una red guardada. Devuelve 0 si el archivo no sirve.
 publico funcion cargar(ruta: &texto) -> entero {
     retornar nooki_ia_red_cargar(ruta)
+}
+
+/* --- Red de varias clases ---
+ * Igual que la anterior, pero la salida es una probabilidad por clase y se
+ * predice la más probable. Sirve para clasificar en 2 a 16 clases. */
+
+// Crea una red de esas clases. Devuelve 0 si los tamaños no valen.
+publico funcion nueva_clases(entradas: entero, ocultas: entero, clases: entero) -> entero {
+    retornar nooki_ia_clases_nueva(entradas, ocultas, clases)
+}
+
+// Añade una muestra; la clase empieza en 0.
+publico funcion ejemplo_clase(red: entero, x1: flotante, x2: flotante, x3: flotante,
+                              x4: flotante, cual: entero) -> vacio {
+    nooki_ia_clases_ejemplo(red, x1, x2, x3, x4, cual)
+}
+
+publico funcion entrenar_clases(red: entero, vueltas: entero, tasa: flotante) -> vacio {
+    nooki_ia_clases_entrenar(red, vueltas, tasa)
+}
+
+// La clase más probable para esa entrada.
+publico funcion predecir_clase(red: entero, x1: flotante, x2: flotante, x3: flotante,
+                               x4: flotante) -> entero {
+    retornar nooki_ia_clases_predecir(red, x1, x2, x3, x4)
+}
+
+// La probabilidad de una clase concreta, entre 0 y 1.
+publico funcion probabilidad(red: entero, x1: flotante, x2: flotante, x3: flotante,
+                             x4: flotante, cual: entero) -> flotante {
+    retornar nooki_ia_clases_probabilidad(red, x1, x2, x3, x4, cual)
+}
+
+publico funcion aciertos_clase(red: entero) -> entero {
+    retornar nooki_ia_clases_aciertos(red)
+}
+
+publico funcion total_clase(red: entero) -> entero {
+    retornar nooki_ia_clases_total(red)
+}
+
+publico funcion liberar_clase(red: entero) -> vacio {
+    nooki_ia_clases_liberar(red)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.

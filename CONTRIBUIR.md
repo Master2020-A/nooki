@@ -137,3 +137,16 @@ En orden de esfuerzo, y todas bien acotadas:
 Se espera respeto y crítica técnica. Los desacuerdos se resuelven con argumentos y con pruebas, no
 con autoridad: la mitad de los arreglos de este proyecto empezaron con un caso de conformidad que
 fallaba.
+
+## Si tocas el runtime de interfaz o de IA
+
+El código C que va dentro del compilador vive en literales de cadena (`R"nooki(...)nooki"`) partidos en
+trozos. **MSVC rechaza cualquier literal de más de 16 KB** con `error C2026`, así que al añadir código a
+`runtime_ui.cpp` o `runtime_ia.cpp` hay que volver a partirlos:
+
+```powershell
+.\herramientas\partir-literales.ps1 -Comprobar   # dice si alguno pasa del límite
+.\herramientas\partir-literales.ps1              # los vuelve a partir en trozos de 7 KB
+```
+
+La compilación con el preset `windows-msvc` (Visual Studio 17) lo detecta, así que la CI también.

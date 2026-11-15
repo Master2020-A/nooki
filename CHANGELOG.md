@@ -5,6 +5,34 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 116 — Clasificar en varias clases (2026-11-14)
+
+La red tenía una sola salida: sí o no. Ahora hay una **segunda red**, con una salida por clase y softmax,
+de 2 a 16 clases:
+
+```
+redes.nueva_clases(entradas, ocultas, clases)
+redes.ejemplo_clase(red, x1, x2, x3, x4, cual)
+redes.entrenar_clases(red, vueltas, tasa)
+redes.predecir_clase(red, x1, x2, x3, x4) -> entero
+redes.probabilidad(red, x1, x2, x3, x4, cual) -> flotante
+redes.aciertos_clase(red)    redes.total_clase(red)    redes.liberar_clase(red)
+```
+
+Va aparte de la binaria a propósito: sus gradientes están escritos a mano y no tocan el grafo de
+autograd, así que **XOR y el círculo siguen funcionando igual**.
+
+**Y un fallo gordo que salió al entrenarla.** La red no aprendía nada: acertaba 21 de 63. La causa era el
+`exp` del runtime, una **serie de Taylor directa** que se rompe con argumentos negativos grandes: en
+`x = −20` los términos llegan a 4·10⁷ y se cancelan entre sí, así que devolvía basura. El softmax produce
+justo esos valores en cuanto los logits se separan. Ahora `exp` usa **reducción de rango**
+(`x = k·ln2 + r`), que es exacta en todo el dominio y además arregla `tensor.softmax` y las sigmoides.
+
+Con eso: **225 de 225** aciertos en el ejemplo de las tres bandas (`ejemplos/09-clases`), que dibuja la
+frontera aprendida, y caso `0068-clases` en la suite. **99 casos.**
+
+### Sprint 115 — Guardar y cargar la red (2026-11-14)
+
 ### Sprint 115 — Guardar y cargar la red (2026-11-14)
 
 Entrenar cuesta tiempo y al cerrar el programa se perdía todo. Ahora:
