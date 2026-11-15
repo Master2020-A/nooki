@@ -129,6 +129,8 @@ externo funcion nooki_ia_clases_probabilidad(red: entero, x1: flotante, x2: flot
 externo funcion nooki_ia_clases_aciertos(red: entero) -> entero
 externo funcion nooki_ia_clases_total(red: entero) -> entero
 externo funcion nooki_ia_clases_liberar(red: entero) -> vacio
+externo funcion nooki_ia_clases_guardar(red: entero, ruta: &texto) -> entero
+externo funcion nooki_ia_clases_cargar(ruta: &texto) -> entero
 
 // Crea una red con esas entradas (1 a 4) y neuronas ocultas.
 publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
@@ -196,6 +198,16 @@ publico funcion total_clase(red: entero) -> entero {
 
 publico funcion liberar_clase(red: entero) -> vacio {
     nooki_ia_clases_liberar(red)
+}
+
+// Guarda la red de clases, con sus pesos y sus muestras, en un archivo.
+publico funcion guardar_clase(red: entero, ruta: &texto) -> booleano {
+    retornar nooki_ia_clases_guardar(red, ruta) != 0
+}
+
+// Carga una red de clases guardada. Devuelve 0 si el archivo no sirve.
+publico funcion cargar_clase(ruta: &texto) -> entero {
+    retornar nooki_ia_clases_cargar(ruta)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.

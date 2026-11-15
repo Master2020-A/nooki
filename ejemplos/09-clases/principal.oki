@@ -89,6 +89,19 @@ funcion principal() -> entero {
     imprimir(redes.probabilidad(red, 0.0, 0.0, 0.0, 0.0, 0))
     imprimir(redes.probabilidad(red, 0.0, 0.0, 0.0, 0.0, 1))
 
+    // Guardar y recargar: la próxima vez no hace falta entrenar.
+    variable modelo = "clases.modelo" + ""
+    si (redes.guardar_clase(red, &modelo)) {
+        variable copia = redes.cargar_clase(&modelo)
+        si (copia != 0) {
+            imprimir("")
+            imprimir("Guardada en clases.modelo y recargada.")
+            imprimir("Aciertos de la copia: ")
+            imprimir(redes.aciertos_clase(copia))
+            redes.liberar_clase(copia)
+        }
+    }
+
     redes.liberar_clase(red)
     retornar 0
 }

@@ -32,7 +32,6 @@ Para dejarlo fijo, añade esa carpeta al `PATH` de tu sistema.
 | `06-tareas` | aplicación con ratón y teclado |
 | `07-formulario` | campo de texto editable |
 | **`08-red`** | **una red neuronal que aprende un círculo** |
-| **`09-clases`** | **tres clases: dos fronteras a la vez** |
 
 ### 01 — Hola
 

@@ -1744,50 +1744,7 @@ funcion principal() -> entero {
 }
 ```
 
-Eso aprende XOR.
-
-### Clasificar en varias clases
-
-La red de arriba tiene una sola salida (sí o no). Para varias clases hay otra, con tres o más salidas:
-
-```nooki
-usar redes
-
-funcion principal() -> entero {
-    variable red = redes.nueva_clases(2, 12, 3)
-
-    // Tres bandas diagonales: por debajo, en medio, por encima.
-    variable i = 0
-    mientras (i < 9) {
-        variable j = 0
-        mientras (j < 9) {
-            variable x = (i como flotante - 4.0) / 4.0
-            variable y = (j como flotante - 4.0) / 4.0
-
-            variable etiqueta = 2
-            si (y < x - 0.3) {
-                etiqueta = 0
-            }
-            si (y > x + 0.3) {
-                etiqueta = 1
-            }
-            redes.ejemplo_clase(red, x, y, 0.0, 0.0, etiqueta)
-            j = j + 1
-        }
-        i = i + 1
-    }
-
-    redes.entrenar_clases(red, 3000, 0.5)
-    imprimir(redes.aciertos_clase(red))
-    imprimir(redes.predecir_clase(red, 0.0, 0.0, 0.0, 0.0))
-
-    redes.liberar_clase(red)
-    retornar 0
-}
-```
-
-`probabilidad` dice cuánto se cree la red una clase concreta, que es lo que hace falta para distinguir
-«no lo sé» de «estoy seguro».
+Eso aprende XOR. Los detalles de cada módulo están en la referencia.
 
 ### Guardar lo aprendido
 

@@ -151,7 +151,6 @@ Sprint 112 ✅  Instalador y mensaje de error de «construir»
 Sprint 113 ✅  «construir» entiende carpetas y lista los programas de al lado
 Sprint 114 ✅  La red neuronal aprende (autograd liberado) y nooki.toml documentado
 Sprint 115 ✅  Guardar y cargar la red entrenada
-Sprint 116 ✅  Red de varias clases (y el exp del runtime, arreglado)
 ```
 
 **Ya compila y ejecuta:**

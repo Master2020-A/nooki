@@ -1,4 +1,4 @@
-﻿#include "nooki/ia/runtime_ia.hpp"
+#include "nooki/ia/runtime_ia.hpp"
 
 namespace nooki::ia {
 
@@ -1831,6 +1831,118 @@ long long nooki_ia_tensor_iguales(long long a_manejador, long long b_manejador) 
     return 1;
 }
 
+
+/* --- Guardar y cargar la red de clases ---
+ *
+ * Formato propio, con su cabecera, para no confundirla con la binaria:
+ *   "NOOKICLS" (8 bytes) · versión, entradas, ocultas, clases y cuántas (5 int de 32)
+ *   w1[entradas*ocultas] · b1[ocultas] · w2[ocultas*clases] · b2[clases]
+ *   xs[cuantas*4] · etiquetas[cuantas] (int de 32 bits) */
+
+int nooki_ia_clases_guardar(long long manejador, const char* ruta) {
+    nooki_red_clases* red = nooki_clases_de(manejador);
+    if (red == NULL || ruta == NULL) {
+        return 0;
+    }
+    FILE* flujo = fopen(ruta, "wb");
+    if (flujo == NULL) {
+        return 0;
+    }
+
+    int bien = fwrite("NOOKICLS", 1, 8, flujo) == 8;
+    const int32_t cabecera[5] = {1, red->entradas, red->ocultas, red->clases, red->cuantas};
+    bien = bien && fwrite(cabecera, sizeof(int32_t), 5, flujo) == 5;
+    bien = bien && nooki_red_escribir_dobles(flujo, red->w1, red->entradas * red->ocultas);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->b1, red->ocultas);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->w2, red->ocultas * red->clases);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->b2, red->clases);
+    bien = bien && nooki_red_escribir_dobles(flujo, red->xs, red->cuantas * 4);
+    if (red->cuantas > 0) {
+        bien = bien && fwrite(red->etiquetas, sizeof(int32_t), (size_t)red->cuantas, flujo) ==
+                           (size_t)red->cuantas;
+    }
+
+    if (fclose(flujo) != 0) {
+        bien = 0;
+    }
+    return bien;
+}
+
+long long nooki_ia_clases_cargar(const char* ruta) {
+    if (ruta == NULL) {
+        return 0;
+    }
+    FILE* flujo = fopen(ruta, "rb");
+    if (flujo == NULL) {
+        return 0;
+    }
+
+    char magia[8];
+    int32_t cabecera[5] = {0, 0, 0, 0, 0};
+    long long resultado = 0;
+    if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKICLS", 8) == 0 &&
+        fread(cabecera, sizeof(int32_t), 5, flujo) == 5 && cabecera[0] == 1 &&
+        cabecera[1] >= 1 && cabecera[1] <= 4 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
+        cabecera[3] >= 2 && cabecera[3] <= 16 && cabecera[4] >= 0) {
+        const int entradas = cabecera[1];
+        const int ocultas = cabecera[2];
+        const int clases = cabecera[3];
+        const int cuantas = cabecera[4];
+
+        const long long manejador = nooki_ia_clases_nueva(entradas, ocultas, clases);
+        nooki_red_clases* red = nooki_clases_de(manejador);
+        if (red != NULL) {
+            int bien = nooki_red_leer_dobles(flujo, red->w1, entradas * ocultas) &&
+                       nooki_red_leer_dobles(flujo, red->b1, ocultas) &&
+                       nooki_red_leer_dobles(flujo, red->w2, ocultas * clases) &&
+                       nooki_red_leer_dobles(flujo, red->b2, clases);
+
+            if (bien && cuantas > 0) {
+                if (cuantas > red->capacidad) {
+                    double* xs = (double*)realloc(red->xs, (size_t)cuantas * 4 * sizeof(double));
+                    int* etiquetas = (int*)realloc(red->etiquetas, (size_t)cuantas * sizeof(int));
+                    if (xs == NULL || etiquetas == NULL) {
+                        free(xs);
+                        free(etiquetas);
+                        bien = 0;
+                    } else {
+                        red->xs = xs;
+                        red->etiquetas = etiquetas;
+                        red->capacidad = cuantas;
+                    }
+                }
+                bien = bien && nooki_red_leer_dobles(flujo, red->xs, cuantas * 4);
+                int32_t* leidas = (int32_t*)malloc((size_t)cuantas * sizeof(int32_t));
+                if (leidas == NULL) {
+                    bien = 0;
+                } else {
+                    bien = bien && fread(leidas, sizeof(int32_t), (size_t)cuantas, flujo) ==
+                                       (size_t)cuantas;
+                    for (int m = 0; bien && m < cuantas; ++m) {
+                        if (leidas[m] < 0 || leidas[m] >= clases) {
+                            bien = 0;
+                            break;
+                        }
+                        red->etiquetas[m] = (int)leidas[m];
+                    }
+                    free(leidas);
+                }
+                if (bien) {
+                    red->cuantas = cuantas;
+                }
+            }
+
+            if (bien) {
+                resultado = manejador;
+            } else {
+                nooki_ia_clases_liberar(manejador);
+            }
+        }
+    }
+
+    fclose(flujo);
+    return resultado;
+}
 
 )nooki";
 }

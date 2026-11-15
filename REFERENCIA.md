@@ -360,22 +360,6 @@ Ver [§9](#9-módulos-y-visibilidad).
 El archivo de `guardar` es binario y lleva una cabecera `NOOKIRED`: una versión, la forma de la red,
 los pesos, los sesgos y las muestras. Cargar un archivo que no es de Nooki devuelve `0`.
 
-**Varias clases.** Una segunda red, con una salida por clase (softmax) y hasta 16 clases:
-
-| Miembro | Firma | Qué hace |
-|---|---|---|
-| `nueva_clases` | `(entradas: entero, ocultas: entero, clases: entero) -> entero` | red de 2 a 16 clases |
-| `ejemplo_clase` | `(red, x1, x2, x3, x4: flotante, cual: entero) -> vacio` | añade una muestra con su clase (desde 0) |
-| `entrenar_clases` | `(red, vueltas: entero, tasa: flotante) -> vacio` | entropía cruzada con softmax |
-| `predecir_clase` | `(red, x1..x4: flotante) -> entero` | la clase más probable, o `-1` si la red no vale |
-| `probabilidad` | `(red, x1..x4: flotante, cual: entero) -> flotante` | probabilidad de esa clase, entre 0 y 1 |
-| `aciertos_clase` | `(red: entero) -> entero` | cuántas muestras acierta |
-| `total_clase` | `(red: entero) -> entero` | cuántas muestras tiene |
-| `liberar_clase` | `(red: entero) -> vacio` | libera la memoria |
-
-Las dos redes son independientes: `liberar` para la binaria, `liberar_clase` para la de clases, y cada
-una rechaza el identificador de la otra. La de clases **no** se guarda todavía en archivo.
-
 ### `Caja<T>`
 
 | Miembro | Firma | Qué hace |
