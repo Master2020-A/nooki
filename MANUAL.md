@@ -1618,6 +1618,34 @@ funcion principal() -> entero {
 }
 ```
 
+### Leer datos de un archivo CSV
+
+```nooki
+usar csv
+
+funcion principal() -> entero {
+    variable ruta = "notas.csv" + ""
+
+    variable filas = csv.filas(&ruta)
+    variable punto_coma = ";" + ""
+
+    variable i = 1
+    mientras (i < filas.largo()) {
+        variable fila = filas.obtener(i)
+        variable campos = csv.campos_con(&fila, &punto_coma)
+        variable nombre = campos.obtener(0)
+        variable nota = campos.obtener(2)
+        imprimir(nombre)
+        imprimir(csv.a_numero(&nota))
+        i = i + 1
+    }
+    retornar 0
+}
+```
+
+`csv.campos` separa por comas; `csv.campos_con` admite otro separador, que es lo que hace falta cuando los
+números llevan coma decimal y el archivo usa `;`. La primera fila suele ser la cabecera: empieza en 1.
+
 ### Interfaz gráfica
 
 | Módulo | Contenido |
@@ -1745,6 +1773,31 @@ funcion principal() -> entero {
 ```
 
 Eso aprende XOR. Los detalles de cada módulo están en la referencia.
+
+### Dos capas ocultas
+
+Cuando una capa no basta —problemas que necesitan combinar rasgos en dos niveles— hay otra red, con dos:
+
+```nooki
+usar redes
+
+funcion principal() -> entero {
+    variable red = redes.nueva_profunda(2, 12, 3)
+
+    variable datos = Vector<flotante>.nuevo()
+    datos.agregar(0.5)
+    datos.agregar(0.5)
+    redes.ejemplo_profunda(red, &datos, 2)
+
+    redes.entrenar_profunda(red, 10000, 0.3)
+    imprimir(redes.predecir_profunda(red, &datos))
+    redes.liberar_profunda(red)
+    retornar 0
+}
+```
+
+La tasa de aprendizaje importa más que en la de una capa: con `1.0` se queda atascada en la clase
+mayoritaria y con `0.3` aprende.
 
 ### Guardar lo aprendido
 

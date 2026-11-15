@@ -137,6 +137,17 @@ externo funcion nooki_ia_clases_predecir_datos(red: entero, x: &Vector<flotante>
 externo funcion nooki_ia_clases_probabilidad_datos(red: entero, x: &Vector<flotante>,
                                                     cual: entero) -> flotante
 
+externo funcion nooki_ia_profunda_nueva(entradas: entero, ocultas: entero,
+                                        clases: entero) -> entero
+externo funcion nooki_ia_profunda_ejemplo(red: entero, x: &Vector<flotante>,
+                                          cual: entero) -> entero
+externo funcion nooki_ia_profunda_entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio
+externo funcion nooki_ia_profunda_predecir(red: entero, x: &Vector<flotante>) -> entero
+externo funcion nooki_ia_profunda_confianza(red: entero, x: &Vector<flotante>) -> flotante
+externo funcion nooki_ia_profunda_aciertos(red: entero) -> entero
+externo funcion nooki_ia_profunda_total(red: entero) -> entero
+externo funcion nooki_ia_profunda_liberar(red: entero) -> vacio
+
 // Crea una red con esas entradas (1 a 4) y neuronas ocultas.
 publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
     retornar nooki_ia_red_nueva(entradas, ocultas)
@@ -230,6 +241,42 @@ publico funcion predecir_datos(red: entero, x: &Vector<flotante>) -> entero {
 
 publico funcion probabilidad_datos(red: entero, x: &Vector<flotante>, cual: entero) -> flotante {
     retornar nooki_ia_clases_probabilidad_datos(red, x, cual)
+}
+
+/* --- Red de dos capas ocultas ---
+ * Para problemas que no se resuelven con una sola: la primera capa combina las
+ * entradas y la segunda combina lo que sacó la primera. */
+
+publico funcion nueva_profunda(entradas: entero, ocultas: entero, clases: entero) -> entero {
+    retornar nooki_ia_profunda_nueva(entradas, ocultas, clases)
+}
+
+publico funcion ejemplo_profunda(red: entero, x: &Vector<flotante>, cual: entero) -> booleano {
+    retornar nooki_ia_profunda_ejemplo(red, x, cual) != 0
+}
+
+publico funcion entrenar_profunda(red: entero, vueltas: entero, tasa: flotante) -> vacio {
+    nooki_ia_profunda_entrenar(red, vueltas, tasa)
+}
+
+publico funcion predecir_profunda(red: entero, x: &Vector<flotante>) -> entero {
+    retornar nooki_ia_profunda_predecir(red, x)
+}
+
+publico funcion confianza_profunda(red: entero, x: &Vector<flotante>) -> flotante {
+    retornar nooki_ia_profunda_confianza(red, x)
+}
+
+publico funcion aciertos_profunda(red: entero) -> entero {
+    retornar nooki_ia_profunda_aciertos(red)
+}
+
+publico funcion total_profunda(red: entero) -> entero {
+    retornar nooki_ia_profunda_total(red)
+}
+
+publico funcion liberar_profunda(red: entero) -> vacio {
+    nooki_ia_profunda_liberar(red)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.
@@ -1154,6 +1201,77 @@ publico funcion presentar(manejador: entero) -> vacio {
 
 publico funcion color_en(manejador: entero, x: entero, y: entero) -> entero {
     retornar nooki_ui_dibujo_color_en(manejador, x, y)
+}
+)";
+    }
+    if (modulo == "csv") {
+        return R"(// Biblioteca estándar: leer archivos CSV, una fila por línea.
+usar archivo
+
+// Las filas del archivo, sin las líneas vacías. Si no se puede leer, ninguna.
+publico funcion filas(ruta: &texto) -> Vector<texto> {
+    variable salida = Vector<texto>.nuevo()
+
+    variable leido = archivo.leer(ruta)
+    coincide (leido) {
+        caso Mal(motivo) => {
+            retornar salida
+        }
+        caso Bien(contenido) => {
+            variable salto = "\n" + ""
+            variable lineas = contenido.dividir(&salto)
+            variable i = 0
+            mientras (i < lineas.largo()) {
+                variable linea = lineas.obtener(i)
+                variable limpia = linea.recortar()
+                si (limpia.largo() > 0) {
+                    salida.agregar(limpia)
+                }
+                i = i + 1
+            }
+            retornar salida
+        }
+    }
+}
+
+// Los campos de una fila, separados por comas.
+publico funcion campos(linea: &texto) -> Vector<texto> {
+    variable coma = "," + ""
+    retornar campos_con(linea, &coma)
+}
+
+// Los campos de una fila, con el separador que se quiera. Con punto y coma
+// caben números con coma decimal: `7,5`.
+publico funcion campos_con(linea: &texto, separador: &texto) -> Vector<texto> {
+    variable partes = (*linea).dividir(separador)
+    variable salida = Vector<texto>.nuevo()
+    variable i = 0
+    mientras (i < partes.largo()) {
+        salida.agregar(partes.obtener(i).recortar())
+        i = i + 1
+    }
+    retornar salida
+}
+
+// El campo como número. Un campo que no es número vale 0.
+publico funcion a_numero(campo: &texto) -> flotante {
+    retornar (*campo).a_flotante()
+}
+
+// El campo como entero.
+publico funcion a_entero(campo: &texto) -> entero {
+    retornar (*campo).a_entero()
+}
+
+// Cuántas columnas tiene la primera fila.
+publico funcion columnas(ruta: &texto) -> entero {
+    variable todas = filas(ruta)
+    si (todas.largo() == 0) {
+        retornar 0
+    }
+    variable primera = todas.obtener(0)
+    variable partes = campos(&primera)
+    retornar partes.largo()
 }
 )";
     }

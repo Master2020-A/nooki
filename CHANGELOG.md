@@ -5,6 +5,31 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 120 — Leer CSV y red de dos capas (2026-11-14)
+
+**Leer datos de verdad.** Faltaba lo más básico para usar el lenguaje con datos: convertir texto en
+números y leer un archivo separado por comas.
+
+- **`texto.a_flotante()`**: convierte un número escrito, con punto **o coma** decimal; si no hay dígitos,
+  `0`. Con eso `"7,5".a_flotante()` es `7,5` y ya se puede sumar.
+- **Módulo `csv`**, escrito en Nooki: `filas`, `campos`, `campos_con`, `columnas`, `a_numero`, `a_entero`.
+  `campos_con` existe por un motivo que salió al probarlo: con comas como separador **y** comas
+  decimales, las columnas se rompen; con `;` caben las dos cosas.
+
+Y un arreglo que salió de ahí: pasar un parámetro `&texto` a un método de texto (`dividir(separador)`)
+generaba C inválido; ahora se desreferencia solo.
+
+**Red de dos capas ocultas.** `nueva_profunda`, `ejemplo_profunda`, `entrenar_profunda`,
+`predecir_profunda`, `confianza_profunda`, `aciertos_profunda`, `liberar_profunda`. Va en su propia
+estructura para no tocar la de una capa, y aprende las tres bandas diagonales al completo (**81 de 81**).
+
+Lo que **no** consigue, y queda dicho: la **paridad de 4 bits** se queda en 8 de 16 —la clase
+mayoritaria— con cualquier configuración probada. El descenso de gradiente plano no basta para eso.
+
+Casos nuevos `0072-csv` y `0073-red-profunda`. **103 casos.**
+
+### Sprint 119 — Las guías, comprobadas y dentro del paquete (2026-11-14)
+
 ### Sprint 119 — Las guías, comprobadas y dentro del paquete (2026-11-14)
 
 Las cuatro guías por audiencia (usuario, administrador, desarrollador y referencia del lenguaje) entran

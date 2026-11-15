@@ -85,10 +85,11 @@ foreach ($archivo in $Ruta) {
     }
     if ($Comprobar) { continue }
 
+    # El contenido ya trae sus saltos: no se añaden aquí, o el literal cambiaría.
     $nuevo = New-Object System.Text.StringBuilder
-    [void]$nuevo.Append($INICIO).Append("`n")
+    [void]$nuevo.Append($INICIO)
     for ($i = 0; $i -lt $trozos.Count; $i++) {
-        if ($i -gt 0) { [void]$nuevo.Append($SEPARADOR).Append("`n") }
+        if ($i -gt 0) { [void]$nuevo.Append($SEPARADOR) }
         [void]$nuevo.Append($trozos[$i])
     }
     [void]$nuevo.Append($FIN)
@@ -100,7 +101,10 @@ foreach ($archivo in $Ruta) {
     # troceado se comiera una línea, esto lo detecta y no se toca el archivo.
     $comprobacion = $resultado.Substring($desde + $INICIO.Length)
     $comprobacion = $comprobacion.Substring(0, $comprobacion.IndexOf($FIN))
-    if ($comprobacion.Replace($SEPARADOR, "") -ne $cuerpo) {
+    # El salto de línea final no cambia el contenido del literal.
+    $izquierda = $comprobacion.Replace($SEPARADOR, "").TrimEnd("`n")
+    $derecha = $cuerpo.TrimEnd("`n")
+    if ($izquierda -ne $derecha) {
         Write-Host "  FALLO: el troceado cambiaría el contenido; no se escribe nada"
         $fallos++
         continue

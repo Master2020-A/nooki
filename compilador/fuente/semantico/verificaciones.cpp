@@ -744,6 +744,15 @@ private:
                                     devuelto.rfind("Caja<", 0) == 0) {
                                     declarar_prestable(sentencia.nombre);
                                 }
+                                // Y se recuerda de qué es el vector, para que
+                                // `obtener` devuelva el tipo correcto.
+                                if (devuelto.find("Vector<texto>") != std::string_view::npos) {
+                                    declarar_vector_texto(sentencia.nombre);
+                                }
+                                if (devuelto.find("Vector<flotante>") !=
+                                    std::string_view::npos) {
+                                    declarar_vector_flotante(sentencia.nombre);
+                                }
                             }
                         }
                     }
@@ -1206,10 +1215,13 @@ private:
             // Un campo es un sitio válido: `&objeto.campo` presta el campo.
             const bool campo = expresion.izquierda &&
                                expresion.izquierda->tipo == TipoExpresion::Miembro;
+            // Se puede prestar una caja, una colección o un texto.
             const bool caja = expresion.izquierda &&
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
                               (es_caja(expresion.izquierda->lexema) ||
-                               es_prestable(expresion.izquierda->lexema));
+                               es_prestable(expresion.izquierda->lexema) ||
+                               es_texto(expresion.izquierda->lexema) ||
+                               tipo_de(*expresion.izquierda) == Tipo::Texto);
             if (campo) {
                 tipo_de(*expresion.izquierda);
                 return Tipo::Texto;
@@ -1482,6 +1494,13 @@ private:
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
             es_vector_texto(acceso.izquierda->lexema)) {
             return Tipo::Texto;
+        }
+        // `texto.a_flotante()` devuelve un flotante.
+        if (acceso.anotacion == "a_flotante" && acceso.izquierda &&
+            acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            (es_texto(acceso.izquierda->lexema) ||
+             tipo_de(*acceso.izquierda) == Tipo::Texto)) {
+            return Tipo::Flotante;
         }
         // `Vector<flotante>.obtener(i)` devuelve un flotante.
         if (acceso.anotacion == "obtener" && acceso.izquierda &&

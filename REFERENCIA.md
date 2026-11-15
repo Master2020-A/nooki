@@ -317,6 +317,7 @@ Ver [§9](#9-módulos-y-visibilidad).
 | `dividir` | `(&separador: texto) -> Vector<texto>` | |
 | `caracter` | `(i: entero) -> entero` | byte en esa posición, o `-1` |
 | `a_entero` | `() -> entero` | convierte un número escrito |
+| `a_flotante` | `() -> flotante` | convierte un número escrito, con punto o coma decimal; si no hay dígitos, `0` |
 | `agregar_codigo` | `(codigo: entero) -> texto` | añade un carácter UTF-8 |
 | `sin_ultimo` | `() -> texto` | quita el último carácter |
 

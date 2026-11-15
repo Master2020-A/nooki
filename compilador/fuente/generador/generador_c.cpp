@@ -408,6 +408,36 @@ const char* PRELUDIO =
     "    return signo * valor;\n"
     "}\n"
     "\n"
+    "/* Convierte un texto a flotante: signo, digitos, punto decimal y nada mas.\n"
+    " * Si no hay ningun digito devuelve 0. Acepta la coma como separador. */\n"
+    "static double nooki_texto_a_flotante(nooki_texto t) {\n"
+    "    double valor = 0.0;\n"
+    "    double signo = 1.0;\n"
+    "    long long i = 0;\n"
+    "    int decimales = 0;\n"
+    "    double escala = 1.0;\n"
+    "    if (t.largo > 0 && (t.datos[0] == '-' || t.datos[0] == '+')) {\n"
+    "        if (t.datos[0] == '-') {\n"
+    "            signo = -1.0;\n"
+    "        }\n"
+    "        i = 1;\n"
+    "    }\n"
+    "    for (; i < t.largo; ++i) {\n"
+    "        const char d = t.datos[i];\n"
+    "        if (d >= '0' && d <= '9') {\n"
+    "            valor = valor * 10.0 + (double)(d - '0');\n"
+    "            if (decimales > 0) {\n"
+    "                escala *= 10.0;\n"
+    "            }\n"
+    "        } else if ((d == '.' || d == ',') && decimales == 0) {\n"
+    "            decimales = 1;\n"
+    "        } else {\n"
+    "            break;\n"
+    "        }\n"
+    "    }\n"
+    "    return signo * valor / escala;\n"
+    "}\n"
+    "\n"
     "static void nooki_texto_soltar(nooki_texto* t) {\n"
     "    if (t->propio && t->datos != NULL) {\n"
     "        free(t->datos);\n"
@@ -2908,6 +2938,9 @@ private:
                         if (metodo == "contiene" || metodo == "empieza_con") {
                             return "int";
                         }
+                        if (metodo == "a_flotante") {
+                            return "double";
+                        }
                         return "long long";
                     }
                     if (acceso.izquierda &&
@@ -3629,7 +3662,7 @@ private:
                                  : expresion(*acceso.izquierda);
                     static const std::set<std::string> METODOS_TEXTO = {
                         "largo", "subtexto", "caracter", "buscar", "contiene",
-                        "empieza_con", "a_entero", "dividir", "mayusculas",
+                        "empieza_con", "a_entero", "a_flotante", "dividir", "mayusculas",
                         "minusculas", "recortar", "agregar_codigo", "sin_ultimo"};
                     if (METODOS_TEXTO.count(std::string(acceso.anotacion)) != 0) {
                         std::string llamada =
@@ -3640,10 +3673,12 @@ private:
                             }
                             llamada += ", ";
                             // El runtime recibe el texto por valor: un préstamo se
-                            // desreferencia.
+                            // desreferencia, venga de `&x` o de un parámetro `&texto`.
                             if (argumento->tipo == sintactico::TipoExpresion::Unaria &&
                                 (argumento->lexema == "&" ||
                                  argumento->lexema == "&mutable")) {
+                                llamada += "(*" + expresion(*argumento) + ")";
+                            } else if (tipo_de(*argumento) == "nooki_texto*") {
                                 llamada += "(*" + expresion(*argumento) + ")";
                             } else {
                                 llamada += expresion(*argumento);

@@ -1,6 +1,6 @@
 <!-- GENERADO por herramientas/generar-referencia.py: no editar a mano -->
 
-**16 módulos**, todos escritos en Nooki. Estas son sus declaraciones públicas,
+**17 módulos**, todos escritos en Nooki. Estas son sus declaraciones públicas,
 copiadas de la fuente que va dentro del compilador.
 
 ### `accesibilidad`
@@ -112,6 +112,27 @@ publico funcion limpiar_campo() -> vacio {
 ```
 ```text
 publico funcion dibujar(pantalla: entero) -> vacio {
+```
+
+### `csv`
+
+```text
+publico funcion filas(ruta: &texto) -> Vector<texto> {
+```
+```text
+publico funcion campos(linea: &texto) -> Vector<texto> {
+```
+```text
+publico funcion campos_con(linea: &texto, separador: &texto) -> Vector<texto> {
+```
+```text
+publico funcion a_numero(campo: &texto) -> flotante {
+```
+```text
+publico funcion a_entero(campo: &texto) -> entero {
+```
+```text
+publico funcion columnas(ruta: &texto) -> entero {
 ```
 
 ### `diseno`
@@ -313,6 +334,30 @@ publico funcion predecir_datos(red: entero, x: &Vector<flotante>) -> entero {
 ```
 ```text
 publico funcion probabilidad_datos(red: entero, x: &Vector<flotante>, cual: entero) -> flotante {
+```
+```text
+publico funcion nueva_profunda(entradas: entero, ocultas: entero, clases: entero) -> entero {
+```
+```text
+publico funcion ejemplo_profunda(red: entero, x: &Vector<flotante>, cual: entero) -> booleano {
+```
+```text
+publico funcion entrenar_profunda(red: entero, vueltas: entero, tasa: flotante) -> vacio {
+```
+```text
+publico funcion predecir_profunda(red: entero, x: &Vector<flotante>) -> entero {
+```
+```text
+publico funcion confianza_profunda(red: entero, x: &Vector<flotante>) -> flotante {
+```
+```text
+publico funcion aciertos_profunda(red: entero) -> entero {
+```
+```text
+publico funcion total_profunda(red: entero) -> entero {
+```
+```text
+publico funcion liberar_profunda(red: entero) -> vacio {
 ```
 ```text
 publico funcion entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio {

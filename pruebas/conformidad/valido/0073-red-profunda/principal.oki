@@ -1,0 +1,65 @@
+// Red de dos capas ocultas: aprende las tres bandas diagonales.
+usar redes
+
+funcion punto(x: flotante, y: flotante) -> Vector<flotante> {
+    variable v = Vector<flotante>.nuevo()
+    v.agregar(x)
+    v.agregar(y)
+    retornar v
+}
+
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (y < x - 0.3) {
+        retornar 0
+    }
+    si (y > x + 0.3) {
+        retornar 1
+    }
+    retornar 2
+}
+
+funcion principal() -> entero {
+    // Dos entradas, dos capas de doce neuronas, tres clases.
+    variable red = redes.nueva_profunda(2, 12, 3)
+
+    variable i = 0
+    mientras (i < 9) {
+        variable j = 0
+        mientras (j < 9) {
+            variable x = (i como flotante - 4.0) / 4.0
+            variable y = (j como flotante - 4.0) / 4.0
+            variable p = punto(x, y)
+            si (!redes.ejemplo_profunda(red, &p, clase_de(x, y))) {
+                imprimir("no acepta")
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    imprimir(redes.total_profunda(red))
+    redes.entrenar_profunda(red, 10000, 0.3)
+    imprimir(redes.aciertos_profunda(red))
+
+    variable abajo = punto(0.75, -0.75)
+    variable arriba = punto(-0.75, 0.75)
+    variable centro = punto(0.0, 0.0)
+    imprimir(redes.predecir_profunda(red, &abajo))
+    imprimir(redes.predecir_profunda(red, &arriba))
+    imprimir(redes.predecir_profunda(red, &centro))
+
+    // La confianza es la probabilidad de la clase elegida.
+    variable c = redes.confianza_profunda(red, &centro)
+    si (c > 0.5) {
+        imprimir("segura")
+    }
+
+    // Un vector con el tamaño equivocado no se acepta.
+    variable corto = punto(1.0, 1.0)
+    si (redes.predecir_profunda(red, &corto) < 0) {
+        imprimir("nada")
+    }
+
+    redes.liberar_profunda(red)
+    retornar 0
+}

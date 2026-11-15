@@ -1,4 +1,4 @@
-#include "nooki/ia/runtime_ia.hpp"
+﻿#include "nooki/ia/runtime_ia.hpp"
 
 namespace nooki::ia {
 
@@ -130,7 +130,7 @@ long long nooki_ia_tensor_resta(long long a, long long b) {
     return nooki_tensor_binaria(a, b, -1);
 }
 
-/* Multiplica todos los elementos por un nÃºmero. */
+/* Multiplica todos los elementos por un nÃƒÂºmero. */
 long long nooki_ia_tensor_escalar(long long manejador, long long factor) {
     nooki_tensor* a = nooki_tensor_de(manejador);
     if (a == NULL) {
@@ -191,7 +191,7 @@ long long nooki_ia_tensor_transpuesta(long long manejador) {
     return salida;
 }
 
-/* Determinante por eliminaciÃ³n de Gauss con doble precisiÃ³n. */
+/* Determinante por eliminaciÃƒÂ³n de Gauss con doble precisiÃƒÂ³n. */
 long long nooki_ia_tensor_determinante(long long manejador) {
     nooki_tensor* a = nooki_tensor_de(manejador);
     if (a == NULL || a->filas != a->columnas) {
@@ -257,7 +257,7 @@ long long nooki_ia_tensor_suma_total(long long manejador) {
     return suma;
 }
 
-/* --- EstadÃ­stica. Los resultados con decimales se dan por mil. --- */
+/* --- EstadÃƒÂ­stica. Los resultados con decimales se dan por mil. --- */
 
 long long nooki_ia_tensor_minimo(long long manejador) {
     nooki_tensor* a = nooki_tensor_de(manejador);
@@ -331,14 +331,14 @@ long long nooki_ia_tensor_varianza(long long manejador) {
     return (long long)(varianza * 1000.0 + 0.5);
 }
 
-/* DesviaciÃ³n tÃ­pica, por mil. */
+/* DesviaciÃƒÂ³n tÃƒÂ­pica, por mil. */
 long long nooki_ia_tensor_desviacion(long long manejador) {
     const long long varianza = nooki_ia_tensor_varianza(manejador);
     if (varianza <= 0) {
         return 0;
     }
-    /* La varianza viene por mil, asÃ­ que hay que multiplicarla otra vez por mil
-     * para que la raÃ­z quede tambiÃ©n por mil. */
+    /* La varianza viene por mil, asÃƒÂ­ que hay que multiplicarla otra vez por mil
+     * para que la raÃƒÂ­z quede tambiÃƒÂ©n por mil. */
     double raiz = (double)varianza * 1000.0;
     double estimacion = raiz > 1.0 ? raiz / 2.0 : 1.0;
     for (int i = 0; i < 40; ++i) {
@@ -390,14 +390,14 @@ long long nooki_ia_tensor_relu(long long manejador) {
     return salida;
 }
 
-/* e^x sin libm, con reducciÃ³n de rango.
+/* e^x sin libm, con reducciÃƒÂ³n de rango.
  *
- * La serie de Taylor directa se rompe con |x| grande: en x = -20 los tÃ©rminos
- * llegan a 4Â·10^7 y se cancelan entre sÃ­, asÃ­ que el resultado era basura. Eso
+ * La serie de Taylor directa se rompe con |x| grande: en x = -20 los tÃƒÂ©rminos
+ * llegan a 4Ã‚Â·10^7 y se cancelan entre sÃƒÂ­, asÃƒÂ­ que el resultado era basura. Eso
  * estropeaba el softmax, donde los logits pueden separarse mucho.
  *
- * Se escribe x = kÂ·ln2 + r con r en [-ln2/2, ln2/2]; la serie de e^r converge en
- * pocos tÃ©rminos y el 2^k solo escala. */
+ * Se escribe x = kÃ‚Â·ln2 + r con r en [-ln2/2, ln2/2]; la serie de e^r converge en
+ * pocos tÃƒÂ©rminos y el 2^k solo escala. */
 static double nooki_tensor_exp(double x) {
     const double LN2 = 0.69314718055994530942;
     if (x > 700.0) {
@@ -463,7 +463,7 @@ long long nooki_ia_tensor_softmax(long long manejador) {
 
         return 0;
     }
-    /* Se resta el mÃ¡ximo para que la exponencial no se dispare. */
+    /* Se resta el mÃƒÂ¡ximo para que la exponencial no se dispare. */
     const long long maximo = nooki_ia_tensor_maximo(manejador);
     double suma = 0.0;
     double* temporal = (double*)malloc(total * sizeof(double));
@@ -494,15 +494,15 @@ long long nooki_ia_tensor_softmax(long long manejador) {
     return salida;
 }
 
-/* --- Autograd: derivadas automÃ¡ticas sobre un grafo de operaciones ---
- * Cada nodo guarda su valor, su gradiente y de dÃ³nde viene. Todos los nodos
- * viven en una lista global: asÃ­ se limpian los gradientes y se libera todo de
- * una vez, sin recorrer el grafo dos veces ni compartir Ã¡reas. */
+/* --- Autograd: derivadas automÃƒÂ¡ticas sobre un grafo de operaciones ---
+ * Cada nodo guarda su valor, su gradiente y de dÃƒÂ³nde viene. Todos los nodos
+ * viven en una lista global: asÃƒÂ­ se limpian los gradientes y se libera todo de
+ * una vez, sin recorrer el grafo dos veces ni compartir ÃƒÂ¡reas. */
 
 typedef struct nooki_auto_nodo {
     double valor;
     double gradiente;
-    int operacion; /* 0 dato, 1 suma, 2 resta, 3 producto, 4 divisiÃ³n, 5 relu, 6 sigmoide */
+    int operacion; /* 0 dato, 1 suma, 2 resta, 3 producto, 4 divisiÃƒÂ³n, 5 relu, 6 sigmoide */
     struct nooki_auto_nodo* izquierda;
     struct nooki_auto_nodo* derecha;
     struct nooki_auto_nodo* siguiente_global;
@@ -532,8 +532,8 @@ static nooki_auto_nodo* nooki_auto_crear(double valor, int operacion, nooki_auto
     return nodo;
 }
 
-/* Marca el principio del grafo de una pasada: lo creado despuÃ©s se puede
- * liberar al terminar, dejando vivos los parÃ¡metros. */
+/* Marca el principio del grafo de una pasada: lo creado despuÃƒÂ©s se puede
+ * liberar al terminar, dejando vivos los parÃƒÂ¡metros. */
 long long nooki_ia_auto_marca(void) {
     return (long long)(intptr_t)nooki_auto_todos;
 }
@@ -688,7 +688,7 @@ void nooki_ia_auto_atras(long long manejador) {
     }
 
     raiz->gradiente = 1.0;
-    /* La pila va de hojas a raÃ­z: se recorre al revÃ©s, de la raÃ­z a las hojas. */
+    /* La pila va de hojas a raÃƒÂ­z: se recorre al revÃƒÂ©s, de la raÃƒÂ­z a las hojas. */
     for (int i = pila.cuantos - 1; i >= 0; --i) {
         nooki_auto_nodo* nodo = pila.datos[i];
         const double g = nodo->gradiente;
@@ -729,7 +729,7 @@ void nooki_ia_auto_atras(long long manejador) {
     free(pila.datos);
 }
 
-/* Libera todos los nodos vivos. Los manejadores dejan de ser vÃ¡lidos. */
+/* Libera todos los nodos vivos. Los manejadores dejan de ser vÃƒÂ¡lidos. */
 void nooki_ia_auto_liberar(long long manejador) {
     (void)manejador;
     nooki_auto_nodo* nodo = nooki_auto_todos;
@@ -740,9 +740,9 @@ void nooki_ia_auto_liberar(long long manejador) {
     }
     nooki_auto_todos = NULL;
 }
-/* --- Redes: una capa oculta, activaciÃ³n sigmoide, descenso de gradiente ---
- * Los pesos son nodos del grafo de autograd, asÃ­ que el entrenamiento es
- * construir la expresiÃ³n de cada ejemplo, llamar a `atras` y mover los pesos. */
+/* --- Redes: una capa oculta, activaciÃƒÂ³n sigmoide, descenso de gradiente ---
+ * Los pesos son nodos del grafo de autograd, asÃƒÂ­ que el entrenamiento es
+ * construir la expresiÃƒÂ³n de cada ejemplo, llamar a `atras` y mover los pesos. */
 
 typedef struct {
     int entradas;
@@ -758,7 +758,7 @@ typedef struct {
     int tipo; /* 1: binaria (sigmoide), 2: varias clases (softmax) */
 } nooki_red;
 
-/* NÃºmero pseudoaleatorio pequeÃ±o y determinista: la red parte siempre igual. */
+/* NÃƒÂºmero pseudoaleatorio pequeÃƒÂ±o y determinista: la red parte siempre igual. */
 static double nooki_red_aleatorio(nooki_red* red, double amplitud) {
     red->semilla = red->semilla * 1103515245u + 12345u;
     const double unidad = (double)((red->semilla >> 16) & 0x7FFF) / 32767.0;
@@ -860,7 +860,7 @@ double nooki_ia_red_predecir(long long manejador, double x1, double x2, double x
     return 1.0 / (1.0 + nooki_auto_exponencial(-salida));
 }
 
-/* Error cuadrÃ¡tico medio de los ejemplos guardados. */
+/* Error cuadrÃƒÂ¡tico medio de los ejemplos guardados. */
 double nooki_ia_red_error(long long manejador) {
     nooki_red* red = nooki_red_de(manejador);
     if (red == NULL || red->cuantas == 0) {
@@ -876,7 +876,7 @@ double nooki_ia_red_error(long long manejador) {
     return total / (double)red->cuantas;
 }
 
-/* Construye la expresiÃ³n de un ejemplo y devuelve la pÃ©rdida. */
+/* Construye la expresiÃƒÂ³n de un ejemplo y devuelve la pÃƒÂ©rdida. */
 static nooki_auto_nodo* nooki_red_adelante(nooki_red* red, const double* fila) {
     nooki_auto_nodo* ocultas[64];
     for (int h = 0; h < red->ocultas; ++h) {
@@ -933,7 +933,7 @@ void nooki_ia_red_entrenar(long long manejador, long long vueltas, double tasa) 
         for (int m = 0; m < red->cuantas; ++m) {
             const double* fila = red->muestras + (size_t)m * 5;
             // Los nodos de esta pasada se liberan al terminarla: si no, el grafo
-            // crecerÃ­a sin lÃ­mite y el entrenamiento se volverÃ­a cuadrÃ¡tico.
+            // crecerÃƒÂ­a sin lÃƒÂ­mite y el entrenamiento se volverÃƒÂ­a cuadrÃƒÂ¡tico.
             const long long marca = nooki_ia_auto_marca();
             nooki_auto_nodo* perdida = nooki_red_adelante(red, fila);
             nooki_ia_auto_atras((long long)(intptr_t)perdida);
@@ -946,13 +946,13 @@ void nooki_ia_red_entrenar(long long manejador, long long vueltas, double tasa) 
 /* --- Guardar y cargar una red ---
  *
  * Formato binario, en el orden en que se escribe y se lee:
- *   "NOOKIRED" (8 bytes) Â· version, entradas, ocultas, cuantas (4 int de 32 bits)
- *   pesos1[entradas*ocultas] Â· sesgos1[ocultas] Â· pesos2[ocultas] Â· sesgo2
+ *   "NOOKIRED" (8 bytes) Ã‚Â· version, entradas, ocultas, cuantas (4 int de 32 bits)
+ *   pesos1[entradas*ocultas] Ã‚Â· sesgos1[ocultas] Ã‚Â· pesos2[ocultas] Ã‚Â· sesgo2
  *   muestras[cuantas*5]
- * Todo en double de 64 bits. Guarda tambiÃ©n los ejemplos, para poder seguir
- * entrenando maÃ±ana donde se dejÃ³. */
+ * Todo en double de 64 bits. Guarda tambiÃƒÂ©n los ejemplos, para poder seguir
+ * entrenando maÃƒÂ±ana donde se dejÃƒÂ³. */
 
-/* Se declara antes porque `cargar` la usa y estÃ¡ definida mÃ¡s abajo. */
+/* Se declara antes porque `cargar` la usa y estÃƒÂ¡ definida mÃƒÂ¡s abajo. */
 void nooki_ia_red_liberar(long long manejador);
 
 static int nooki_red_escribir_dobles(FILE* flujo, const double* valores, int cuantos) {
@@ -1026,8 +1026,8 @@ long long nooki_ia_red_cargar(const char* ruta) {
     int32_t cabecera[4] = {0, 0, 0, 0};
     long long resultado = 0;
     if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKIRED", 8) == 0 &&
-        fread(cabecera, sizeof(int32_t), 4, flujo) == 4 && cabecera[0] == 1 &&
-)nooki" R"nooki(
+)nooki" R"nooki(        fread(cabecera, sizeof(int32_t), 4, flujo) == 4 && cabecera[0] == 1 &&
+
         cabecera[1] >= 1 && cabecera[1] <= 64 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
         cabecera[3] >= 0) {
         const int entradas = cabecera[1];
@@ -1109,13 +1109,13 @@ void nooki_ia_red_liberar(long long manejador) {
  *
  * Una capa oculta con sigmoide y una salida softmax, una neurona por clase.
  * Se entrena con gradientes escritos a mano (el grafo de autograd es para la
- * red binaria): asÃ­ el caso de varias clases no toca el que ya funciona.
+ * red binaria): asÃƒÂ­ el caso de varias clases no toca el que ya funciona.
  *
- *   h[k]  = sigmoide(b1[k] + Î£_i w1[i][k]Â·x[i])
- *   z[c]  = b2[c] + Î£_k w2[k][c]Â·h[k]
- *   p[c]  = exp(z[c] âˆ’ max) / Î£ exp(z âˆ’ max)          (softmax estable)
- *   pÃ©rdida = âˆ’log p[etiqueta]                        (entropÃ­a cruzada)
- *   âˆ‚pÃ©rdida/âˆ‚z[c] = p[c] âˆ’ [c == etiqueta]
+ *   h[k]  = sigmoide(b1[k] + ÃŽÂ£_i w1[i][k]Ã‚Â·x[i])
+ *   z[c]  = b2[c] + ÃŽÂ£_k w2[k][c]Ã‚Â·h[k]
+ *   p[c]  = exp(z[c] Ã¢Ë†â€™ max) / ÃŽÂ£ exp(z Ã¢Ë†â€™ max)          (softmax estable)
+ *   pÃƒÂ©rdida = Ã¢Ë†â€™log p[etiqueta]                        (entropÃƒÂ­a cruzada)
+ *   Ã¢Ë†â€špÃƒÂ©rdida/Ã¢Ë†â€šz[c] = p[c] Ã¢Ë†â€™ [c == etiqueta]
  *
  * Con esa derivada, el resto son reglas de la cadena normales. */
 
@@ -1127,11 +1127,11 @@ typedef struct {
     int cuantas;
     int capacidad;
     unsigned int semilla;
-    double* w1;    /* entradas Ã— ocultas */
+    double* w1;    /* entradas Ãƒâ€” ocultas */
     double* b1;    /* ocultas */
-    double* w2;    /* ocultas Ã— clases */
+    double* w2;    /* ocultas Ãƒâ€” clases */
     double* b2;    /* clases */
-    double* xs;    /* cuantas Ã— 4 entradas */
+    double* xs;    /* cuantas Ãƒâ€” 4 entradas */
     int* etiquetas;
 } nooki_red_clases;
 
@@ -1220,7 +1220,7 @@ void nooki_ia_clases_ejemplo(long long manejador, double x1, double x2, double x
     }
     fila[0] = x1;
     if (red->entradas > 1) {
-        fila[1] = x2;
+)nooki" R"nooki(        fila[1] = x2;
     }
     if (red->entradas > 2) {
         fila[2] = x3;
@@ -1235,7 +1235,7 @@ void nooki_ia_clases_ejemplo(long long manejador, double x1, double x2, double x
 long long nooki_ia_clases_total(long long manejador) {
     nooki_red_clases* red = nooki_clases_de(manejador);
     return red == NULL ? 0 : red->cuantas;
-)nooki" R"nooki(
+
 }
 
 /* Calcula las probabilidades de una muestra. `h` y `p` los pone quien llama. */
@@ -1332,7 +1332,7 @@ void nooki_ia_clases_entrenar(long long manejador, long long vueltas, double tas
             const int etiqueta = red->etiquetas[m];
             nooki_clases_adelante(red, x, h, p);
 
-            /* âˆ‚pÃ©rdida/âˆ‚z = p âˆ’ y */
+            /* Ã¢Ë†â€špÃƒÂ©rdida/Ã¢Ë†â€šz = p Ã¢Ë†â€™ y */
             for (int c = 0; c < clases; ++c) {
                 dz[c] = p[c] - (c == etiqueta ? 1.0 : 0.0);
             }
@@ -1342,7 +1342,7 @@ void nooki_ia_clases_entrenar(long long manejador, long long vueltas, double tas
                     red->w2[k * clases + c] -= tasa * dz[c] * h[k];
                 }
             }
-            /* âˆ‚pÃ©rdida/âˆ‚h[k], y a travÃ©s de la sigmoide */
+            /* Ã¢Ë†â€špÃƒÂ©rdida/Ã¢Ë†â€šh[k], y a travÃƒÂ©s de la sigmoide */
             for (int k = 0; k < ocultas; ++k) {
                 double suma = 0.0;
                 for (int c = 0; c < clases; ++c) {
@@ -1404,7 +1404,7 @@ void nooki_ia_clases_liberar(long long manejador) {
 }
 
 /* --- Tablas: columnas con nombre, como un DataFrame ---
- * Cada columna es numÃ©rica o de texto. Las de texto guardan copias propias. */
+ * Cada columna es numÃƒÂ©rica o de texto. Las de texto guardan copias propias. */
 
 typedef struct {
     char* nombre;
@@ -1452,7 +1452,7 @@ long long nooki_ia_tabla_crear(long long filas) {
     return (long long)(intptr_t)tabla;
 }
 
-/* AÃ±ade una columna y devuelve su Ã­ndice, o -1 si no se puede. */
+/* AÃƒÂ±ade una columna y devuelve su ÃƒÂ­ndice, o -1 si no se puede. */
 static long long nooki_tabla_anadir(long long manejador, const char* nombre, int es_texto) {
     nooki_tabla* tabla = nooki_tabla_de(manejador);
     if (tabla == NULL) {
@@ -1461,7 +1461,7 @@ static long long nooki_tabla_anadir(long long manejador, const char* nombre, int
     const int cuantas = tabla->columnas + 1;
     nooki_columna* columnas =
         (nooki_columna*)realloc(tabla->columnas_datos, (size_t)cuantas * sizeof(nooki_columna));
-    if (columnas == NULL) {
+)nooki" R"nooki(    if (columnas == NULL) {
         return -1;
     }
     tabla->columnas_datos = columnas;
@@ -1474,7 +1474,7 @@ static long long nooki_tabla_anadir(long long manejador, const char* nombre, int
     const size_t filas = (size_t)tabla->filas;
     if (es_texto) {
         columna->textos = (char**)calloc(filas == 0 ? 1 : filas, sizeof(char*));
-)nooki" R"nooki(
+
         if (columna->textos == NULL) {
             free(columna->nombre);
             return -1;
@@ -1508,7 +1508,7 @@ long long nooki_ia_tabla_columnas(long long manejador) {
     return tabla == NULL ? 0 : tabla->columnas;
 }
 
-/* Nombre de la columna; cadena vacÃ­a si no existe. */
+/* Nombre de la columna; cadena vacÃƒÂ­a si no existe. */
 const char* nooki_ia_tabla_nombre(long long manejador, long long columna) {
     nooki_tabla* tabla = nooki_tabla_de(manejador);
     if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
@@ -1673,7 +1673,7 @@ long long nooki_ia_tabla_filtrar_texto(long long manejador, long long columna,
     if (nueva == NULL) {
         return 0;
     }
-    int destino = 0;
+)nooki" R"nooki(    int destino = 0;
     for (int i = 0; i < tabla->filas; ++i) {
         if (c->textos[i] == NULL || strcmp(c->textos[i], valor) != 0) {
             continue;
@@ -1683,7 +1683,7 @@ long long nooki_ia_tabla_filtrar_texto(long long manejador, long long columna,
             if (origen->es_texto) {
                 nooki_ia_tabla_poner_texto((long long)(intptr_t)nueva, destino, j,
                                            origen->textos[i] == NULL ? "" : origen->textos[i]);
-)nooki" R"nooki(
+
             } else {
                 nooki_ia_tabla_poner_entero((long long)(intptr_t)nueva, destino, j,
                                             origen->numeros[i]);
@@ -1694,7 +1694,7 @@ long long nooki_ia_tabla_filtrar_texto(long long manejador, long long columna,
     return (long long)(intptr_t)nueva;
 }
 
-/* Filas ordenadas de menor a mayor por una columna numÃ©rica. */
+/* Filas ordenadas de menor a mayor por una columna numÃƒÂ©rica. */
 long long nooki_ia_tabla_ordenar(long long manejador, long long columna) {
     nooki_tabla* tabla = nooki_tabla_de(manejador);
     if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {
@@ -1716,7 +1716,7 @@ long long nooki_ia_tabla_ordenar(long long manejador, long long columna) {
     for (int i = 0; i < tabla->filas; ++i) {
         orden[i] = i;
     }
-    /* Orden por inserciÃ³n: simple y suficiente para tablas de trabajo. */
+    /* Orden por inserciÃƒÂ³n: simple y suficiente para tablas de trabajo. */
     for (int i = 1; i < tabla->filas; ++i) {
         const int actual = orden[i];
         int j = i - 1;
@@ -1744,8 +1744,8 @@ long long nooki_ia_tabla_ordenar(long long manejador, long long columna) {
     return (long long)(intptr_t)nueva;
 }
 
-/* CuÃ¡ntas filas de cada valor de una columna de texto. La tabla resultante
- * tiene dos columnas: Â«valorÂ» y Â«cuentaÂ». */
+/* CuÃƒÂ¡ntas filas de cada valor de una columna de texto. La tabla resultante
+ * tiene dos columnas: Ã‚Â«valorÃ‚Â» y Ã‚Â«cuentaÃ‚Â». */
 long long nooki_ia_tabla_contar_por(long long manejador, long long columna) {
 
     nooki_tabla* tabla = nooki_tabla_de(manejador);
@@ -1844,9 +1844,9 @@ long long nooki_ia_tensor_iguales(long long a_manejador, long long b_manejador) 
 /* --- Guardar y cargar la red de clases ---
  *
  * Formato propio, con su cabecera, para no confundirla con la binaria:
- *   "NOOKICLS" (8 bytes) · versión, entradas, ocultas, clases y cuántas (5 int de 32)
- *   w1[entradas*ocultas] · b1[ocultas] · w2[ocultas*clases] · b2[clases]
- *   xs[cuantas*4] · etiquetas[cuantas] (int de 32 bits) */
+ *   "NOOKICLS" (8 bytes) Â· versiÃ³n, entradas, ocultas, clases y cuÃ¡ntas (5 int de 32)
+ *   w1[entradas*ocultas] Â· b1[ocultas] Â· w2[ocultas*clases] Â· b2[clases]
+ *   xs[cuantas*4] Â· etiquetas[cuantas] (int de 32 bits) */
 
 int nooki_ia_clases_guardar(long long manejador, const char* ruta) {
     nooki_red_clases* red = nooki_clases_de(manejador);
@@ -1868,7 +1868,7 @@ int nooki_ia_clases_guardar(long long manejador, const char* ruta) {
     bien = bien && nooki_red_escribir_dobles(flujo, red->xs, red->cuantas * red->entradas);
     if (red->cuantas > 0) {
         bien = bien && fwrite(red->etiquetas, sizeof(int32_t), (size_t)red->cuantas, flujo) ==
-                           (size_t)red->cuantas;
+)nooki" R"nooki(                           (size_t)red->cuantas;
     }
 
     if (fclose(flujo) != 0) {
@@ -1954,11 +1954,11 @@ long long nooki_ia_clases_cargar(const char* ruta) {
 }
 
 
-/* --- Entradas de cualquier tamaño ---
+/* --- Entradas de cualquier tamaÃ±o ---
  *
  * El runtime no puede ver el tipo `Vector<flotante>` del lenguaje (vive en el
- * preludio, en otro archivo), así que se declara aquí una vista con los mismos
- * tres campos y en el mismo orden. Es un contrato entre los dos archivos y está
+ * preludio, en otro archivo), asÃ­ que se declara aquÃ­ una vista con los mismos
+ * tres campos y en el mismo orden. Es un contrato entre los dos archivos y estÃ¡
  * comprobado por la suite. */
 
 typedef struct {
@@ -2042,6 +2042,336 @@ double nooki_ia_clases_probabilidad_datos(long long manejador,
     nooki_clases_adelante(red, datos, h, p);
     return p[cual];
 }
+
+
+/* --- Red de dos capas ocultas ---
+ *
+ * La de una capa oculta no puede aprender problemas que necesitan combinar
+ * rasgos en dos niveles. Esta tiene dos, con softmax a la salida:
+ *
+ *   h1 = sigmoide(W1Â·x + b1)
+ *   h2 = sigmoide(W2Â·h1 + b2)
+ *   z  = W3Â·h2 + b3
+ *   p  = softmax(z)
+ *
+ * Se entrena con gradientes escritos a mano, igual que la de una capa. Va en su
+ * propia estructura para no tocar la que ya funciona y estÃ¡ probada. */
+
+typedef struct {
+    int tipo; /* 3 */
+    int entradas;
+    int ocultas;
+    int clases;
+    int cuantas;
+    int capacidad;
+    unsigned int semilla;
+    double* w1; /* entradas Ã— ocultas */
+    double* b1; /* ocultas */
+    double* w2; /* ocultas Ã— ocultas */
+    double* b2; /* ocultas */
+    double* w3; /* ocultas Ã— clases */
+    double* b3; /* clases */
+    double* xs; /* cuantas Ã— entradas */
+    int* etiquetas;
+} nooki_red_profunda;
+
+static nooki_red_profunda* nooki_profunda_de(long long manejador) {
+    nooki_red_profunda* red = (nooki_red_profunda*)(intptr_t)manejador;
+)nooki" R"nooki(    if (red == NULL || red->tipo != 3) {
+        return NULL;
+    }
+    return red;
+}
+
+static double nooki_profunda_aleatorio(nooki_red_profunda* red, double amplitud) {
+    red->semilla = red->semilla * 1103515245u + 12345u;
+    const double unidad = (double)((red->semilla >> 16) & 0x7FFF) / 32767.0;
+    return (unidad - 0.5) * amplitud;
+}
+
+long long nooki_ia_profunda_nueva(long long entradas, long long ocultas, long long clases) {
+    if (entradas < 1 || entradas > 64 || ocultas < 1 || ocultas > 64 || clases < 2 ||
+        clases > 16) {
+        return 0;
+    }
+    nooki_red_profunda* red = (nooki_red_profunda*)malloc(sizeof(nooki_red_profunda));
+    if (red == NULL) {
+        return 0;
+    }
+    const size_t e = (size_t)entradas;
+    const size_t h = (size_t)ocultas;
+    const size_t c = (size_t)clases;
+
+    red->tipo = 3;
+    red->entradas = (int)entradas;
+    red->ocultas = (int)ocultas;
+    red->clases = (int)clases;
+    red->cuantas = 0;
+    red->capacidad = 16;
+    red->semilla = 20261115u;
+    red->w1 = (double*)malloc(e * h * sizeof(double));
+    red->b1 = (double*)malloc(h * sizeof(double));
+    red->w2 = (double*)malloc(h * h * sizeof(double));
+    red->b2 = (double*)malloc(h * sizeof(double));
+    red->w3 = (double*)malloc(h * c * sizeof(double));
+    red->b3 = (double*)malloc(c * sizeof(double));
+    red->xs = (double*)malloc((size_t)red->capacidad * e * sizeof(double));
+    red->etiquetas = (int*)malloc((size_t)red->capacidad * sizeof(int));
+    if (red->w1 == NULL || red->b1 == NULL || red->w2 == NULL || red->b2 == NULL ||
+        red->w3 == NULL || red->b3 == NULL || red->xs == NULL || red->etiquetas == NULL) {
+        free(red->w1);
+        free(red->b1);
+        free(red->w2);
+        free(red->b2);
+        free(red->w3);
+        free(red->b3);
+        free(red->xs);
+        free(red->etiquetas);
+        free(red);
+        return 0;
+    }
+
+    /* Xavier: la escala depende del nÃºmero de conexiones de cada capa. */
+    const double escala1 = 1.0 / (double)(entradas > 0 ? entradas : 1);
+    const double escala2 = 1.0 / (double)(ocultas > 0 ? ocultas : 1);
+    for (size_t i = 0; i < e * h; ++i) {
+        red->w1[i] = nooki_profunda_aleatorio(red, 2.0 * escala1 + 0.5);
+    }
+    for (size_t i = 0; i < h; ++i) {
+        red->b1[i] = 0.0;
+        red->b2[i] = 0.0;
+    }
+    for (size_t i = 0; i < h * h; ++i) {
+        red->w2[i] = nooki_profunda_aleatorio(red, 2.0 * escala2 + 0.5);
+    }
+    for (size_t i = 0; i < h * c; ++i) {
+        red->w3[i] = nooki_profunda_aleatorio(red, 2.0 * escala2 + 0.5);
+    }
+    for (size_t i = 0; i < c; ++i) {
+        red->b3[i] = 0.0;
+    }
+    return (long long)(intptr_t)red;
+}
+
+int nooki_ia_profunda_ejemplo(long long manejador, const nooki_ia_vector_flotante* x,
+                             long long cual) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || cual < 0 || cual >= red->clases || x == NULL || x->datos == NULL ||
+        x->largo != (long long)red->entradas) {
+        return 0;
+    }
+    if (red->cuantas >= red->capacidad) {
+        const int nueva = red->capacidad * 2;
+        double* xs = (double*)realloc(red->xs,
+                                      (size_t)nueva * (size_t)red->entradas * sizeof(double));
+        int* etiquetas = (int*)realloc(red->etiquetas, (size_t)nueva * sizeof(int));
+        if (xs == NULL || etiquetas == NULL) {
+            return 0;
+        }
+        red->xs = xs;
+        red->etiquetas = etiquetas;
+        red->capacidad = nueva;
+    }
+    double* fila = red->xs + (size_t)red->cuantas * (size_t)red->entradas;
+    for (int i = 0; i < red->entradas; ++i) {
+        fila[i] = x->datos[i];
+    }
+    red->etiquetas[red->cuantas] = (int)cual;
+    red->cuantas += 1;
+    return 1;
+}
+
+long long nooki_ia_profunda_total(long long manejador) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    return red == NULL ? 0 : red->cuantas;
+}
+
+/* Adelante: deja en `h1`, `h2` y `p` lo necesario para el atrÃ¡s. */
+static void nooki_profunda_adelante(const nooki_red_profunda* red, const double* x,
+                                    double* h1, double* h2, double* p) {
+    for (int a = 0; a < red->ocultas; ++a) {
+        double z = red->b1[a];
+        for (int i = 0; i < red->entradas; ++i) {
+            z += red->w1[i * red->ocultas + a] * x[i];
+        }
+        h1[a] = 1.0 / (1.0 + nooki_tensor_exp(-z));
+    }
+    for (int k = 0; k < red->ocultas; ++k) {
+        double z = red->b2[k];
+        for (int a = 0; a < red->ocultas; ++a) {
+            z += red->w2[a * red->ocultas + k] * h1[a];
+        }
+        h2[k] = 1.0 / (1.0 + nooki_tensor_exp(-z));
+    }
+    double maximo = -1e300;
+    for (int c = 0; c < red->clases; ++c) {
+        double z = red->b3[c];
+        for (int k = 0; k < red->ocultas; ++k) {
+            z += red->w3[k * red->clases + c] * h2[k];
+        }
+        p[c] = z;
+        if (z > maximo) {
+            maximo = z;
+        }
+    }
+    double suma = 0.0;
+    for (int c = 0; c < red->clases; ++c) {
+        p[c] = nooki_tensor_exp(p[c] - maximo);
+        suma += p[c];
+    }
+    if (suma <= 0.0) {
+        suma = 1.0;
+    }
+    for (int c = 0; c < red->clases; ++c) {
+        p[c] /= suma;
+    }
+}
+
+static int nooki_profunda_clase(const nooki_red_profunda* red, const double* x, double* confianza) {
+    double h1[64];
+    double h2[64];
+    double p[16];
+    nooki_profunda_adelante(red, x, h1, h2, p);
+    int mejor = 0;
+    for (int c = 1; c < red->clases; ++c) {
+        if (p[c] > p[mejor]) {
+            mejor = c;
+        }
+    }
+    if (confianza != NULL) {
+        *confianza = p[mejor];
+    }
+    return mejor;
+}
+
+long long nooki_ia_profunda_predecir(long long manejador, const nooki_ia_vector_flotante* x) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || x == NULL || x->datos == NULL ||
+        x->largo != (long long)red->entradas) {
+        return -1;
+    }
+    return nooki_profunda_clase(red, x->datos, NULL);
+}
+
+double nooki_ia_profunda_confianza(long long manejador, const nooki_ia_vector_flotante* x) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || x == NULL || x->datos == NULL ||
+        x->largo != (long long)red->entradas) {
+        return 0.0;
+    }
+    double confianza = 0.0;
+    nooki_profunda_clase(red, x->datos, &confianza);
+    return confianza;
+}
+
+void nooki_ia_profunda_entrenar(long long manejador, long long vueltas, double tasa) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || red->cuantas == 0) {
+        return;
+    }
+    const int e = red->entradas;
+    const int h = red->ocultas;
+    const int c = red->clases;
+
+    double* h1 = (double*)malloc((size_t)h * sizeof(double));
+    double* h2 = (double*)malloc((size_t)h * sizeof(double));
+    double* p = (double*)malloc((size_t)c * sizeof(double));
+    double* dz = (double*)malloc((size_t)c * sizeof(double));
+    double* d2 = (double*)malloc((size_t)h * sizeof(double));
+    double* d1 = (double*)malloc((size_t)h * sizeof(double));
+)nooki" R"nooki(    if (h1 == NULL || h2 == NULL || p == NULL || dz == NULL || d2 == NULL || d1 == NULL) {
+        free(h1);
+        free(h2);
+        free(p);
+        free(dz);
+        free(d2);
+        free(d1);
+        return;
+    }
+
+    for (long long vuelta = 0; vuelta < vueltas; ++vuelta) {
+        for (int m = 0; m < red->cuantas; ++m) {
+            const double* x = red->xs + (size_t)m * (size_t)e;
+            const int etiqueta = red->etiquetas[m];
+            nooki_profunda_adelante(red, x, h1, h2, p);
+
+            for (int k = 0; k < c; ++k) {
+                dz[k] = p[k] - (k == etiqueta ? 1.0 : 0.0);
+            }
+            for (int k = 0; k < c; ++k) {
+                red->b3[k] -= tasa * dz[k];
+                for (int b = 0; b < h; ++b) {
+                    red->w3[b * c + k] -= tasa * dz[k] * h2[b];
+                }
+            }
+            for (int b = 0; b < h; ++b) {
+                double suma = 0.0;
+                for (int k = 0; k < c; ++k) {
+                    suma += red->w3[b * c + k] * dz[k];
+                }
+                d2[b] = suma * h2[b] * (1.0 - h2[b]);
+            }
+            for (int b = 0; b < h; ++b) {
+                red->b2[b] -= tasa * d2[b];
+                for (int a = 0; a < h; ++a) {
+                    red->w2[a * h + b] -= tasa * d2[b] * h1[a];
+                }
+            }
+            for (int a = 0; a < h; ++a) {
+                double suma = 0.0;
+                for (int b = 0; b < h; ++b) {
+                    suma += red->w2[a * h + b] * d2[b];
+                }
+                d1[a] = suma * h1[a] * (1.0 - h1[a]);
+            }
+            for (int a = 0; a < h; ++a) {
+                red->b1[a] -= tasa * d1[a];
+                for (int i = 0; i < e; ++i) {
+                    red->w1[i * h + a] -= tasa * d1[a] * x[i];
+                }
+            }
+        }
+    }
+
+    free(h1);
+    free(h2);
+    free(p);
+    free(dz);
+    free(d2);
+    free(d1);
+}
+
+long long nooki_ia_profunda_aciertos(long long manejador) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL) {
+        return 0;
+    }
+    long long bien = 0;
+    for (int m = 0; m < red->cuantas; ++m) {
+        const double* x = red->xs + (size_t)m * (size_t)red->entradas;
+        if (nooki_profunda_clase(red, x, NULL) == red->etiquetas[m]) {
+            bien += 1;
+        }
+    }
+    return bien;
+}
+
+void nooki_ia_profunda_liberar(long long manejador) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL) {
+        return;
+    }
+    free(red->w1);
+    free(red->b1);
+    free(red->w2);
+    free(red->b2);
+    free(red->w3);
+    free(red->b3);
+    free(red->xs);
+    free(red->etiquetas);
+    free(red);
+}
+
 
 )nooki";
 }

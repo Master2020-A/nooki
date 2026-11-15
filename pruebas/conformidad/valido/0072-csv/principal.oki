@@ -1,0 +1,38 @@
+// Leer un CSV escrito por el propio programa: filas, campos y números.
+usar csv
+usar archivo
+
+funcion principal() -> entero {
+    variable ruta = "notas.csv" + ""
+    // Con punto y coma se pueden escribir decimales con coma.
+    variable contenido = "nombre;edad;nota\nAna;30;7,5\nLuis;25;8,25\n" + ""
+    variable escrito = archivo.escribir(&ruta, &contenido)
+    si (!archivo.existe(&ruta)) {
+        imprimir("no se escribió")
+        retornar 1
+    }
+
+    variable filas = csv.filas(&ruta)
+    imprimir(filas.largo())
+
+    variable punto_coma = ";" + ""
+    variable cabecera = filas.obtener(0)
+    variable titulos = csv.campos_con(&cabecera, &punto_coma)
+    imprimir(titulos.largo())
+
+    variable suma = 0.0
+    variable edades = 0
+    variable i = 1
+    mientras (i < filas.largo()) {
+        variable fila = filas.obtener(i)
+        variable campos = csv.campos_con(&fila, &punto_coma)
+        variable nota = campos.obtener(2)
+        variable edad = campos.obtener(1)
+        suma = suma + csv.a_numero(&nota)
+        edades = edades + csv.a_entero(&edad)
+        i = i + 1
+    }
+    imprimir(suma)
+    imprimir(edades)
+    retornar 0
+}
