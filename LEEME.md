@@ -35,7 +35,7 @@ $ nooki ejecutar hola.oki
 | Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas`, `archivo`, `ventana`, `diseno`, `controles`, `accesibilidad`, `imagenes`, `tensor`, `pln`, `tabla`, `autograd`, `redes` |
 | Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
 
-**Versión actual: 1.0.0.** La guía de interfaz gráfica está en [`docs/INTERFAZ.md`](docs/INTERFAZ.md). En Linux, compilar programas con ventana necesita `libx11-dev`; para ejecutarlos sin pantalla, `xvfb-run`. Dieciséis módulos de biblioteca, escritos en Nooki: los de datos y textos, los cinco de interfaz y los cinco de IA. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
+**Versión actual: 1.0.1.** La guía de interfaz gráfica está en [`docs/INTERFAZ.md`](docs/INTERFAZ.md). En Linux, compilar programas con ventana necesita `libx11-dev`; para ejecutarlos sin pantalla, `xvfb-run`. Dieciséis módulos de biblioteca, escritos en Nooki: los de datos y textos, los cinco de interfaz y los cinco de IA. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
 son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Probar sin instalar nada

@@ -3,7 +3,12 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.0.1] — 2026-11-15
+
+Primera versión posterior a la 1.0: cierra la API de inteligencia artificial, añade `Vector<flotante>` y
+`Mapa<texto, flotante>`, entrenamiento por lotes con momento, lectura de CSV, guardar y cargar las tres
+redes, formato de números dentro de un texto y `sino si`. Incluye las guías por audiencia y su
+verificación automática.
 
 ### Sprint 123 — El mapa de flotantes y prestar una llamada (2026-11-15)
 
