@@ -1,4 +1,4 @@
-﻿#include "nooki/ia/runtime_ia.hpp"
+#include "nooki/ia/runtime_ia.hpp"
 
 namespace nooki::ia {
 
@@ -2371,6 +2371,7 @@ void nooki_ia_profunda_liberar(long long manejador) {
     free(red->etiquetas);
     free(red);
 }
+
 
 
 )nooki";

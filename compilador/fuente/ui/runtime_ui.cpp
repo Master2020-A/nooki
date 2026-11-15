@@ -883,6 +883,7 @@ long long nooki_ui_dibujo_color_en(long long manejador, long long x, long long y
 
 #endif
 
+
 )nooki";
 }
 
