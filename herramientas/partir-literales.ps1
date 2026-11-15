@@ -54,7 +54,9 @@ function Trocear {
 $fallos = 0
 foreach ($archivo in $Ruta) {
     if (-not (Test-Path $archivo)) { continue }
-    $texto = Get-Content $archivo -Raw
+    # UTF-8 explícito: leer con la codificación por defecto (ANSI) rompe las
+    # tildes y escribe un BOM al guardar.
+    $texto = Get-Content $archivo -Raw -Encoding UTF8
     if ($texto -match "`r`n") { $texto = $texto.Replace("`r`n", "`n") }
 
     $desde = $texto.IndexOf($INICIO)
@@ -110,9 +112,8 @@ foreach ($archivo in $Ruta) {
         continue
     }
 
-    Copy-Item $archivo "$archivo.antes-del-troceado" -Force
-    Set-Content $archivo $resultado -Encoding utf8 -NoNewline
-    Remove-Item "$archivo.antes-del-troceado" -Force
+    # Sin BOM: MSVC y el propio compilador lo rechazan al principio del archivo.
+    [System.IO.File]::WriteAllText($archivo, $resultado, (New-Object System.Text.UTF8Encoding $false))
     Write-Host ("  reescrito en {0} trozos" -f $trozos.Count)
 }
 
