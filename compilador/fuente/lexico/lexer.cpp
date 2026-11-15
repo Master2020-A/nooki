@@ -222,8 +222,9 @@ bool es_operador_simple(char c) {
 }
 
 bool es_escape_valido(char c) {
-    return c == 'n' || c == 'r' || c == 't' || c == '\\' || c == '"' || c == '\'' || c == '0' ||
-           c == 'u';
+    // `\0` no está: un texto con un cero dentro se cortaría al usarlo como
+    // cadena de C, así que es mejor rechazarlo que aceptarlo a medias.
+    return c == 'n' || c == 'r' || c == 't' || c == '\\' || c == '"' || c == '\'' || c == 'u';
 }
 
 /// Texto imprimible para un carácter que no pertenece al lenguaje.

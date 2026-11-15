@@ -1,0 +1,18 @@
+// Las secuencias de escape de los textos se aplican de verdad.
+funcion principal() -> entero {
+    variable salto = "a\nb" + ""
+    imprimir(salto)
+    imprimir(salto.largo())
+
+    variable tabulador = "\t" + ""
+    imprimir(tabulador.largo())
+
+    variable barra = "c:\\ruta" + ""
+    imprimir(barra)
+    imprimir(barra.largo())
+
+    variable comillas = "dijo \"hola\"" + ""
+    imprimir(comillas)
+
+    retornar 0
+}

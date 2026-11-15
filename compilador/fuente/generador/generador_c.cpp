@@ -68,6 +68,50 @@ std::string tipo_c(std::string_view escrito) {
     return "long long";
 }
 
+/// Convierte las secuencias de escape del fuente en los caracteres que
+/// representan: `\n` en un salto, `\t` en un tabulador, `\\` en una barra.
+/// El lexer ya comprobó que son válidas; aquí solo se aplican.
+std::string desescapar(std::string_view texto) {
+    std::string salida;
+    salida.reserve(texto.size());
+    for (std::size_t i = 0; i < texto.size(); ++i) {
+        if (texto[i] != '\\' || i + 1 >= texto.size()) {
+            salida += texto[i];
+            continue;
+        }
+        switch (texto[i + 1]) {
+            case 'n':
+                salida += '\n';
+                break;
+            case 'r':
+                salida += '\r';
+                break;
+            case 't':
+                salida += '\t';
+                break;
+            case '0':
+                salida += '\0';
+                break;
+            case '\\':
+                salida += '\\';
+                break;
+            case '"':
+                salida += '"';
+                break;
+            case '\'':
+                salida += '\'';
+                break;
+            default:
+                // Una secuencia desconocida (el lexer ya avisó) se deja tal cual.
+                salida += '\\';
+                salida += texto[i + 1];
+                break;
+        }
+        ++i;
+    }
+    return salida;
+}
+
 std::string escapar_c(std::string_view texto) {
     std::string salida;
     salida.reserve(texto.size() + 2);
@@ -3163,7 +3207,7 @@ private:
         const GuardiaProfundidad guardia(*this);
         switch (nodo.tipo) {
             case TipoExpresion::Texto:
-                return "nooki_texto_literal(\"" + escapar_c(nodo.lexema) + "\")";
+                return "nooki_texto_literal(\"" + escapar_c(desescapar(nodo.lexema)) + "\")";
             case TipoExpresion::Entero:
                 return limpiar_separadores(nodo.lexema);
             case TipoExpresion::Flotante:

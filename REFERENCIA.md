@@ -62,8 +62,10 @@ identificador.
 | `booleano` | `verdadero` `falso` | |
 | `nulo` | `nulo` | valor ausente |
 
-Escapes admitidos dentro de `"..."`: `\n`, `\t`, `\\`, `\"`. Un `"""` abre un texto multilínea que
-termina en el siguiente `"""` y **no interpreta escapes**.
+Escapes admitidos dentro de `"..."`: `\n` (salto), `\r` (retorno), `\t` (tabulador), `\\` (barra),
+`\"` (comillas) y `\'`. Cualquier otra secuencia es `NOK1009`, incluida `\0`: un texto con un cero dentro
+se cortaría al usarlo como cadena, así que se rechaza. Un `"""` abre un texto multilínea que termina en
+el siguiente `"""` y **no interpreta escapes**.
 
 No existen: literales de carácter entre comillas simples, cadenas sin procesar, números complejos,
 literales binarios (`0b`) ni octales.

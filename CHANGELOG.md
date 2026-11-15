@@ -26,7 +26,13 @@ estructura para no tocar la de una capa, y aprende las tres bandas diagonales al
 Lo que **no** consigue, y queda dicho: la **paridad de 4 bits** se queda en 8 de 16 —la clase
 mayoritaria— con cualquier configuración probada. El descenso de gradiente plano no basta para eso.
 
-Casos nuevos `0072-csv` y `0073-red-profunda`. **103 casos.**
+**Y un fallo de fondo: los escapes no se aplicaban.** `"a\nb"` imprimía `a\nb` —el lexer validaba la
+secuencia y el generador la volvía a escapar, así que el carácter nunca llegaba—. Ahora `\n`, `\r`, `\t`,
+`\\`, `\"` y `\'` se aplican de verdad, y `\0` se rechaza (`NOK1009`) porque un texto con un cero dentro
+se cortaría al usarlo como cadena. Salió al probar `csv`: el programa escribía archivos con la barra y la
+`n` en vez de un salto.
+
+Casos nuevos `0072-csv`, `0073-red-profunda` y `0074-escapes`. **104 casos.**
 
 ### Sprint 119 — Las guías, comprobadas y dentro del paquete (2026-11-14)
 
