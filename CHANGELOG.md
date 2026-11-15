@@ -29,7 +29,7 @@ justo esos valores en cuanto los logits se separan. Ahora `exp` usa **reducción
 (`x = k·ln2 + r`), que es exacta en todo el dominio y además arregla `tensor.softmax` y las sigmoides.
 
 Con eso: **225 de 225** aciertos en el ejemplo de las tres bandas (`ejemplos/09-clases`), que dibuja la
-frontera aprendida, y caso `0068-clases` en la suite. **99 casos.**
+frontera aprendida, y caso `0068-clases` en la suite. **98 casos.**
 
 ### Sprint 115 — Guardar y cargar la red (2026-11-14)
 
