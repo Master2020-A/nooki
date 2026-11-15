@@ -2374,6 +2374,169 @@ void nooki_ia_profunda_liberar(long long manejador) {
 
 
 
+
+/* --- Entrenamiento por lotes, con momento ---
+ *
+ * El entrenamiento de antes actualizaba los pesos después de **cada** muestra:
+ * el camino es ruidoso y hay que bajar mucho la tasa para que no se atore. Aquí
+ * se acumulan los gradientes de un lote y se aplican de una vez, con momento:
+ *
+ *   v = momento·v − tasa·gradiente_acumulado
+ *   peso += v
+ *
+ * Con momento, el paso conserva algo de la dirección anterior: atraviesa zonas
+ * planas y amortigua el zigzag. Es lo que hace que un problema como la paridad
+ * de cuatro bits —que con el descenso plano se queda en la clase mayoritaria—
+ * se pueda aprender. */
+
+void nooki_ia_profunda_entrenar_lote(long long manejador, long long vueltas, double tasa,
+                                            long long lote, double momento) {
+    nooki_red_profunda* red = nooki_profunda_de(manejador);
+    if (red == NULL || red->cuantas == 0) {
+        return;
+    }
+    if (lote < 1) {
+        lote = 1;
+    }
+    if (lote > red->cuantas) {
+        lote = red->cuantas;
+    }
+    if (momento < 0.0 || momento >= 1.0) {
+        momento = 0.9;
+    }
+
+    const int e = red->entradas;
+    const int h = red->ocultas;
+    const int c = red->clases;
+    const size_t ne = (size_t)e * (size_t)h;
+    const size_t nh = (size_t)h * (size_t)h;
+    const size_t nc = (size_t)h * (size_t)c;
+
+    /* Gradientes acumulados y velocidades, del mismo tamaño que los pesos. */
+    double* gw1 = (double*)calloc(ne, sizeof(double));
+    double* gb1 = (double*)calloc((size_t)h, sizeof(double));
+    double* gw2 = (double*)calloc(nh, sizeof(double));
+    double* gb2 = (double*)calloc((size_t)h, sizeof(double));
+    double* gw3 = (double*)calloc(nc, sizeof(double));
+    double* gb3 = (double*)calloc((size_t)c, sizeof(double));
+    double* vw1 = (double*)calloc(ne, sizeof(double));
+    double* vb1 = (double*)calloc((size_t)h, sizeof(double));
+    double* vw2 = (double*)calloc(nh, sizeof(double));
+    double* vb2 = (double*)calloc((size_t)h, sizeof(double));
+    double* vw3 = (double*)calloc(nc, sizeof(double));
+    double* vb3 = (double*)calloc((size_t)c, sizeof(double));
+    double* h1 = (double*)malloc((size_t)h * sizeof(double));
+    double* h2 = (double*)malloc((size_t)h * sizeof(double));
+    double* p = (double*)malloc((size_t)c * sizeof(double));
+    double* dz = (double*)malloc((size_t)c * sizeof(double));
+    double* d2 = (double*)malloc((size_t)h * sizeof(double));
+    double* d1 = (double*)malloc((size_t)h * sizeof(double));
+
+    if (gw1 == NULL || gb1 == NULL || gw2 == NULL || gb2 == NULL || gw3 == NULL ||
+        gb3 == NULL || vw1 == NULL || vb1 == NULL || vw2 == NULL || vb2 == NULL ||
+        vw3 == NULL || vb3 == NULL || h1 == NULL || h2 == NULL || p == NULL || dz == NULL ||
+        d2 == NULL || d1 == NULL) {
+        free(gw1); free(gb1); free(gw2); free(gb2); free(gw3); free(gb3);
+        free(vw1); free(vb1); free(vw2); free(vb2); free(vw3); free(vb3);
+        free(h1); free(h2); free(p); free(dz); free(d2); free(d1);
+        return;
+    }
+
+    int en_lote = 0;
+    for (long long vuelta = 0; vuelta < vueltas; ++vuelta) {
+        for (int m = 0; m < red->cuantas; ++m) {
+            const double* x = red->xs + (size_t)m * (size_t)e;
+            const int etiqueta = red->etiquetas[m];
+            nooki_profunda_adelante(red, x, h1, h2, p);
+
+            for (int k = 0; k < c; ++k) {
+                dz[k] = p[k] - (k == etiqueta ? 1.0 : 0.0);
+            }
+            for (int k = 0; k < c; ++k) {
+                gb3[k] += dz[k];
+                for (int b = 0; b < h; ++b) {
+                    gw3[b * c + k] += dz[k] * h2[b];
+                }
+            }
+            for (int b = 0; b < h; ++b) {
+                double suma = 0.0;
+                for (int k = 0; k < c; ++k) {
+                    suma += red->w3[b * c + k] * dz[k];
+                }
+                d2[b] = suma * h2[b] * (1.0 - h2[b]);
+            }
+            for (int b = 0; b < h; ++b) {
+                gb2[b] += d2[b];
+                for (int a = 0; a < h; ++a) {
+                    gw2[a * h + b] += d2[b] * h1[a];
+                }
+            }
+            for (int a = 0; a < h; ++a) {
+                double suma = 0.0;
+                for (int b = 0; b < h; ++b) {
+                    suma += red->w2[a * h + b] * d2[b];
+                }
+                d1[a] = suma * h1[a] * (1.0 - h1[a]);
+            }
+            for (int a = 0; a < h; ++a) {
+                gb1[a] += d1[a];
+                for (int i = 0; i < e; ++i) {
+                    gw1[i * h + a] += d1[a] * x[i];
+                }
+            }
+
+            en_lote += 1;
+            if (en_lote < lote && m + 1 < red->cuantas) {
+                continue;
+            }
+
+            /* Se aplica el lote: gradiente medio, momento y paso. */
+            const double escala = 1.0 / (double)en_lote;
+            for (size_t i = 0; i < ne; ++i) {
+                const double g = gw1[i] * escala;
+                vw1[i] = momento * vw1[i] - tasa * g;
+                red->w1[i] += vw1[i];
+                gw1[i] = 0.0;
+            }
+            for (size_t i = 0; i < (size_t)h; ++i) {
+                const double g = gb1[i] * escala;
+                vb1[i] = momento * vb1[i] - tasa * g;
+                red->b1[i] += vb1[i];
+                gb1[i] = 0.0;
+            }
+            for (size_t i = 0; i < nh; ++i) {
+                const double g = gw2[i] * escala;
+                vw2[i] = momento * vw2[i] - tasa * g;
+                red->w2[i] += vw2[i];
+                gw2[i] = 0.0;
+            }
+            for (size_t i = 0; i < (size_t)h; ++i) {
+                const double g = gb2[i] * escala;
+                vb2[i] = momento * vb2[i] - tasa * g;
+                red->b2[i] += vb2[i];
+                gb2[i] = 0.0;
+            }
+            for (size_t i = 0; i < nc; ++i) {
+                const double g = gw3[i] * escala;
+                vw3[i] = momento * vw3[i] - tasa * g;
+                red->w3[i] += vw3[i];
+                gw3[i] = 0.0;
+            }
+            for (size_t i = 0; i < (size_t)c; ++i) {
+                const double g = gb3[i] * escala;
+                vb3[i] = momento * vb3[i] - tasa * g;
+                red->b3[i] += vb3[i];
+                gb3[i] = 0.0;
+            }
+            en_lote = 0;
+        }
+    }
+
+    free(gw1); free(gb1); free(gw2); free(gb2); free(gw3); free(gb3);
+    free(vw1); free(vb1); free(vw2); free(vb2); free(vw3); free(vb3);
+    free(h1); free(h2); free(p); free(dz); free(d2); free(d1);
+}
+
 )nooki";
 }
 

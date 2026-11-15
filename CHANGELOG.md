@@ -5,6 +5,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 121 — Publicado, y entrenar por lotes (2026-11-14)
+
+**El proyecto está en GitHub**: <https://github.com/Master2020-A/nooki>, público, 130 commits. La primera
+ejecución de la CI dio la razón a publicar: **Windows MSVC y Linux GCC pasan**, y a la vez salieron dos
+cosas que sólo se ven fuera de esta máquina — el trabajo de formato se caía porque `.clang-format` tenía
+un bloque `Language: YAML` que la versión del ejecutor no entiende, y el trabajo de macOS quedó cancelado
+antes de configurar.
+
+**Entrenar por lotes, con momento.** `redes.entrenar_profunda_lote(red, vueltas, tasa, lote, momento)`
+acumula los gradientes de `lote` muestras y los aplica de una vez, conservando parte de la dirección
+anterior. Con eso:
+
+| Problema | Muestra a muestra | Por lotes + momento |
+|---|---|---|
+| Paridad de 4 bits | **8 de 16** (clase mayoritaria) con toda configuración probada | **16 de 16** |
+
+Caso nuevo `0075-lotes-momento`. **105 casos.**
+
+### Sprint 120 — Leer CSV y red de dos capas (2026-11-14)
+
 ### Sprint 120 — Leer CSV y red de dos capas (2026-11-14)
 
 **Leer datos de verdad.** Faltaba lo más básico para usar el lenguaje con datos: convertir texto en

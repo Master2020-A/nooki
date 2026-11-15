@@ -24,7 +24,3 @@ Language: Json
 BasedOnStyle: LLVM
 IndentWidth: 4
 ColumnLimit: 120
----
-Language: YAML
-BasedOnStyle: LLVM
-IndentWidth: 2

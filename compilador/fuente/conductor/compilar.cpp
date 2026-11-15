@@ -147,6 +147,8 @@ externo funcion nooki_ia_profunda_confianza(red: entero, x: &Vector<flotante>) -
 externo funcion nooki_ia_profunda_aciertos(red: entero) -> entero
 externo funcion nooki_ia_profunda_total(red: entero) -> entero
 externo funcion nooki_ia_profunda_liberar(red: entero) -> vacio
+externo funcion nooki_ia_profunda_entrenar_lote(red: entero, vueltas: entero, tasa: flotante,
+                                                 lote: entero, momento: flotante) -> vacio
 
 // Crea una red con esas entradas (1 a 4) y neuronas ocultas.
 publico funcion nueva(entradas: entero, ocultas: entero) -> entero {
@@ -277,6 +279,13 @@ publico funcion total_profunda(red: entero) -> entero {
 
 publico funcion liberar_profunda(red: entero) -> vacio {
     nooki_ia_profunda_liberar(red)
+}
+
+// Entrena por lotes y con momento. `lote` muestras por paso; `momento` entre 0
+// y 1 (0,9 va bien). Aprende más rápido y aguanta tasas más altas.
+publico funcion entrenar_profunda_lote(red: entero, vueltas: entero, tasa: flotante,
+                                       lote: entero, momento: flotante) -> vacio {
+    nooki_ia_profunda_entrenar_lote(red, vueltas, tasa, lote, momento)
 }
 
 // Entrena: vueltas sobre los ejemplos con esa tasa de aprendizaje.

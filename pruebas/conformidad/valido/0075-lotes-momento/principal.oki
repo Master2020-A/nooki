@@ -1,0 +1,54 @@
+// Entrenar por lotes y con momento aprende la paridad de cuatro bits,
+// que con el descenso muestra a muestra se queda en la clase mayoritaria.
+usar redes
+
+funcion bits(valor: entero) -> Vector<flotante> {
+    variable v = Vector<flotante>.nuevo()
+    variable k = 0
+    mientras (k < 4) {
+        v.agregar(((valor >> k) & 1) como flotante)
+        k = k + 1
+    }
+    retornar v
+}
+
+funcion paridad(valor: entero) -> entero {
+    variable unos = 0
+    variable k = 0
+    mientras (k < 4) {
+        unos = unos + ((valor >> k) & 1)
+        k = k + 1
+    }
+    si (unos % 2 == 0) {
+        retornar 0
+    }
+    retornar 1
+}
+
+funcion principal() -> entero {
+    variable red = redes.nueva_profunda(4, 16, 2)
+
+    variable i = 0
+    mientras (i < 16) {
+        variable x = bits(i)
+        si (!redes.ejemplo_profunda(red, &x, paridad(i))) {
+            imprimir("no acepta")
+        }
+        i = i + 1
+    }
+
+    imprimir(redes.total_profunda(red))
+    // Lote de 4 y momento 0,9.
+    redes.entrenar_profunda_lote(red, 2500, 0.5, 4, 0.9)
+    imprimir(redes.aciertos_profunda(red))
+
+    // Los cuatro primeros valores y sus paridades.
+    variable j = 0
+    mientras (j < 4) {
+        variable x = bits(j)
+        imprimir(redes.predecir_profunda(red, &x))
+        j = j + 1
+    }
+    redes.liberar_profunda(red)
+    retornar 0
+}
