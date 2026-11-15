@@ -270,6 +270,51 @@ publico funcion ejemplo(red: entero, x1: flotante, x2: flotante, x3: flotante, x
 publico funcion ejemplos(red: entero) -> entero {
 ```
 ```text
+publico funcion guardar(red: entero, ruta: &texto) -> booleano {
+```
+```text
+publico funcion cargar(ruta: &texto) -> entero {
+```
+```text
+publico funcion nueva_clases(entradas: entero, ocultas: entero, clases: entero) -> entero {
+```
+```text
+publico funcion ejemplo_clase(red: entero, x1: flotante, x2: flotante, x3: flotante,
+```
+```text
+publico funcion entrenar_clases(red: entero, vueltas: entero, tasa: flotante) -> vacio {
+```
+```text
+publico funcion predecir_clase(red: entero, x1: flotante, x2: flotante, x3: flotante,
+```
+```text
+publico funcion probabilidad(red: entero, x1: flotante, x2: flotante, x3: flotante,
+```
+```text
+publico funcion aciertos_clase(red: entero) -> entero {
+```
+```text
+publico funcion total_clase(red: entero) -> entero {
+```
+```text
+publico funcion liberar_clase(red: entero) -> vacio {
+```
+```text
+publico funcion guardar_clase(red: entero, ruta: &texto) -> booleano {
+```
+```text
+publico funcion cargar_clase(ruta: &texto) -> entero {
+```
+```text
+publico funcion ejemplo_datos(red: entero, x: &Vector<flotante>, cual: entero) -> booleano {
+```
+```text
+publico funcion predecir_datos(red: entero, x: &Vector<flotante>) -> entero {
+```
+```text
+publico funcion probabilidad_datos(red: entero, x: &Vector<flotante>, cual: entero) -> flotante {
+```
+```text
 publico funcion entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio {
 ```
 ```text

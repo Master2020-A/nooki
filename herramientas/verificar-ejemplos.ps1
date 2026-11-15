@@ -6,7 +6,7 @@
 # se desincronice del lenguaje.
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][string]$Documento,
+    [Parameter(Mandatory = $true)][string[]]$Documento,
     [string]$Nooki = ""
 )
 
@@ -20,7 +20,8 @@ if (-not $Nooki) {
 }
 if (-not $Nooki) { throw "no se encontró nooki.exe" }
 
-$lineas = Get-Content $Documento
+$lineas = @()
+foreach ($uno in $Documento) { $lineas += Get-Content $uno }
 $bloques = @()
 $actual = $null
 $enBloque = $false
