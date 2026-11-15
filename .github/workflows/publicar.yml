@@ -1,0 +1,58 @@
+name: Publicar la distribución
+
+# Se dispara al empujar una etiqueta de versión (`v1.0.2`, `v2.0.0`…). Construye
+# el paquete de Linux y lo adjunta a la versión, junto al de Windows que se
+# genera en local con `herramientas/empaquetar.ps1`.
+on:
+  push:
+    tags:
+      - 'v*'
+  # A mano, para rehacer un paquete sin tocar la etiqueta.
+  workflow_dispatch:
+    inputs:
+      etiqueta:
+        description: 'Etiqueta a la que adjuntar el paquete (por ejemplo v1.0.1)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    name: Paquete de Linux
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      # Los programas con ventana se enlazan con X11.
+      - name: Instalar X11
+        run: sudo apt-get update && sudo apt-get install -y libx11-dev
+
+      - name: Empaquetar
+        run: |
+          chmod +x herramientas/empaquetar.sh
+          ./herramientas/empaquetar.sh linux
+
+      # Antes de subir nada: el binario del paquete tiene que responder.
+      - name: Comprobar el paquete
+        run: |
+          version=$(sed -n 's/^ *VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt | head -1)
+          carpeta="dist/nooki-$version-linux-x86_64"
+          "$carpeta/nooki" --version
+          "$carpeta/nooki" --version | grep -q "^nooki $version "
+          "$carpeta/nooki" ejecutar "$carpeta/ejemplos/01-hola/principal.oki"
+
+      - name: Adjuntar a la versión
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ github.event.inputs.etiqueta }}"
+          if [ -z "$tag" ]; then
+            tag="${GITHUB_REF_NAME}"
+          fi
+          if ! gh release view "$tag" > /dev/null 2>&1; then
+            gh release create "$tag" --title "Nooki ${tag#v}" --generate-notes
+          fi
+          gh release upload "$tag" dist/*.tar.gz --clobber
+          gh release view "$tag" --json assets --jq '.assets[].name'

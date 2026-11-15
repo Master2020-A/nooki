@@ -42,12 +42,27 @@ rm -rf "$destino"
 mkdir -p "$destino/spec"
 
 cp "$binario" "$destino/nooki"
-for documento in LEEME.md GUIA.md NOTAS_DE_VERSION.md CHANGELOG.md DECISIONES.md \
-                 LICENCIA.md LICENCIA-MIT.txt LICENCIA-APACHE.txt CONTRIBUIR.md PUBLICAR.md; do
+for documento in LEEME.md GUIA.md MANUAL.md REFERENCIA.md NOTAS_DE_VERSION.md CHANGELOG.md \
+                 DECISIONES.md LICENCIA.md LICENCIA-MIT.txt LICENCIA-APACHE.txt CONTRIBUIR.md \
+                 PUBLICAR.md; do
     [ -f "$documento" ] && cp "$documento" "$destino/"
 done
 
+# Las guías por audiencia y sus PDF, si están.
+if [ -d docs/guias ]; then
+    mkdir -p "$destino/guias"
+    cp docs/guias/*.md "$destino/guias/" 2>/dev/null || true
+    cp docs/guias/*.pdf "$destino/guias/" 2>/dev/null || true
+fi
+for pdf in GUIA_DEL_USUARIO.pdf GUIA_DEL_ADMINISTRADOR.pdf GUIA_DEL_DESARROLLADOR.pdf \
+           REFERENCIA_DEL_LENGUAJE.pdf; do
+    [ -f "$pdf" ] && cp "$pdf" "$destino/guias/"
+done
+
 cp -r ejemplos editores "$destino/"
+# El instalador, como en el paquete de Windows.
+mkdir -p "$destino/herramientas"
+cp herramientas/instalar.ps1 "$destino/herramientas/" 2>/dev/null || true
 cp spec/especificacion-v0.1.md "$destino/spec/"
 
 cat > "$destino/INSTALAR.txt" <<TEXTO

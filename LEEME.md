@@ -1,5 +1,10 @@
 # Nooki
 
+[![Integración continua](https://github.com/Master2020-A/nooki/actions/workflows/ci.yml/badge.svg)](https://github.com/Master2020-A/nooki/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/github/v/release/Master2020-A/nooki?label=versi%C3%B3n)](https://github.com/Master2020-A/nooki/releases/latest)
+[![Licencia](https://img.shields.io/badge/licencia-MIT%20o%20Apache--2.0-blue)](LICENCIA.md)
+[![Casos](https://img.shields.io/badge/casos%20de%20conformidad-111-brightgreen)](pruebas/conformidad/)
+
 **Un lenguaje compilado, con sintaxis en español, tipado seguro y memoria determinista.**
 
 Nooki se escribe en archivos `.oki` y se compila a un binario nativo. Usa un compilador de C
@@ -7,16 +12,29 @@ Nooki se escribe en archivos `.oki` y se compila a un binario nativo. Usa un com
 propio.
 
 ```aura
+usar redes
+
 funcion principal() -> entero {
-    imprimir("¡Hola, Nooki!")
+    variable red = redes.nueva_profunda(2, 12, 3)
+    variable punto = Vector<flotante>.nuevo()
+    punto.agregar(0.5)
+    punto.agregar(0.5)
+    redes.ejemplo_profunda(red, &punto, 2)
+    redes.entrenar_profunda(red, 8000, 0.3)
+    imprimir(redes.predecir_profunda(red, &punto))
+    redes.liberar_profunda(red)
     retornar 0
 }
 ```
 
-```bash
-$ nooki ejecutar hola.oki
-¡Hola, Nooki!
-```
+Ese es un programa completo: 24 líneas, sin dependencias, que **entrena una red neuronal** y la usa.
+
+## Una aplicación de escritorio, en el repositorio
+
+![Lista de tareas escrita en Nooki](docs/captura-tareas.png)
+
+`ejemplos/06-tareas` es un programa con ratón y teclado, escrito entero en Nooki: ventana, botones,
+campo de texto, lista y persistencia. Se ejecuta con `nooki ejecutar ejemplos/06-tareas/principal.oki`.
 
 ## Qué tiene
 
@@ -30,13 +48,15 @@ $ nooki ejecutar hola.oki
 | Enumeraciones con datos y emparejamiento | sí |
 | Rasgos y despacho por rasgo (`&Rasgo`) | sí |
 | Errores como valores (`resultado` y `?`), sin excepciones | sí |
-| Colecciones: `Vector<entero>`, `Vector<texto>`, `Mapa<texto, entero>` | sí |
+| Colecciones: `Vector<entero>`, `Vector<texto>`, `Vector<flotante>`, `Mapa<texto, entero>`, `Mapa<texto, flotante>` | sí |
 | Módulos con visibilidad y proyectos con `biblioteca/` | sí |
-| Biblioteca estándar escrita en Nooki | `resultado`, `matematicas`, `textos`, `listas`, `fechas`, `archivo`, `ventana`, `diseno`, `controles`, `accesibilidad`, `imagenes`, `tensor`, `pln`, `tabla`, `autograd`, `redes` |
-| Control de hardware (`inseguro`, `asm!`) | pendiente (fase posterior) |
+| Biblioteca estándar escrita en Nooki | 17 módulos: datos y textos, interfaz gráfica e IA |
+| Interfaz gráfica de escritorio | sí (Windows y Linux; macOS compila, sin backend de ventana) |
+| Redes neuronales y datos | sí: una y dos capas ocultas, CSV, tensores, tablas |
+| Control de hardware (`inseguro`, `asm!`) | `asm!` sí; lo demás, fase posterior |
+| **Verificación** | **111 casos de conformidad · 18 suites · Windows, Linux y ASan+UBSan** |
 
-**Versión actual: 1.0.1.** La guía de interfaz gráfica está en [`docs/INTERFAZ.md`](docs/INTERFAZ.md). En Linux, compilar programas con ventana necesita `libx11-dev`; para ejecutarlos sin pantalla, `xvfb-run`. Dieciséis módulos de biblioteca, escritos en Nooki: los de datos y textos, los cinco de interfaz y los cinco de IA. No hay defectos conocidos: todos los huecos de propiedad están cerrados o
-son error de compilación. Lo que falta son características planificadas, no fallos.
+**Versión actual: 1.0.1.**son error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Probar sin instalar nada
 
@@ -119,6 +139,10 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 ```
 
 ## Documentación
+
+- **[Manual](MANUAL.md)** — el lenguaje capítulo a capítulo, con 69 programas que la suite compila.
+- **[Referencia](REFERENCIA.md)** — para consultar: tipos, operadores con su precedencia, miembros y los
+  46 diagnósticos. Las tablas se generan desde el compilador.
 
 - **[Guías por audiencia](docs/guias/LEEME.md)** — usuario, administrador, desarrollador y referencia
   del lenguaje. También en PDF: [usuario](GUIA_DEL_USUARIO.pdf),
