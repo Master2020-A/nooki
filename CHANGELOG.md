@@ -5,6 +5,22 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 126 — Un programa que lo junta todo (2026-11-15)
+
+`ejemplos/10-clasificador`: escribe un CSV con 225 puntos de tres clases, lo lee, entrena una red de dos
+capas ocultas y **dibuja la frontera que ha aprendido**. Si hay entorno gráfico la pinta en una ventana de
+480×480; si no, en caracteres. Acierta **225 de 225**.
+
+Es el primer programa que usa las tres piezas a la vez —datos, modelo y ventana—, y con él la suite
+aprende a comprobar algo que faltaba: **todos los ejemplos de `ejemplos/` se compilan** en cada `ctest`
+(10 programas), además de los del manual y la referencia.
+
+Probando la captura de la ventana salió un detalle: `PrintWindow` devuelve estados intermedios del
+dibujado, así que no publiqué la imagen. El ejemplo deja constancia de su salida por consola, que sí está
+verificada.
+
+## [1.0.1] — 2026-11-15
+
 ### Sprint 125 — `Mapa<texto, texto>` (2026-11-15)
 
 El mapa solo llevaba números, así que una agenda, un diccionario o una tabla de configuración había que

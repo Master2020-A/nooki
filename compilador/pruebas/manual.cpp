@@ -120,10 +120,49 @@ int main() {
 
     fs::remove_all(directorio, error_fs);
 
+    // Y los ejemplos del repositorio, uno por carpeta, también tienen que compilar.
+    int ejemplos_del_repositorio = 0;
+    const fs::path raiz = ruta_del_documento("LEEME.md").parent_path();
+    const fs::path carpeta_ejemplos = raiz / "ejemplos";
+    std::error_code error_dir;
+    if (fs::is_directory(carpeta_ejemplos, error_dir)) {
+        for (const auto& entrada : fs::directory_iterator(carpeta_ejemplos, error_dir)) {
+            if (!entrada.is_directory(error_dir)) {
+                continue;
+            }
+            const fs::path fuente = entrada.path() / "principal.oki";
+            if (!fs::exists(fuente, error_dir)) {
+                continue;
+            }
+            ejemplos_del_repositorio += 1;
+
+            nooki::conductor::Opciones opciones;
+            opciones.fuente = fuente;
+            opciones.solo_verificar = true;
+
+            nooki::diagnostico::GestorFuentes fuentes;
+            nooki::diagnostico::Emisor emisor;
+            std::ostringstream salida;
+            std::ostringstream errores;
+            const auto resultado =
+                nooki::conductor::compilar(opciones, fuentes, emisor, salida, errores);
+
+            if (resultado.codigo != 0 || emisor.hay_errores()) {
+                ++fallos;
+                std::cout << "FALLO el ejemplo " << fuente.filename().string() << " de "
+                          << entrada.path().filename().string() << "\n";
+                for (const auto& diagnostico : emisor.diagnosticos()) {
+                    std::cout << "  " << diagnostico.codigo() << "\n";
+                }
+            }
+        }
+    }
+
     if (fallos > 0) {
-        std::cout << fallos << " ejemplo(s) del manual no compilan\n";
+        std::cout << fallos << " ejemplo(s) no compilan\n";
         return 1;
     }
-    std::cout << "documentación: " << ejemplos.size() << " ejemplos compilan (manual y referencia)\n";
+    std::cout << "documentación: " << ejemplos.size() << " ejemplos del manual y la referencia, y "
+              << ejemplos_del_repositorio << " de ejemplos/, compilan\n";
     return 0;
 }

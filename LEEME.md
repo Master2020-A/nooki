@@ -36,6 +36,24 @@ Ese es un programa completo: 24 líneas, sin dependencias, que **entrena una red
 `ejemplos/06-tareas` es un programa con ratón y teclado, escrito entero en Nooki: ventana, botones,
 campo de texto, lista y persistencia. Se ejecuta con `nooki ejecutar ejemplos/06-tareas/principal.oki`.
 
+## Datos, modelo y ventana en el mismo programa
+
+`ejemplos/10-clasificador` escribe un CSV, lo lee, entrena una red de dos capas con él y dibuja la
+frontera que ha aprendido: en una ventana si hay entorno gráfico, y en caracteres si no.
+
+```
+$ nooki ejecutar ejemplos/10-clasificador/principal.oki
+muestras:
+225
+aciertos:
+225
+sin entorno gráfico; la frontera en caracteres:
+o o o + + + + + + + + + + + +
+o o o o + + + + + + + + + + +
+o o o o o + + + + + + + + + +
+...
+```
+
 ## Qué tiene
 
 | Pilar | Estado |

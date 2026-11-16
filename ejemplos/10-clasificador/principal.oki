@@ -1,0 +1,202 @@
+// Clasificador: lee datos de un CSV, entrena una red y la muestra por pantalla.
+//
+// Junta las tres piezas del lenguaje que más se usan juntas: leer datos, entrenar
+// un modelo y enseñarlo. Si hay entorno gráfico abre una ventana con los puntos y
+// la frontera que ha aprendido; si no, lo dibuja con caracteres.
+//
+//   nooki ejecutar ejemplos/10-clasificador/principal.oki
+
+usar redes
+usar csv
+usar archivo
+usar ventana
+usar textos
+
+// Los datos: tres clases en tres zonas, separadas por dos rectas.
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (y < x - 0.3) {
+        retornar 0
+    }
+    si (y > x + 0.3) {
+        retornar 1
+    }
+    retornar 2
+}
+
+// Escribe el CSV si no existe, para que el ejemplo se pueda ejecutar solo.
+funcion preparar_datos(ruta: &texto) -> vacio {
+    si (archivo.existe(ruta)) {
+        retornar
+    }
+    variable contenido = "x;y;clase\n" + ""
+
+    variable i = 0
+    mientras (i < 15) {
+        variable j = 0
+        mientras (j < 15) {
+            variable x = (i como flotante - 7.0) / 7.0
+            variable y = (j como flotante - 7.0) / 7.0
+            contenido = contenido + textos_de_punto(x, y)
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    variable escrito = archivo.escribir(ruta, &contenido)
+}
+
+funcion textos_de_punto(x: flotante, y: flotante) -> texto {
+    variable punto_coma = ";" + ""
+    variable salto = "\n" + ""
+    variable linea = textos.de_flotante(x) + punto_coma
+    linea = linea + textos.de_flotante(y) + punto_coma
+    linea = linea + textos.de_entero(clase_de(x, y)) + salto
+    retornar linea
+}
+
+funcion punto(x: flotante, y: flotante) -> Vector<flotante> {
+    variable v = Vector<flotante>.nuevo()
+    v.agregar(x)
+    v.agregar(y)
+    retornar v
+}
+
+// Dibuja la frontera aprendida con caracteres, para cuando no hay ventana.
+funcion dibujar_texto(red: entero) -> vacio {
+    variable i = 0
+    mientras (i < 15) {
+        variable linea = "" + ""
+        variable j = 0
+        mientras (j < 15) {
+            variable x = (i como flotante - 7.0) / 7.0
+            variable y = (j como flotante - 7.0) / 7.0
+            variable p = punto(x, y)
+            variable adivinada = redes.predecir_profunda(red, &p)
+
+            variable simbolo = "-" + ""
+            si (adivinada == 1) {
+                simbolo = "+" + ""
+            }
+            si (adivinada == 2) {
+                simbolo = "o" + ""
+            }
+            si (adivinada != clase_de(x, y)) {
+                simbolo = "X" + ""
+            }
+            linea = linea + simbolo + " "
+            j = j + 1
+        }
+        imprimir(linea)
+        i = i + 1
+    }
+}
+
+funcion principal() -> entero {
+    variable ruta = "puntos.csv" + ""
+    preparar_datos(&ruta)
+
+    // Leer el CSV y entrenar con él.
+    variable filas = csv.filas(&ruta)
+    variable punto_coma = ";" + ""
+    variable red = redes.nueva_profunda(2, 12, 3)
+
+    variable i = 1
+    mientras (i < filas.largo()) {
+        variable fila = filas.obtener(i)
+        variable campos = csv.campos_con(&fila, &punto_coma)
+        variable x = csv.a_numero(&campos.obtener(0))
+        variable y = csv.a_numero(&campos.obtener(1))
+        variable cual = csv.a_entero(&campos.obtener(2))
+        variable p = punto(x, y)
+        si (!redes.ejemplo_profunda(red, &p, cual)) {
+            imprimir("no acepta la muestra")
+        }
+        i = i + 1
+    }
+
+    imprimir("muestras: ")
+    imprimir(redes.total_profunda(red))
+
+    redes.entrenar_profunda_lote(red, 8000, 0.3, 8, 0.9)
+    imprimir("aciertos: ")
+    imprimir(redes.aciertos_profunda(red))
+
+    // Una ventana, si la hay.
+    variable titulo = "Nooki - clasificador" + ""
+    variable v = ventana.abrir(&titulo, 480, 480)
+    si (v == 0) {
+        imprimir("sin entorno gráfico; la frontera en caracteres:")
+        dibujar_texto(red)
+    } sino {
+        variable dibujar = verdadero
+        mientras (ventana.viva(v)) {
+            si (dibujar || ventana.repintar(v)) {
+                ventana.limpiar(v, 0x1E1E2E)
+                pintar(red, v)
+                ventana.presentar(v)
+                dibujar = falso
+            }
+            variable e = ventana.evento(v)
+            mientras (e != 0) {
+                si (ventana.es_cerrar(e)) {
+                    romper
+                }
+                e = ventana.evento(v)
+            }
+            ventana.pausa(16)
+        }
+        ventana.cerrar(v)
+    }
+
+    redes.liberar_profunda(red)
+    retornar 0
+}
+
+// Un color por clase, para los puntos y para el fondo de cada celda.
+funcion color_de(cual: entero) -> entero {
+    si (cual == 0) {
+        retornar 0x89B4FA
+    }
+    si (cual == 1) {
+        retornar 0xF38BA8
+    }
+    retornar 0xA6E3A1
+}
+
+funcion pintar(red: entero, v: entero) -> vacio {
+    // El fondo: la clase que predice la red en cada celda de 16 píxeles.
+    variable i = 0
+    mientras (i < 15) {
+        variable j = 0
+        mientras (j < 15) {
+            variable x = (i como flotante - 7.0) / 7.0
+            variable y = (j como flotante - 7.0) / 7.0
+            variable p = punto(x, y)
+            variable adivinada = redes.predecir_profunda(red, &p)
+            ventana.rectangulo(v, i * 32, j * 32, 32, 32, oscuro(color_de(adivinada)))
+            j = j + 1
+        }
+        i = i + 1
+    }
+
+    // Y encima, los puntos de verdad.
+    variable k = 0
+    mientras (k < 15) {
+        variable l = 0
+        mientras (l < 15) {
+            variable x = (k como flotante - 7.0) / 7.0
+            variable y = (l como flotante - 7.0) / 7.0
+            ventana.rectangulo(v, k * 32 + 12, l * 32 + 12, 8, 8, color_de(clase_de(x, y)))
+            l = l + 1
+        }
+        k = k + 1
+    }
+}
+
+// Oscurece un color para que los puntos resalten encima.
+funcion oscuro(color: entero) -> entero {
+    variable r = ((color >> 16) & 255) / 3
+    variable g = ((color >> 8) & 255) / 3
+    variable b = (color & 255) / 3
+    retornar (r << 16) | (g << 8) | b
+}
