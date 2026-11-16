@@ -1414,6 +1414,14 @@ publico funcion escribir(ruta: &texto, contenido: &texto) -> lectura {
     }
     retornar Bien("")
 }
+
+// Añade al final, sin borrar lo que hubiera. Útil para registros.
+publico funcion agregar(ruta: &texto, contenido: &texto) -> lectura {
+    si (!agregar_archivo(*ruta, *contenido)) {
+        retornar Mal("no se pudo añadir")
+    }
+    retornar Bien("")
+}
 )";
     }
     if (modulo == "listas") {

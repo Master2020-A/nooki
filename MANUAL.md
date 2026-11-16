@@ -602,6 +602,26 @@ funcion principal() -> entero {
 }
 ```
 
+### Con el índice
+
+Si además del elemento hace falta la posición, se piden las dos:
+
+```nooki
+funcion principal() -> entero {
+    variable nombres = Vector<texto>.nuevo()
+    nombres.agregar("Ana")
+    nombres.agregar("Luis")
+
+    para (i, nombre en nombres) {
+        imprimir(i)
+        imprimir(nombre)
+    }
+    retornar 0
+}
+```
+
+El índice empieza en 0 y es un `entero`.
+
 ### `hacer` ... `mientras`
 
 Ejecuta el cuerpo al menos una vez:

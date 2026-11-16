@@ -1018,11 +1018,22 @@ Sentencia Parser::analizar_para() {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
     }
 
-    if (const Token& variable = actual(); variable.es(TipoToken::Identificador)) {
-        sentencia.nombre = variable.lexema;
+    // `para (x en ...)` o `para (i, x en ...)`, con el índice delante.
+    if (const Token& primera = actual(); primera.es(TipoToken::Identificador)) {
+        sentencia.nombre = primera.lexema;
         avanzar();
+        if (aceptar_lexema(",")) {
+            if (const Token& elemento = actual(); elemento.es(TipoToken::Identificador)) {
+                sentencia.indice = sentencia.nombre;
+                sentencia.nombre = elemento.lexema;
+                avanzar();
+            } else {
+                error_en(elemento, diagnostico::codigos::TOKEN_INESPERADO,
+                         "un nombre de variable");
+            }
+        }
     } else {
-        error_en(variable, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de variable");
+        error_en(primera, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de variable");
     }
 
     if (!aceptar_lexema("en")) {

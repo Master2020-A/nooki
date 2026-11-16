@@ -1,0 +1,22 @@
+usar archivo
+
+funcion principal() -> entero {
+    variable ruta = "registro.txt" + ""
+    variable primera = "uno\n" + ""
+    variable segunda = "dos\n" + ""
+
+    variable a = archivo.escribir(&ruta, &primera)
+    variable b = archivo.agregar(&ruta, &segunda)
+
+    variable leido = archivo.leer(&ruta)
+    coincide (leido) {
+        caso Mal(m) => {
+            imprimir("no se pudo leer")
+        }
+        caso Bien(c) => {
+            imprimir(c.largo())
+            imprimir(c)
+        }
+    }
+    retornar 0
+}

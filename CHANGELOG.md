@@ -3,6 +3,27 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 124 — Portada, paquete de Linux y dos huecos del lenguaje (2026-11-15)
+
+**El LEEME es ahora la portada.** Distintivos de integración continua, versión, licencia y número de
+casos; un programa de veinte líneas que entrena una red neuronal y la usa; la captura de la aplicación de
+escritorio; y el manual y la referencia al principio de la documentación.
+
+**Paquete de Linux en cada versión.** Un flujo nuevo (`.github/workflows/publicar.yml`) que, al empujar
+una etiqueta, compila en Linux, empaqueta y adjunta el archivo a la versión — comprobando antes que el
+binario del paquete responde y ejecuta un ejemplo. El empaquetador de Linux incluye ya los mismos
+documentos que el de Windows, con las guías y sus PDF.
+
+**Dos huecos del lenguaje, cerrados:**
+
+- **`para (i, x en coleccion)`**: la posición además del elemento, sin llevar un contador a mano.
+- **`archivo.agregar(ruta, texto)`**: añadir al final sin borrar lo que hubiera, que es lo que hace falta
+  para un registro.
+
+Casos nuevos `0082-para-indice` y `0083-archivo-agregar`. **113 casos.**
+
 ## [1.0.1] — 2026-11-15
 
 Primera versión posterior a la 1.0: cierra la API de inteligencia artificial, añade `Vector<flotante>` y

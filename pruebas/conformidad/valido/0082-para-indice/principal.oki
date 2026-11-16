@@ -1,0 +1,28 @@
+funcion principal() -> entero {
+    variable v = Vector<texto>.nuevo()
+    v.agregar("uno" + "")
+    v.agregar("dos" + "")
+    v.agregar("tres" + "")
+
+    para (i, palabra en v) {
+        imprimir(i)
+        imprimir(palabra)
+    }
+
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(10)
+    numeros.agregar(30)
+    numeros.agregar(20)
+
+    // Dónde está el mayor.
+    variable mejor = 0
+    variable posicion = 0
+    para (k, n en numeros) {
+        si (n > mejor) {
+            mejor = n
+            posicion = k
+        }
+    }
+    imprimir(posicion)
+    retornar 0
+}

@@ -186,7 +186,7 @@ Cada sentencia ocupa su línea. No hay `;` al final.
 | Condicional | `si (condicion) { ... } sino { ... }` — el `sino` es opcional, y `sino si (condicion) { ... }` encadena sin anidar |
 | Bucle mientras | `mientras (condicion) { ... }` |
 | Bucle hacer | `hacer { ... } mientras (condicion)` |
-| Bucle para | `para (nombre en inicio..fin) { ... }` · `para (nombre en inicio..=fin)` · `para (nombre en coleccion)` |
+| Bucle para | `para (nombre en inicio..fin) { ... }` · `para (nombre en inicio..=fin)` · `para (nombre en coleccion)` · `para (indice, nombre en coleccion)`, con el índice desde 0 |
 | Salida de bucle | `romper` · `continuar` |
 | Retorno | `retornar expresion` · `retornar` |
 | Coincidencia | `coincide (expresion) { caso patron => { ... } ... }` |

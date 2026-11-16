@@ -919,6 +919,9 @@ private:
                     sentencia.expresion &&
                     sentencia.expresion->tipo == TipoExpresion::Identificador &&
                     es_vector_flotante(sentencia.expresion->lexema);
+                if (!sentencia.indice.empty()) {
+                    declarar(sentencia.indice, Tipo::Entero);
+                }
                 declarar(sentencia.nombre, sobre_textos ? Tipo::Texto
                                             : sobre_flotantes ? Tipo::Flotante
                                                               : Tipo::Entero);
@@ -1457,8 +1460,10 @@ private:
 
 
         if (nombre_llamado == "leer_archivo" || nombre_llamado == "existe_archivo" ||
-            nombre_llamado == "escribir_archivo") {
-            const std::size_t esperados = nombre_llamado == "escribir_archivo" ? 2 : 1;
+            nombre_llamado == "escribir_archivo" || nombre_llamado == "agregar_archivo") {
+            const std::size_t esperados =
+                (nombre_llamado == "escribir_archivo" || nombre_llamado == "agregar_archivo") ? 2
+                                                                                            : 1;
             if (expresion.lista.size() != esperados) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
                     .parametro("funcion", std::string(nombre_llamado))

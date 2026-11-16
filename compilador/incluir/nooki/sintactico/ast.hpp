@@ -122,6 +122,9 @@ struct Sentencia {
     /// Nombre declarado o variable de iteración.
     std::string_view nombre;
 
+    /// En `para (i, x en coleccion)`, el nombre del índice. Vacío si no lo hay.
+    std::string_view indice;
+
     /// Tipo escrito en la declaración, si lo hay.
     std::string_view tipo_declarado;
 

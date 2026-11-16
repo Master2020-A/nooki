@@ -1233,6 +1233,23 @@ const char* PRELUDIO =
     "    return t;\n"
     "}\n"
     "\n"
+    "/* Añade al final del archivo, sin borrar lo que hubiera. */\n"
+    "static int nooki_agregar_archivo(const char* ruta, const char* contenido) {\n"
+    "    if (ruta == NULL || contenido == NULL) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    FILE* archivo = fopen(ruta, \"ab\");\n"
+    "    if (archivo == NULL) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    const size_t largo = strlen(contenido);\n"
+    "    const int bien = fwrite(contenido, 1, largo, archivo) == largo;\n"
+    "    if (fclose(archivo) != 0) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    return bien;\n"
+    "}\n"
+    "\n"
     "static int nooki_escribir_archivo(const char* ruta, const char* contenido) {\n"
     "    FILE* archivo = fopen(ruta, \"wb\");\n"
     "    if (archivo == NULL) {\n"
@@ -3005,11 +3022,19 @@ private:
                 << tipo_base << "_largo(__nooki_col); ++" << indice << ") {\n";
         ++nivel_;
 
+        // Si el bucle pide el índice, se declara con ese nombre.
+        if (!sentencia.indice.empty()) {
+            salida_ << indentacion() << "long long " << sentencia.indice << " = " << indice
+                    << ";\n";
+        }
         salida_ << indentacion() << elemento << " " << nombre << " = " << tipo_base
                 << "_obtener(__nooki_col, " << indice << ");\n";
 
         abrir_ambito();
         declarar(sentencia.nombre, elemento);
+        if (!sentencia.indice.empty()) {
+            declarar(sentencia.indice, "long long");
+        }
         for (const sintactico::Sentencia& hija : sentencia.cuerpo) {
             emitir_sentencia(hija, false);
         }
@@ -3337,6 +3362,7 @@ private:
                         return "nooki_texto";
                     }
                     if (expresion.izquierda->lexema == "escribir_archivo" ||
+                        expresion.izquierda->lexema == "agregar_archivo" ||
                         expresion.izquierda->lexema == "existe_archivo") {
                         return "int";
                     }
@@ -4040,7 +4066,7 @@ private:
 
 
         if (nombre_llamado == "leer_archivo" || nombre_llamado == "escribir_archivo" ||
-            nombre_llamado == "existe_archivo") {
+            nombre_llamado == "agregar_archivo" || nombre_llamado == "existe_archivo") {
             std::string salida = "nooki_" + std::string(nombre_llamado) + "(";
             bool primero = true;
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
