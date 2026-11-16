@@ -2,6 +2,27 @@
 
 Utilidades del proyecto que no forman parte del compilador.
 
+## `descargar-wiki.ps1`
+
+Descarga la wiki que **DeepWiki** genera para el repositorio y la convierte en un HTML de una pieza y su
+PDF:
+
+```powershell
+.\herramientas\descargar-wiki.ps1 -Repositorio Master2020-A/nooki
+```
+
+Deja `dist/wiki-nooki.html` y `dist/wiki-nooki.pdf`. El HTML lleva el índice, las 34 páginas, sus enlaces
+internos convertidos en anclas y el CSS incrustado, así que se abre sin conexión.
+
+DeepWiki sirve el contenido con JavaScript y detrás de una comprobación anti-bots de Vercel: una descarga
+normal recibe un 429. Por eso la herramienta usa **Chrome en modo headless**, que sí pasa la comprobación,
+vuelca el DOM de cada página y extrae el bloque de contenido con `herramientas/wiki/extraer.py`. Después
+imprime ese mismo HTML a PDF con Chrome. Necesita Chrome instalado (o `-Chrome <ruta>`) y el Python con
+`lxml`.
+
+Las páginas ya descargadas se conservan en `build/wiki/<nombre>/`, así que si algo falla se puede volver a
+lanzar y solo baja lo que falte.
+
 ## `empaquetar.ps1` / `empaquetar.sh`
 
 Crea una distribución lista para entregar: el binario, la documentación, los ejemplos, los editores y
