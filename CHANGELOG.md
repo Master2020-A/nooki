@@ -5,6 +5,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 125 — `Mapa<texto, texto>` (2026-11-15)
+
+El mapa solo llevaba números, así que una agenda, un diccionario o una tabla de configuración había que
+inventarla con dos vectores en paralelo. Ahora el valor puede ser **texto**:
+
+```nooki
+variable agenda = Mapa<texto, texto>.nuevo()
+agenda.insertar(&ana, telefono)
+imprimir(agenda.obtener(&ana))
+```
+
+El mapa guarda **copias** de la clave y del valor, y libera el valor viejo al actualizar o al quitar — que
+es donde este tipo de estructura suele romperse. `obtener` devuelve una **vista**: el texto es del mapa,
+no del llamante. Comprobado con ASan: sin fugas ni dobles liberaciones.
+
+Caso nuevo `0084-mapa-texto`. **114 casos.**
+
+## [1.0.1] — 2026-11-15
+
 ### Sprint 124 — Portada, paquete de Linux y dos huecos del lenguaje (2026-11-15)
 
 **El LEEME es ahora la portada.** Distintivos de integración continua, versión, licencia y número de

@@ -336,13 +336,13 @@ Ver [§9](#9-módulos-y-visibilidad).
 | `largo` | `() -> entero` | cuántos hay |
 | `vaciar` | `() -> vacio` | los quita todos (libera los textos) |
 
-### `Mapa<texto, entero>` y `Mapa<texto, flotante>`
+### `Mapa<texto, entero>`, `Mapa<texto, flotante>` y `Mapa<texto, texto>`
 
 | Miembro | Firma | Qué hace |
 |---|---|---|
-| `nuevo` | `Mapa<texto, T>.nuevo() -> Mapa` | mapa vacío, con valores `entero` o `flotante` |
-| `insertar` | `(clave: texto, valor: T) -> vacio` | **copia** la clave; si existía, actualiza |
-| `obtener` | `(clave: texto) -> T` | valor, o `0` si no está |
+| `nuevo` | `Mapa<texto, T>.nuevo() -> Mapa` | mapa vacío; el valor puede ser `entero`, `flotante` o `texto` |
+| `insertar` | `(clave: texto, valor: T) -> vacio` | **copia** la clave y el valor; si la clave existía, actualiza |
+| `obtener` | `(clave: texto) -> T` | valor, o `0`/vacío si no está. Con valores `texto` devuelve una **vista**: el texto es del mapa |
 | `contiene` | `(clave: texto) -> booleano` | |
 | `quitar` | `(clave: texto) -> entero` | `1` si estaba, `0` si no |
 | `largo` | `() -> entero` | cuántas claves |

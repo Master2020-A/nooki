@@ -1,0 +1,36 @@
+funcion principal() -> entero {
+    variable agenda = Mapa<texto, texto>.nuevo()
+
+    variable ana = "Ana" + ""
+    variable luis = "Luis" + ""
+
+    variable tel_ana = "555-1234" + ""
+    variable tel_luis = "555-9876" + ""
+    agenda.insertar(&ana, tel_ana)
+    agenda.insertar(&luis, tel_luis)
+
+    imprimir(agenda.largo())
+    imprimir(agenda.obtener(&ana))
+    imprimir(agenda.obtener(&luis))
+
+    si (agenda.contiene(&ana)) {
+        imprimir("está Ana")
+    }
+
+    // Se puede cambiar el valor de una clave.
+    variable otro = "555-0000" + ""
+    agenda.insertar(&ana, otro)
+    imprimir(agenda.obtener(&ana))
+
+    // Y quitar.
+    imprimir(agenda.quitar(&luis))
+    imprimir(agenda.largo())
+
+    variable claves = agenda.claves()
+    imprimir(claves.largo())
+    imprimir(claves.obtener(0))
+
+    // Los teléfonos siguen siendo de quien los creó.
+    imprimir(tel_ana)
+    retornar 0
+}

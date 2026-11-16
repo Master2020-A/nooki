@@ -822,7 +822,22 @@ funcion principal() -> entero {
 }
 ```
 
-El mapa **copia la clave**: la variable que usaste sigue siendo tuya.
+El mapa **copia la clave**: la variable que usaste sigue siendo tuya. El valor puede ser `entero`,
+`flotante` o `texto`:
+
+```nooki
+funcion principal() -> entero {
+    variable agenda = Mapa<texto, texto>.nuevo()
+    variable ana = "Ana" + ""
+    variable telefono = "555-1234" + ""
+    agenda.insertar(&ana, telefono)
+    imprimir(agenda.obtener(&ana))
+    retornar 0
+}
+```
+
+Con valores de texto, `obtener` devuelve una **vista**: el texto pertenece al mapa, así que no hay que
+liberarlo ni se puede modificar por ahí.
 
 ### `Caja`
 
