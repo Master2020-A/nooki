@@ -104,7 +104,9 @@ private:
     // --- Ámbitos -----------------------------------------------------------
     struct Ambito {
         std::map<std::string, Tipo> tipos;
-        std::map<std::string, std::string_view> estructuras;
+        // El ámbito es dueño del nombre: así la vista que se devuelve no puede
+        // quedar apuntando a una cadena local que ya murió.
+        std::map<std::string, std::string> estructuras;
         std::set<std::string> cajas;
         std::set<std::string> textos;
         std::set<std::string> prestables;
@@ -113,6 +115,8 @@ private:
         std::set<std::string> vectores_texto;
         std::set<std::string> vectores_flotante;
         std::set<std::string> mapas_flotante;
+        /// Variables que son `Vector<MiEstructura>`: nombre → estructura.
+        std::map<std::string, std::string> vector_de_estructura;
         std::set<std::string> movidas;
         std::map<std::string, bool> prestamos;  // nombre -> ¿mutable?
     };
@@ -206,6 +210,21 @@ private:
     void declarar_vector_texto(std::string_view nombre) {
         if (!ambitos_.empty()) {
             ambitos_.back().vectores_texto.insert(std::string(nombre));
+        }
+    }
+    /// La estructura que guarda un vector, o vacío si no es de estructuras.
+    std::string estructura_de_vector(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            const auto encontrada = it->vector_de_estructura.find(std::string(nombre));
+            if (encontrada != it->vector_de_estructura.end()) {
+                return encontrada->second;
+            }
+        }
+        return {};
+    }
+    void declarar_vector_de_estructura(std::string_view nombre, std::string estructura) {
+        if (!ambitos_.empty()) {
+            ambitos_.back().vector_de_estructura[std::string(nombre)] = std::move(estructura);
         }
     }
     void declarar_mapa_flotante(std::string_view nombre) {
@@ -400,7 +419,7 @@ private:
         Ambito& ambito = ambitos_.back();
         ambito.tipos[std::string(nombre_variable)] = tipo;
         if (!estructura.empty()) {
-            ambito.estructuras[std::string(nombre_variable)] = estructura;
+            ambito.estructuras[std::string(nombre_variable)] = std::string(estructura);
         }
     }
     Tipo buscar(std::string_view nombre_variable, diagnostico::Span span) {
@@ -449,8 +468,12 @@ private:
                 }
                 for (const sintactico::Campo& campo : definicion->campos) {
                     if (campo.nombre == expresion.anotacion) {
-                        return tipo_por_nombre(campo.tipo) != nullptr ? campo.tipo
-                                                                     : std::string_view{};
+                        // El `string_view` se construye explícito: si no, el
+                        // ternario crea un `std::string` temporal y la vista
+                        // queda apuntando a memoria muerta.
+                        return tipo_por_nombre(campo.tipo) != nullptr
+                                   ? std::string_view(campo.tipo)
+                                   : std::string_view{};
                     }
                 }
                 return {};
@@ -702,6 +725,57 @@ private:
                     es_llamada_vector(*sentencia.expresion) ||
                     es_llamada_mapa(*sentencia.expresion)) {
                     declarar_prestable(sentencia.nombre);
+                }
+
+                // `Vector<MiEstructura>`: se recuerda qué estructura guarda,
+                // para que `obtener` devuelva una y se puedan tocar sus campos.
+                {
+                    std::string dentro;
+                    const std::string_view declarado = sentencia.tipo_declarado;
+                    const std::size_t abre = declarado.find("Vector<");
+                    if (abre != std::string_view::npos) {
+                        const std::size_t cierra = declarado.find('>', abre);
+                        if (cierra != std::string_view::npos) {
+                            dentro = std::string(declarado.substr(abre + 7, cierra - abre - 7));
+                        }
+                    } else if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                               sentencia.expresion->izquierda &&
+                               sentencia.expresion->izquierda->tipo ==
+                                   TipoExpresion::Miembro &&
+                               sentencia.expresion->izquierda->izquierda &&
+                               sentencia.expresion->izquierda->izquierda->tipo ==
+                                   TipoExpresion::Identificador &&
+                               sentencia.expresion->izquierda->izquierda->lexema ==
+                                   "Vector" &&
+                               sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() ==
+                                   1) {
+                        dentro = std::string(
+                            sentencia.expresion->izquierda->izquierda->tipos_aplicados.front());
+                    }
+                    if (!dentro.empty() && tipos_.count(dentro) != 0) {
+                        declarar_vector_de_estructura(sentencia.nombre, dentro);
+                    }
+                }
+
+                // Y si la variable es una estructura sacada de un vector, se
+                // declara como estructura para poder prestarla y tocar campos.
+                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                    sentencia.expresion->izquierda &&
+                    sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                    sentencia.expresion->izquierda->anotacion == "obtener" &&
+                    sentencia.expresion->izquierda->izquierda &&
+                    sentencia.expresion->izquierda->izquierda->tipo ==
+                        TipoExpresion::Identificador) {
+                    const std::string guarda = estructura_de_vector(
+                        sentencia.expresion->izquierda->izquierda->lexema);
+                    if (!guarda.empty()) {
+                        declarar(sentencia.nombre, Tipo::Desconocido, guarda);
+                    }
+                }
+                if (!sentencia.tipo_declarado.empty() &&
+                    tipos_.count(std::string(sentencia.tipo_declarado)) != 0) {
+                    declarar(sentencia.nombre, Tipo::Desconocido,
+                             std::string(sentencia.tipo_declarado));
                 }
                 // Un `Vector<flotante>` se recuerda para saber que su elemento es
                 // un flotante, tanto al obtener como al recorrerlo.
@@ -1261,11 +1335,27 @@ private:
                 tipo_de(*expresion.izquierda);
                 return Tipo::Texto;
             }
-            // El resultado de una llamada también se puede prestar: el
-            // compilador le da un sitio temporal donde vivir.
+            // También se presta el resultado de una llamada (el compilador le da
+            // un sitio temporal) y una variable cualquiera, incluidas las de un
+            // tipo propio, que es como se pasa una estructura sin copiarla.
             const bool llamada = expresion.izquierda &&
                                  expresion.izquierda->tipo == TipoExpresion::Llamada;
-            if (!caja && !llamada) {
+            // Una variable suelta también: es como se pasa una estructura sin
+            // copiarla. Lo que no vale es prestar algo que ya es un préstamo:
+            // eso sería un puntero a puntero.
+            const bool variable = expresion.izquierda &&
+                                  (expresion.izquierda->tipo == TipoExpresion::Identificador ||
+                                   expresion.izquierda->tipo == TipoExpresion::Miembro ||
+                                   expresion.izquierda->tipo == TipoExpresion::Indice) &&
+                                  !es_prestamo_declarado(
+                                      std::string_view(expresion.izquierda->lexema)) &&
+                                  (expresion.izquierda->tipo != TipoExpresion::Identificador ||
+                                   !buscar_estructura(expresion.izquierda->lexema).empty() ||
+                                   es_caja(expresion.izquierda->lexema) ||
+                                   es_prestable(expresion.izquierda->lexema) ||
+                                   es_texto(expresion.izquierda->lexema) ||
+                                   tipo_de(*expresion.izquierda) == Tipo::Texto);
+            if (!caja && !llamada && !variable) {
                 error(diagnostico::codigos::PRESTAMO_INVALIDO, expresion.span);
             }
             return Tipo::Desconocido;

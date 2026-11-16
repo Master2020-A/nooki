@@ -1,5 +1,6 @@
 #include "nooki/generador/generador_c.hpp"
 
+#include <functional>
 #include <map>
 #include <set>
 #include <algorithm>
@@ -16,6 +17,8 @@ namespace {
 /// Tipo de C de un tipo escrito en Nooki.
 /// Nombres de los rasgos del programa, para resolver `&Rasgo` en los tipos.
 inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
+/// Estructuras que tienen vector propio; lo fija el emisor al empezar.
+inline const std::set<std::string>* VECTORES_DE_ESTRUCTURA = nullptr;
 
 
 bool es_rasgo_c(std::string_view nombre) {
@@ -56,6 +59,15 @@ std::string tipo_c(std::string_view escrito) {
         }
         if (escrito.find("flotante") != std::string_view::npos) {
             return "nooki_vector_flotante";
+        }
+        // `Vector<MiEstructura>` tiene su vector propio.
+        const std::size_t cierra = escrito.find('>');
+        if (cierra != std::string_view::npos) {
+            const std::string dentro(escrito.substr(7, cierra - 7));
+            if (VECTORES_DE_ESTRUCTURA != nullptr &&
+                VECTORES_DE_ESTRUCTURA->count(dentro) != 0) {
+                return "nooki_vector_" + dentro;
+            }
         }
         return "nooki_vector_entero";
     }
@@ -199,6 +211,17 @@ std::string elemento_de_vector(const std::string& tipo_vector) {
     }
     if (tipo_vector.rfind("nooki_vector_flotante", 0) == 0) {
         return "double";
+    }
+    // Un vector de estructura devuelve la estructura. El tipo puede venir con
+    // un `*` detrás si se pasó prestado: eso no cambia el elemento.
+    if (tipo_vector.rfind("nooki_vector_", 0) == 0) {
+        std::string dentro = tipo_vector.substr(std::string("nooki_vector_").size());
+        while (!dentro.empty() && dentro.back() == '*') {
+            dentro.pop_back();
+        }
+        if (dentro != "entero" && dentro != "texto" && dentro != "flotante") {
+            return "nooki_" + dentro;
+        }
     }
     return "long long";
 }
@@ -1744,12 +1767,110 @@ private:
             rasgos_def_[std::string(rasgo.nombre)] = &rasgo;
         }
         RASGOS_DEL_PROGRAMA = &rasgos_;
+        VECTORES_DE_ESTRUCTURA = &vectores_de_estructura_;
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
             if (definicion.es_clase) {
                 clases_.insert(std::string(definicion.nombre));
             }
         }
         recoger_instancias(programa);
+
+        // `Vector<MiEstructura>`: se busca en todo el programa qué estructuras
+        // se meten en un vector, para generarles su vector en C.
+        {
+            const auto es_estructura = [&programa](const std::string& nombre) {
+                for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+                    if (definicion.nombre == nombre && !definicion.es_clase) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            const auto anotar = [&](std::string_view texto) {
+                const std::size_t abre = texto.find("Vector<");
+                if (abre == std::string_view::npos) {
+                    return;
+                }
+                const std::size_t cierra = texto.find('>', abre);
+                if (cierra == std::string_view::npos) {
+                    return;
+                }
+                const std::string dentro(texto.substr(abre + 7, cierra - abre - 7));
+                if (!es_estructura(dentro)) {
+                    return;
+                }
+                // Una estructura con campos con dueño (textos, colecciones,
+                // cajas) necesitaría copia y liberación profundas; de momento no
+                // se admite dentro de un vector.
+                for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+                    if (definicion.nombre != dentro) {
+                        continue;
+                    }
+                    for (const sintactico::Campo& campo : definicion.campos) {
+                        const std::string_view tipo_campo = campo.tipo;
+                        if (tipo_campo == "texto" ||
+                            tipo_campo.rfind("Vector<", 0) == 0 ||
+                            tipo_campo.rfind("Mapa<", 0) == 0 ||
+                            tipo_campo.rfind("Caja<", 0) == 0) {
+                            no_soportado("un Vector de la estructura «" + dentro +
+                                         "», que tiene campos con dueño");
+                            return;
+                        }
+                    }
+                }
+                vectores_de_estructura_.insert(dentro);
+            };
+            std::function<void(const sintactico::Expresion&)> por_expresion;
+            std::function<void(const std::vector<sintactico::Sentencia>&)> por_cuerpo;
+            por_expresion = [&](const sintactico::Expresion& expresion) {
+                anotar(expresion.anotacion);
+                for (const std::string_view tipo : expresion.tipos_aplicados) {
+                    // Se pasa por `anotar` para que la guarda de los campos con
+                    // dueño se aplique también aquí.
+                    anotar("Vector<" + std::string(tipo) + ">");
+                }
+                if (expresion.izquierda) {
+                    por_expresion(*expresion.izquierda);
+                }
+                if (expresion.derecha) {
+                    por_expresion(*expresion.derecha);
+                }
+                for (const sintactico::ExpresionPtr& hija : expresion.lista) {
+                    if (hija) {
+                        por_expresion(*hija);
+                    }
+                }
+            };
+            por_cuerpo = [&](const std::vector<sintactico::Sentencia>& cuerpo) {
+                for (const sintactico::Sentencia& sentencia : cuerpo) {
+                    anotar(sentencia.tipo_declarado);
+                    if (sentencia.expresion) {
+                        por_expresion(*sentencia.expresion);
+                    }
+                    if (sentencia.paso) {
+                        por_expresion(*sentencia.paso);
+                    }
+                    por_cuerpo(sentencia.cuerpo);
+                    por_cuerpo(sentencia.sino);
+                    for (const sintactico::Rama& rama : sentencia.ramas) {
+                        por_cuerpo(rama.cuerpo);
+                    }
+                }
+            };
+            for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
+                for (const sintactico::Campo& campo : definicion.campos) {
+                    anotar(campo.tipo);
+                }
+            }
+            for (const sintactico::Funcion& funcion : programa.funciones) {
+                anotar(funcion.tipo_retorno);
+                for (const sintactico::Parametro& parametro : funcion.parametros) {
+                    anotar(parametro.tipo);
+                }
+                por_cuerpo(funcion.cuerpo);
+            }
+
+        }
         for (const std::string& instancia : instancias_tipo_) {
             tipo_c_de_[instancia] = nombre_de_instancia(instancia);
 
@@ -2032,6 +2153,76 @@ private:
             salida_ << "} " << nombre_c << ";\n\n";
         }
 
+        // Vector de una estructura: se genera uno por cada estructura que se
+        // meta en un vector. Solo hay estructuras sin campos con dueño, así que
+        // copiar el valor es copiar todo lo que hay que copiar.
+        for (const std::string& nombre : vectores_de_estructura_) {
+            const std::string tipo = "nooki_" + nombre;
+            const std::string vec = "nooki_vector_" + nombre;
+            salida_ << "typedef struct {\n"
+                    << "    " << tipo << "* datos;\n"
+                    << "    long long largo;\n"
+                    << "    long long capacidad;\n"
+                    << "} " << vec << ";\n\n";
+
+            salida_ << "static " << vec << " " << vec << "_nuevo(void) {\n"
+                    << "    " << vec << " v;\n"
+                    << "    v.datos = NULL;\n"
+                    << "    v.largo = 0;\n"
+                    << "    v.capacidad = 0;\n"
+                    << "    return v;\n"
+                    << "}\n\n";
+
+            salida_ << "static void " << vec << "_agregar(" << vec << "* v, " << tipo
+                    << " valor) {\n"
+                    << "    if (v->largo >= v->capacidad) {\n"
+                    << "        const long long nueva = v->capacidad == 0 ? 8 : v->capacidad * 2;\n"
+                    << "        " << tipo << "* datos = (" << tipo
+                    << "*)realloc(v->datos, (size_t)nueva * sizeof(" << tipo << "));\n"
+                    << "        if (datos == NULL) {\n"
+                    << "            return;\n"
+                    << "        }\n"
+                    << "        v->datos = datos;\n"
+                    << "        v->capacidad = nueva;\n"
+                    << "    }\n"
+                    << "    v->datos[v->largo] = valor;\n"
+                    << "    v->largo += 1;\n"
+                    << "}\n\n";
+
+            salida_ << "static " << tipo << " " << vec << "_obtener(" << vec
+                    << "* v, long long indice) {\n"
+                    << "    " << tipo << " vacio;\n"
+                    << "    memset(&vacio, 0, sizeof vacio);\n"
+                    << "    if (indice < 0 || indice >= v->largo) {\n"
+                    << "        return vacio;\n"
+                    << "    }\n"
+                    << "    return v->datos[indice];\n"
+                    << "}\n\n";
+
+            salida_ << "static long long " << vec << "_largo(" << vec << "* v) {\n"
+                    << "    return v->largo;\n"
+                    << "}\n\n";
+
+            salida_ << "static void " << vec << "_modificar(" << vec << "* v, long long indice, "
+                    << tipo << " valor) {\n"
+                    << "    if (indice < 0 || indice >= v->largo) {\n"
+                    << "        return;\n"
+                    << "    }\n"
+                    << "    v->datos[indice] = valor;\n"
+                    << "}\n\n";
+
+            salida_ << "static void " << vec << "_vaciar(" << vec << "* v) {\n"
+                    << "    v->largo = 0;\n"
+                    << "}\n\n";
+
+            salida_ << "static void " << vec << "_soltar(" << vec << "* v) {\n"
+                    << "    free(v->datos);\n"
+                    << "    v->datos = NULL;\n"
+                    << "    v->largo = 0;\n"
+                    << "    v->capacidad = 0;\n"
+                    << "}\n\n";
+        }
+
         // Rasgos: tabla de métodos por rasgo y referencia (objeto + tabla).
         if (!programa.rasgos.empty()) {
             for (const sintactico::Rasgo& rasgo : programa.rasgos) {
@@ -2178,6 +2369,7 @@ private:
         if (genericos_tipo_.count(base) != 0) {
             instancias_tipo_.insert(std::string(texto));
         }
+
     }
 
     void recoger_tipos_de(const std::vector<sintactico::Sentencia>& cuerpo) {
@@ -3485,6 +3677,10 @@ private:
                         if (elemento == "flotante") {
                             return "nooki_vector_flotante";
                         }
+                        if (!elemento.empty() &&
+                            vectores_de_estructura_.count(std::string(elemento)) != 0) {
+                            return "nooki_vector_" + std::string(elemento);
+                        }
                         return "nooki_vector_entero";
                     }
                     if (acceso.izquierda &&
@@ -4204,6 +4400,10 @@ private:
                 if (elemento == "flotante") {
                     return "nooki_vector_flotante_nuevo()";
                 }
+                if (!elemento.empty() &&
+                    vectores_de_estructura_.count(std::string(elemento)) != 0) {
+                    return "nooki_vector_" + std::string(elemento) + "_nuevo()";
+                }
                 return "nooki_vector_entero_nuevo()";
             }
             if (acceso.izquierda &&
@@ -4711,6 +4911,8 @@ private:
     std::map<std::string, const sintactico::Funcion*> funciones_ast_;
     std::map<std::string, const sintactico::DefinicionTipo*> genericos_tipo_;
     std::set<std::string> instancias_tipo_;
+    /// Estructuras usadas dentro de un `Vector<...>`.
+    std::set<std::string> vectores_de_estructura_;
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::set<std::string> externas_;

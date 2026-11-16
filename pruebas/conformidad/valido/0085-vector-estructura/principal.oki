@@ -1,0 +1,42 @@
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+funcion magnitud(p: &punto) -> entero {
+    retornar (*p).x + (*p).y
+}
+
+funcion principal() -> entero {
+    variable v = Vector<punto>.nuevo()
+    v.agregar(punto { x: 1, y: 2 })
+    v.agregar(punto { x: 10, y: 20 })
+    v.agregar(punto { x: 100, y: 200 })
+
+    imprimir(v.largo())
+
+    variable p = v.obtener(1)
+    imprimir(p.x)
+    imprimir(p.y)
+    imprimir(magnitud(&p))
+
+    v.modificar(0, punto { x: 5, y: 6 })
+    variable q = v.obtener(0)
+    imprimir(q.x)
+    imprimir(q.y)
+
+    // Recorrer el vector de estructuras.
+    variable suma = 0
+    para (i, r en v) {
+        suma = suma + r.x
+        si (i == 2) {
+            imprimir(r.y)
+        }
+    }
+    imprimir(suma)
+
+    v.vaciar()
+    imprimir(v.largo())
+    v.soltar()
+    retornar 0
+}

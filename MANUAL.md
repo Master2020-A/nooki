@@ -602,6 +602,37 @@ funcion principal() -> entero {
 }
 ```
 
+### Vectores de estructuras
+
+Un vector puede guardar tus propias estructuras:
+
+```nooki
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+funcion principal() -> entero {
+    variable puntos = Vector<punto>.nuevo()
+    puntos.agregar(punto { x: 1, y: 2 })
+    puntos.agregar(punto { x: 10, y: 20 })
+
+    variable p = puntos.obtener(1)
+    imprimir(p.x)
+
+    variable suma = 0
+    para (i, q en puntos) {
+        suma = suma + q.x
+    }
+    imprimir(suma)
+    retornar 0
+}
+```
+
+El vector se queda con el valor que le das (como `Vector<texto>`), así que no lo uses después de
+meterlo. Y las estructuras del vector no pueden tener campos con dueño —`texto`, `Vector`, `Mapa` o
+`Caja`—: esas necesitan copia y liberación profundas, que todavía no están.
+
 ### Con el índice
 
 Si además del elemento hace falta la posición, se piden las dos:

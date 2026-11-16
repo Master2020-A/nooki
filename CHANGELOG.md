@@ -5,6 +5,41 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 127 — `Vector` de estructuras (2026-11-15)
+
+Ya se pueden guardar estructuras propias en un vector, con su `agregar`, `obtener`, `modificar`, `largo`,
+`vaciar` y `soltar`, y recorrerlas con `para (i, x en v)`:
+
+```nooki
+variable puntos = Vector<punto>.nuevo()
+puntos.agregar(punto { x: 1, y: 2 })
+variable p = puntos.obtener(0)
+imprimir(p.x)
+```
+
+El vector **se queda con el valor**, como `Vector<texto>`: no se copia nada por detrás ni hay que liberar
+nada a mano. Por eso esta primera versión admite estructuras **sin campos con dueño** (`texto`, `Vector`,
+`Mapa` o `Caja`): esas necesitarían copia y liberación profundas, y el compilador lo dice con claridad en
+vez de generar algo que se rompa:
+
+```
+error[NOK6003]: el backend todavía no sabe traducir un Vector de la estructura «ficha»,
+que tiene campos con dueño
+```
+
+De paso hubo que abrir los préstamos: `&punto` sobre una variable de tipo propio era «solo se puede
+prestar una Caja». Ahora se presta una estructura, una colección o un texto, y se sigue rechazando
+prestar algo que ya es un préstamo (sería un puntero a puntero).
+
+**Y ASan encontró un fallo de verdad.** Al pasar la cadena de saneamiento, el verificador daba
+`stack-use-after-return`: el ámbito guardaba el nombre de la estructura como **vista** a una cadena local
+que ya había muerto, y `tipo_miembro` leía de ahí. Ahora el ámbito es dueño del nombre. Sin ASan, eso
+habría sido un fallo silencioso en un programa con estructuras.
+
+Caso nuevo `0085-vector-estructura`. **115 casos.**
+
+## [1.0.1] — 2026-11-15
+
 ### Sprint 126 — Un programa que lo junta todo (2026-11-15)
 
 `ejemplos/10-clasificador`: escribe un CSV con 225 puntos de tres clases, lo lee, entrena una red de dos
