@@ -21,7 +21,6 @@ from lxml import etree, html as lhtml
 FUERA = (
     ".//button",
     ".//nav",
-    ".//svg",
     ".//script",
     ".//style",
     ".//*[contains(@class,'md:hidden')]",
@@ -34,6 +33,14 @@ def limpiar(nodo: lhtml.HtmlElement) -> None:
             padre = encontrado.getparent()
             if padre is not None:
                 padre.remove(encontrado)
+
+    # Los diagramas se dibujan como SVG y merece la pena conservarlos; los
+    # iconos de la interfaz, no. Un diagrama lleva texto dentro; un icono no.
+    for dibujo in nodo.xpath(".//svg"):
+        if not dibujo.xpath(".//text"):
+            padre = dibujo.getparent()
+            if padre is not None:
+                padre.remove(dibujo)
 
 
 def contenido(archivo: Path) -> tuple[str, str] | None:
@@ -86,6 +93,11 @@ def main() -> int:
     analizador.add_argument("--salida", required=True, help="HTML resultante")
     analizador.add_argument("--base", default="https://deepwiki.com")
     analizador.add_argument("--titulo", default="Wiki")
+    analizador.add_argument(
+        "--traducido",
+        default="docs/wiki-es",
+        help="carpeta con fragmentos ya traducidos, por página",
+    )
     argumentos = analizador.parse_args()
 
     carpeta = Path(argumentos.entrada)
@@ -107,13 +119,25 @@ def main() -> int:
     conocidas = {archivo.stem for archivo in archivos}
     saneados = {sanear(slug): slug for slug in conocidas}
 
+    traducidos = Path(argumentos.traducido)
     for archivo in archivos:
-        extraido = contenido(archivo)
-        if extraido is None:
-            print(f"  aviso: {archivo.name} no tiene contenido", file=sys.stderr)
-            continue
-        titulo, cuerpo = extraido
         slug = archivo.stem
+        # Si la página ya está traducida, se usa la traducción.
+        fragmento = traducidos / f"{slug}.html"
+        if fragmento.exists():
+            cuerpo = fragmento.read_text(encoding="utf-8")
+            primera = re.search(r"<h1[^>]*>(.*?)</h1>", cuerpo, re.S)
+            titulo = (
+                " ".join(re.sub(r"<[^>]+>", "", primera.group(1)).split())
+                if primera
+                else slug
+            )
+        else:
+            extraido = contenido(archivo)
+            if extraido is None:
+                print(f"  aviso: {archivo.name} no tiene contenido", file=sys.stderr)
+                continue
+            titulo, cuerpo = extraido
 
         # Los enlaces internos pasan a ser anclas dentro del documento.
         def a_ancla(coincidencia: re.Match[str]) -> str:

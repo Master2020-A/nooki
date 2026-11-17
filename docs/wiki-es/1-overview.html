@@ -1,0 +1,51 @@
+<h1>Visión general</h1>
+
+<p>Nooki es un lenguaje compilado, de sintaxis española y tipado estático, con gestión determinista de la
+memoria mediante propiedad, préstamos y movimientos, que se apoya en un compilador de C del sistema como
+destino de compilación. El repositorio contiene la cadena de herramientas completa: el compilador en
+C++20 (<code>compilador/</code>), la especificación normativa del lenguaje (<code>spec/</code>), las
+decisiones de arquitectura (<code>docs/adr/</code>), los arneses de prueba (<code>pruebas/</code>), los
+programas de ejemplo (<code>ejemplos/</code>), las extensiones de editor (<code>editores/</code>) y las
+utilidades de mantenimiento (<code>herramientas/</code>).</p>
+
+<p>Para compilar el compilador, escribir el primer programa <code>.oki</code> y manejar proyectos, véase
+«Empezar». Para la historia del proyecto, el plan de sprints y las decisiones de arquitectura, véase
+«Historia, hoja de ruta y decisiones». Para un recorrido por los programas de ejemplo y los guiones de
+verificación, véase «Galería de ejemplos».</p>
+
+<h2>Identidad del lenguaje y fundamentos de la arquitectura</h2>
+
+<p>Nooki une conceptos de programación en lenguaje natural —en español— con un análisis estático estricto
+y una capa de traducción a C eficiente. El compilador, en <code>compilador/</code>, transforma los archivos
+fuente (<code>.oki</code>) pasando por fases distintas —léxica, sintáctica, semántica y de generación de
+código— antes de invocar un compilador de C nativo del sistema (<code>cc</code>, <code>gcc</code>,
+<code>clang</code> o MSVC).</p>
+
+<p>El lenguaje se apoya en cuatro decisiones que se sostienen entre sí:</p>
+
+<ul>
+  <li><strong>Todo se escribe en español</strong>, incluidas las palabras reservadas, los diagnósticos y
+  la biblioteca estándar.</li>
+  <li><strong>Los tipos se comprueban antes de ejecutar</strong>, de modo que un error de tipo no llega a
+  ser un programa que se rompe.</li>
+  <li><strong>La memoria es determinista</strong>: no hay recolector de basura; un valor tiene un dueño y
+  se mueve, se presta o se copia, y el compilador lo comprueba.</li>
+  <li><strong>El destino es C</strong>, así que el binario resultante es nativo y no arrastra un runtime
+  propio.</li>
+</ul>
+
+<p>Estas decisiones están registradas como ADR en <code>docs/adr/</code>, y el estado de cada una se
+mantiene en <code>DECISIONES.md</code>. Lo que el lenguaje puede hacer hoy está descrito en el manual y en
+la referencia; lo que falta, en el plan de sprints.</p>
+
+<h2>Qué hay en el repositorio</h2>
+
+<p>El código se organiza por fases del compilador, no por capas genéricas: <code>lexico/</code>,
+<code>sintactico/</code>, <code>semantico/</code>, <code>generador/</code> y <code>conductor/</code>, cada
+una con su prueba. La biblioteca estándar está escrita en Nooki (<code>fuente_biblioteca</code>), salvo los
+runtimes de interfaz e inteligencia artificial, que son C y se emiten junto al programa.</p>
+
+<p>La verificación se apoya en tres piezas: las pruebas unitarias de cada fase, los <strong>casos de
+conformidad</strong> —programas con su salida esperada— y la comprobación de que los ejemplos del manual y
+del repositorio compilan. Todo eso corre en cada cambio, en Windows y en Linux, con y sin
+desinfectantes.</p>

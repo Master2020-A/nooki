@@ -28,7 +28,10 @@ param(
     [string] $Chrome = 'C:\Program Files\Google\Chrome\Application\chrome.exe',
 
     # Segundos que se le dan a cada página para dibujarse.
-    [int] $Espera = 12
+    [int] $Espera = 12,
+
+    # Sufijo del archivo de salida: «es» produce wiki-<nombre>-es.html y .pdf.
+    [string] $Sufijo = ""
 )
 
 $ErrorActionPreference = 'Stop'
@@ -108,6 +111,7 @@ foreach ($ruta in $paginas) {
 Write-Host "páginas descargadas: $descargadas"
 
 # El HTML de una pieza, con el CSS incrustado para que se pueda abrir sin conexión.
+if ($Sufijo) { $nombre = "$nombre-$Sufijo" }
 $html = Join-Path $destino "wiki-$nombre.html"
 & $python (Join-Path $raiz 'herramientas/wiki/extraer.py') `
     --entrada $trabajo --salida $html --base "https://deepwiki.com" --titulo "Nooki — wiki del repositorio"

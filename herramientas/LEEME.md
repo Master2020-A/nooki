@@ -23,6 +23,25 @@ imprime ese mismo HTML a PDF con Chrome. Necesita Chrome instalado (o `-Chrome <
 Las páginas ya descargadas se conservan en `build/wiki/<nombre>/`, así que si algo falla se puede volver a
 lanzar y solo baja lo que falte.
 
+### Traducirla
+
+DeepWiki genera la wiki en inglés. Cada página traducida va en `docs/wiki-es/<página>.html`, con el mismo
+nombre que la original:
+
+```powershell
+.\herramientas\descargar-wiki.ps1 -Repositorio Master2020-A/nooki -Sufijo es
+```
+
+Produce `dist/wiki-nooki-es.html` y su PDF. Las páginas que aún no están traducidas salen en el original,
+así que el resultado se puede usar desde la primera tanda. Para ver el texto de una página y traducirlo:
+
+```powershell
+python herramientas/wiki/a-markdown.py --pagina 3-compiler-architecture
+```
+
+Los diagramas de las páginas se conservan: se quedan los SVG que llevan texto dentro (los dibujos) y se
+quitan los que son iconos de la interfaz.
+
 ## `empaquetar.ps1` / `empaquetar.sh`
 
 Crea una distribución lista para entregar: el binario, la documentación, los ejemplos, los editores y
