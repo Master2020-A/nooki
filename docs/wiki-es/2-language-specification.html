@@ -1,0 +1,40 @@
+<h1>Especificación del lenguaje</h1>
+
+<p>La especificación define la semántica normativa de Nooki: el modelo léxico en UTF-8, la gramática en
+EBNF, el sistema de tipos estático, las construcciones de programación orientada a objetos, el modelo de
+propiedad y préstamos, y el tratamiento de errores.</p>
+
+<p>El documento normativo es <code>spec/especificacion-v0.1.md</code>, y la gramática formal vive en
+<code>spec/gramatica.ebnf</code>. Para el detalle, estas cuatro páginas:</p>
+
+<ul>
+  <li><strong>Sintaxis y gramática</strong>: el modelo léxico, las palabras reservadas, la precedencia de
+  operadores y la verificación de la gramática.</li>
+  <li><strong>Sistema de tipos</strong>: primitivos, compuestos, colecciones, clases, estructuras, rasgos y
+  genéricos.</li>
+  <li><strong>Propiedad, préstamos y memoria</strong>: quién es dueño de un valor, cómo se mueve y cómo se
+  presta.</li>
+  <li><strong>Errores, código inseguro y FFI</strong>: <code>resultado</code> con <code>?</code>, los
+  pánicos, <code>inseguro</code>, los punteros, <code>asm!</code> y la llamada a C.</li>
+</ul>
+
+<h2>Lo esencial de cada parte</h2>
+
+<p><strong>Sintaxis</strong>. Las palabras reservadas van sin tilde (<code>funcion</code>,
+<code>si</code>, <code>retornar</code>) y los archivos son UTF-8; las sentencias se separan por saltos de
+línea y las expresiones se analizan con un analizador Pratt.</p>
+
+<p><strong>Tipos</strong>. Hay primitivos (<code>entero</code>, <code>flotante</code>,
+<code>booleano</code>, <code>texto</code>, <code>vacio</code>), tipos propios con <code>clase</code>
+—referencia, con herencia— y <code>estructura</code> —valor—, además de rasgos, genéricos y las
+colecciones <code>Vector&lt;T&gt;</code>, <code>Mapa&lt;K, V&gt;</code>, <code>Caja&lt;T&gt;</code> y
+<code>resultado&lt;T, E&gt;</code>.</p>
+
+<p><strong>Propiedad</strong>. Un valor tiene un solo dueño; se mueve al pasarlo o al asignarlo, y se presta
+con <code>&amp;</code> para leer o <code>&amp;mutable</code> para escribir. El compilador comprueba que no
+haya a la vez una referencia mutable y otra cualquiera al mismo dato.</p>
+
+<p><strong>Errores</strong>. Lo que puede fallar devuelve <code>resultado</code> y se propaga con
+<code>?</code>; lo que no se puede recuperar es un pánico, que termina con el código 70. Lo que toca la
+memoria a mano —<code>inseguro</code>, punteros, <code>asm!</code>, <code>externo "C"</code>— queda
+encerrado en un bloque <code>inseguro</code> y a la vista de quien lea el código.</p>

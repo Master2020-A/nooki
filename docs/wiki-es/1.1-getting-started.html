@@ -1,0 +1,70 @@
+<h1>Empezar</h1>
+
+<p>Esta página describe cómo compilar el compilador de Nooki desde el código fuente con los presets de
+CMake, cómo ejecutar la batería de pruebas con <code>ctest</code>, cómo escribir y ejecutar el primer
+programa <code>.oki</code> y cómo manejar el ciclo de vida de un proyecto con los comandos <code>nooki
+nuevo</code> y <code>nooki construir</code>. Está pensada para quien va a montar la cadena de herramientas
+en su máquina o va a escribir su primer proyecto.</p>
+
+<h2>Requisitos y sistema de compilación</h2>
+
+<p>Nooki necesita CMake 3.25 o superior y un compilador compatible con C++20 (MSVC 2022+, GCC 12+ o Clang
+15+). La configuración se reparte entre los presets de la raíz (<code>CMakePresets.json</code>), el
+<code>CMakeLists.txt</code> de la raíz y el de <code>compilador/</code>, que fijan la estructura del
+proyecto, los avisos y los objetivos de compilación.</p>
+
+<p>Para configurar, compilar y probar con un preset concreto (<code>linux</code>,
+<code>windows-mingw</code>, <code>macos</code>…):</p>
+
+<pre><code>cmake --preset &lt;preset&gt;
+cmake --build --preset &lt;preset&gt;
+ctest --preset &lt;preset&gt;</code></pre>
+
+<p>Los presets disponibles son <code>windows-msvc-2022</code>, <code>windows-msvc-2026</code>,
+<code>windows-mingw</code>, <code>linux</code>, <code>macos</code> y <code>saneamiento</code>, que activa
+AddressSanitizer y UBSan.</p>
+
+<h2>Ejecutar las pruebas con CTest</h2>
+
+<p>Con <code>NOOKI_PRUEBAS</code> activado (es el valor por defecto), la compilación registra en CTest los
+objetivos de prueba unitaria y de conformidad. La batería cubre el análisis léxico, el sintáctico, el
+verificador semántico, los diagnósticos, los argumentos de la línea de órdenes y las ejecuciones de
+conformidad de <code>pruebas/conformidad/</code>.</p>
+
+<p>Al invocar <code>ctest --preset &lt;preset&gt;</code> se compilan los binarios de prueba y se ejecutan:</p>
+
+<ul>
+  <li>las pruebas unitarias de cada componente del compilador (<code>compilador/pruebas/</code>);</li>
+  <li>los binarios de conformidad, que comparan la salida estándar con su archivo <code>.esperado</code>.</li>
+</ul>
+
+<h2>Escribir y ejecutar el primer programa</h2>
+
+<p>Un archivo fuente de Nooki (<code>.oki</code>) necesita una función de entrada llamada
+<code>principal</code> que devuelva un <code>entero</code>, que es el código de salida. Se crea
+<code>hola.oki</code>:</p>
+
+<pre><code>funcion principal() -&gt; entero {
+    imprimir("¡Hola, Nooki!")
+    retornar 0
+}</code></pre>
+
+<p>Y se compila y ejecuta con:</p>
+
+<pre><code>nooki ejecutar hola.oki</code></pre>
+
+<p>Esa orden llama a <code>comando_ejecutar</code>, que traduce el fuente a un archivo C intermedio con
+<code>conductor::compilar</code>, invoca el compilador de C del sistema (<code>cc</code>,
+<code>gcc</code>, <code>clang</code> o MSVC) y ejecuta el binario resultante.</p>
+
+<h2>Proyectos: <code>nooki nuevo</code> y <code>nooki construir</code></h2>
+
+<p>Los proyectos se manejan desde el despachador de órdenes (<code>cli/orden.cpp</code>), que indexa los
+comandos disponibles en <code>cli::COMANDOS</code>.</p>
+
+<ul>
+  <li><code>nooki nuevo &lt;nombre&gt;</code>: crea la carpeta con el manifiesto <code>nooki.toml</code> y
+  el esqueleto <code>principal.oki</code>.</li>
+  <li><code>nooki construir [carpeta]</code>: comprueba que estén <code>principal.oki</code> (o
+  <code>fuente/principal.oki</code>) y el manifiesto, carga los módulos y lanza la compilación.</li>
+</ul>

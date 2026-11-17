@@ -1,0 +1,70 @@
+<h1>Sintaxis y gramática</h1>
+
+<p>Esta página describe el modelo léxico normativo, las palabras reservadas, la gramática en EBNF
+(<code>spec/gramatica.ebnf</code>), la precedencia de operadores, las sentencias y expresiones, y las
+herramientas que comprueban que la gramática no se desvía entre el compilador y los editores.</p>
+
+<h2>El modelo léxico y las palabras reservadas</h2>
+
+<h3>Codificación e identificadores</h3>
+
+<ul>
+  <li><strong>UTF-8</strong>: el fuente tiene que ser UTF-8. La marca de orden de bytes (BOM) se ignora y
+  los finales de línea (<code>\n</code>, <code>\r\n</code>, <code>\r</code>) se normalizan a
+  <code>\n</code>.</li>
+  <li><strong>Identificadores</strong>: admiten letras acentuadas y tildes (<code>á</code>,
+  <code>é</code>, <code>ñ</code>) y se normalizan a la forma C de Unicode (NFC) antes de compararse, para
+  que dos formas equivalentes sean el mismo nombre (ADR-008).</li>
+  <li><strong>Palabras reservadas</strong>: el lenguaje reserva sus palabras y sus tipos primitivos, y
+  ninguna lleva tilde. Escribir <code>función</code> con tilde no es un error silencioso: el compilador lo
+  detecta y sugiere la forma correcta.</li>
+</ul>
+
+<h3>Literales y terminación</h3>
+
+<p>Las sentencias se separan por saltos de línea, no por punto y coma. Los literales de texto admiten
+secuencias de escape (<code>\n</code>, <code>\t</code>, <code>\\</code>, <code>\"</code>) que el compilador
+traduce de verdad al carácter correspondiente.</p>
+
+<h2>Precedencia de operadores</h2>
+
+<p>De menor a mayor precedencia:</p>
+
+<ul>
+  <li>asignación (<code>=</code>, <code>+=</code>, <code>-=</code>…);</li>
+  <li>o lógico (<code>||</code>);</li>
+  <li>y lógico (<code>&amp;&amp;</code>);</li>
+  <li>igualdad (<code>==</code>, <code>!=</code>);</li>
+  <li>comparación (<code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>);</li>
+  <li>rangos (<code>..</code>, <code>..=</code>);</li>
+  <li>suma y resta (<code>+</code>, <code>-</code>);</li>
+  <li>producto, división y resto (<code>*</code>, <code>/</code>, <code>%</code>);</li>
+  <li>unarios (<code>-</code>, <code>!</code>, <code>&amp;</code>, <code>*</code>, <code>como</code>);</li>
+  <li>postfijos (llamada, índice, <code>.</code>, <code>?</code>).</li>
+</ul>
+
+<h2>Sentencias y expresiones</h2>
+
+<p>Nooki es un lenguaje de expresiones: un bloque vale lo que vale su última expresión, salvo que se salga
+antes con <code>retornar</code>.</p>
+
+<ul>
+  <li><strong>Control de flujo</strong>: <code>si</code>, <code>sino</code> —y <code>sino si</code>
+  encadenado—, <code>mientras</code>, <code>para</code> y <code>coincide</code> para el emparejamiento de
+  patrones.</li>
+  <li><strong>Propagación de errores</strong>: el operador postfijo <code>?</code> sobre
+  <code>resultado&lt;T, E&gt;</code> y <code>opcional&lt;T&gt;</code>.</li>
+</ul>
+
+<h2>Herramientas de verificación de la gramática</h2>
+
+<p>Para que el analizador del compilador, la gramática de TextMate para VS Code y el paquete de JetBrains no
+se separen, hay dos guiones en Python:</p>
+
+<ul>
+  <li><code>herramientas/generar-gramaticas.py</code>: genera las definiciones de sintaxis de VS Code (JSON)
+  y el paquete de JetBrains (XML plist) desde una sola estructura de datos.</li>
+  <li><code>herramientas/verificar-gramatica.py</code>: comprueba que las expresiones regulares compilan,
+  que las reglas coinciden entre los paquetes de los editores y que cada token cae donde debe sobre casos
+  concretos.</li>
+</ul>

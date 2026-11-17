@@ -1,0 +1,79 @@
+<h1>Historia, hoja de ruta y decisiones</h1>
+
+<p>Esta página recorre el desarrollo histórico del proyecto, el modelo de sprints con el que se planifica,
+los registros de decisiones de arquitectura (ADR), las decisiones ya cerradas y la deuda técnica conocida.
+Nooki pasó de una base especulativa —<code>Aurora2.txt</code>— a un lenguaje compilado, de sintaxis
+española y tipado estático, con C como destino.</p>
+
+<p>Los mecanismos de seguimiento, los registros de decisiones y los hitos que se describen aquí son los que
+gobiernan cómo una característica pasa de la especificación normativa a estar implementada en el
+compilador en C++20 (<code>compilador/</code>) y en los casos de conformidad
+(<code>pruebas/conformidad/</code>).</p>
+
+<h2>Planificación por sprints y reglas de ejecución</h2>
+
+<p>El proyecto sigue el modelo de sprints definido en
+<code>PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md</code>. Cada sprint es un alcance funcional de dos semanas
+—que en la práctica de un solo desarrollador vienen a ser unas 3,5 o 4— pensado para mantener el estado
+verificado en Windows, macOS y Linux.</p>
+
+<p>Las reglas de ejecución son estrictas:</p>
+
+<ul>
+  <li>Cada sprint termina con la rama principal en verde en Windows, Linux y macOS.</li>
+  <li>Ninguna característica del lenguaje se integra sin su caso de conformidad en
+  <code>pruebas/conformidad/</code>.</li>
+  <li>Todo diagnóstico lleva su código propio (<code>NOKxxxx</code>), la ubicación exacta en el fuente y
+  una explicación en español.</li>
+</ul>
+
+<h2>Decisiones de arquitectura y decisiones cerradas</h2>
+
+<p>El rumbo del proyecto está fijado por los ADR catalogados en <code>DECISIONES.md</code>. Esos registros
+fijan la sintaxis, la semántica de la memoria, las reglas de tipos y la estrategia de integración con el
+backend antes o durante la implementación.</p>
+
+<p>El caso de las clases es el ejemplo más claro: implementar semántica de referencia en el montón exigía
+infraestructura —destructores, reglas de movimiento y tablas virtuales— que se aplazó. Por eso la v0.1
+compilaba las clases como estructuras de C por valor (ADR-015), un compromiso que después sustituyó el
+ADR-021.</p>
+
+<h2>Hitos de versión</h2>
+
+<p>La versión 1.0 representa una cadena de compilación probada de punta a punta, con memoria determinista,
+subsistemas de interfaz integrados y primitivas de inteligencia artificial, tal como recoge
+<code>NOTAS_DE_VERSION.md</code>. Las cifras de esa versión:</p>
+
+<ul>
+  <li><strong>Conformidad</strong>: 92 programas de prueba validados con <code>ctest</code>.</li>
+  <li><strong>Biblioteca estándar</strong>: 16 módulos nativos en <code>.oki</code> —matemáticas, textos,
+  listas, fechas, archivos, procesamiento de lenguaje, tensores y redes neuronales—.</li>
+  <li><strong>Línea de órdenes</strong>: 13 comandos en <code>fuente/cli/</code> (<code>nuevo</code>,
+  <code>construir</code>, <code>ejecutar</code>, <code>probar</code>, <code>verificar</code>,
+  <code>formatear</code>, <code>documentar</code>, <code>lsp</code>, <code>limpiar</code>…).</li>
+</ul>
+
+<h2>Deuda técnica y límites conocidos</h2>
+
+<p>La configuración y las dependencias de un proyecto viven en el manifiesto <code>nooki.toml</code>,
+descrito en <code>docs/PROYECTO.md</code>. El manifiesto declara la identidad del proyecto y sus
+dependencias locales relativas:</p>
+
+<pre><code>[proyecto]
+nombre = "demo"
+version = "0.1.0"
+
+[dependencias]
+utilidades = { ruta = "../utilidades" }</code></pre>
+
+<h3>Lo que falta y se sabe</h3>
+
+<ul>
+  <li><strong>Gestión de paquetes</strong>: no hay descarga de paquetes remotos, ni resolución de rangos de
+  versión, ni archivo de bloqueo (<code>nooki.lock</code>), ni recorrido de dependencias transitivas.</li>
+  <li><strong>macOS</strong>: el backend de ventanas (Cocoa) no está implementado; los programas con
+  interfaz compilan pero no abren ventana de forma nativa.</li>
+  <li><strong>Formato de textos</strong>: la interpolación y el formato de números dentro de una
+  concatenación tienen soporte limitado (hoy se resuelven con <code>textos.de_entero</code> y
+  <code>textos.de_flotante</code>).</li>
+</ul>

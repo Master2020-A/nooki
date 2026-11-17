@@ -1,0 +1,64 @@
+<h1>Propiedad, préstamos y modelo de memoria</h1>
+
+<p>Nooki gestiona la memoria con seguridad comprobada en tiempo de compilación y sin recolector de basura.
+Esta página describe el modelo: quién es dueño de un valor en el montón, qué pasa al asignarlo o pasarlo
+como argumento, cómo se presta para leer y para escribir, y qué diagnósticos (<code>NOK5xxx</code>) avisan
+cuando algo se rompe.</p>
+
+<h2>Un solo dueño</h2>
+
+<p>Todo valor tiene <strong>un dueño</strong> en cada momento. Los tipos que guardan memoria en el montón
+—<code>Caja&lt;T&gt;</code>, <code>texto</code>, <code>Vector&lt;T&gt;</code> y
+<code>Mapa&lt;K, V&gt;</code>— se transfieren o se prestan de forma explícita, para que no haya ni dobles
+liberaciones ni fugas.</p>
+
+<p><code>Caja&lt;T&gt;</code> envuelve un dato en el montón. Se crea con <code>Caja.nuevo(...)</code> y su
+memoria queda atada al ámbito de la variable dueña: cuando el ámbito termina, el compilador emite la
+liberación.</p>
+
+<h2>Movimiento</h2>
+
+<p>La regla es una sola, y es la del ADR-020: <strong>pasar un valor con dueño a un parámetro que no es un
+préstamo lo mueve</strong>. Después del movimiento, la variable de origen queda invalidada y usarla es un
+error de compilación (<code>NOK5001</code>), no un fallo al ejecutar.</p>
+
+<pre><code>funcion consumir(texto_entrante: texto) -> entero {
+    retornar texto_entrante.largo()
+}
+
+funcion principal() -> entero {
+    variable c = "adios" + ""
+    variable largo = consumir(c)   // c se mueve aquí
+    retornar 0
+}</code></pre>
+
+<p>Esa regla es la que evita el doble dueño: si dos variables apuntaran a la misma memoria y las dos la
+liberaran, el programa se rompería, y el compilador no lo deja escribir.</p>
+
+<h2>Prestar: <code>&amp;</code> y <code>&amp;mutable</code></h2>
+
+<p>Para dar acceso sin transferir la propiedad, se presta:</p>
+
+<ul>
+  <li><strong><code>&amp;T</code></strong>: préstamo inmutable, solo lectura. Pueden convivir varios a la
+  vez.</li>
+  <li><strong><code>&amp;mutable T</code></strong>: préstamo mutable, permite escribir a través de la
+  referencia con <code>*p</code>. Solo puede haber uno a la vez, y mientras exista no puede haber ningún
+  otro préstamo al mismo dato.</li>
+</ul>
+
+<pre><code>funcion sumar_a(p: &amp;mutable Caja&lt;entero&gt;, cuanto: entero) -> vacio {
+    *p = *p + cuanto
+}</code></pre>
+
+<p>El verificador lleva la cuenta de los préstamos activos por ámbito, con su tipo y si son mutables, y
+rechaza el programa cuando el préstamo escapa de donde vive el dato o cuando se pide uno mutable habiendo
+otro.</p>
+
+<h2>Los diagnósticos de esta parte</h2>
+
+<p>Los avisos de propiedad y préstamos son la serie <code>NOK5xxx</code>: uso tras mover
+(<code>NOK5001</code>), préstamo guardado (<code>NOK5002</code>), préstamo mutable que no es exclusivo
+(<code>NOK5003</code>), copia de un compuesto con dueño (<code>NOK5004</code>) y préstamo que escapa
+(<code>NOK5006</code>). Cada uno tiene su caso de conformidad, de modo que el comportamiento está fijado
+por una prueba y no por la costumbre.</p>

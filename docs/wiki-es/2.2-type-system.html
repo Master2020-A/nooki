@@ -1,0 +1,79 @@
+<h1>Sistema de tipos</h1>
+
+<p>El sistema de tipos de Nooki da tipado estático con inferencia, memoria segura, abstracciones sin coste,
+tipos algebraicos, clases y estructuras, rasgos y genéricos. Esta página recoge las definiciones normativas
+de la especificación y cómo las implementa el verificador semántico
+(<code>compilador/incluir/nooki/semantico/tipos.hpp</code>).</p>
+
+<h2>Tipos primitivos</h2>
+
+<p>Nooki define un conjunto de tipos primitivos que cubre enteros, números en coma flotante, booleanos,
+caracteres Unicode, texto en el montón, el valor vacío y un entero del tamaño de un puntero. Son
+<code>entero</code>, <code>flotante</code>, <code>booleano</code>, <code>caracter</code>,
+<code>texto</code>, <code>vacio</code> y <code>nulo</code>.</p>
+
+<h2>Tipos compuestos</h2>
+
+<ul>
+  <li><strong>Colecciones</strong>: <code>Vector&lt;T&gt;</code> para listas que crecen y
+  <code>Mapa&lt;K, V&gt;</code> para tablas hash. Hoy el vector admite <code>entero</code>,
+  <code>flotante</code>, <code>texto</code> y estructuras propias sin campos con dueño; el mapa admite
+  como valor <code>entero</code>, <code>flotante</code> o <code>texto</code>.</li>
+  <li><strong>Caja</strong>: <code>Caja&lt;T&gt;</code> guarda un valor en el montón y es la pieza con la
+  que se explica la propiedad: una caja tiene un solo dueño y se presta para dejar que otros la lean.</li>
+  <li><strong>Resultado</strong>: <code>resultado&lt;T, E&gt;</code> para lo que puede salir bien con
+  <code>T</code> o fallar con <code>E</code>, y <code>opcional&lt;T&gt;</code> para lo que puede no
+  estar.</li>
+</ul>
+
+<h2>Clases y estructuras</h2>
+
+<p>Nooki distingue dos formas de agrupar datos, y la diferencia importa:</p>
+
+<ul>
+  <li><strong><code>clase</code></strong>: tipo con identidad, herencia (<code>hereda</code>), despacho
+  virtual, rasgos (<code>implementa</code>), constructor y destructor, y propiedades.</li>
+  <li><strong><code>estructura</code></strong>: tipo por valor, que se copia al asignarlo y al pasarlo. Es
+  lo que se usa para un registro de datos: un punto, una ficha, una medida.</li>
+</ul>
+
+<h2>Rasgos y genéricos</h2>
+
+<p>Un <code>rasgo</code> define un contrato: un conjunto de firmas que un tipo se compromete a implementar.
+Con eso, una función puede aceptar <code>&amp;Rasgo</code> y despachar al método del tipo concreto que
+llegue en cada llamada.</p>
+
+<pre><code>rasgo Describible {
+    funcion describir() -> texto
+}
+
+clase persona implementa Describible {
+    publico nombre: texto
+
+    publico funcion describir() -> texto {
+        retornar "persona " + este.nombre
+    }
+}</code></pre>
+
+<p>Los genéricos permiten escribir tipos y funciones parametrizados, de modo que un algoritmo o una
+estructura de datos sirvan para varios tipos sin renunciar a la comprobación estática.</p>
+
+<h2>Cómo representa el compilador los tipos</h2>
+
+<p>El verificador semántico modela los tipos con la enumeración <code>nooki::semantico::Tipo</code> y dos
+funciones de utilidad, <code>nombre(Tipo)</code> y <code>desde_nombre(std::string_view)</code>, que traducen
+entre el nombre que se escribe y el valor interno:</p>
+
+<pre><code>enum class Tipo : unsigned char {
+    Desconocido,
+    Vacio,
+    Entero,
+    Texto,
+    Booleano,
+    Flotante,
+};</code></pre>
+
+<p>Los tipos propios (clases, estructuras, enumeraciones) no viven en esa enumeración: el verificador los
+resuelve por nombre contra la tabla de tipos del programa, y por eso puede decir «falta el campo
+<code>y</code>» o «<code>punto</code> no tiene miembro <code>z</code>» con el nombre que escribió el
+programador.</p>
