@@ -5,20 +5,31 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [1.0.7] — 2026-11-17
 
-### Sprint 135 — Dos fallos de los argumentos, arreglados (2026-11-17)
+### Sprint 135 — `.largo()` sobre el resultado de una llamada (2026-11-17)
 
-La 1.0.6 traía los argumentos del programa, pero **a medias**, y esto lo deja bien:
+La 1.0.6 traía los argumentos del programa, pero `sistema.argumentos().largo()` **no compilaba**: el
+generador emitía `&llamada()`, y en C no se puede tomar la dirección de un valor temporal.
 
-- **`sistema.cuantos_argumentos()` devolvía siempre 0.** El módulo llamaba a una función con el mismo
-  nombre que él mismo, y la llamada se quedaba en casa. El integrado pasa a llamarse
-  `cuantos_argumentos_programa`, para que no haya dos cosas con el mismo nombre.
-- **`sistema.argumentos().largo()` no compilaba.** El generador emitía `&llamada()`, y en C no se puede
-  tomar la dirección de un valor temporal. Ahora, cuando el receptor de un método no es un sitio, se le da
-  uno con un literal compuesto —la misma idea que ya se usaba al prestar el resultado de una llamada—.
+Ahora, cuando el receptor de un método de colección no es un sitio (una variable, un campo, un índice), se
+le da uno con un literal compuesto —la misma idea que ya se usaba al prestar el resultado de una llamada—.
 
-El caso `0088-argumentos` ahora comprueba también `.largo()`, que es lo que habría detectado el segundo
-fallo.
+```nooki
+variable lista = sistema.argumentos()
+imprimir(lista.largo())                  // ya funcionaba
+imprimir(sistema.argumentos().largo())   // y ahora también
+```
 
+El caso `0088-argumentos` comprueba las dos formas.
+
+De paso, el integrado que cuenta los argumentos pasa a llamarse `cuantos_argumentos_programa`, para que no
+comparta nombre con la función del módulo `sistema`. No era un fallo —`cuantos_argumentos()` funcionaba—,
+sino dos cosas con el mismo nombre, que es una trampa para el siguiente que lo lea.
+
+**Una nota sobre cómo se detectó esto, porque importa:** el fallo de `.largo()` salió del compilador, no de
+una medición. Y una supuesta avería de `cuantos_argumentos()` que creí ver era un artefacto de medir el
+código de salida a través de WSL, donde `$?` llegaba siempre a cero: comprobado después con el código de
+salida real, la 1.0.6 lo hacía bien. Queda escrito aquí porque la primera versión de esta entrada decía lo
+contrario.
 ## [1.0.6] — 2026-11-17
 
 ### Sprint 134 — Argumentos para el programa (2026-11-17)
