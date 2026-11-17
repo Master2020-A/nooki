@@ -1632,6 +1632,31 @@ comprobación en cada suma.
 
 ### `asm!`
 
+### Recibir argumentos
+
+Un programa puede leer con qué argumentos se lanzó:
+
+```nooki
+usar sistema
+
+funcion principal() -> entero {
+    variable lista = sistema.argumentos()
+    variable i = 0
+    mientras (i < lista.largo()) {
+        imprimir(lista.obtener(i))
+        i = i + 1
+    }
+    si (sistema.cuantos_argumentos() > 0) {
+        imprimir("el primero es " + sistema.argumento(0))
+    }
+    retornar 0
+}
+```
+
+Con `nooki ejecutar programa.oki uno dos`, `argumentos()` devuelve los dos y el nombre del programa no
+aparece. Lo que va detrás del fuente son argumentos del programa; las opciones del compilador empiezan por
+guion y van antes.
+
 ### Análisis de datos con SQL
 
 Para lo que en pandas sería un `groupby`, un `pivot_table`, un `merge` o un `rolling`, hay un módulo `datos`

@@ -1453,6 +1453,21 @@ publico funcion ejecutar(comando: &texto) -> entero {
 publico funcion capturar(comando: &texto) -> texto {
     retornar capturar_orden(*comando)
 }
+
+// Los argumentos con los que se lanzó el programa, sin su nombre.
+publico funcion argumentos() -> Vector<texto> {
+    retornar argumentos_programa()
+}
+
+// Cuántos argumentos hay.
+publico funcion cuantos_argumentos() -> entero {
+    retornar cuantos_argumentos()
+}
+
+// Un argumento por su posición, empezando en 0. Vacío si no existe.
+publico funcion argumento(indice: entero) -> texto {
+    retornar argumento_de(indice)
+}
 )";
     }
     if (modulo == "archivo") {

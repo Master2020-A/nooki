@@ -297,12 +297,25 @@ int main() {
         const std::filesystem::path antes = std::filesystem::current_path();
         std::filesystem::current_path(carpeta);
         const Resultado resultado = invocar({"ejecutar", "saluda.oki"});
-        std::filesystem::current_path(antes);
         // La salida del programa va a la consola, no al flujo capturado; lo que
         // distingue el fallo es el código: sin el «./», el intérprete no
         // encuentra el binario y devuelve 127.
         comprobar(resultado.codigo == nooki::cli::EXITO, "compila y ejecuta sin error");
         comprobar(resultado.error.empty(), "no hay mensaje de error");
+
+        // Los argumentos que van detrás del fuente llegan al programa: este
+        // devuelve cuántos recibió, así que el código de salida lo dice.
+        {
+            std::ofstream archivo(fuente);
+            archivo << "usar sistema\n"
+                       "\n"
+                       "funcion principal() -> entero {\n"
+                       "    retornar sistema.cuantos_argumentos()\n"
+                       "}\n";
+        }
+        const Resultado con_argumentos = invocar({"ejecutar", "saluda.oki", "uno", "dos"});
+        comprobar(con_argumentos.codigo == 2, "el programa recibe los dos argumentos");
+        std::filesystem::current_path(antes);
         std::filesystem::remove_all(carpeta);
     }
 

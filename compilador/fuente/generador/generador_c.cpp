@@ -1777,6 +1777,34 @@ const char* PRELUDIO =
     "}\n"
 
     "/* ------------------------------------------------------------------ */\n"
+    "/* Argumentos de la línea de órdenes.                                  */\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "\n"
+    "static int NOOKI_ARGC = 0;\n"
+    "static char** NOOKI_ARGV = NULL;\n"
+    "\n"
+    "long long nooki_cuantos_argumentos(void) {\n"
+    "    return NOOKI_ARGC > 0 ? (long long)(NOOKI_ARGC - 1) : 0;\n"
+    "}\n"
+    "\n"
+    "nooki_texto nooki_argumento(long long indice) {\n"
+    "    nooki_texto vacio = nooki_texto_desde_c(\"\");\n"
+    "    if (indice < 0 || NOOKI_ARGV == NULL || indice + 1 >= NOOKI_ARGC) {\n"
+    "        return vacio;\n"
+    "    }\n"
+    "    return nooki_texto_desde_c(NOOKI_ARGV[indice + 1]);\n"
+    "}\n"
+    "\n"
+    "/* Todos los argumentos, sin el nombre del programa. */\n"
+    "nooki_vector_texto nooki_argumentos(void) {\n"
+    "    nooki_vector_texto lista = nooki_vector_texto_nuevo();\n"
+    "    for (long long i = 1; i < (long long)NOOKI_ARGC; ++i) {\n"
+    "        nooki_vector_texto_agregar(&lista, nooki_texto_desde_c(NOOKI_ARGV[i]));\n"
+    "    }\n"
+    "    return lista;\n"
+    "}\n"
+    "\n"
+    "/* ------------------------------------------------------------------ */\n"
     "/* Procesos externos: para hablar con un programa de fuera (Python,   */\n"
     "/* una herramienta del sistema…). La orden va como una línea de       */\n"
     "/* comandos; las comillas son cosa de quien la escribe.               */\n"
@@ -3483,7 +3511,9 @@ private:
             if (!funcion.parametros.empty()) {
                 no_soportado("una función «principal» con parámetros");
             }
-            salida_ << "int main(void) {\n";
+            salida_ << "int main(int argc, char** argv) {\n";
+            salida_ << "    NOOKI_ARGC = argc;\n";
+            salida_ << "    NOOKI_ARGV = argv;\n";
             retorno_actual_ = "int";
         } else {
             salida_ << firma(funcion) << " {\n";
@@ -4936,6 +4966,31 @@ private:
         if (const auto puntero = PUNTEROS_C.find(std::string(nombre_llamado));
             puntero != PUNTEROS_C.end()) {
             std::string salida = "nooki_puntero_" + std::string(puntero->second) + "(";
+            bool primero = true;
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
+        }
+
+        // Argumentos del programa.
+        if (nombre_llamado == "cuantos_argumentos" || nombre_llamado == "argumento_de" ||
+            nombre_llamado == "argumentos_programa") {
+            if (nombre_llamado == "cuantos_argumentos") {
+                return "nooki_cuantos_argumentos()";
+            }
+            if (nombre_llamado == "argumentos_programa") {
+                return "nooki_argumentos()";
+            }
+            std::string salida = "nooki_argumento(";
             bool primero = true;
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
                 if (!argumento) {

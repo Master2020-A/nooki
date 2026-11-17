@@ -34,6 +34,7 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
     conductor::Opciones opciones;
     opciones.rutas_de_modulos = rutas_de_modulos;
     bool hay_fuente = false;
+    std::vector<std::string> argumentos_del_programa;
 
     for (std::size_t i = 0; i < argumentos.size(); ++i) {
         const std::string_view argumento = argumentos[i];
@@ -56,8 +57,9 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
             opciones.fuente = ruta_desde_utf8(argumento);
             hay_fuente = true;
         } else {
-            error << "nooki: sobra el argumento «" << argumento << "»\n";
-            return USO_INCORRECTO;
+            // Lo que va detrás del fuente son argumentos del programa, no del
+            // compilador: se le pasan tal cual al ejecutarlo.
+            argumentos_del_programa.emplace_back(argumento);
         }
     }
 
@@ -94,7 +96,14 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
         orden = "./" + orden;
     }
 #endif
-    return nooki::ejecutar_comando(nooki::entrecomillar_si_hace_falta(orden));
+    // Se entrecomilla cada pieza por separado: el ejecutable y cada argumento.
+    // Entrecomillar la orden entera rompería un argumento con espacios.
+    std::string lanzar = nooki::entrecomillar_si_hace_falta(orden);
+    for (const std::string& argumento : argumentos_del_programa) {
+        lanzar += " ";
+        lanzar += nooki::entrecomillar_si_hace_falta(argumento);
+    }
+    return nooki::ejecutar_comando(lanzar);
 }
 
 }  // namespace

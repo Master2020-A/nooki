@@ -3,6 +3,44 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.6] — 2026-11-17
+
+### Sprint 134 — Argumentos para el programa (2026-11-17)
+
+El `main` que generaba el compilador era `int main(void)`: un programa de Nooki **no podía recibir
+argumentos**. Para un lenguaje compilado eso deja fuera media vida real —un programa que recibe un archivo,
+un modo, un número de iteraciones—.
+
+Ahora `main` recibe `argc` y `argv`, y el módulo `sistema` los expone:
+
+```nooki
+usar sistema
+
+funcion principal() -> entero {
+    variable lista = sistema.argumentos()
+    variable i = 0
+    mientras (i < lista.largo()) {
+        imprimir(lista.obtener(i))
+        i = i + 1
+    }
+    retornar 0
+}
+```
+
+`sistema.argumentos()` da la lista sin el nombre del programa, `cuantos_argumentos()` la cuenta y
+`argumento(i)` una posición concreta (vacío si no existe).
+
+Y `nooki ejecutar` se los pasa: **todo lo que va detrás del fuente** es para el programa, y las opciones
+del compilador van antes. Cada argumento se entrecomilla por separado, así que uno con espacios llega
+entero.
+
+```bash
+nooki ejecutar programa.oki uno "dos palabras"
+```
+
+Caso nuevo `0088-argumentos` y dos pruebas de CLI que comprueban que el programa recibe lo que se le pasa
+(devuelve cuántos, y el código de salida lo dice).
+
 ## [1.0.5] — 2026-11-17
 
 ### Sprint 133 — `nooki ejecutar` en Linux (2026-11-17)

@@ -1527,6 +1527,30 @@ private:
             }
         }
 
+        // Argumentos del programa.
+        if (nombre_llamado == "cuantos_argumentos" || nombre_llamado == "argumento_de" ||
+            nombre_llamado == "argumentos_programa") {
+            const std::size_t esperados =
+                (nombre_llamado == "cuantos_argumentos" || nombre_llamado == "argumentos_programa")
+                    ? 0
+                    : 1;
+            if (expresion.lista.size() != esperados) {
+                error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                    .parametro("funcion", std::string(nombre_llamado))
+                    .parametro("esperados", std::to_string(esperados))
+                    .parametro("dados", std::to_string(expresion.lista.size()));
+            }
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            if (nombre_llamado == "argumentos_programa") {
+                return Tipo::Desconocido;
+            }
+            return nombre_llamado == "argumento_de" ? Tipo::Texto : Tipo::Entero;
+        }
+
         // Funciones de datos: hablan con la biblioteca de análisis.
         if (nombre_llamado == "consultar_datos" || nombre_llamado == "ejecutar_datos" ||
             nombre_llamado == "disponible_datos" || nombre_llamado == "version_datos" ||

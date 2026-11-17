@@ -425,6 +425,15 @@ publico funcion ejecutar(comando: &texto) -> entero {
 ```text
 publico funcion capturar(comando: &texto) -> texto {
 ```
+```text
+publico funcion argumentos() -> Vector<texto> {
+```
+```text
+publico funcion cuantos_argumentos() -> entero {
+```
+```text
+publico funcion argumento(indice: entero) -> texto {
+```
 
 ### `tabla`
 

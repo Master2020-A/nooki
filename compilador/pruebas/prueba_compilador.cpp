@@ -92,7 +92,7 @@ int main() {
         const generador::ResultadoGeneracion generado = generador::generar_c(programa);
         const std::string& c = generado.codigo;
         comprobar(generado.soportado, "el backend soporta este programa");
-        comprobar(contiene(c, "int main(void)"), "principal se convierte en main");
+        comprobar(contiene(c, "int main(int argc, char** argv)"), "principal se convierte en main");
         comprobar(contiene(c, "nooki_imprimir_texto(nooki_texto_literal(\"¡Hola, Nooki!\"))"),
                   "la llamada se traduce al runtime");
         comprobar(contiene(c, "return 0;"), "el retorno se traduce");
@@ -132,7 +132,8 @@ int main() {
 
         const auto resultado = conductor::compilar(opciones, fuentes, emisor, salida, error);
         comprobar(resultado.codigo == 0, "termina bien");
-        comprobar(contiene(salida.str(), "int main(void)"), "escribe el C en la salida");
+        comprobar(contiene(salida.str(), "int main(int argc, char** argv)"),
+                  "escribe el C en la salida");
 
         std::error_code ignorado;
         std::filesystem::remove(opciones.fuente, ignorado);

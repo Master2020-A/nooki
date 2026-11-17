@@ -1,0 +1,13 @@
+// Los argumentos del programa: sin argumentos, la lista está vacía.
+usar sistema
+
+funcion principal() -> entero {
+    imprimir(sistema.cuantos_argumentos())
+
+    variable lista = sistema.argumentos()
+    imprimir(lista.largo())
+
+    variable primero = sistema.argumento(0)
+    imprimir(primero.largo())
+    retornar 0
+}
