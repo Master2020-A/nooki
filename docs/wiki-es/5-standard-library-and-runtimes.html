@@ -1,0 +1,48 @@
+<h1>Biblioteca estándar y runtimes</h1>
+
+<p>Visión de conjunto de la biblioteca de Nooki —módulos escritos en Nooki e incrustados en el propio binario
+del compilador— y de los runtimes nativos en C que sostienen la inteligencia artificial, el tratamiento de
+datos y la interfaz de escritorio.</p>
+
+<h2>Los módulos de la biblioteca</h2>
+
+<p>La biblioteca son varios módulos <code>.oki</code> incrustados que dan los tipos y las utilidades
+básicas: <code>resultado</code> para lo que puede fallar, <code>textos</code> para manipular cadenas,
+<code>listas</code> para operar sobre vectores de números, <code>matematicas</code> para la aritmética
+habitual, <code>fechas</code> para el calendario, <code>archivo</code> para leer y escribir archivos y
+<code>csv</code> para datos tabulares.</p>
+
+<p>Como están incrustados, un <code>usar</code> los resuelve sin que exista el archivo: no hay nada que
+copiar ni que pueda faltar en una instalación.</p>
+
+<h2>Colecciones: <code>Vector</code> y <code>Mapa</code></h2>
+
+<p>Las colecciones genéricas se apoyan en estructuras del runtime con tamaño dinámico y semántica de
+propiedad. <code>Vector&lt;T&gt;</code> gestiona un búfer contiguo en el montón; <code>Mapa&lt;K, V&gt;</code>
+usa hash FNV-1a para indexar las claves con rapidez. Las dos se integran con el verificador para que la
+propiedad de los elementos sea correcta: sin dobles liberaciones ni uso después de liberar.</p>
+
+<p>El vector admite hoy <code>entero</code>, <code>flotante</code>, <code>texto</code> y estructuras propias
+sin campos con dueño; el mapa admite <code>entero</code>, <code>flotante</code> y <code>texto</code> como
+valor.</p>
+
+<h2>Inteligencia artificial y datos</h2>
+
+<p>Este subsistema une la sintaxis de Nooki con la ejecución nativa a través de <code>runtime_ia.cpp</code>.
+Expone una API de manejadores que cubre tensores, diferenciación automática (<code>autograd</code>),
+arquitecturas de red (<code>redes</code>), datos tabulares (<code>tabla</code>), rutinas estadísticas y
+procesamiento de lenguaje natural (<code>pln</code>).</p>
+
+<p>La forma de usarla es siempre la misma: se crea un manejador, se le dan datos, se entrena y se consulta;
+y se libera al final. El runtime esconde la reserva de memoria y la aritmética, y el generador solo emite ese
+C cuando el programa lo usa.</p>
+
+<h2>Interfaz de escritorio</h2>
+
+<p>La interfaz se apoya en <code>runtime_ui.cpp</code>, que ofrece una capa portable sobre Win32 y X11.
+Sostiene los módulos de ventana (<code>ventana</code>), disposición (<code>diseno</code>), controles
+interactivos (<code>controles</code>), accesibilidad (<code>accesibilidad</code>) e imágenes
+(<code>imagenes</code>), y todo se maneja con un bucle de eventos.</p>
+
+<p>En Linux hace falta <code>libx11-dev</code> para compilar un programa con ventana, y para ejecutarlo sin
+pantalla se usa <code>xvfb-run</code>. En macOS compila, pero todavía no abre ventana de forma nativa.</p>

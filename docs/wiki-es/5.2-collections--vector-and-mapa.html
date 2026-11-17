@@ -1,0 +1,58 @@
+<h1>Colecciones: <code>Vector</code> y <code>Mapa</code></h1>
+
+<p>Esta página describe cómo se representan las colecciones genéricas de Nooki —<code>Vector&lt;T&gt;</code> y
+<code>Mapa&lt;K, V&gt;</code>— en el compilador y en el runtime: qué estructura de C les corresponde, quién es
+dueño de sus elementos, cómo se gestiona la memoria y cómo se indexan las claves.</p>
+
+<h2>1. La representación en el runtime</h2>
+
+<p>En el lenguaje, las colecciones son tipos genéricos parametrizados por el tipo del elemento o del valor.
+Como el backend es C estándar, cada instanciación se convierte en una estructura concreta del preludio. La
+traducción se hace en una sola función, <code>tipo_c</code>, y según los parámetros sale una estructura u
+otra:</p>
+
+<table>
+  <tr><th>En Nooki</th><th>En C</th></tr>
+  <tr><td><code>Vector&lt;texto&gt;</code></td><td><code>nooki_vector_texto</code></td></tr>
+  <tr><td><code>Vector&lt;flotante&gt;</code></td><td><code>nooki_vector_flotante</code></td></tr>
+  <tr><td><code>Vector&lt;entero&gt;</code></td><td><code>nooki_vector_entero</code></td></tr>
+  <tr><td><code>Vector&lt;MiEstructura&gt;</code></td><td><code>nooki_vector_MiEstructura</code>, generado</td></tr>
+  <tr><td><code>Mapa&lt;texto, entero&gt;</code></td><td><code>nooki_mapa_texto_entero</code></td></tr>
+  <tr><td><code>Mapa&lt;texto, flotante&gt;</code></td><td><code>nooki_mapa_texto_flotante</code></td></tr>
+  <tr><td><code>Mapa&lt;texto, texto&gt;</code></td><td><code>nooki_mapa_texto_texto</code></td></tr>
+</table>
+
+<p>El caso del vector de estructuras es distinto: como cada estructura tiene sus campos, el generador emite
+un vector a medida para cada una que se use en el programa, con su <code>agregar</code>, <code>obtener</code>,
+<code>modificar</code>, <code>largo</code>, <code>vaciar</code> y <code>soltar</code>.</p>
+
+<h2>2. Propiedad de los elementos</h2>
+
+<p>Las colecciones gestionan el ciclo de vida de lo que guardan, y la regla cambia según el tipo:</p>
+
+<ul>
+  <li><strong>Claves de un mapa</strong>: se pasan por referencia (<code>&amp;</code>) y el mapa guarda su
+  propia copia. Así la variable que usaste sigue siendo tuya y no hay movimiento ni liberación
+  sorpresa.</li>
+  <li><strong>Valores de un mapa</strong>: también se copian; al actualizar una clave o al quitarla, el mapa
+  libera el valor viejo, que es donde este tipo de estructura suele romperse.</li>
+  <li><strong>Elementos de un vector</strong>: el vector <em>se queda</em> con el valor. Meter un texto en un
+  vector lo mueve, y usar la variable después es <code>NOK5001</code>.</li>
+  <li><strong>Leer de una colección</strong>: <code>obtener</code> devuelve una vista para los textos —el dato
+  sigue siendo de la colección—, y el valor para los números y las estructuras.</li>
+</ul>
+
+<p>Las tres redes de decisión se comprueban con casos de conformidad: <code>0063-mapa</code>,
+<code>0080-mapa-flotante</code>, <code>0084-mapa-texto</code> y <code>0085-vector-estructura</code>.</p>
+
+<h2>3. El hash de las claves</h2>
+
+<p>Los mapas indexan con <strong>FNV-1a</strong> sobre los bytes del texto de la clave, con encadenamiento
+para las colisiones y un rehash al superar el 75 % de ocupación. Es la combinación que da un reparto
+razonable con muy poco código y sin dependencias.</p>
+
+<h2>4. Lo que todavía no hay</h2>
+
+<p>Un vector de una estructura con campos con dueño (<code>texto</code>, <code>Vector</code>,
+<code>Mapa</code> o <code>Caja</code>) no está admitido: exigiría copia y liberación profundas. El compilador
+lo dice con claridad (<code>NOK6003</code>) en lugar de generar algo que se rompa en ejecución.</p>

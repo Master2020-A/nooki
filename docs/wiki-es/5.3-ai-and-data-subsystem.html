@@ -1,0 +1,74 @@
+<h1>Inteligencia artificial y datos</h1>
+
+<p>El subsistema de IA y datos (<code>fuente/ia/runtime_ia.cpp</code>) da a Nooki una API nativa basada en
+manejadores para tensores, diferenciación automática, redes neuronales (<code>redes</code>,
+<code>clases</code>, <code>profunda</code>), estadística, datos tabulares (<code>tabla</code>) y
+procesamiento de lenguaje natural (<code>pln</code>).</p>
+
+<p>Como Nooki se compila a C nativo, todo esto se ejecuta directamente, sin máquina virtual de por medio.</p>
+
+<h2>1. Manejadores y memoria</h2>
+
+<p>El runtime representa las estructuras de datos —matrices, tensores— como manejadores opacos de 64 bits: un
+<code>entero</code> que por dentro es un puntero a la estructura de C correspondiente. Las comprobaciones de
+dimensiones y de límites se hacen en el runtime, dentro del backend de C.</p>
+
+<p>Ese detalle es lo que permite que el lenguaje no tenga que saber nada de punteros para usar la IA: se
+crea un manejador, se opera con él y se libera. Y sigue siendo código nativo, sin copiar datos entre el
+lenguaje y una biblioteca.</p>
+
+<h2>2. Tensores y estadística</h2>
+
+<p>Un tensor guarda sus filas, sus columnas y un arreglo contiguo de enteros de 64 bits. Las operaciones
+principales:</p>
+
+<ul>
+  <li><code>tensor.ceros(filas, columnas)</code>: un tensor a cero.</li>
+  <li><code>tensor.lleno(filas, columnas, valor)</code>: relleno con una constante.</li>
+  <li><code>tensor.identidad(lado)</code>: la matriz identidad.</li>
+  <li><code>tensor.producto(a, b)</code>: multiplicación de matrices, con comprobación de dimensiones.</li>
+  <li><code>tensor.determinante(t)</code>: determinante por eliminación gaussiana en doble precisión.</li>
+</ul>
+
+<p>Y las funciones de resumen y activación —<code>minimo</code>, <code>maximo</code>, <code>media</code>,
+<code>varianza</code>, <code>desviacion</code>, <code>relu</code>, <code>sigmoides</code>,
+<code>softmax</code>— trabajan directamente sobre esas estructuras.</p>
+
+<h2>3. Diferenciación automática</h2>
+
+<p>El módulo <code>autograd</code> construye un grafo de operaciones que guarda los valores y sus gradientes:
+se hace la pasada hacia delante, se pide la hacia atrás y el grafo calcula las derivadas de cada nodo.</p>
+
+<p>Un detalle que costó y quedó arreglado: el grafo hay que liberarlo. Al principio no se liberaba y entrenar
+una red tardaba más de diez minutos; con la marca y la liberación por niveles, el mismo entrenamiento baja a
+poco más de cinco segundos. Es el tipo de fallo que no da error, solo lentitud.</p>
+
+<h2>4. Redes neuronales</h2>
+
+<p>Hay tres arquitecturas, con la misma forma de uso:</p>
+
+<ul>
+  <li><strong>Binaria</strong> (<code>redes.nueva</code>): una capa oculta y una salida de dos clases, con
+  sigmoide.</li>
+  <li><strong>De clases</strong> (<code>redes.nueva_clases</code>): una capa oculta y de 2 a 16 clases, con
+  softmax.</li>
+  <li><strong>Profunda</strong> (<code>redes.nueva_profunda</code>): dos capas ocultas, de 1 a 64 entradas y
+  de 2 a 16 clases.</li>
+</ul>
+
+<p>Las tres se entrenan muestra a muestra o <strong>por lotes con momento</strong>, se evalúan con su
+porcentaje de acierto y se guardan y cargan en archivo con sus pesos y sus muestras. La diferencia entre
+muestra a muestra y por lotes no es cosmética: la paridad de 4 bits, que con el descenso plano se queda en la
+mitad, se aprende entera con lotes y momento.</p>
+
+<h2>5. Datos tabulares y lenguaje natural</h2>
+
+<p><code>tabla</code> da una estructura de columnas con tipos para manejar datos en memoria, y
+<code>pln</code> las operaciones básicas de texto —tokenizar, normalizar, contar— que sirven de base para
+preparar datos antes de entrenar.</p>
+
+<h2>Lo que no hay</h2>
+
+<p>No hay convolucionales, ni recurrentes, ni aceleración por GPU, y las redes no incluyen capas
+convolucionales. Tampoco hay carga de datos automática desde CSV: eso se hace con el módulo
+<code>csv</code> y se alimenta a mano, que es lo que hace el ejemplo <code>10-clasificador</code>.</p>

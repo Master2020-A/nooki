@@ -1,0 +1,84 @@
+<h1>Los módulos de la biblioteca</h1>
+
+<p>Esta página cubre los módulos incrustados de la biblioteca estándar, escritos enteros en Nooki
+(<code>resultado</code>, <code>textos</code>, <code>listas</code>, <code>matematicas</code>,
+<code>fechas</code>, <code>archivo</code>, <code>csv</code>), sus interfaces, cómo se integran y cómo se
+verifican.</p>
+
+<p>Los módulos se resuelven al cargar (<code>usar &lt;modulo&gt;</code>) sin que exista un archivo en disco,
+porque van dentro del compilador. Y cada uno tiene su caso de conformidad en
+<code>pruebas/conformidad/valido/</code> y su comprobación de documentación.</p>
+
+<h2>1. <code>textos</code></h2>
+
+<p>Utilidades para componer y medir cadenas.</p>
+
+<ul>
+  <li><code>unir(partes: &amp;Vector&lt;texto&gt;, separador: &amp;texto) -&gt; texto</code>: junta las partes
+  con el separador.</li>
+  <li><code>repetir(texto_base: &amp;texto, veces: entero) -&gt; texto</code>: repite un texto.</li>
+  <li><code>contar(frase: &amp;texto, aguja: &amp;texto) -&gt; entero</code>: cuenta cuántas veces aparece.</li>
+  <li><code>de_entero(valor: entero) -&gt; texto</code> y <code>de_flotante(valor: flotante) -&gt; texto</code>:
+  meten un número en un mensaje, con el mismo formato que <code>imprimir</code> (coma decimal y sin ceros de
+  más).</li>
+</ul>
+
+<h2>2. <code>listas</code></h2>
+
+<p>Operaciones de conjunto sobre vectores de enteros.</p>
+
+<ul>
+  <li><code>suma(numeros: &amp;Vector&lt;entero&gt;) -&gt; entero</code></li>
+  <li><code>mayor(numeros: &amp;Vector&lt;entero&gt;) -&gt; entero</code></li>
+  <li><code>menor(numeros: &amp;Vector&lt;entero&gt;) -&gt; entero</code></li>
+  <li><code>contiene(numeros: &amp;Vector&lt;entero&gt;, buscado: entero) -&gt; booleano</code></li>
+  <li><code>promedio(numeros: &amp;Vector&lt;entero&gt;) -&gt; entero</code></li>
+</ul>
+
+<h2>3. <code>fechas</code></h2>
+
+<p>Aritmética de calendario y de fechas.</p>
+
+<ul>
+  <li><code>bisiesto(anio: entero) -&gt; booleano</code></li>
+  <li><code>dias_del_mes(mes: entero, anio: entero) -&gt; entero</code></li>
+  <li><code>dias_del_anio(anio: entero) -&gt; entero</code></li>
+  <li><code>a_dias(anio: entero, mes: entero, dia: entero) -&gt; entero</code> y
+  <code>sumar_dias(dias: entero, cantidad: entero) -&gt; entero</code></li>
+</ul>
+
+<h2>4. <code>archivo</code></h2>
+
+<p>Comprobar, leer y escribir archivos.</p>
+
+<ul>
+  <li><code>existe(ruta: &amp;texto) -&gt; booleano</code></li>
+  <li><code>leer(ruta: &amp;texto) -&gt; lectura</code>: devuelve la enumeración <code>lectura</code>, con
+  <code>Bien(contenido)</code> o <code>Mal(motivo)</code>.</li>
+  <li><code>escribir(ruta: &amp;texto, contenido: &amp;texto) -&gt; lectura</code></li>
+  <li><code>agregar(ruta: &amp;texto, contenido: &amp;texto) -&gt; lectura</code>: añade al final sin borrar
+  lo que hubiera, que es lo que hace falta para un registro.</li>
+</ul>
+
+<h2>5. <code>csv</code></h2>
+
+<p>Lectura de datos tabulares, con separador configurable y conversión de campos a número.</p>
+
+<ul>
+  <li><code>filas(ruta: &amp;texto) -&gt; Vector&lt;texto&gt;</code>: todas las líneas del archivo.</li>
+  <li><code>campos(linea: &amp;texto) -&gt; Vector&lt;texto&gt;</code>: parte por punto y coma.</li>
+  <li><code>campos_con(linea: &amp;texto, separador: &amp;texto) -&gt; Vector&lt;texto&gt;</code>: parte por
+  el separador que se diga.</li>
+  <li><code>a_numero(campo: &amp;texto) -&gt; flotante</code> y
+  <code>a_entero(campo: &amp;texto) -&gt; entero</code>: convierten un campo, aceptando coma decimal.</li>
+  <li><code>columnas(ruta: &amp;texto) -&gt; entero</code>: cuántas columnas tiene la cabecera.</li>
+</ul>
+
+<p>El ejemplo <code>0072-csv</code> lee un archivo con punto y coma y procesa sus filas y columnas; el
+<code>10-clasificador</code> va más allá: escribe el CSV, lo lee, entrena una red y dibuja el resultado.</p>
+
+<h2>Cómo se verifica la biblioteca</h2>
+
+<p>La referencia de la biblioteca no se escribe a mano: <code>herramientas/generar-referencia.py</code> la
+extrae del propio compilador. Y como cada módulo tiene su caso de conformidad, cambiar una firma sin querer
+rompe una prueba antes de llegar a nadie.</p>

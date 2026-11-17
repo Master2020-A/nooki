@@ -1,0 +1,72 @@
+<h1>Interfaz de escritorio</h1>
+
+<p>El subsistema de interfaz da a Nooki un marco ligero y sin dependencias para construir aplicaciones de
+escritorio nativas compiladas a código máquina. En lugar de una máquina virtual o un motor de navegador, los
+módulos de la biblioteca (<code>ventana</code>, <code>diseno</code>, <code>controles</code>,
+<code>accesibilidad</code> e <code>imagenes</code>) se apoyan directamente en la API del sistema: <strong>Win32
+GDI</strong> en Windows y <strong>X11</strong> en Linux y Unix.</p>
+
+<p>El runtime está en <code>fuente/ui/runtime_ui.cpp</code> y lo ejercitan tanto las pruebas de integración
+(<code>pruebas/ventana.cpp</code>) como los casos de conformidad.</p>
+
+<h2>1. Los cinco módulos</h2>
+
+<ul>
+  <li><strong><code>ventana</code></strong>: abrir, cerrar, limpiar, presentar, leer eventos, repintar.</li>
+  <li><strong><code>diseno</code></strong>: disposición en columnas y filas, márgenes y tamaños.</li>
+  <li><strong><code>controles</code></strong>: botones, campos de texto, listas.</li>
+  <li><strong><code>accesibilidad</code></strong>: etiquetas y descripciones para lo que hay en pantalla.</li>
+  <li><strong><code>imagenes</code></strong>: cargar y leer píxeles.</li>
+</ul>
+
+<p>Los cinco están escritos en Nooki y por debajo llaman a las rutinas de dibujo y de eventos del runtime de
+C. Esa separación es la que permite que el mismo programa se compile en Windows y en Linux sin cambiar una
+línea de Nooki.</p>
+
+<h2>2. El runtime nativo</h2>
+
+<h3>Imágenes</h3>
+
+<p>El subsistema de imágenes lee archivos BMP de Windows sin comprimir, de 24 y 32 bits, y los deja en un
+arreglo plano de píxeles con el formato <code>0xRRGGBB</code>:</p>
+
+<ul>
+  <li><code>nooki_ui_imagen_cargar(ruta)</code>: lee la cabecera de 54 bytes, comprueba la firma
+  (<code>B</code>, <code>M</code>) y que no haya compresión, y carga las filas de abajo arriba en una
+  estructura gestionada.</li>
+  <li><code>nooki_ui_imagen_color_en()</code> y <code>nooki_ui_imagen_soltar()</code>: leer un píxel y
+  liberar la imagen.</li>
+</ul>
+
+<h3>El backend de Windows</h3>
+
+<p>En Windows, el runtime usa las estructuras de GDI de Win32:</p>
+
+<ul>
+  <li><strong><code>nooki_ventana_estado</code></strong>: guarda la ventana (<code>HWND</code>), el contexto
+  de dispositivo (<code>HDC</code>), las banderas de estado (viva, cerrada, sucia) y una cola circular de
+  eventos de tamaño fijo.</li>
+  <li><strong><code>nooki_encolar()</code></strong>: mete los mensajes —movimiento del ratón, clics, teclas—
+  en esa cola.</li>
+  <li><strong><code>nooki_ventana_proc()</code></strong>: el procedimiento de ventana, que atiende
+  <code>WM_CLOSE</code>, <code>WM_PAINT</code>, <code>WM_MOUSEMOVE</code>, <code>WM_LBUTTONDOWN</code> y el
+  teclado.</li>
+</ul>
+
+<p>La cola es fija a propósito: el programa lee eventos y los procesa en su bucle, y si no llega a tiempo se
+quedan en la cola en vez de crecer sin control. Por eso el bucle de una aplicación de Nooki tiene siempre la
+misma forma: mirar si hay evento, atenderlo, dibujar si toca y volver a empezar.</p>
+
+<h2>3. El backend de Linux</h2>
+
+<p>En Linux y otros Unix, el runtime usa <strong>X11</strong>. Para compilar un programa con ventana hace
+falta <code>libx11-dev</code>, y para ejecutarlo en un servidor sin pantalla se usa <code>xvfb-run</code>.</p>
+
+<p>Si no hay entorno gráfico, <code>ventana.abrir</code> devuelve cero y el programa puede seguir por el camino
+de consola, que es lo que hace el ejemplo <code>10-clasificador</code>: dibuja la frontera aprendida con
+caracteres cuando no hay ventana.</p>
+
+<h2>4. Lo que falta</h2>
+
+<p>El backend de macOS no está implementado: los programas compilan y la parte de consola funciona, pero no
+abren ventana de forma nativa. Es el hueco conocido del subsistema, anotado en las notas de la versión.</p>
