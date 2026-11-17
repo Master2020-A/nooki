@@ -33,7 +33,7 @@ nombre que la original:
 ```
 
 Produce `dist/wiki-nooki-es.html` y su PDF. Las páginas que aún no están traducidas salen en el original,
-así que el resultado se puede usar desde la primera tanda. Para ver el texto de una página y traducirlo:
+así que el resultado se puede usar desde la primera tanda. **Hoy están traducidas las 34.** Para ver el texto de una página y traducirlo:
 
 ```powershell
 python herramientas/wiki/a-markdown.py --pagina 3-compiler-architecture

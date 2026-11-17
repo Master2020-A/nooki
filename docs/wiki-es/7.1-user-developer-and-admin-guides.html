@@ -1,0 +1,59 @@
+<h1>Las guías por audiencia</h1>
+
+<p>Esta página describe el contenido, la organización y la verificación de las guías de Nooki:
+<code>GUIA_DEL_USUARIO.md</code>, <code>GUIA_DEL_DESARROLLADOR.md</code>,
+<code>GUIA_DEL_ADMINISTRADOR.md</code>, <code>REFERENCIA_DEL_LENGUAJE.md</code>, y de los documentos centrales
+<code>MANUAL.md</code> y <code>REFERENCIA.md</code>, con sus PDF.</p>
+
+<h2>1. Cuatro guías, cuatro lectores</h2>
+
+<p>La documentación está separada por para quién es, no por extensión. Cada guía responde a una pregunta
+distinta:</p>
+
+<table>
+  <tr><th>Guía</th><th>Para quién</th><th>Qué responde</th></tr>
+  <tr><td>Del usuario</td><td>quien escribe programas</td><td>«¿cómo hago esto en Nooki?»</td></tr>
+  <tr><td>Del administrador</td><td>quien lo instala y lo mantiene</td><td>«¿cómo lo despliego y lo dejo funcionando?»</td></tr>
+  <tr><td>Del desarrollador</td><td>quien toca el compilador</td><td>«¿dónde está esto en el código?»</td></tr>
+  <tr><td>De referencia</td><td>quien consulta</td><td>«¿qué firma tiene y qué código de error da?»</td></tr>
+</table>
+
+<p>Y encima de las cuatro están el <code>MANUAL.md</code>, que enseña el lenguaje capítulo a capítulo, y el
+<code>REFERENCIA.md</code>, que es el documento de consulta.</p>
+
+<h2>2. La guía del desarrollador</h2>
+
+<p>Es la que más se usa para tocar el compilador: lleva los conceptos de alto nivel a los archivos concretos
+de <code>compilador/</code>. Explica los presets, el reparto de carpetas, las pasadas del analizador y los
+arneses de prueba.</p>
+
+<p>Su valor está en el mapa: si quieres cambiar cómo se comprueba un préstamo, la guía te dice en qué archivo
+y en qué función, en lugar de dejarte buscando por el árbol.</p>
+
+<h2>3. Las guías de administrador y de usuario</h2>
+
+<p>La del administrador cubre el despliegue: el entorno, las órdenes, la lectura del manifiesto
+<code>nooki.toml</code> y la elección del compilador de C del sistema. La del usuario cubre el lenguaje y las
+tareas: escribir, compilar, probar y publicar un programa.</p>
+
+<p>Las dos comparten el mismo flujo por debajo: lo que el usuario escribe se convierte en C y se entrega al
+compilador del sistema. Entender ese paso es lo que permite diagnosticar un fallo de instalación sin
+adivinar.</p>
+
+<h2>4. Los PDF y cómo se comprueban</h2>
+
+<p>Cada guía tiene su PDF junto al Markdown del que sale.</p>
+
+<h3>La verificación</h3>
+
+<ul>
+  <li><strong>Bloques de código</strong>: los ejemplos de <code>MANUAL.md</code> y de las guías se compilan y
+  se ejecutan en las pruebas de <code>ctest</code>, para que la documentación no se separe del compilador.</li>
+  <li><strong>Pruebas locales</strong>: con <code>ctest --preset &lt;preset&gt; -R documentos</code> se pueden
+  pasar solo las de documentación.</li>
+  <li><strong>Regeneración</strong>: cuando cambia un Markdown, hay que regenerar su PDF con los guiones de
+  <code>herramientas/</code>.</li>
+</ul>
+
+<p>Esa comprobación automática es lo que permite decir que los ejemplos del manual funcionan: no es una
+promesa, es una prueba que corre en cada cambio.</p>

@@ -1,0 +1,117 @@
+<h1>Glosario</h1>
+
+<p>Los términos que se repiten en el código, en la especificación y en la documentación, con lo que significan
+y con la pieza del compilador que les corresponde.</p>
+
+<h2>1. Términos del lenguaje</h2>
+
+<h3>Caja</h3>
+
+<p>Una caja con dueño en el montón (<code>Caja&lt;T&gt;</code>): un solo dueño y destrucción determinista. En
+el C generado es <code>nooki_caja</code>, y se crea con <code>Caja.nuevo()</code>.</p>
+
+<h3>Préstamo (<code>&amp;</code> / <code>&amp;mutable</code>)</h3>
+
+<p>Referencia sujeta a las reglas del verificador, que lleva la cuenta por ámbito de si un préstamo es
+compartido (<code>&amp;</code>) o exclusivo (<code>&amp;mutable</code>). Mientras hay uno exclusivo no puede
+haber ningún otro.</p>
+
+<h3>Rasgo</h3>
+
+<p>Contrato de comportamiento: un conjunto de firmas de métodos que un tipo se compromete a implementar. Se
+despacha con referencias gordas (<code>nooki_ref_…</code>) que emparejan el puntero al objeto con la tabla de
+métodos virtuales.</p>
+
+<h3>Clase y estructura</h3>
+
+<p>Los dos tipos propios. Según los ADR-001 y ADR-021, una <code>clase</code> tiene semántica de referencia y
+se crea con <code>nuevo</code>; una <code>estructura</code> tiene semántica de valor y se copia al asignarla o
+pasarla.</p>
+
+<h3>Resultado</h3>
+
+<p>El error como valor (<code>resultado&lt;T, E&gt;</code>) en lugar de excepciones (ADR-023). Se propaga con
+<code>?</code> y se comprueba en la fase semántica.</p>
+
+<h3><code>inseguro</code> y <code>asm!</code></h3>
+
+<p>Las dos escotillas del lenguaje (ADR-011 y ADR-026). Un bloque <code>inseguro</code> desactiva la aritmética
+comprobada y abre los punteros —<code>reservar</code>, <code>liberar</code>, <code>leer_en</code>,
+<code>escribir_en</code>, <code>desde_direccion</code>—, y dentro se permite <code>asm!</code> con sintaxis
+Intel.</p>
+
+<h3>Coincide</h3>
+
+<p>El emparejamiento de patrones: <code>coincide (valor) { caso … => … }</code>. Admite literales, variantes
+de enumeración y ligaduras que se llevan los datos.</p>
+
+<h3>Manifiesto</h3>
+
+<p>El archivo de configuración del proyecto (<code>nooki.toml</code>), que declara el nombre, la versión y las
+dependencias locales.</p>
+
+<h2>2. Términos de la verificación</h2>
+
+<h3>Caso de conformidad</h3>
+
+<p>Un programa <code>.oki</code> con su <code>esperado.txt</code>: la salida que debe producir si es válido, o
+los códigos de diagnóstico si es inválido. Hoy hay 116.</p>
+
+<h3>Esperado</h3>
+
+<p>El archivo con el resultado que se espera de un caso: la salida estándar, línea a línea, o los códigos
+<code>NOKnnnn</code>, uno por línea y ordenados.</p>
+
+<h3>Arnés</h3>
+
+<p>El programa que descubre los casos, los ejecuta y compara. En el proyecto,
+<code>arnes_conformidad.cpp</code>.</p>
+
+<h3>Saneamiento</h3>
+
+<p>El preset que compila con AddressSanitizer y UndefinedBehaviorSanitizer. Es la cadena que encuentra los
+fallos de memoria que no se ven a simple vista —como la vista a una cadena ya liberada que apareció en el
+verificador—.</p>
+
+<h2>3. Términos del compilador</h2>
+
+<h3>Ámbito</h3>
+
+<p>El nivel de un bloque en el verificador. Guarda las variables, sus tipos, las cajas, los textos, los
+préstamos activos, las variables ya movidas y qué vectores o mapas son de un tipo concreto.</p>
+
+<h3>Emisor de C</h3>
+
+<p>La clase que traduce el árbol verificado a C (<code>EmisorC</code>), con el preludio del runtime delante.</p>
+
+<h3>Preludio</h3>
+
+<p>El bloque de C que se pone al principio de cada programa generado: textos, vectores, mapas, cajas, punteros,
+aritmética comprobada y las funciones de archivo y entrada.</p>
+
+<h3>Conductor</h3>
+
+<p>La pieza que orquesta la compilación: resuelve módulos, sirve la biblioteca incrustada, localiza el
+compilador de C del sistema y devuelve el binario o el error.</p>
+
+<h3>Diagnóstico</h3>
+
+<p>Un aviso del compilador con su código estable <code>NOKnnnn</code>, su ubicación exacta y su explicación.
+Son 47 y no cambian de número entre versiones.</p>
+
+<h2>4. Términos del proyecto</h2>
+
+<h3>ADR</h3>
+
+<p><em>Architecture Decision Record</em>: el documento que cuenta una decisión de diseño con su contexto y sus
+consecuencias. Viven en <code>docs/adr/</code> y se indexan en <code>DECISIONES.md</code>.</p>
+
+<h3>Sprint</h3>
+
+<p>La unidad de planificación: un alcance funcional de dos semanas que termina con la rama principal en verde
+en las plataformas soportadas.</p>
+
+<h3>Paquete</h3>
+
+<p>La distribución lista para usar: binario, documentación, ejemplos, editores y especificación, en un
+<code>.zip</code> para Windows o un <code>.tar.gz</code> para Linux y macOS.</p>

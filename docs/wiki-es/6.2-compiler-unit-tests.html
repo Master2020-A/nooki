@@ -1,0 +1,60 @@
+<h1>Pruebas unitarias del compilador</h1>
+
+<p>Esta batería, en <code>compilador/pruebas/</code>, valida cada subsistema del compilador por separado: los
+casos límite de comportamiento, los diagnósticos, la integración con el runtime, la resistencia al
+<em>fuzzing</em> y las regresiones de rendimiento. A diferencia de los casos de conformidad —que evalúan
+programas <code>.oki</code> completos contra su salida—, estas pruebas hablan directamente con las clases y
+funciones de C++, o lanzan el binario de la línea de órdenes en un entorno aislado.</p>
+
+<h2>1. Cómo se registran</h2>
+
+<p>Todas las pruebas se registran en <code>compilador/pruebas/CMakeLists.txt</code>. Cada una es un ejecutable
+independiente enlazado con <code>nooki_nucleo</code> y dado de alta en CTest con <code>add_test()</code>.</p>
+
+<p>Las opciones de compilación —nivel de avisos, C++20, desinfectantes— se aplican de forma uniforme desde una
+función común. Algunas pruebas, además, fijan su carpeta de trabajo, su tiempo máximo o rutas de compilación
+con <code>target_compile_definitions()</code> y <code>set_tests_properties()</code>.</p>
+
+<h2>2. Semántica y cadena completa</h2>
+
+<h3>Verificación semántica</h3>
+
+<p><code>prueba_semantico.cpp</code> lanza una batería de fragmentos válidos e inválidos contra
+<code>semantico::verificar()</code>. Comprueba que los válidos no producen ningún diagnóstico y que los
+inválidos dan exactamente el código esperado: <code>NOK3001</code> para un nombre que no existe,
+<code>NOK4002</code> para un tipo que no encaja, <code>NOK4003</code> para una aridad equivocada.</p>
+
+<p>Es la prueba que más ha crecido, porque cada regla nueva del lenguaje —la propiedad, los préstamos, los
+tipos del vector, los punteros— añade casos que se cruzan con las anteriores.</p>
+
+<h3>Cadena vertical y backend de C</h3>
+
+<p><code>prueba_compilador.cpp</code> prueba el corte vertical completo: traduce el fuente a C, invoca el
+compilador del sistema, ejecuta el binario resultante y comprueba su salida estándar. Si algo se rompe entre
+la generación y la ejecución, aquí se ve.</p>
+
+<h2>3. Comportamiento, entorno y casos límite</h2>
+
+<h3>Aritmética comprobada y pánicos</h3>
+
+<p><code>panico.cpp</code> valida el ADR-003. Compila fragmentos con desbordamiento —suma, resta,
+multiplicación, negación del mínimo— o con división y resto por cero, los ejecuta y comprueba que terminan con
+código <strong>70</strong> y escriben el mensaje esperado por la salida de error.</p>
+
+<h3>Unicode y rutas</h3>
+
+<p><code>rutas.cpp</code> comprueba que un proyecto en una carpeta con acentos o con espacios funciona igual
+que en una ruta sencilla, que es justo lo que falla cuando se manejan rutas como bytes sin pensar en la
+codificación.</p>
+
+<h3>Fuzzing y rendimiento</h3>
+
+<p>Hay dos pruebas más que no comprueban corrección sino resistencia: <code>fuzz.cpp</code> lanza entradas
+aleatorias al analizador para asegurar que nunca se cuelga ni se sale del búfer, y <code>rendimiento.cpp</code>
+mide tiempos de compilación para detectar retrocesos.</p>
+
+<h3>La ventana y el servidor de lenguaje</h3>
+
+<p><code>ventana.cpp</code> ejercita el runtime de interfaz —abrir, dibujar, leer eventos, cerrar— y
+<code>lsp.cpp</code> habla con el servidor de lenguaje como lo haría un editor. Son las dos piezas que no se
+pueden probar con un caso de conformidad, porque dependen del entorno.</p>

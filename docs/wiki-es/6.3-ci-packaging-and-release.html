@@ -1,0 +1,66 @@
+<h1>Integración continua, empaquetado y publicación</h1>
+
+<p>Esta página reúne lo que hace falta para publicar: los flujos de integración continua, las puertas de estilo
+y de análisis estático, los guiones de empaquetado, el procedimiento de versión y la licencia.</p>
+
+<h2>1. Los flujos de GitHub Actions</h2>
+
+<p>La configuración está en <code>.github/workflows/ci.yml</code> y se dispara con cada empujón y cada
+petición de cambio a <code>principal</code> o <code>main</code>. Tiene cinco trabajos:</p>
+
+<table>
+  <tr><th>Trabajo</th><th>Qué comprueba</th></tr>
+  <tr><td><code>compilar</code></td><td>compila y prueba en Windows (MSVC 2022) y Linux (GCC)</td></tr>
+  <tr><td><code>saneamiento</code></td><td>AddressSanitizer y UndefinedBehaviorSanitizer</td></tr>
+  <tr><td><code>formato</code></td><td><code>clang-format</code> en modo comprobación</td></tr>
+  <tr><td><code>analisis</code></td><td><code>clang-tidy</code> sobre la base de compilación</td></tr>
+  <tr><td><code>Publicar</code></td><td>al empujar una etiqueta, construye el paquete de Linux y lo adjunta a la versión</td></tr>
+</table>
+
+<p>El trabajo de macOS se quitó de la matriz: los ejecutores no están disponibles para esta cuenta y el
+trabajo se quedaba en cola para siempre, dejando la ejecución entera en ese estado aunque los demás
+terminaran bien.</p>
+
+<h2>2. Estilo y análisis estático</h2>
+
+<p>El formato se fija en <code>.clang-format</code>: base de LLVM, sangría de 4 espacios, punteros y
+referencias a la izquierda, y 100 columnas para C++ (120 para JSON).</p>
+
+<p>El trabajo de formato pasa <code>clang-format --dry-run --Werror</code> por todos los <code>.cpp</code> y
+<code>.hpp</code> de <code>compilador/</code> y <code>cmake/</code>. Las plantillas <code>.in</code> quedan
+fuera a propósito: llevan <code>@VARIABLE@</code> de CMake y el formateador mete un espacio antes del
+<code>@</code> de cierre, con lo que la sustitución deja de valer.</p>
+
+<p>El trabajo de análisis pasa <code>clang-tidy</code> con la base de compilación que genera el preset de
+Linux. Los dos son informativos en el peor caso, pero hoy están en verde, y eso es lo que se quiere
+mantener.</p>
+
+<h2>3. Empaquetado</h2>
+
+<p>El paquete se arma con <code>herramientas/empaquetar.ps1</code> en Windows y con
+<code>herramientas/empaquetar.sh</code> en Linux y macOS. Los dos compilan con el preset que se les diga,
+deducen la plataforma (<code>windows-x86_64</code>, <code>linux-x86_64</code>, <code>macos-x86_64</code>),
+sacan la versión del propio binario con <code>--version</code> y juntan en una carpeta el ejecutable, la
+documentación, las guías en PDF, los ejemplos, los editores y la especificación, con un
+<code>INSTALAR.txt</code> que dice cómo dejarlo en el <code>PATH</code>.</p>
+
+<p>El de Linux lo lanza la CI al publicar una etiqueta, y antes de subir nada comprueba que el binario del
+paquete responde y ejecuta un ejemplo. El de Windows se genera en local y se adjunta a la versión a mano.</p>
+
+<h2>4. Publicar una versión</h2>
+
+<ol>
+  <li>Subir el número en <code>CMakeLists.txt</code>, en el historial y en el LEEME —la suite comprueba que
+  coincidan—.</li>
+  <li>Pasar las cinco cadenas: Windows MSVC, Windows MinGW, Linux, saneamiento y el análisis.</li>
+  <li>Empaquetar.</li>
+  <li>Confirmar, etiquetar con <code>vX.Y.Z</code> y empujar la etiqueta: la CI construye el paquete de Linux
+  y crea la versión.</li>
+  <li>Adjuntar el paquete de Windows y escribir las notas.</li>
+</ol>
+
+<h2>5. Licencia</h2>
+
+<p>Nooki se publica con doble licencia <strong>MIT o Apache-2.0</strong>, a elección de quien lo use. El
+código generado por el compilador es del programa que lo generó: compilar un programa con Nooki no le impone
+ninguna condición de licencia.</p>

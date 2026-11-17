@@ -1,0 +1,44 @@
+<h1>El conjunto de documentación y cómo contribuir</h1>
+
+<p>Esta sección describe la documentación del proyecto, en <code>docs/</code>, y el flujo de contribución
+definido en <code>CONTRIBUIR.md</code>. La documentación cubre las guías por audiencia —usuario,
+desarrollador y administrador—, el manual y la referencia del lenguaje, las decisiones de arquitectura
+(<code>docs/adr/</code>) y los PDF que se entregan.</p>
+
+<h2>Cómo se organiza</h2>
+
+<p>La carpeta <code>docs/</code> está dividida por para qué sirve cada cosa:</p>
+
+<ul>
+  <li><strong><code>docs/guias/</code></strong>: las guías por audiencia —
+  <code>GUIA_DEL_USUARIO.md</code>, <code>GUIA_DEL_ADMINISTRADOR.md</code>,
+  <code>GUIA_DEL_DESARROLLADOR.md</code> y <code>REFERENCIA_DEL_LENGUAJE.md</code>— con su LEEME.</li>
+  <li><strong><code>docs/adr/</code></strong>: los registros de decisiones de arquitectura, con el porqué de
+  cada decisión grande.</li>
+  <li><strong><code>docs/referencia/</code></strong>: las tablas que se generan del compilador
+  —diagnósticos, palabras reservadas y firmas de la biblioteca—.</li>
+</ul>
+
+<p>En la raíz están el <code>MANUAL.md</code>, el <code>REFERENCIA.md</code>, el <code>GUIA.md</code> de diez
+pasos y el <code>LEEME.md</code> que hace de portada del repositorio.</p>
+
+<h2>Los PDF y su comprobación</h2>
+
+<p>Los PDF —<code>GUIA_DEL_USUARIO.pdf</code>, <code>GUIA_DEL_ADMINISTRADOR.pdf</code>,
+<code>GUIA_DEL_DESARROLLADOR.pdf</code> y <code>REFERENCIA_DEL_LENGUAJE.pdf</code>— se guardan junto al
+Markdown del que salen y se comprueban en cada <code>ctest</code>.</p>
+
+<p>La comprobación es la parte interesante: <code>verificar-guia.ps1</code> extrae los bloques de código de las
+guías, los compila y avisa de los que no compilan. Y <code>prueba_manual</code> hace lo mismo con el manual y
+la referencia, además de compilar los diez ejemplos del repositorio. Un manual que envejece deja de compilar, y
+entonces la prueba falla: la documentación no se puede quedar atrás en silencio.</p>
+
+<h2>Las dos páginas de esta sección</h2>
+
+<ul>
+  <li><strong>7.1 Guías por audiencia</strong>: el detalle de cada guía, para quién es y cómo se genera su
+  PDF.</li>
+  <li><strong>7.2 Cómo contribuir</strong>: las convenciones de <code>CONTRIBUIR.md</code>, el estilo de C++20,
+  cómo se añade un diagnóstico (<code>codigos.hpp</code> y <code>catalogo.cpp</code>), cómo entra un ADR y
+  cuándo se actualiza el <code>CHANGELOG.md</code>.</li>
+</ul>

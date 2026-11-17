@@ -1,0 +1,68 @@
+<h1>Los casos de conformidad</h1>
+
+<p>La batería de conformidad comprueba el compilador contra la especificación del lenguaje. Prueba las dos
+caras: el código correcto —que tiene que compilar, ejecutarse y producir la salida esperada— y el código
+equivocado, que tiene que ser rechazado con los códigos de diagnóstico precisos.</p>
+
+<h2>Estructura</h2>
+
+<p>Vive en <code>pruebas/conformidad/</code> y se divide en dos ramas: <code>valido/</code> para los programas
+correctos e <code>invalido/</code> para los que deben provocar diagnósticos. Cada caso es una carpeta con su
+<code>principal.oki</code> y su <code>esperado.txt</code>.</p>
+
+<h2>El arnés</h2>
+
+<p>El arnés está en <code>compilador/pruebas/arnes_conformidad.cpp</code> y hace tres cosas: descubre los
+casos, los ejecuta por la cadena de compilación y compara con lo esperado.</p>
+
+<ul>
+  <li><strong><code>descubrir(raiz)</code></strong>: recorre <code>valido/</code> e <code>invalido/</code> y
+  llena una lista de casos ordenada por nombre.</li>
+  <li><strong><code>compilar_y_comparar(caso, esperado, obtenido)</code></strong>: para los válidos, llama al
+  conductor, ejecuta el binario resultante, normaliza los finales de línea y compara la cadena.</li>
+  <li><strong><code>analizar_codigos(caso, esperados, obtenidos)</code></strong>: para los inválidos, pasa el
+  fuente por el léxico, el analizador y el verificador, y recoge los códigos del emisor para compararlos con
+  <code>esperado.txt</code>.</li>
+</ul>
+
+<h2>Normalización: por qué no falla en Windows</h2>
+
+<p>Para que el resultado sea el mismo en Windows y en POSIX, el arnés normaliza la salida e ignora lo que no
+son datos:</p>
+
+<ul>
+  <li><strong><code>recortar(texto)</code></strong>: quita espacios, retornos de carro y saltos sobrantes de
+  los extremos.</li>
+  <li><strong><code>leer_codigos(ruta)</code></strong>: lee <code>esperado.txt</code> línea a línea,
+  descartando las vacías y las que empiezan por <code>#</code>, y ordena los códigos alfabéticamente —así el
+  orden en que el compilador los emite no importa—.</li>
+  <li><strong><code>normalizar_saltos()</code></strong>: pasa <code>\r\n</code> a <code>\n</code> antes de
+  comparar.</li>
+</ul>
+
+<p>Ese último punto es el que evita el fallo clásico de una batería que pasa en Linux y falla en Windows por un
+carácter invisible al final de cada línea.</p>
+
+<h2>Cómo se añade un caso</h2>
+
+<h3>Un caso válido</h3>
+
+<ol>
+  <li>Crear una carpeta en <code>pruebas/conformidad/valido/</code> con prefijo numérico y un nombre
+  descriptivo.</li>
+  <li>Escribir <code>principal.oki</code> con la lógica y las llamadas a <code>imprimir()</code>.</li>
+  <li>Escribir <code>esperado.txt</code> con la salida exacta que debe producir.</li>
+  <li>Compilar y ejecutar las pruebas con <code>ctest</code>.</li>
+</ol>
+
+<h3>Un caso inválido</h3>
+
+<ol>
+  <li>Crear la carpeta en <code>pruebas/conformidad/invalido/</code>.</li>
+  <li>Escribir un <code>principal.oki</code> que incumpla a propósito la regla que se quiere cubrir.</li>
+  <li>Escribir <code>esperado.txt</code> con los códigos esperados, uno por línea y ordenados.</li>
+  <li>Ejecutar para confirmar que el compilador emite exactamente ese conjunto de códigos.</li>
+</ol>
+
+<p>La costumbre del proyecto es añadir el caso <strong>en el mismo commit</strong> que la característica: si el
+comportamiento no está fijado por una prueba, no está terminado.</p>

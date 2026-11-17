@@ -1,0 +1,54 @@
+<h1>Pruebas e integración continua</h1>
+
+<p>La infraestructura de pruebas garantiza la corrección, la estabilidad y la portabilidad del compilador y de
+sus runtimes. La estrategia tiene tres niveles distintos: los <strong>casos de conformidad</strong>, que
+validan la sintaxis y la semántica de punta a punta; las <strong>pruebas unitarias</strong> de C++, que
+comprueban cada componente por dentro; y los <strong>flujos de GitHub Actions</strong>, que aplican las
+puertas de calidad en cada sistema.</p>
+
+<h2>6.1 Los casos de conformidad</h2>
+
+<p>La batería de <code>pruebas/conformidad/</code> es el banco de pruebas de comportamiento del lenguaje. Se
+divide en programas válidos (<code>valido/</code>) e inválidos (<code>invalido/</code>): los primeros tienen
+que compilar, ejecutarse y producir la salida esperada; los segundos tienen que ser rechazados con el código
+<code>NOKnnnn</code> correspondiente.</p>
+
+<p>Cada caso es un <code>principal.oki</code> con su <code>esperado.txt</code> al lado, que contiene la
+salida estándar esperada o el código del diagnóstico. El arnés compila, ejecuta y compara
+automáticamente.</p>
+
+<p>Hoy son <strong>116 casos</strong>, y cada característica del lenguaje que se integra trae el suyo: es la
+regla del proyecto, y la razón por la que el comportamiento no se mueve sin que nadie lo note.</p>
+
+<h2>6.2 Pruebas unitarias del compilador</h2>
+
+<p>En <code>compilador/pruebas/</code> están las pruebas de cada subsistema de C++, de las reglas del
+analizador, de las transformaciones del árbol, de las pasadas del verificador y de los cortes verticales.</p>
+
+<p>Por ejemplo, <code>prueba_compilador.cpp</code> hace comprobaciones de extremo a extremo invocando a mano
+el léxico, el analizador y el generador sobre fragmentos controlados, para verificar que la traducción a C y
+la integración con el runtime son las esperadas.</p>
+
+<p>Las pruebas se registran en CMake y se ejecutan con <code>ctest</code>. Cubren los diagnósticos semánticos,
+la validación de sentencias, las órdenes de la línea de comandos y el servidor de lenguaje. Son
+<strong>18 suites</strong>.</p>
+
+<h2>6.3 Integración continua, empaquetado y publicación</h2>
+
+<p>La integración continua son los flujos de GitHub Actions de <code>.github/workflows/</code>. Validan la
+compilación en Windows (<code>windows-2022</code>, con MSVC) y en Linux (<code>ubuntu-24.04</code>, con GCC),
+instalando lo que haga falta —MinGW, las cabeceras de X11—.</p>
+
+<p>Además de compilar y probar, la CI incorpora:</p>
+
+<ul>
+  <li><strong>desinfectantes</strong>: el preset <code>saneamiento</code> con AddressSanitizer y
+  UndefinedBehaviorSanitizer;</li>
+  <li><strong>análisis estático</strong> con <code>clang-tidy</code>;</li>
+  <li><strong>estilo</strong> con <code>clang-format</code> en modo comprobación;</li>
+  <li>y un flujo aparte que, al empujar una etiqueta, construye el <strong>paquete de Linux</strong> y lo
+  adjunta a la versión.</li>
+</ul>
+
+<p>Los cinco trabajos están hoy en verde, y el de macOS se quitó de la matriz porque los ejecutores no están
+disponibles para esta cuenta y dejaban la ejecución en cola para siempre.</p>
