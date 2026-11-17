@@ -1,0 +1,76 @@
+<h1>Integración con los editores</h1>
+
+<p>La carpeta <code>editores/</code> reúne las extensiones y definiciones que dan a los archivos
+<code>.oki</code> resaltado, tokenización, emparejamiento de llaves y conexión con el servidor de lenguaje en
+VS Code, Vim y Neovim, los IDE de JetBrains y cualquier editor que entienda TextMate.</p>
+
+<h2>1. TextMate y Visual Studio Code</h2>
+
+<p>Nooki usa una gramática canónica de TextMate (<code>source.nooki</code>) para el resaltado en VS Code,
+Sublime Text, TextMate y Zed. Las reglas están en JSON, en
+<code>editores/vscode/syntaxes/nooki.tmLanguage.json</code>, y cada una asigna expresiones regulares y
+conjuntos de palabras a un ámbito de TextMate. Las secciones principales:</p>
+
+<ul>
+  <li><code>comentarios</code>: de línea (<code>//</code>) y de bloque (<code>/* … */</code>).</li>
+  <li><code>texto_multilinea</code>: los textos entre comillas triples (<code>"""</code>).</li>
+  <li><code>textos</code>: los de comillas dobles, con sus secuencias de escape.</li>
+  <li><code>numeros</code>: flotantes, enteros hexadecimales (<code>0x…</code>) y enteros con guiones bajos
+  opcionales.</li>
+  <li><code>declaraciones</code>: <code>funcion</code>, <code>variable</code>, <code>constante</code>,
+  <code>clase</code>, <code>estructura</code>, <code>rasgo</code>, <code>enumeracion</code>,
+  <code>tipo</code> y <code>modulo</code>, capturando además el nombre que las sigue.</li>
+</ul>
+
+<h2>2. Vim y Neovim</h2>
+
+<p>El resaltado en Vim se hace con archivos propios. La detección del tipo de archivo la hace
+<code>editores/vim/ftdetect/nooki.vim</code>:</p>
+
+<pre><code>au BufRead,BufNewFile *.oki set filetype=nooki</code></pre>
+
+<p>Las reglas están en <code>editores/vim/syntax/nooki.vim</code>, que distingue mayúsculas de minúsculas
+(<code>syntax case match</code>) y asigna grupos de resaltado:</p>
+
+<ul>
+  <li><code>nookiComentario</code> va a <code>Comment</code>;</li>
+  <li><code>nookiTexto</code> y <code>nookiCaracter</code> a <code>String</code>;</li>
+  <li><code>nookiDeclaracion</code> agrupa <code>variable</code>, <code>constante</code>,
+  <code>funcion</code>, <code>clase</code>, <code>estructura</code> y <code>rasgo</code> en
+  <code>Statement</code>;</li>
+  <li>y hay patrones contextuales que reconocen la definición de una función
+  (<code>nookiFuncion</code>) y de un tipo (<code>nookiTipoDefinido</code>) mirando la palabra que sigue a
+  la declaración.</li>
+</ul>
+
+<h2>3. El plugin de JetBrains</h2>
+
+<p>Para los IDE de JetBrains —IntelliJ IDEA, PyCharm, CLion, RustRover— hay un plugin nativo en
+<code>editores/jetbrains/plugin/</code>. Algunas distribuciones (RustRover 2026.1, por ejemplo) no traen
+soporte de TextMate, así que la integración es un <strong>lexer propio en Java</strong>, no una gramática
+prestada.</p>
+
+<h3>Tokens y lexer</h3>
+
+<ul>
+  <li><code>NookiTokens</code>: define los tipos de elemento (comentarios, literales, palabras reservadas,
+  operadores, identificadores) y asigna cada palabra del lenguaje a su categoría.</li>
+  <li><code>NookiLexer</code>: extiende <code>LexerBase</code> y tokeniza a mano. Mira el contexto —por
+  ejemplo, si un identificador viene detrás de <code>funcion</code> o de <code>clase</code>— para darle el
+  tipo semántico correcto sin construir un árbol PSI completo.</li>
+</ul>
+
+<h3>Colores y configuración</h3>
+
+<ul>
+  <li><code>NookiSyntaxHighlighter</code>: traduce cada tipo de token a una clave de atributos de IntelliJ,
+  de modo que el color sale del esquema del IDE.</li>
+  <li><code>NookiColorPage</code>: añade la página de ajustes para cambiar los colores de Nooki en
+  <em>Ajustes → Editor → Esquema de colores → Nooki</em>.</li>
+</ul>
+
+<h2>4. El servidor de lenguaje en cualquier editor</h2>
+
+<p>Además del resaltado, cualquier editor que sepa hablar LSP puede conectarse a <code>nooki lsp</code> y
+obtener diagnósticos en vivo, autocompletado y formateo. Esa es la vía para los editores que no tienen
+gramática propia: basta con decirles el comando y el tipo de archivo.</p>

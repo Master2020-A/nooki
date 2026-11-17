@@ -1,0 +1,64 @@
+<h1>Los guiones del repositorio</h1>
+
+<p>Esta página documenta los guiones auxiliares de <code>herramientas/</code>, en PowerShell y en Python, que
+automatizan el empaquetado de la distribución, la instalación en el entorno del usuario, el reparto de los
+literales largos para MSVC, la sincronización de las gramáticas de los editores y la comprobación de los
+bloques de código de la documentación contra el compilador.</p>
+
+<h2>1. Empaquetar e instalar</h2>
+
+<p>La publicación se apoya en dos guiones de PowerShell que no necesitan permisos de administrador.</p>
+
+<h3>Empaquetar</h3>
+
+<p><code>empaquetar.ps1</code> compila con el preset de CMake, localiza el ejecutable y lo junta con la
+documentación, los ejemplos, los editores y la especificación en un <code>.zip</code> con la versión en el
+nombre, dentro de <code>dist/</code>.</p>
+
+<p>En detalle: invoca <code>cmake --preset</code> y <code>cmake --build --preset</code>, saca la versión
+ejecutando el binario con <code>--version</code>, copia los documentos principales
+(<code>LEEME.md</code>, <code>GUIA.md</code>, <code>MANUAL.md</code>, <code>REFERENCIA.md</code>,
+<code>CHANGELOG.md</code>…), las guías en PDF, el árbol de <code>ejemplos/</code>, los paquetes de
+<code>editores/</code> y la especificación; escribe dentro un <code>INSTALAR.txt</code> con las
+instrucciones y comprime la carpeta.</p>
+
+<h3>Instalar</h3>
+
+<p><code>instalar.ps1</code> copia el ejecutable a una carpeta estable del usuario
+(<code>%LOCALAPPDATA%\Nooki\bin</code>) y lo añade al <code>PATH</code> del usuario a través del registro de
+Windows (<code>HKCU:\Environment</code>), sin tocar nada del sistema.</p>
+
+<p>Sus piezas: <code>Leer-PathUsuario</code> lee el <code>Path</code> sin expandir del registro;
+<code>Escribir-PathUsuario</code> comprueba que la cadena resultante no pase de 32 000 caracteres antes de
+escribirla; y el interruptor <code>-Desinstalar</code> quita la carpeta del <code>PATH</code> y borra
+<code>%LOCALAPPDATA%\Nooki</code>.</p>
+
+<h2>2. Repartir literales para MSVC</h2>
+
+<p>El compilador de Microsoft (MSVC 17 y anteriores) no admite literales de texto de más de
+<strong>16 380</strong> caracteres: da el error C2026 <em>string too big</em>. Y el proyecto tiene literales
+enormes, porque los runtimes de inteligencia artificial y de interfaz se guardan como cadenas de C dentro
+del compilador.</p>
+
+<p>De ahí <code>partir-literales.ps1</code>: parte esos literales en trozos del tamaño permitido y los vuelve
+a unir con concatenación de C++, que el compilador sí acepta. El guion lee y escribe en UTF-8 sin BOM y, si
+el contenido fuese a cambiar más allá del reparto, se niega a escribir. Ese detalle no es adorno: una
+versión anterior corrompió un archivo con acentos, y desde entonces el guion comprueba antes de tocar.</p>
+
+<h2>3. Sincronizar las gramáticas de los editores</h2>
+
+<p><code>generar-gramaticas.py</code> produce, desde una sola estructura de datos, tanto la definición de
+sintaxis de VS Code (JSON) como el paquete de JetBrains (XML). Y <code>verificar-gramatica.py</code>
+comprueba que las expresiones regulares compilan, que las reglas coinciden entre los paquetes y que cada
+token cae donde debe sobre casos concretos. Así no hay tres gramáticas que se separen con el tiempo.</p>
+
+<h2>4. Comprobar la documentación</h2>
+
+<p><code>verificar-guia.ps1</code> extrae los bloques de código de las guías, los compila y avisa de los que
+no compilan. Es lo que impide que un manual envejezca en silencio: si un ejemplo deja de valer, la
+comprobación falla antes de publicar.</p>
+
+<p>En la misma línea están <code>verificar-ejemplos.ps1</code> (compila y ejecuta cada ejemplo y compara con
+su salida esperada) y <code>generar-referencia.py</code>, que escribe las tablas de palabras reservadas,
+diagnósticos y biblioteca leyéndolas del propio compilador, para que la referencia no se escriba a mano
+nunca más.</p>

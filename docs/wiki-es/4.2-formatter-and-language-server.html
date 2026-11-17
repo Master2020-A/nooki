@@ -1,0 +1,66 @@
+<h1>Formateador y servidor de lenguaje</h1>
+
+<p>Esta página cubre dos piezas: el formateador canónico de Nooki (<code>nooki::formato</code>) y el servidor
+de lenguaje (<code>nooki::lsp</code>). La primera se usa desde la orden <code>nooki formatear</code>; la
+segunda da al editor diagnósticos en vivo, autocompletado y sincronización del documento.</p>
+
+<h2>El formateador</h2>
+
+<p>El formateador trabaja sobre el <strong>texto</strong>, no sobre el árbol: así los comentarios, los
+espacios intencionados y el diseño que escribió la persona se conservan, mientras se normalizan la sangría y
+los espacios sobrantes al final de cada línea.</p>
+
+<h3>Las piezas</h3>
+
+<ul>
+  <li><code>SANGRIA</code>: el paso de sangría, cuatro espacios por nivel.</li>
+  <li><code>formatear()</code>: el punto de entrada. Lee el texto, quita los espacios finales, lleva la
+  cuenta de la profundidad de llaves, respeta los textos de varias líneas entre comillas triples y devuelve
+  el resultado normalizado.</li>
+  <li><code>sin_espacios_finales()</code>: quita de cada línea los espacios, tabuladores y retornos de carro
+  del final.</li>
+  <li><code>llaves_de()</code>: cuenta las llaves de apertura y cierre <em>ignorando</em> las que están
+  dentro de un texto o de un comentario de línea, que es el detalle que hace que una llave escrita en un
+  mensaje no descuadre la sangría.</li>
+  <li><code>comillas_triples()</code>: detecta <code>"""</code> para no tocar la sangría dentro de un bloque
+  de texto crudo.</li>
+</ul>
+
+<h3><code>nooki formatear</code></h3>
+
+<p>La orden la ejecuta <code>comando_formatear()</code>, que acepta uno o varios archivos y el indicador
+<code>--comprobar</code>. Con ese indicador no reescribe nada: si algún archivo necesita cambios, termina con
+código distinto de cero (<code>DATOS_INCORRECTOS</code>). Eso es lo que permite usarlo como puerta de estilo
+en la integración continua.</p>
+
+<h2>El servidor de lenguaje</h2>
+
+<p>El servidor habla por la entrada y la salida estándar con mensajes JSON-RPC envueltos en cabeceras del
+tipo <code>Content-Length</code>.</p>
+
+<h3>El bucle de mensajes</h3>
+
+<ul>
+  <li><code>leer_mensaje()</code>: lee las cabeceras y el cuerpo con la longitud exacta.</li>
+  <li><code>escribir_mensaje()</code>: serializa la respuesta con las cabeceras correctas.</li>
+  <li><code>servir()</code>: el bucle principal —inicialización, apertura y cambio de documentos, peticiones
+  de formato, autocompletado y cierre—.</li>
+</ul>
+
+<h3>Diagnósticos en vivo</h3>
+
+<p>Cuando se abre o se modifica un documento, <code>diagnosticos_de()</code> compila el fragmento en memoria
+pasando por las mismas fases que el compilador:</p>
+
+<ul>
+  <li>crea el gestor de fuentes y el emisor;</li>
+  <li>tokeniza con el léxico;</li>
+  <li>construye el árbol con el analizador;</li>
+  <li>verifica con la fase semántica, tipos y préstamos incluidos;</li>
+  <li>y traduce cada diagnóstico (<code>NOKnnnn</code>) a un objeto del protocolo, con su rango de línea y
+  carácter y su gravedad.</li>
+</ul>
+
+<p>Como el editor ve exactamente los mismos códigos que vería al compilar, no hay dos verdades: un error que
+aparece subrayado en el editor es el mismo que impide compilar, con el mismo número y el mismo
+mensaje.</p>

@@ -1,0 +1,80 @@
+<h1>Las órdenes de la línea de comandos</h1>
+
+<p>Esta página documenta la interfaz de órdenes del compilador: el despacho en <code>cli/orden.cpp</code> y
+los manejadores de cada orden en <code>fuente/cli/</code>. La interfaz es el punto de entrada para quien usa
+el compilador: convierte los argumentos en operaciones —construir un proyecto, probarlo, verificar sin
+compilar, formatear o generar documentación—.</p>
+
+<h2>El registro de órdenes</h2>
+
+<p>Todo gira alrededor de una tabla central en <code>cli/comandos.hpp</code>. La estructura
+<code>Comando</code> guarda el nombre, el resumen y el sprint en el que está disponible: un
+<code>sprint</code> igual a cero significa que la orden está lista para usarse.</p>
+
+<pre><code>struct Comando {
+    std::string_view nombre;
+    std::string_view resumen;
+    int sprint;
+
+    [[nodiscard]] constexpr bool disponible() const noexcept { return sprint == 0; }
+};</code></pre>
+
+<p>La tabla <code>COMANDOS</code> enumera todas las órdenes: <code>ayuda</code>, <code>version</code>,
+<code>compilar</code>, <code>ejecutar</code>, <code>ast</code>, <code>construir</code>, <code>lsp</code>,
+<code>nuevo</code>, <code>probar</code>, <code>limpiar</code>, <code>verificar</code>,
+<code>formatear</code> y <code>documentar</code>.</p>
+
+<h3>Despacho y sugerencias</h3>
+
+<p>La función <code>ejecutar</code> recibe el vector de argumentos. Si viene vacío, imprime la ayuda; si no,
+busca el primer token en la tabla de órdenes.</p>
+
+<p>Y cuando se escribe una orden que no existe, el despachador calcula la <strong>distancia de
+edición</strong> con <code>distancia_edicion()</code> y propone la orden válida más parecida antes de salir
+con el código de uso incorrecto. Es la diferencia entre un <code>nooki construi</code> que dice «¿querías
+decir <code>construir</code>?» y un «orden desconocida» que obliga a buscar.</p>
+
+<h2>Órdenes de proyecto</h2>
+
+<p>Las órdenes de proyecto —<code>nuevo</code>, <code>construir</code>, <code>probar</code>,
+<code>limpiar</code>— manejan la estructura de carpetas, el manifiesto <code>nooki.toml</code> y los flujos de
+validación locales. Están en <code>cli/proyecto.cpp</code> y <code>cli/compilar.cpp</code>.</p>
+
+<h3><code>nooki nuevo</code></h3>
+
+<p>Crea el árbol mínimo: un <code>principal.oki</code> de entrada, una carpeta <code>biblioteca/</code> para
+los módulos propios y un <code>nooki.toml</code>. El manifiesto se escribe con
+<code>nooki::escribir_manifiesto</code>.</p>
+
+<h3><code>nooki construir</code></h3>
+
+<p>Busca <code>principal.oki</code> en la raíz de la carpeta o dentro de <code>fuente/</code>, carga el
+manifiesto con <code>nooki::leer_manifiesto</code> y añade a la búsqueda de módulos las rutas que declara
+(<code>Manifiesto::rutas_de_busqueda()</code>), que es lo que hace que las dependencias locales se
+encuentren.</p>
+
+<h3><code>nooki probar</code> y <code>nooki limpiar</code></h3>
+
+<ul>
+  <li><code>nooki probar</code>: recorre <code>pruebas/</code>, compila cada prueba, la ejecuta, captura su
+  salida y la compara con su archivo <code>.esperado</code> (normalizando los retornos de carro para que el
+  resultado sea el mismo en Windows y en Linux).</li>
+  <li><code>nooki limpiar</code>: borra de forma recursiva lo generado (<code>build/</code>,
+  <code>artefactos/</code>) sin tocar el código fuente.</li>
+</ul>
+
+<h2>Órdenes de compilación y mantenimiento</h2>
+
+<p>El resto de órdenes dan acceso directo a las fases y a las herramientas:</p>
+
+<ul>
+  <li><code>compilar</code>: genera el binario, y con sus opciones conserva el C intermedio
+  (<code>--emitir-c</code>) o solo verifica.</li>
+  <li><code>ejecutar</code>: compila y lanza el programa en un paso.</li>
+  <li><code>verificar</code>: pasa las fases sin generar binario; es lo que usan las pruebas de los ejemplos.</li>
+  <li><code>ast</code>: vuelca el árbol de sintaxis, para depurar.</li>
+  <li><code>formatear</code>: reescribe el fuente con el estilo canónico, o solo comprueba con
+  <code>--comprobar</code>.</li>
+  <li><code>documentar</code>: genera la referencia de la biblioteca a partir del propio compilador.</li>
+  <li><code>lsp</code>: arranca el servidor de lenguaje para el editor.</li>
+</ul>

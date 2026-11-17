@@ -1,0 +1,37 @@
+<h1>Línea de órdenes y herramientas</h1>
+
+<p>La orden <code>nooki</code> y su ecosistema son la puerta de entrada al compilador: compilar, ejecutar,
+manejar proyectos, formatear el fuente, servir las características del lenguaje por LSP y lanzar los guiones
+de mantenimiento del repositorio. Las órdenes se despachan desde <code>cli/orden.cpp</code> y se declaran en
+<code>cli/comandos.hpp</code>.</p>
+
+<h2>4.1 Las órdenes</h2>
+
+<p>El repertorio incluye <code>construir</code>, <code>ejecutar</code>, <code>nuevo</code>,
+<code>limpiar</code>, <code>probar</code>, <code>verificar</code>, <code>ast</code>,
+<code>documentar</code>, <code>formatear</code>, <code>lsp</code> y <code>ayuda</code>. El análisis de
+argumentos, la recuperación de errores —que sugiere la orden más parecida— y el despacho viven en
+<code>fuente/cli/</code>, coordinados por <code>orden.cpp</code>.</p>
+
+<h2>4.2 Formateador y servidor de lenguaje</h2>
+
+<p>El formateo canónico del fuente y el soporte para el editor están dentro de la propia cadena. Las reglas
+de formato las aplica <code>formato/formateador.cpp</code>, con opciones como <code>--comprobar</code>, que
+no reescribe nada y solo dice si el archivo cumple el estilo.</p>
+
+<p>El servidor de lenguaje (<code>lsp/servidor.cpp</code>) habla por la entrada y la salida estándar y
+entrega diagnósticos en vivo, autocompletado, ir a la definición y formateo del documento.</p>
+
+<h2>4.3 Integración con los editores</h2>
+
+<p>La carpeta <code>editores/</code> reúne los paquetes que dan resaltado, tokenización y conocimiento del
+lenguaje a los entornos habituales: la gramática de TextMate para VS Code, las reglas de sintaxis y de tipo
+de archivo para Vim, y el paquete de JetBrains (con su lexer, sus tokens, sus tipos de archivo y su
+analizador) con los guiones que lo empaquetan.</p>
+
+<h2>4.4 Los guiones del repositorio</h2>
+
+<p>Las tareas de mantenimiento, pruebas, empaquetado y generación de documentación están automatizadas en
+<code>herramientas/</code>, con guiones de PowerShell y de Python: empaquetar la distribución, instalarla en
+el sistema, partir los literales largos, generar y verificar las gramáticas de los editores, generar la
+referencia de la biblioteca desde el compilador y comprobar que los ejemplos y las guías siguen compilando.</p>
