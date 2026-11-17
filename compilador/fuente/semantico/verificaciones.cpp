@@ -1527,6 +1527,33 @@ private:
             }
         }
 
+        // Funciones de datos: hablan con la biblioteca de análisis.
+        if (nombre_llamado == "consultar_datos" || nombre_llamado == "ejecutar_datos" ||
+            nombre_llamado == "disponible_datos" || nombre_llamado == "version_datos" ||
+            nombre_llamado == "error_datos") {
+            const std::size_t esperados =
+                (nombre_llamado == "disponible_datos" || nombre_llamado == "version_datos" ||
+                 nombre_llamado == "error_datos")
+                    ? 0
+                    : 1;
+            if (expresion.lista.size() != esperados) {
+                error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                    .parametro("funcion", std::string(nombre_llamado))
+                    .parametro("esperados", std::to_string(esperados))
+                    .parametro("dados", std::to_string(expresion.lista.size()));
+            }
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            if (nombre_llamado == "consultar_datos" || nombre_llamado == "version_datos" ||
+                nombre_llamado == "error_datos") {
+                return Tipo::Texto;
+            }
+            return Tipo::Entero;
+        }
+
         if (nombre_llamado == "ejecutar_orden" || nombre_llamado == "capturar_orden") {
             if (expresion.lista.size() != 1) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)

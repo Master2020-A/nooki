@@ -5,6 +5,28 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 132 — `datos` sin proceso y con la biblioteca dentro (2026-11-17)
+
+El módulo `datos` lanzaba el ejecutable de DuckDB para cada consulta. Ahora habla con su **API de C**, que
+se abre en tiempo de ejecución: el programa no se enlaza contra DuckDB al compilar y, si no analiza datos,
+ni siquiera la carga. La interfaz del módulo no ha cambiado.
+
+Y la biblioteca viaja con la distribución: `duckdb.dll` junto al ejecutable en Windows, `libduckdb.so` en
+Linux (la descarga la integración continua al empaquetar). Se puede usar otra con `NOOKI_DUCKDB`.
+
+Depurar esto costó, y quedan dos cosas aprendidas que están escritas en el código:
+
+- **El `duckdb_result` real es mayor que el que declara su cabecera**: con la estructura replicada (48
+  bytes) el programa corrompía el montón. Ahora se reserva un colchón alineado de 4 KB, que es lo único que
+  la API necesita, porque solo usa el puntero.
+- **El nombre de una columna es de la biblioteca**, no del llamante: liberarlo con `duckdb_free` corrompe
+  el montón y el programa revienta al destruir el resultado. Ese `free` sobraba.
+
+Probado con DuckDB **1.2.2** (la que se empaqueta, 28 MB) y con la **2.0.0**: las dos funcionan y dan los
+mismos resultados.
+
+## [1.0.3] — 2026-11-16
+
 ### Sprint 131 — Análisis de datos con SQL nativo (2026-11-16)
 
 Las operaciones que se hacen con pandas —agrupar, pivotar, unir, ventanas deslizantes, describir— ya se

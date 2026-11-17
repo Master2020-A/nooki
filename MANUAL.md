@@ -1647,10 +1647,12 @@ funcion principal() -> entero {
 }
 ```
 
-`consultar` devuelve el resultado en CSV; `a_csv` y `a_parquet` lo guardan en un archivo. Necesita el
-binario de **DuckDB** en el `PATH` (o la variable `NOOKI_DUCKDB` apuntando a él). Si lo que necesitas es
-Python con pandas —un `apply` con una función tuya, una gráfica—, usa `sistema` con el guion de Python:
-las dos cosas conviven.
+`consultar` devuelve el resultado en CSV; `a_csv` y `a_parquet` lo guardan en un archivo.
+
+La biblioteca de **DuckDB** viaja con la distribución (`duckdb.dll` junto al ejecutable, o
+`libduckdb.so`), y el programa la carga la primera vez que la usa: si no analizas datos, no se abre. Si
+prefieres la tuya, apunta `NOOKI_DUCKDB` a su ruta. Y si lo que necesitas es Python con pandas —un
+`apply` con una función tuya, una gráfica—, usa `sistema` con el guion de Python: las dos cosas conviven.
 
 ### Hablar con otro programa
 

@@ -65,6 +65,15 @@ mkdir -p "$destino/herramientas"
 cp herramientas/instalar.ps1 "$destino/herramientas/" 2>/dev/null || true
 cp spec/especificacion-v0.1.md "$destino/spec/"
 
+# La biblioteca de datos (DuckDB), si está descargada.
+for biblioteca in build/duckdb/libs122/libduckdb.so build/duckdb/libs122/libduckdb.dylib; do
+    if [ -f "$biblioteca" ]; then
+        mkdir -p "$destino/datos"
+        cp "$biblioteca" "$destino/datos/"
+        echo "  biblioteca de datos: $(basename "$biblioteca")"
+    fi
+done
+
 cat > "$destino/INSTALAR.txt" <<TEXTO
 Nooki $version ($plataforma)
 ============================

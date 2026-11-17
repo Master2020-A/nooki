@@ -1,4 +1,4 @@
-# Empaqueta Nooki para distribuirlo: binario + documentación + ejemplos + editores.
+﻿# Empaqueta Nooki para distribuirlo: binario + documentación + ejemplos + editores.
 #
 #   .\herramientas\empaquetar.ps1                 # compila si hace falta y empaqueta
 #   .\herramientas\empaquetar.ps1 -Preset linux   # con otro preset
@@ -104,6 +104,15 @@ La guía completa está en GUIA.md.
 # Comprimir.
 $zip = "dist/$nombre.zip"
 if (Test-Path $zip) { Remove-Item -Force $zip }
+# La biblioteca de datos (DuckDB), si está descargada: así el módulo `datos`
+# funciona sin que el usuario tenga que instalar nada. El programa la carga solo
+# cuando la usa, así que quien no analiza datos no la toca.
+$duckdb = Join-Path $raiz 'build/duckdb/libs122/duckdb.dll'
+if (Test-Path $duckdb) {
+    Copy-Item $duckdb (Join-Path $destino 'duckdb.dll')
+    Write-Host "  biblioteca de datos: duckdb.dll ($([math]::Round((Get-Item $duckdb).Length / 1MB, 1)) MB)"
+}
+
 Compress-Archive -Path $destino -DestinationPath $zip -CompressionLevel Optimal
 
 $tamano = [math]::Round((Get-Item $zip).Length / 1MB, 1)

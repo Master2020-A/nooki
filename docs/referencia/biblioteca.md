@@ -141,7 +141,13 @@ publico funcion columnas(ruta: &texto) -> entero {
 ### `datos`
 
 ```text
-publico funcion archivo_de_consulta() -> texto {
+publico funcion disponible() -> booleano {
+```
+```text
+publico funcion error() -> texto {
+```
+```text
+publico funcion version() -> texto {
 ```
 ```text
 publico funcion consultar(consulta: &texto) -> texto {
@@ -154,9 +160,6 @@ publico funcion a_csv(consulta: &texto, destino: &texto) -> booleano {
 ```
 ```text
 publico funcion a_parquet(consulta: &texto, destino: &texto) -> booleano {
-```
-```text
-publico funcion version() -> texto {
 ```
 
 ### `diseno`

@@ -29,6 +29,16 @@ jobs:
       - name: Instalar X11
         run: sudo apt-get update && sudo apt-get install -y libx11-dev
 
+      # La biblioteca de datos va dentro del paquete, para que el módulo `datos`
+      # funcione sin instalar nada.
+      - name: Descargar la biblioteca de datos
+        run: |
+          mkdir -p build/duckdb/libs122
+          curl -fsSL -o /tmp/libduckdb.zip \
+            https://github.com/duckdb/duckdb/releases/download/v1.2.2/libduckdb-linux-amd64.zip
+          unzip -o /tmp/libduckdb.zip -d build/duckdb/libs122
+          ls -l build/duckdb/libs122
+
       - name: Empaquetar
         run: |
           chmod +x herramientas/empaquetar.sh
