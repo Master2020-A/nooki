@@ -33,3 +33,7 @@ rutas/
 # Sistema
 Thumbs.db
 .DS_Store
+
+# Datos que generan los ejemplos al ejecutarse
+ejemplos/*/*.csv
+
