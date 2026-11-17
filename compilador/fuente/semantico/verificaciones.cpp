@@ -1551,7 +1551,8 @@ private:
             const std::string_view nombre = nombre_llamado;
             const bool es_puntero = nombre == "reservar" || nombre == "liberar" ||
                                     nombre == "leer_en" || nombre == "escribir_en" ||
-                                    nombre == "leer_flotante_en" || nombre == "escribir_flotante_en" ||
+                                    nombre == "leer_flotante_en" ||
+                                    nombre == "escribir_flotante_en" ||
                                     nombre == "desde_direccion" || nombre == "direccion_de";
             if (es_puntero) {
                 if (profundidad_inseguro_ == 0) {
