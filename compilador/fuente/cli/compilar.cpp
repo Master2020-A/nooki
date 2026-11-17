@@ -86,8 +86,15 @@ int compilar_archivo(std::span<const std::string_view> argumentos, std::ostream&
 
     // `make_preferred` convierte «/» en «\» en Windows: la consola no entiende «/».
     std::filesystem::path binario = resultado.binario;
-    return nooki::ejecutar_comando(
-        nooki::entrecomillar_si_hace_falta(ruta_a_utf8(binario.make_preferred())));
+    std::string orden = ruta_a_utf8(binario.make_preferred());
+#if !defined(_WIN32)
+    // En Unix la consola no busca en el directorio actual: un binario que se
+    // llama «hola» hay que lanzarlo como «./hola».
+    if (orden.find('/') == std::string::npos) {
+        orden = "./" + orden;
+    }
+#endif
+    return nooki::ejecutar_comando(nooki::entrecomillar_si_hace_falta(orden));
 }
 
 }  // namespace

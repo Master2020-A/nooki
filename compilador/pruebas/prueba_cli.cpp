@@ -274,6 +274,38 @@ int main() {
         comprobar(contiene(resultado.error, "--turbio"), "menciona la opción");
     }
 
+    // `ejecutar` compila y lanza el binario. En Unix la consola no busca en el
+    // directorio actual, así que un binario llamado como el fuente necesita
+    // «./»; esta prueba lo cubre en las dos plataformas.
+    caso("ejecutar compila y lanza");
+    {
+        const std::filesystem::path carpeta =
+            std::filesystem::temp_directory_path() / "nooki-cli-ejecutar";
+        std::filesystem::remove_all(carpeta);
+        std::filesystem::create_directories(carpeta);
+        const std::filesystem::path fuente = carpeta / "saluda.oki";
+        {
+            std::ofstream archivo(fuente);
+            archivo << "funcion principal() -> entero {\n"
+                       "    imprimir(\"saludo desde el binario\")\n"
+                       "    retornar 0\n"
+                       "}\n";
+        }
+
+        // Se ejecuta desde la carpeta, con el nombre a secas: así el binario se
+        // llama «saluda» y sin el «./» el intérprete no lo encuentra en Unix.
+        const std::filesystem::path antes = std::filesystem::current_path();
+        std::filesystem::current_path(carpeta);
+        const Resultado resultado = invocar({"ejecutar", "saluda.oki"});
+        std::filesystem::current_path(antes);
+        // La salida del programa va a la consola, no al flujo capturado; lo que
+        // distingue el fallo es el código: sin el «./», el intérprete no
+        // encuentra el binario y devuelve 127.
+        comprobar(resultado.codigo == nooki::cli::EXITO, "compila y ejecuta sin error");
+        comprobar(resultado.error.empty(), "no hay mensaje de error");
+        std::filesystem::remove_all(carpeta);
+    }
+
     std::cout << "\n  " << (comprobaciones - fallos) << "/" << comprobaciones
               << " comprobaciones correctas\n";
     return fallos == 0 ? 0 : 1;

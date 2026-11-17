@@ -3,6 +3,19 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.5] — 2026-11-17
+
+### Sprint 133 — `nooki ejecutar` en Linux (2026-11-17)
+
+Un fallo que la 1.0.4 llevaba dentro: en Linux y macOS, `nooki ejecutar hola.oki` compilaba y después
+fallaba con «sh: hola: not found». La causa es que el binario se lanzaba por su nombre relativo, y la
+consola de Unix **no busca en el directorio actual**: hay que escribir `./hola`. En Windows no se veía
+porque `cmd` sí lo busca.
+
+Arreglado en el lanzamiento, y con una prueba que lo cubre de verdad: el caso cambia a la carpeta del
+programa y lo invoca por su nombre a secas, que es la forma en que el fallo aparece; con la corrección
+pasa y sin ella falla.
+
 ## [1.0.4] — 2026-11-17
 
 Cuarta versión de la serie 1.0. Trae el análisis de datos dentro del lenguaje y deja el proyecto con la
