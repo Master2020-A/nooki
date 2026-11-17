@@ -1461,7 +1461,7 @@ publico funcion argumentos() -> Vector<texto> {
 
 // Cuántos argumentos hay.
 publico funcion cuantos_argumentos() -> entero {
-    retornar cuantos_argumentos()
+    retornar cuantos_argumentos_programa()
 }
 
 // Un argumento por su posición, empezando en 0. Vacío si no existe.

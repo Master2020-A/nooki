@@ -1,13 +1,12 @@
 // Los argumentos del programa: sin argumentos, la lista está vacía.
 usar sistema
+usar textos
 
 funcion principal() -> entero {
-    imprimir(sistema.cuantos_argumentos())
-
-    variable lista = sistema.argumentos()
-    imprimir(lista.largo())
+    imprimir(textos.de_entero(sistema.cuantos_argumentos()))
+    imprimir(textos.de_entero(sistema.argumentos().largo()))
 
     variable primero = sistema.argumento(0)
-    imprimir(primero.largo())
+    imprimir(textos.de_entero(primero.largo()))
     retornar 0
 }

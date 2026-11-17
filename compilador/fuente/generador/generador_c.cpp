@@ -20,6 +20,20 @@ inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
 /// Estructuras que tienen vector propio; lo fija el emisor al empezar.
 inline const std::set<std::string>* VECTORES_DE_ESTRUCTURA = nullptr;
 
+/// Un puntero al valor de una expresión. Si no es un sitio (una variable, un
+/// campo), se le da uno temporal con un literal compuesto: así una llamada como
+/// `sistema.argumentos()` también se puede pasar a un método de colección.
+inline std::string direccion_de_expresion(const sintactico::Expresion& expresion,
+                                          const std::string& tipo, const std::string& codigo) {
+    const bool es_sitio = expresion.tipo == sintactico::TipoExpresion::Identificador ||
+                          expresion.tipo == sintactico::TipoExpresion::Miembro ||
+                          expresion.tipo == sintactico::TipoExpresion::Indice ||
+                          expresion.tipo == sintactico::TipoExpresion::Este;
+    if (es_sitio || tipo.empty() || tipo == "void") {
+        return "&" + codigo;
+    }
+    return "(&((" + tipo + "[]){ " + codigo + " })[0])";
+}
 /// Nombre en Nooki → nombre en C de las funciones de punteros.
 inline const std::map<std::string, std::string> PUNTEROS_C = {
     {"reservar", "reservar"},
@@ -4982,9 +4996,9 @@ private:
         }
 
         // Argumentos del programa.
-        if (nombre_llamado == "cuantos_argumentos" || nombre_llamado == "argumento_de" ||
+        if (nombre_llamado == "cuantos_argumentos_programa" || nombre_llamado == "argumento_de" ||
             nombre_llamado == "argumentos_programa") {
-            if (nombre_llamado == "cuantos_argumentos") {
+            if (nombre_llamado == "cuantos_argumentos_programa") {
                 return "nooki_cuantos_argumentos()";
             }
             if (nombre_llamado == "argumentos_programa") {
@@ -5390,8 +5404,9 @@ private:
             tipo_objeto.rfind("nooki_mapa_", 0) == 0) {
             // Si llega como préstamo (`&Vector<T>`), ya es un puntero.
             std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
-            salida +=
-                objeto_puntero ? expresion(*acceso.izquierda) : "&" + expresion(*acceso.izquierda);
+            salida += objeto_puntero ? expresion(*acceso.izquierda)
+                                     : direccion_de_expresion(*acceso.izquierda, tipo_objeto,
+                                                              expresion(*acceso.izquierda));
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
                 if (!argumento) {
                     continue;
@@ -5435,10 +5450,12 @@ private:
                 virtuales.end();
 
         // Expresión de C que da un puntero al objeto, sea `este` o un valor.
-        std::string objeto_ptr = acceso.izquierda->tipo == sintactico::TipoExpresion::Este
-                                     ? "este"
-                                     : (objeto_puntero ? expresion(*acceso.izquierda)
-                                                       : "&" + expresion(*acceso.izquierda));
+        std::string objeto_ptr =
+            acceso.izquierda->tipo == sintactico::TipoExpresion::Este
+                ? "este"
+                : (objeto_puntero ? expresion(*acceso.izquierda)
+                                  : direccion_de_expresion(*acceso.izquierda, tipo_objeto,
+                                                           expresion(*acceso.izquierda)));
         // `(*x).metodo()` sobre una referencia: el runtime quiere `x`.
         if (acceso.izquierda->tipo == sintactico::TipoExpresion::Unaria &&
             acceso.izquierda->lexema == "*" && acceso.izquierda->izquierda) {

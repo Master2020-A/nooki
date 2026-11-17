@@ -1528,12 +1528,12 @@ private:
         }
 
         // Argumentos del programa.
-        if (nombre_llamado == "cuantos_argumentos" || nombre_llamado == "argumento_de" ||
+        if (nombre_llamado == "cuantos_argumentos_programa" || nombre_llamado == "argumento_de" ||
             nombre_llamado == "argumentos_programa") {
-            const std::size_t esperados =
-                (nombre_llamado == "cuantos_argumentos" || nombre_llamado == "argumentos_programa")
-                    ? 0
-                    : 1;
+            const std::size_t esperados = (nombre_llamado == "cuantos_argumentos_programa" ||
+                                           nombre_llamado == "argumentos_programa")
+                                              ? 0
+                                              : 1;
             if (expresion.lista.size() != esperados) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
                     .parametro("funcion", std::string(nombre_llamado))

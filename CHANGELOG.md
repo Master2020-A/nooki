@@ -3,6 +3,22 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.7] — 2026-11-17
+
+### Sprint 135 — Dos fallos de los argumentos, arreglados (2026-11-17)
+
+La 1.0.6 traía los argumentos del programa, pero **a medias**, y esto lo deja bien:
+
+- **`sistema.cuantos_argumentos()` devolvía siempre 0.** El módulo llamaba a una función con el mismo
+  nombre que él mismo, y la llamada se quedaba en casa. El integrado pasa a llamarse
+  `cuantos_argumentos_programa`, para que no haya dos cosas con el mismo nombre.
+- **`sistema.argumentos().largo()` no compilaba.** El generador emitía `&llamada()`, y en C no se puede
+  tomar la dirección de un valor temporal. Ahora, cuando el receptor de un método no es un sitio, se le da
+  uno con un literal compuesto —la misma idea que ya se usaba al prestar el resultado de una llamada—.
+
+El caso `0088-argumentos` ahora comprueba también `.largo()`, que es lo que habría detectado el segundo
+fallo.
+
 ## [1.0.6] — 2026-11-17
 
 ### Sprint 134 — Argumentos para el programa (2026-11-17)
