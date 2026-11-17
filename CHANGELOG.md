@@ -3,6 +3,27 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 130 — Hablar con otros programas (2026-11-16)
+
+Hasta ahora un programa de Nooki no podía lanzar otro. Eso dejaba fuera todo lo que ya existe hecho: un
+guion de Python con pandas, una herramienta del sistema, un conversor.
+
+Ahora hay un módulo **`sistema`** con dos funciones:
+
+- `sistema.ejecutar(&comando) -> entero`: lanza la orden y devuelve su código de salida.
+- `sistema.capturar(&comando) -> texto`: lanza la orden y devuelve su salida estándar.
+
+Con eso, usar pandas desde Nooki es un puente de tres pasos: el programa escribe el CSV, llama a
+`python analisis.py entrada.csv salida.csv` y lee el resultado. Está en
+`ejemplos/11-pandas`, y funciona: pandas agrupa y suma, y Nooki lee el resumen.
+
+La orden se entrega al intérprete del sistema (`cmd` en Windows, `sh` en Linux), así que las comillas de
+las rutas son responsabilidad de quien la escribe.
+
+Caso nuevo `0087-sistema`. **117 casos**, **18 módulos** y **190 firmas** en la biblioteca.
+
 ## [1.0.3] — 2026-11-16
 
 ### Sprint 129 — Punteros en `inseguro` y la wiki en español (2026-11-16)

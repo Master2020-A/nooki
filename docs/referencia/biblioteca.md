@@ -1,6 +1,6 @@
 <!-- GENERADO por herramientas/generar-referencia.py: no editar a mano -->
 
-**17 módulos**, todos escritos en Nooki. Estas son sus declaraciones públicas,
+**18 módulos**, todos escritos en Nooki. Estas son sus declaraciones públicas,
 copiadas de la fuente que va dentro del compilador.
 
 ### `accesibilidad`
@@ -391,6 +391,15 @@ publico funcion liberar(red: entero) -> vacio {
 
 ```text
 publico enumeracion resultado {
+```
+
+### `sistema`
+
+```text
+publico funcion ejecutar(comando: &texto) -> entero {
+```
+```text
+publico funcion capturar(comando: &texto) -> texto {
 ```
 
 ### `tabla`

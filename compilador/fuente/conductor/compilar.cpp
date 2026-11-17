@@ -1390,6 +1390,23 @@ publico funcion columnas(ruta: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "sistema") {
+        return R"(// Biblioteca estándar: hablar con otros programas.
+//
+// Sirve para usar una herramienta que ya existe —un guion de Python, un
+// programa del sistema— sin reescribirla. La orden es una línea de comandos, y
+// las comillas de las rutas con espacios son responsabilidad de quien la escribe.
+// Lanza la orden y devuelve su código de salida (0 si fue bien).
+publico funcion ejecutar(comando: &texto) -> entero {
+    retornar ejecutar_orden(*comando)
+}
+
+// Lanza la orden y devuelve lo que escribió por la salida estándar.
+publico funcion capturar(comando: &texto) -> texto {
+    retornar capturar_orden(*comando)
+}
+)";
+    }
     if (modulo == "archivo") {
         return R"(// Biblioteca estándar: leer y escribir archivos.
 publico enumeracion lectura {

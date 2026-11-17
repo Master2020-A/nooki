@@ -1632,6 +1632,30 @@ comprobación en cada suma.
 
 ### `asm!`
 
+### Hablar con otro programa
+
+A veces la herramienta existe ya y no tiene sentido reescribirla: un guion de Python con pandas, un
+programa del sistema, un conversor. El módulo `sistema` lanza la orden y recoge lo que responda:
+
+```nooki
+usar sistema
+
+funcion principal() -> entero {
+    variable listado = sistema.capturar("echo hola")
+    imprimir(listado)
+
+    variable codigo = sistema.ejecutar("python analisis.py datos.csv salida.csv")
+    si (codigo != 0) {
+        imprimir("el guion falló")
+    }
+    retornar 0
+}
+```
+
+La orden es una **línea de comandos**: se ejecuta con el intérprete del sistema (`cmd` en Windows, `sh` en
+Linux), y las comillas de las rutas con espacios son cosa de quien la escribe. `capturar` devuelve la salida
+estándar; `ejecutar`, el código de salida.
+
 ### Punteros y memoria manual
 
 Dentro de `inseguro` también se puede pedir memoria y tocarla. Es lo que hace falta para hablar con el

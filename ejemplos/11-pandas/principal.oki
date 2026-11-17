@@ -1,0 +1,55 @@
+// Análisis con pandas: Nooki prepara los datos, Python los analiza y Nooki lee
+// el resultado.
+//
+// Necesita Python con pandas instalado. Si no está, el ejemplo lo dice y sigue.
+//
+//   nooki ejecutar ejemplos/11-pandas/principal.oki
+
+usar sistema
+usar archivo
+
+funcion principal() -> entero {
+    // 1. Los datos: ventas por ciudad y mes, en CSV y enteros (para que el
+    //    ejemplo no dependa de la coma decimal).
+    variable ruta = "ventas.csv" + ""
+    variable contenido = "ciudad;mes;unidades;precio\n" + ""
+    contenido = contenido + "Madrid;enero;10;5\n"
+    contenido = contenido + "Madrid;febrero;20;5\n"
+    contenido = contenido + "Lima;enero;7;4\n"
+    contenido = contenido + "Lima;febrero;9;4\n"
+    contenido = contenido + "Bogota;enero;12;3\n"
+    contenido = contenido + "Bogota;febrero;15;3\n"
+
+    variable escrito = archivo.escribir(&ruta, &contenido)
+    si (!archivo.existe(&ruta)) {
+        imprimir("no se pudo escribir ventas.csv")
+        retornar 1
+    }
+
+    // 2. Python, con pandas, hace el trabajo: agrupa, suma y escribe el resumen.
+    variable orden = "python analisis.py ventas.csv resumen.csv" + ""
+    variable codigo = sistema.ejecutar(&orden)
+    si (codigo != 0) {
+        imprimir("no se pudo ejecutar Python con pandas (¿está instalado?)")
+        retornar 1
+    }
+
+    // 3. Y Nooki lee lo que pandas dejó.
+    variable resumen = "resumen.csv" + ""
+    si (!archivo.existe(&resumen)) {
+        imprimir("no se pudo leer el resumen")
+        retornar 1
+    }
+    variable leido = archivo.leer(&resumen)
+    coincide (leido) {
+        caso Mal(m) => {
+            imprimir("no se pudo leer el resumen")
+            retornar 1
+        }
+        caso Bien(texto_resumen) => {
+            imprimir(texto_resumen)
+        }
+    }
+
+    retornar 0
+}

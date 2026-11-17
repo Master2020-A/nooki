@@ -1,0 +1,14 @@
+// Capturar lo que escribe otro programa. Solo `capturar`: la salida de
+// `ejecutar` se mezcla con la del hijo y no sería una prueba estable.
+usar sistema
+
+funcion principal() -> entero {
+    variable saludo = sistema.capturar("echo hola")
+    imprimir(saludo.largo())
+    imprimir(saludo)
+
+    variable dos = sistema.capturar("echo dos")
+    imprimir(dos)
+
+    retornar 0
+}

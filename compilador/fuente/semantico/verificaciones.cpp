@@ -1527,6 +1527,21 @@ private:
             }
         }
 
+        if (nombre_llamado == "ejecutar_orden" || nombre_llamado == "capturar_orden") {
+            if (expresion.lista.size() != 1) {
+                error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                    .parametro("funcion", std::string(nombre_llamado))
+                    .parametro("esperados", "1")
+                    .parametro("dados", std::to_string(expresion.lista.size()));
+            }
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            return nombre_llamado == "capturar_orden" ? Tipo::Texto : Tipo::Entero;
+        }
+
         if (nombre_llamado == "leer_archivo" || nombre_llamado == "existe_archivo" ||
             nombre_llamado == "escribir_archivo" || nombre_llamado == "agregar_archivo") {
             const std::size_t esperados =

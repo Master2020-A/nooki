@@ -1478,6 +1478,71 @@ const char* PRELUDIO =
     "}\n"
     "\n"
     "/* ------------------------------------------------------------------ */\n"
+    "/* Procesos externos: para hablar con un programa de fuera (Python,   */\n"
+    "/* una herramienta del sistema…). La orden va como una línea de       */\n"
+    "/* comandos; las comillas son cosa de quien la escribe.               */\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "\n"
+    "#if defined(_WIN32)\n"
+    "#define NOOKI_POPEN _popen\n"
+    "#define NOOKI_PCLOSE _pclose\n"
+    "#else\n"
+    "#define NOOKI_POPEN popen\n"
+    "#define NOOKI_PCLOSE pclose\n"
+    "#endif\n"
+    "\n"
+    "long long nooki_orden_ejecutar(const char* comando) {\n"
+    "    if (comando == NULL) {\n"
+    "        return -1;\n"
+    "    }\n"
+    "    return (long long)system(comando);\n"
+    "}\n"
+    "\n"
+    "/* Lanza la orden y devuelve lo que escriba por la salida estándar. */\n"
+    "nooki_texto nooki_orden_capturar(const char* comando) {\n"
+    "    nooki_texto salida = nooki_texto_desde_c(\"\");\n"
+    "    if (comando == NULL) {\n"
+    "        return salida;\n"
+    "    }\n"
+    "    FILE* tubo = NOOKI_POPEN(comando, \"r\");\n"
+    "    if (tubo == NULL) {\n"
+    "        return salida;\n"
+    "    }\n"
+    "    char* datos = NULL;\n"
+    "    size_t largo = 0;\n"
+    "    size_t capacidad = 0;\n"
+    "    char trozo[4096];\n"
+    "    size_t leidos = 0;\n"
+    "    while ((leidos = fread(trozo, 1, sizeof trozo, tubo)) > 0) {\n"
+    "        if (largo + leidos + 1 > capacidad) {\n"
+    "            size_t nueva = capacidad == 0 ? 8192 : capacidad * 2;\n"
+    "            while (nueva < largo + leidos + 1) {\n"
+    "                nueva *= 2;\n"
+    "            }\n"
+    "            char* crecido = (char*)realloc(datos, nueva);\n"
+    "            if (crecido == NULL) {\n"
+    "                free(datos);\n"
+    "                NOOKI_PCLOSE(tubo);\n"
+    "                return salida;\n"
+    "            }\n"
+    "            datos = crecido;\n"
+    "            capacidad = nueva;\n"
+    "        }\n"
+    "        memcpy(datos + largo, trozo, leidos);\n"
+    "        largo += leidos;\n"
+    "    }\n"
+    "    NOOKI_PCLOSE(tubo);\n"
+    "    if (datos == NULL) {\n"
+    "        return salida;\n"
+    "    }\n"
+    "    datos[largo] = '\\0';\n"
+    "    nooki_texto_soltar(&salida);\n"
+    "    salida = nooki_texto_desde_c(datos);\n"
+    "    free(datos);\n"
+    "    return salida;\n"
+    "}\n"
+    "\n"
+    "/* ------------------------------------------------------------------ */\n"
     "/* Punteros y memoria manual. Solo se usan dentro de «inseguro».       */\n"
     "/* ------------------------------------------------------------------ */\n"
     "\n"
@@ -4582,6 +4647,34 @@ private:
                 }
                 primero = false;
                 salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
+        }
+
+        if (nombre_llamado == "ejecutar_orden" || nombre_llamado == "capturar_orden") {
+            std::string salida = std::string("nooki_orden_") +
+                                 (nombre_llamado == "capturar_orden" ? "capturar" : "ejecutar") +
+                                 "(";
+            bool primero = true;
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                std::string valor = expresion(*argumento);
+                const std::string tipo = tipo_de(*argumento);
+                if (tipo == "nooki_texto") {
+                    valor = argumento->tipo == sintactico::TipoExpresion::Identificador
+                                ? valor + ".datos"
+                                : "(" + valor + ").datos";
+                } else if (tipo == "nooki_texto*") {
+                    valor = "(" + valor + ")->datos";
+                }
+                salida += valor;
             }
             salida += ')';
             return salida;
