@@ -96,6 +96,9 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
 
     {codigos::ASM_FUERA_DE_INSEGURO, "«asm!» solo se permite dentro de un bloque «inseguro { }»",
      "“asm!” is only allowed inside an “inseguro { }” block"},
+    {codigos::PUNTERO_FUERA_DE_INSEGURO,
+     "los punteros solo se usan dentro de un bloque «inseguro { }»",
+     "pointers are only used inside an “inseguro { }” block"},
 
     {codigos::METODO_DE_RASGO_FALTANTE,
      "a «{tipo}» le falta «{metodo}», que exige el rasgo «{rasgo}»",

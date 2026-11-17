@@ -1632,6 +1632,31 @@ comprobación en cada suma.
 
 ### `asm!`
 
+### Punteros y memoria manual
+
+Dentro de `inseguro` también se puede pedir memoria y tocarla. Es lo que hace falta para hablar con el
+hardware o con una biblioteca de C:
+
+```nooki
+funcion principal() -> entero {
+    variable total = 0
+    inseguro {
+        variable p = reservar(16)
+        escribir_en(p, 0, 42)
+        escribir_en(p, 8, 100)
+        total = leer_en(p, 0) + leer_en(p, 8)
+        liberar(p)
+    }
+    imprimir(total)
+    retornar 0
+}
+```
+
+`desde_direccion(n)` construye un puntero a una dirección concreta, que es como se leen y escriben los
+registros de un dispositivo; `direccion_de(p)` la devuelve. **No hay comprobación de límites ni libertad
+automática**: si te sales de lo reservado o liberas dos veces, el programa se rompe, y eso es lo que
+significa `inseguro`.
+
 Permite insertar ensamblador en línea. **Solo dentro de `inseguro`**; fuera es un error (`NOK3012`).
 
 ```nooki

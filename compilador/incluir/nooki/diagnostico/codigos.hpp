@@ -38,6 +38,7 @@ inline constexpr std::string_view MODULO_NO_ENCONTRADO = "NOK3008";
 inline constexpr std::string_view SIMBOLO_PRIVADO = "NOK3009";
 inline constexpr std::string_view METODO_DE_RASGO_FALTANTE = "NOK3011";
 inline constexpr std::string_view ASM_FUERA_DE_INSEGURO = "NOK3012";
+inline constexpr std::string_view PUNTERO_FUERA_DE_INSEGURO = "NOK3013";
 
 // --- Tipos (NOK4xxx) --------------------------------------------------------
 inline constexpr std::string_view TIPO_INCOMPATIBLE = "NOK4001";

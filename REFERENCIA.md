@@ -480,7 +480,42 @@ final del proceso (asunto abierto A-18). No corrompe nada.
 
 ### `inseguro`
 
-Desactiva **solo** las comprobaciones aritméticas. La propiedad y los tipos se siguen comprobando.
+Desactiva las comprobaciones aritméticas y **abre la puerta a los punteros**. La propiedad y los tipos se
+siguen comprobando: lo único que cambia es que dentro se puede tocar la memoria a mano.
+
+### Punteros y memoria manual
+
+Un `Puntero` es una dirección de memoria. Se pasa por valor, como en C: no tiene dueño, no se copia lo
+apuntado y **no se libera solo**. Solo se puede usar dentro de `inseguro { }`; fuera, `NOK3013`.
+
+| Función | Firma | Qué hace |
+|---|---|---|
+| `reservar` | `(bytes: entero) -> Puntero` | pide memoria al sistema, a cero |
+| `liberar` | `(p: Puntero) -> vacio` | la devuelve; liberar dos veces es error del programa |
+| `leer_en` | `(p: Puntero, desplazamiento: entero) -> entero` | lee un entero en `p + desplazamiento` |
+| `escribir_en` | `(p: Puntero, desplazamiento: entero, valor: entero) -> vacio` | escribe un entero |
+| `leer_flotante_en` | `(p: Puntero, desplazamiento: entero) -> flotante` | lee un flotante |
+| `escribir_flotante_en` | `(p: Puntero, desplazamiento: entero, valor: flotante) -> vacio` | escribe un flotante |
+| `desde_direccion` | `(direccion: entero) -> Puntero` | un puntero a una dirección concreta: registros del hardware |
+| `direccion_de` | `(p: Puntero) -> entero` | la dirección, para compararla o guardarla |
+
+```nooki
+funcion principal() -> entero {
+    variable total = 0
+    inseguro {
+        variable p = reservar(16)
+        escribir_en(p, 0, 42)
+        total = leer_en(p, 0)
+        liberar(p)
+    }
+    retornar total
+}
+```
+
+Las lecturas y escrituras se hacen con `memcpy`, así que valen para direcciones alineadas o no. Un
+`Puntero` nulo (el que devuelve `reservar` si no hay memoria) no lee ni escribe: las funciones lo
+comprueban y no hacen nada. Y no hay comprobación de límites: **escribir fuera de lo reservado corrompe la
+memoria**, que es exactamente lo que `inseguro` significa.
 
 ---
 
@@ -499,7 +534,7 @@ Desactiva **solo** las comprobaciones aritméticas. La propiedad y los tipos se 
 ## 10. Diagnósticos
 
 <!-- GENERADO:diagnosticos -->
-Hay **46 códigos**. La tabla completa, con el mensaje exacto de cada uno, está en
+Hay **47 códigos**. La tabla completa, con el mensaje exacto de cada uno, está en
 [`docs/referencia/diagnosticos.md`](docs/referencia/diagnosticos.md), generada desde `codigos.hpp` y
 `catalogo.cpp`.
 <!-- FIN -->

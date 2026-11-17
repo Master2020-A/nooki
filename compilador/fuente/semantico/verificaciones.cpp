@@ -663,6 +663,11 @@ private:
             base == "vacio" || base == "nulo") {
             return;
         }
+        // `Puntero` es un tipo del lenguaje, aunque su uso esté limitado a
+        // `inseguro`: representa una dirección de memoria.
+        if (base == "Puntero") {
+            return;
+        }
         // Genéricos de la biblioteca.
         if (base == "Vector" || base == "Mapa" || base == "Caja" || base == "resultado") {
             return;
@@ -1539,6 +1544,50 @@ private:
                 }
             }
             return nombre_llamado == "leer_archivo" ? Tipo::Texto : Tipo::Booleano;
+        }
+
+        // Punteros y memoria manual: solo dentro de `inseguro`.
+        {
+            const std::string_view nombre = nombre_llamado;
+            const bool es_puntero = nombre == "reservar" || nombre == "liberar" ||
+                                    nombre == "leer_en" || nombre == "escribir_en" ||
+                                    nombre == "leer_flotante_en" || nombre == "escribir_flotante_en" ||
+                                    nombre == "desde_direccion" || nombre == "direccion_de";
+            if (es_puntero) {
+                if (profundidad_inseguro_ == 0) {
+                    error(diagnostico::codigos::PUNTERO_FUERA_DE_INSEGURO, expresion.span)
+                        .ayuda("envuélvalo en «inseguro { }» y documente por qué");
+                }
+                std::size_t esperados = 1;
+                if (nombre == "escribir_en" || nombre == "escribir_flotante_en" ||
+                    nombre == "leer_flotante_en" || nombre == "leer_en") {
+                    esperados = 2;
+                }
+                if (nombre == "escribir_en" || nombre == "escribir_flotante_en") {
+                    esperados = 3;
+                }
+                if (expresion.lista.size() != esperados) {
+                    error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
+                        .parametro("funcion", std::string(nombre))
+                        .parametro("esperados", std::to_string(esperados))
+                        .parametro("dados", std::to_string(expresion.lista.size()));
+                }
+                for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                    if (argumento) {
+                        tipo_de(*argumento);
+                    }
+                }
+                if (nombre == "reservar" || nombre == "desde_direccion") {
+                    return Tipo::Desconocido;
+                }
+                if (nombre == "direccion_de" || nombre == "leer_en") {
+                    return Tipo::Entero;
+                }
+                if (nombre == "leer_flotante_en") {
+                    return Tipo::Flotante;
+                }
+                return Tipo::Vacio;
+            }
         }
 
         if (nombre_llamado == "leer_linea" || nombre_llamado == "leer_entero") {

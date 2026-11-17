@@ -1,6 +1,6 @@
 <!-- GENERADO por herramientas/generar-referencia.py: no editar a mano -->
 
-Hay **46 códigos**. El mensaje es el que imprime el compilador, con sus
+Hay **47 códigos**. El mensaje es el que imprime el compilador, con sus
 huecos entre llaves.
 
 | Código | Constante | Mensaje |
@@ -30,6 +30,7 @@ huecos entre llaves.
 | `NOK3009` | `SIMBOLO_PRIVADO` | «{simbolo}» es privado del módulo «{modulo}» |
 | `NOK3011` | `METODO_DE_RASGO_FALTANTE` | a «{tipo}» le falta «{metodo}», que exige el rasgo «{rasgo}» |
 | `NOK3012` | `ASM_FUERA_DE_INSEGURO` | «asm!» solo se permite dentro de un bloque «inseguro { }» |
+| `NOK3013` | `PUNTERO_FUERA_DE_INSEGURO` | los punteros solo se usan dentro de un bloque «inseguro { }» |
 | `NOK4001` | `TIPO_INCOMPATIBLE` | se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}» |
 | `NOK4002` | `ARGUMENTO_INCOMPATIBLE` | el argumento «{parametro}» de «{funcion}» espera «{esperado}» y se pasa «{encontrado}» |
 | `NOK4003` | `ARIDAD_INCORRECTA` | «{funcion}» espera {esperados} argumento(s) y se han pasado {dados} |

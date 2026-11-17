@@ -71,7 +71,7 @@ o o o o o + + + + + + + + + +
 | Biblioteca estándar escrita en Nooki | 17 módulos: datos y textos, interfaz gráfica e IA |
 | Interfaz gráfica de escritorio | sí (Windows y Linux; macOS compila, sin backend de ventana) |
 | Redes neuronales y datos | sí: una y dos capas ocultas, CSV, tensores, tablas |
-| Control de hardware (`inseguro`, `asm!`) | `asm!` sí; lo demás, fase posterior |
+| Control de hardware: punteros, `reservar`/`liberar`, `desde_direccion` y `asm!` | sí, dentro de `inseguro` |
 | **Verificación** | **111 casos de conformidad · 18 suites · Windows, Linux y ASan+UBSan** |
 
 **Versión actual: 1.0.2.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o son
@@ -171,7 +171,7 @@ Copy-Item -Recurse editores\vscode "$env:USERPROFILE\.vscode\extensions\nooki-1.
 - **[Editores](editores/LEEME.md)** — resaltado para VS Code, JetBrains (RustRover, IntelliJ…) y Vim, y cómo conectar el servidor de lenguaje.
 - **[Manual](MANUAL.md)** — el lenguaje capítulo a capítulo, con 69 programas que la suite compila.
 - **[Referencia](REFERENCIA.md)** — para consultar: tipos, operadores con su precedencia, miembros y los
-  46 diagnósticos. Las tablas se generan desde el compilador.
+  47 diagnósticos. Las tablas se generan desde el compilador.
 - **[Cambios](CHANGELOG.md)** — qué entró en cada versión.
 - **[Notas de la 1.0](NOTAS_DE_VERSION.md)** — qué incluye, qué no y para quién es.
 
@@ -189,7 +189,7 @@ Cada cambio pasa por tres filtros:
 4. **Ambos compiladores de C**: GCC y MSVC, con `ctest` en los dos, más Linux con `gcc` y con
    `AddressSanitizer` + `UndefinedBehaviorSanitizer`.
 
-De los 46 códigos de diagnóstico, **40 tienen un caso que los provoca**. Los seis restantes necesitan
+De los 47 códigos de diagnóstico, **41 tienen un caso que los provoca**. Los seis restantes necesitan
 escenarios que no caben en una prueba automática —una máquina sin compilador de C, uno roto, dos
 módulos para el símbolo privado y tres errores del analizador sin disparador estable— y están
 anotados con su motivo en `DECISIONES.md`.

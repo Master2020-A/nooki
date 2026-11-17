@@ -44,6 +44,9 @@ publico funcion leer(ruta: &texto) -> lectura {
 ```text
 publico funcion escribir(ruta: &texto, contenido: &texto) -> lectura {
 ```
+```text
+publico funcion agregar(ruta: &texto, contenido: &texto) -> lectura {
+```
 
 ### `autograd`
 
@@ -360,6 +363,18 @@ publico funcion total_profunda(red: entero) -> entero {
 publico funcion liberar_profunda(red: entero) -> vacio {
 ```
 ```text
+publico funcion entrenar_profunda_lote(red: entero, vueltas: entero, tasa: flotante,
+```
+```text
+publico funcion evaluar_profunda(red: entero, x: &Vector<flotante>, cual: entero) -> booleano {
+```
+```text
+publico funcion guardar_profunda(red: entero, ruta: &texto) -> booleano {
+```
+```text
+publico funcion cargar_profunda(ruta: &texto) -> entero {
+```
+```text
 publico funcion entrenar(red: entero, vueltas: entero, tasa: flotante) -> vacio {
 ```
 ```text
@@ -515,6 +530,12 @@ publico funcion softmax(t: entero) -> entero {
 
 ### `textos`
 
+```text
+publico funcion de_entero(valor: entero) -> texto {
+```
+```text
+publico funcion de_flotante(valor: flotante) -> texto {
+```
 ```text
 publico funcion unir(partes: &Vector<texto>, separador: texto) -> texto {
 ```

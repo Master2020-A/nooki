@@ -20,6 +20,18 @@ inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
 /// Estructuras que tienen vector propio; lo fija el emisor al empezar.
 inline const std::set<std::string>* VECTORES_DE_ESTRUCTURA = nullptr;
 
+/// Nombre en Nooki → nombre en C de las funciones de punteros.
+inline const std::map<std::string, std::string> PUNTEROS_C = {
+    {"reservar", "reservar"},
+    {"liberar", "liberar"},
+    {"leer_en", "leer_entero"},
+    {"escribir_en", "escribir_entero"},
+    {"leer_flotante_en", "leer_flotante"},
+    {"escribir_flotante_en", "escribir_flotante"},
+    {"desde_direccion", "desde_direccion"},
+    {"direccion_de", "direccion"},
+};
+
 bool es_rasgo_c(std::string_view nombre) {
     return RASGOS_DEL_PROGRAMA != nullptr && RASGOS_DEL_PROGRAMA->count(std::string(nombre)) != 0;
 }
@@ -245,6 +257,7 @@ std::string tipo_estructura(const sintactico::DefinicionTipo& definicion) {
 const char* PRELUDIO =
     "/* Generado por Nooki. No editar: se regenera en cada compilación. */\n"
     "#include <limits.h>\n"
+    "#include <stdint.h>\n"
     "#include <stdio.h>\n"
     "#include <stdlib.h>\n"
     "#include <string.h>\n"
@@ -1462,6 +1475,77 @@ const char* PRELUDIO =
     "    t.largo = (long long)leido;\n"
     "    fclose(archivo);\n"
     "    return t;\n"
+    "}\n"
+    "\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "/* Punteros y memoria manual. Solo se usan dentro de «inseguro».       */\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "\n"
+    "/* Una dirección de memoria. Se pasa por valor, como un puntero de C:  */\n"
+    "/* ni se copia lo apuntado ni hay dueño. */\n"
+    "typedef struct {\n"
+    "    unsigned char* datos;\n"
+    "} nooki_puntero;\n"
+    "\n"
+    "static nooki_puntero nooki_puntero_reservar(long long bytes) {\n"
+    "    nooki_puntero p;\n"
+    "    p.datos = NULL;\n"
+    "    if (bytes <= 0) {\n"
+    "        return p;\n"
+    "    }\n"
+    "    p.datos = (unsigned char*)calloc((size_t)bytes, 1);\n"
+    "    return p;\n"
+    "}\n"
+    "\n"
+    "static void nooki_puntero_liberar(nooki_puntero p) {\n"
+    "    free(p.datos);\n"
+    "}\n"
+    "\n"
+    "/* Las lecturas y escrituras van con memcpy: así valen para cualquier   */\n"
+    "/* dirección, esté alineada o no. */\n"
+    "static long long nooki_puntero_leer_entero(nooki_puntero p, long long desplazamiento) {\n"
+    "    long long valor = 0;\n"
+    "    if (p.datos == NULL || desplazamiento < 0) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    memcpy(&valor, p.datos + desplazamiento, sizeof valor);\n"
+    "    return valor;\n"
+    "}\n"
+    "\n"
+    "static void nooki_puntero_escribir_entero(nooki_puntero p, long long desplazamiento,\n"
+    "                                          long long valor) {\n"
+    "    if (p.datos == NULL || desplazamiento < 0) {\n"
+    "        return;\n"
+    "    }\n"
+    "    memcpy(p.datos + desplazamiento, &valor, sizeof valor);\n"
+    "}\n"
+    "\n"
+    "static double nooki_puntero_leer_flotante(nooki_puntero p, long long desplazamiento) {\n"
+    "    double valor = 0.0;\n"
+    "    if (p.datos == NULL || desplazamiento < 0) {\n"
+    "        return 0.0;\n"
+    "    }\n"
+    "    memcpy(&valor, p.datos + desplazamiento, sizeof valor);\n"
+    "    return valor;\n"
+    "}\n"
+    "\n"
+    "static void nooki_puntero_escribir_flotante(nooki_puntero p, long long desplazamiento,\n"
+    "                                            double valor) {\n"
+    "    if (p.datos == NULL || desplazamiento < 0) {\n"
+    "        return;\n"
+    "    }\n"
+    "    memcpy(p.datos + desplazamiento, &valor, sizeof valor);\n"
+    "}\n"
+    "\n"
+    "/* Para hablar con el hardware: un registro está en una dirección. */\n"
+    "static nooki_puntero nooki_puntero_desde_direccion(long long direccion) {\n"
+    "    nooki_puntero p;\n"
+    "    p.datos = (unsigned char*)(intptr_t)direccion;\n"
+    "    return p;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_puntero_direccion(nooki_puntero p) {\n"
+    "    return (long long)(intptr_t)p.datos;\n"
     "}\n"
     "\n"
     "/* Añade al final del archivo, sin borrar lo que hubiera. */\n"
@@ -2921,6 +3005,9 @@ private:
         if (escrito == "caracter") {
             return "char";
         }
+        if (escrito == "Puntero") {
+            return "nooki_puntero";
+        }
         if (escrito == "vacio") {
             return "void";
         }
@@ -3756,6 +3843,23 @@ private:
                 if (expresion.izquierda->lexema == "leer_entero") {
                     return "long long";
                 }
+                // Punteros: cada operación devuelve lo suyo.
+                {
+                    const std::string_view nombre = expresion.izquierda->lexema;
+                    if (nombre == "reservar" || nombre == "desde_direccion") {
+                        return "nooki_puntero";
+                    }
+                    if (nombre == "direccion_de" || nombre == "leer_en") {
+                        return "long long";
+                    }
+                    if (nombre == "leer_flotante_en") {
+                        return "double";
+                    }
+                    if (nombre == "liberar" || nombre == "escribir_en" ||
+                        nombre == "escribir_flotante_en") {
+                        return "void";
+                    }
+                }
                 const auto encontrada = retornos_.find(std::string(expresion.izquierda->lexema));
                 if (encontrada != retornos_.end()) {
                     return encontrada->second;
@@ -4462,6 +4566,25 @@ private:
                 salida += " } }";
                 return salida;
             }
+        }
+
+        // Punteros: los argumentos van tal cual, sin conversión.
+        if (const auto puntero = PUNTEROS_C.find(std::string(nombre_llamado));
+            puntero != PUNTEROS_C.end()) {
+            std::string salida = "nooki_puntero_" + std::string(puntero->second) + "(";
+            bool primero = true;
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
         }
 
         if (nombre_llamado == "leer_archivo" || nombre_llamado == "escribir_archivo" ||

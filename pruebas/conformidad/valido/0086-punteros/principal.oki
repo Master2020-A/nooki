@@ -1,0 +1,29 @@
+// Punteros y memoria manual, solo dentro de `inseguro`.
+funcion principal() -> entero {
+    variable total = 0
+
+    inseguro {
+        variable p = reservar(64)
+        escribir_en(p, 0, 42)
+        escribir_en(p, 8, 1000)
+        escribir_flotante_en(p, 16, 2.5)
+
+        total = total + leer_en(p, 0)
+        total = total + leer_en(p, 8)
+        total = total + (leer_flotante_en(p, 16) como entero)
+
+        // Una dirección se puede mirar y volver a usar.
+        variable posicion = direccion_de(p)
+        variable q = desde_direccion(posicion)
+        total = total + leer_en(q, 0)
+
+        // Y se puede escribir por la segunda referencia.
+        escribir_en(q, 0, 1)
+        total = total + leer_en(p, 0)
+
+        liberar(p)
+    }
+
+    imprimir(total)
+    retornar 0
+}

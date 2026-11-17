@@ -1368,7 +1368,7 @@ error[NOK5001]: no se puede usar «letras»: el valor se movió antes
 | `NOK5xxx` | propiedad y préstamos |
 | `NOK6xxx` | backend de C y ejecución |
 
-### 9.3 Tabla completa (46 códigos)
+### 9.3 Tabla completa (47 códigos)
 
 | Código | Mensaje | Causa típica / arreglo |
 |---|---|---|
@@ -1397,6 +1397,7 @@ error[NOK5001]: no se puede usar «letras»: el valor se movió antes
 | `NOK3009` | «{simbolo}» es privado del módulo «{modulo}» | marca `publico` en el símbolo |
 | `NOK3011` | a «{tipo}» le falta «{metodo}», que exige el rasgo «{rasgo}» | implementa el método |
 | `NOK3012` | «asm!» solo se permite dentro de un bloque «inseguro { }» | envuelve el `asm!` en `inseguro` |
+| `NOK3013` | los punteros solo se usan dentro de un bloque «inseguro { }» | envuelve `reservar`, `leer_en`… en `inseguro` |
 | `NOK4001` | se esperaba un valor de tipo «{esperado}» pero se encontró «{encontrado}» | convierte con `como` o cambia el valor |
 | `NOK4002` | el argumento «{parametro}» de «{funcion}» espera «{esperado}» y se pasa «{encontrado}» | ajusta el argumento |
 | `NOK4003` | «{funcion}» espera {esperados} argumento(s) y se han pasado {dados} | ajusta la aridad |

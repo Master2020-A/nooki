@@ -3,6 +3,24 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Sprint 128 — Punteros y memoria manual (2026-11-16)
+
+El pilar que faltaba de la visión original: controlar el hardware como en C, pero sin renunciar a las
+comprobaciones del resto del lenguaje.
+
+Dentro de `inseguro { }` hay ya un tipo **`Puntero`** y ocho operaciones: `reservar`, `liberar`,
+`leer_en`, `escribir_en`, `leer_flotante_en`, `escribir_flotante_en`, `desde_direccion` y `direccion_de`.
+Con eso se pide memoria, se lee y se escribe en ella con desplazamientos, y se construye un puntero a una
+dirección concreta —que es como se habla con los registros de un dispositivo.
+
+Es un tipo crudo a propósito: se pasa por valor, no tiene dueño, no se libera solo y no comprueba límites.
+Fuera de `inseguro` no existe: `NOK3013`. Las lecturas y escrituras van con `memcpy`, así que funcionan en
+cualquier dirección, alineada o no, y un puntero nulo no lee ni escribe.
+
+Caso nuevo `0086-punteros`. **116 casos** y **47 diagnósticos.**
+
 ## [1.0.2] — 2026-11-16
 
 Segunda versión de la serie 1.0. Cierra la API de inteligencia artificial, añade colecciones que faltaban y
