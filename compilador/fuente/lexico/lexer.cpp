@@ -16,15 +16,21 @@ namespace {
 // Clasificación de caracteres
 // ---------------------------------------------------------------------------
 
-constexpr bool es_digito(char c) noexcept { return c >= '0' && c <= '9'; }
+constexpr bool es_digito(char c) noexcept {
+    return c >= '0' && c <= '9';
+}
 
 constexpr bool es_hexadecimal(char c) noexcept {
     return es_digito(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
 
-constexpr bool es_octal(char c) noexcept { return c >= '0' && c <= '7'; }
+constexpr bool es_octal(char c) noexcept {
+    return c >= '0' && c <= '7';
+}
 
-constexpr bool es_binario(char c) noexcept { return c == '0' || c == '1'; }
+constexpr bool es_binario(char c) noexcept {
+    return c == '0' || c == '1';
+}
 
 constexpr bool es_letra_ascii(char c) noexcept {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -35,23 +41,23 @@ bool es_letra(char32_t c) noexcept {
         return es_letra_ascii(static_cast<char>(c));
     }
     switch (c) {
-        case U'á':
-        case U'é':
-        case U'í':
-        case U'ó':
-        case U'ú':
-        case U'ü':
-        case U'ñ':
-        case U'Á':
-        case U'É':
-        case U'Í':
-        case U'Ó':
-        case U'Ú':
-        case U'Ü':
-        case U'Ñ':
-            return true;
-        default:
-            return false;
+    case U'á':
+    case U'é':
+    case U'í':
+    case U'ó':
+    case U'ú':
+    case U'ü':
+    case U'ñ':
+    case U'Á':
+    case U'É':
+    case U'Í':
+    case U'Ó':
+    case U'Ú':
+    case U'Ü':
+    case U'Ñ':
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -64,90 +70,20 @@ bool es_continuacion(char32_t c) noexcept {
 // ---------------------------------------------------------------------------
 
 constexpr std::array<std::string_view, 85> PALABRAS_RESERVADAS{{
-    "Este",
-    "abstracta",
-    "asincrono",
-    "asm",
-    "atrapar",
-    "booleano",
-    "bucle",
-    "byte",
-    "caracter",
-    "caso",
-    "clase",
-    "coincide",
-    "como",
-    "constante",
-    "constructor",
-    "continuar",
-    "destructor",
-    "donde",
-    "en",
-    "entero",
-    "entero128",
-    "entero16",
-    "entero32",
-    "entero64",
-    "entero8",
-    "enumeracion",
-    "es",
-    "esperar",
-    "establecer",
-    "estatico",
-    "este",
-    "estructura",
-    "exportar",
-    "externo",
-    "falso",
-    "finalmente",
-    "flotante",
-    "flotante32",
-    "funcion",
-    "hacer",
-    "hereda",
-    "implementa",
-    "implementar",
-    "importar",
-    "inseguro",
-    "intentar",
-    "interfaz",
-    "interna",
-    "lanzar",
-    "macro",
-    "mientras",
-    "mixin",
-    "modulo",
-    "mutable",
-    "natural",
-    "natural128",
-    "natural16",
-    "natural32",
-    "natural64",
-    "natural8",
-    "nuevo",
-    "nulo",
-    "obtener",
-    "para",
-    "paso",
-    "privado",
-    "propiedad",
-    "protegido",
-    "publico",
-    "rasgo",
-    "retornar",
-    "romper",
-    "si",
-    "sino",
-    "sinosi",
-    "super",
-    "tamano",
-    "tamano_signado",
-    "texto",
-    "tipo",
-    "union",
-    "usar",
-    "vacio",
-    "variable",
+    "Este",        "abstracta",   "asincrono",   "asm",       "atrapar",    "booleano",
+    "bucle",       "byte",        "caracter",    "caso",      "clase",      "coincide",
+    "como",        "constante",   "constructor", "continuar", "destructor", "donde",
+    "en",          "entero",      "entero128",   "entero16",  "entero32",   "entero64",
+    "entero8",     "enumeracion", "es",          "esperar",   "establecer", "estatico",
+    "este",        "estructura",  "exportar",    "externo",   "falso",      "finalmente",
+    "flotante",    "flotante32",  "funcion",     "hacer",     "hereda",     "implementa",
+    "implementar", "importar",    "inseguro",    "intentar",  "interfaz",   "interna",
+    "lanzar",      "macro",       "mientras",    "mixin",     "modulo",     "mutable",
+    "natural",     "natural128",  "natural16",   "natural32", "natural64",  "natural8",
+    "nuevo",       "nulo",        "obtener",     "para",      "paso",       "privado",
+    "propiedad",   "protegido",   "publico",     "rasgo",     "retornar",   "romper",
+    "si",          "sino",        "sinosi",      "super",     "tamano",     "tamano_signado",
+    "texto",       "tipo",        "union",       "usar",      "vacio",      "variable",
     "verdadero",
 }};
 
@@ -169,35 +105,35 @@ std::string quitar_tildes(std::string_view texto) {
     while (i < texto.size()) {
         const utf8::Punto punto = utf8::decodificar(texto, i);
         switch (punto.valor) {
-            case U'á':
-            case U'Á':
-                salida += 'a';
-                break;
-            case U'é':
-            case U'É':
-                salida += 'e';
-                break;
-            case U'í':
-            case U'Í':
-                salida += 'i';
-                break;
-            case U'ó':
-            case U'Ó':
-                salida += 'o';
-                break;
-            case U'ú':
-            case U'ü':
-            case U'Ú':
-            case U'Ü':
-                salida += 'u';
-                break;
-            case U'ñ':
-            case U'Ñ':
-                salida += 'n';
-                break;
-            default:
-                salida.append(texto.substr(i, punto.bytes));
-                break;
+        case U'á':
+        case U'Á':
+            salida += 'a';
+            break;
+        case U'é':
+        case U'É':
+            salida += 'e';
+            break;
+        case U'í':
+        case U'Í':
+            salida += 'i';
+            break;
+        case U'ó':
+        case U'Ó':
+            salida += 'o';
+            break;
+        case U'ú':
+        case U'ü':
+        case U'Ú':
+        case U'Ü':
+            salida += 'u';
+            break;
+        case U'ñ':
+        case U'Ñ':
+            salida += 'n';
+            break;
+        default:
+            salida.append(texto.substr(i, punto.bytes));
+            break;
         }
         i += punto.bytes;
     }
@@ -210,9 +146,8 @@ std::string quitar_tildes(std::string_view texto) {
 
 // Los más largos primero: `..=` antes que `..`, `<<=` antes que `<<`.
 constexpr std::array<std::string_view, 25> OPERADORES{{
-    "..=", "<<=", ">>=", "->", "=>", "==", "!=", "<=", ">=", "&&", "||", "??",
-    "?.",  "**",  "<<",  ">>", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=",
-    "..",
+    "..=", "<<=", ">>=", "->", "=>", "==", "!=", "<=", ">=", "&&", "||", "??", "?.",
+    "**",  "<<",  ">>",  "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "..",
 }};
 
 bool es_operador_simple(char c) {
@@ -250,7 +185,9 @@ Lexer::Lexer(const diagnostico::GestorFuentes& fuentes, diagnostico::ArchivoId a
              diagnostico::Emisor& emisor)
     : archivo_(archivo), emisor_(emisor), contenido_(fuentes.contenido(archivo)) {}
 
-char Lexer::actual() const noexcept { return pos_ < contenido_.size() ? contenido_[pos_] : '\0'; }
+char Lexer::actual() const noexcept {
+    return pos_ < contenido_.size() ? contenido_[pos_] : '\0';
+}
 
 char Lexer::mirar(std::size_t distancia) const noexcept {
     return (pos_ + distancia) < contenido_.size() ? contenido_[pos_ + distancia] : '\0';
@@ -339,8 +276,8 @@ Token Lexer::siguiente() {
         return crear(TipoToken::Operador, inicio);
     }
 
-    if (es_letra(punto.valor) || (punto.valor == U'_' && es_continuacion(
-                                     utf8::decodificar(contenido_, pos_ + 1).valor))) {
+    if (es_letra(punto.valor) ||
+        (punto.valor == U'_' && es_continuacion(utf8::decodificar(contenido_, pos_ + 1).valor))) {
         return leer_identificador();
     }
 
@@ -530,9 +467,8 @@ Token Lexer::leer_texto() {
                 } else {
                     auto& diagnostico =
                         error(diagnostico::codigos::ESCAPE_DESCONOCIDO, escape_inicio, pos_);
-                    diagnostico.parametro(
-                        "escape",
-                        std::string(contenido_.substr(escape_inicio, pos_ - escape_inicio)));
+                    diagnostico.parametro("escape", std::string(contenido_.substr(
+                                                        escape_inicio, pos_ - escape_inicio)));
                 }
                 continue;
             }
@@ -578,10 +514,8 @@ Token Lexer::leer_caracter_o_vida() {
     if (actual() == '\\') {
         if (!es_escape_valido(mirar(1))) {
             avanzar(2);
-            auto& diagnostico =
-                error(diagnostico::codigos::ESCAPE_DESCONOCIDO, inicio, pos_);
-            diagnostico.parametro(
-                "escape", std::string(contenido_.substr(inicio, pos_ - inicio)));
+            auto& diagnostico = error(diagnostico::codigos::ESCAPE_DESCONOCIDO, inicio, pos_);
+            diagnostico.parametro("escape", std::string(contenido_.substr(inicio, pos_ - inicio)));
             return crear(TipoToken::Caracter, inicio);
         }
         if (mirar(1) == 'u') {
@@ -592,10 +526,9 @@ Token Lexer::leer_caracter_o_vida() {
             if (actual() == '}') {
                 avanzar();
             } else {
-                auto& diagnostico =
-                    error(diagnostico::codigos::ESCAPE_DESCONOCIDO, inicio, pos_);
-                diagnostico.parametro(
-                    "escape", std::string(contenido_.substr(inicio, pos_ - inicio)));
+                auto& diagnostico = error(diagnostico::codigos::ESCAPE_DESCONOCIDO, inicio, pos_);
+                diagnostico.parametro("escape",
+                                      std::string(contenido_.substr(inicio, pos_ - inicio)));
                 return crear(TipoToken::Caracter, inicio);
             }
         } else {

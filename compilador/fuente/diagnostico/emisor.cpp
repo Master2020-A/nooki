@@ -31,6 +31,8 @@ std::size_t Emisor::contar(Gravedad gravedad) const noexcept {
     return total;
 }
 
-bool Emisor::hay_errores() const noexcept { return contar(Gravedad::Error) > 0; }
+bool Emisor::hay_errores() const noexcept {
+    return contar(Gravedad::Error) > 0;
+}
 
 }  // namespace nooki::diagnostico

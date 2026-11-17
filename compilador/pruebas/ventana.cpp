@@ -131,9 +131,9 @@ int main() {
     // un programa aparte y el binario generado no comparte nada con esta prueba.
     const fs::path binario = directorio / ("ventana" + std::string(EXTENSION));
     const std::string compilar =
-        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(compilador_nooki())) +
-        " compilar " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(fuente)) +
-        " -o " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario));
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(compilador_nooki())) + " compilar " +
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(fuente)) + " -o " +
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario));
     if (nooki::ejecutar_comando(compilar) != 0) {
         std::cout << "FALLO: no compiló el programa de ventana\n";
         return 1;
@@ -186,5 +186,6 @@ int main() {
         std::cout << "ventana: se abre, dibuja, atiende eventos y se cierra\n";
     } else {
         std::cout << "ventana: sin entorno gráfico, la capa responde con 0\n";
-    }    return 0;
+    }
+    return 0;
 }

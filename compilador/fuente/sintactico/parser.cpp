@@ -251,13 +251,11 @@ DefinicionTipo Parser::analizar_definicion_tipo(bool es_clase) {
         avanzar();
         while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ">") {
             if (const Token& parametro = actual();
-                parametro.es(TipoToken::Identificador) ||
-                parametro.es(TipoToken::PalabraClave)) {
+                parametro.es(TipoToken::Identificador) || parametro.es(TipoToken::PalabraClave)) {
                 definicion.tipo_parametros.push_back(parametro.lexema);
                 avanzar();
             } else {
-                error_en(parametro, diagnostico::codigos::TOKEN_INESPERADO,
-                         "un parámetro de tipo");
+                error_en(parametro, diagnostico::codigos::TOKEN_INESPERADO, "un parámetro de tipo");
                 break;
             }
             if (!aceptar_lexema(",")) {
@@ -442,13 +440,11 @@ Funcion Parser::analizar_funcion(bool externa) {
         avanzar();
         while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != ">") {
             if (const Token& parametro = actual();
-                parametro.es(TipoToken::Identificador) ||
-                parametro.es(TipoToken::PalabraClave)) {
+                parametro.es(TipoToken::Identificador) || parametro.es(TipoToken::PalabraClave)) {
                 funcion.tipo_parametros.push_back(parametro.lexema);
                 avanzar();
             } else {
-                error_en(parametro, diagnostico::codigos::TOKEN_INESPERADO,
-                         "un parámetro de tipo");
+                error_en(parametro, diagnostico::codigos::TOKEN_INESPERADO, "un parámetro de tipo");
                 break;
             }
             if (!aceptar_lexema(",")) {
@@ -589,8 +585,7 @@ Rasgo Parser::analizar_rasgo() {
                 parametro.nombre = nombre.lexema;
                 avanzar();
             } else {
-                error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO,
-                         "un nombre de parámetro");
+                error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de parámetro");
                 break;
             }
             if (!aceptar_lexema(":")) {
@@ -645,8 +640,7 @@ Enumeracion Parser::analizar_enumeracion() {
     }
 
     while (!actual().es(TipoToken::FinDeArchivo) && actual().lexema != "}") {
-        if (const Token& token_variante = actual();
-            token_variante.es(TipoToken::Identificador)) {
+        if (const Token& token_variante = actual(); token_variante.es(TipoToken::Identificador)) {
             Variante variante;
             variante.nombre = token_variante.lexema;
             variante.span = token_variante.span;
@@ -893,8 +887,7 @@ Sentencia Parser::analizar_sentencia() {
             return analizar_bucle();
         }
         if (palabra == "romper" || palabra == "continuar") {
-            sentencia.tipo =
-                palabra == "romper" ? TipoSentencia::Romper : TipoSentencia::Continuar;
+            sentencia.tipo = palabra == "romper" ? TipoSentencia::Romper : TipoSentencia::Continuar;
             avanzar();
             return sentencia;
         }
@@ -1028,8 +1021,7 @@ Sentencia Parser::analizar_para() {
                 sentencia.nombre = elemento.lexema;
                 avanzar();
             } else {
-                error_en(elemento, diagnostico::codigos::TOKEN_INESPERADO,
-                         "un nombre de variable");
+                error_en(elemento, diagnostico::codigos::TOKEN_INESPERADO, "un nombre de variable");
             }
         }
     } else {
@@ -1201,54 +1193,53 @@ ExpresionPtr Parser::prefijo() {
     };
 
     switch (token.tipo) {
-        case TipoToken::Texto: {
-            auto nodo = literal(TipoExpresion::Texto);
-            nodo->lexema = sin_comillas(nodo->lexema);
-            return nodo;
+    case TipoToken::Texto: {
+        auto nodo = literal(TipoExpresion::Texto);
+        nodo->lexema = sin_comillas(nodo->lexema);
+        return nodo;
+    }
+    case TipoToken::Caracter: {
+        auto nodo = literal(TipoExpresion::Caracter);
+        nodo->lexema = sin_comillas(nodo->lexema);
+        return nodo;
+    }
+    case TipoToken::Entero:
+        return literal(TipoExpresion::Entero);
+    case TipoToken::Flotante:
+        return literal(TipoExpresion::Flotante);
+    case TipoToken::Identificador: {
+        auto nodo = literal(TipoExpresion::Identificador);
+        if (actual().lexema == "{" && viene_construccion()) {
+            return analizar_construccion(nodo->lexema);
         }
-        case TipoToken::Caracter: {
-            auto nodo = literal(TipoExpresion::Caracter);
-            nodo->lexema = sin_comillas(nodo->lexema);
-            return nodo;
-        }
-        case TipoToken::Entero:
-            return literal(TipoExpresion::Entero);
-        case TipoToken::Flotante:
-            return literal(TipoExpresion::Flotante);
-        case TipoToken::Identificador: {
-            auto nodo = literal(TipoExpresion::Identificador);
-            if (actual().lexema == "{" && viene_construccion()) {
-                return analizar_construccion(nodo->lexema);
-            }
-            // Construcción de un tipo genérico: `par<entero> { ... }`.
-            if (actual().lexema == "<") {
-                const std::size_t inicio_tipo = nodo->span.inicio;
-                const std::size_t guardado = indice_;
-                avanzar();
-                int profundidad = 1;
-                std::size_t fin_tipo = 0;
-                while (!actual().es(TipoToken::FinDeArchivo) && profundidad > 0) {
-                    if (actual().lexema == "<") {
-                        ++profundidad;
-                    } else if (actual().lexema == ">") {
-                        --profundidad;
-                        if (profundidad == 0) {
-                            fin_tipo = actual().span.fin;
-                        }
+        // Construcción de un tipo genérico: `par<entero> { ... }`.
+        if (actual().lexema == "<") {
+            const std::size_t inicio_tipo = nodo->span.inicio;
+            const std::size_t guardado = indice_;
+            avanzar();
+            int profundidad = 1;
+            std::size_t fin_tipo = 0;
+            while (!actual().es(TipoToken::FinDeArchivo) && profundidad > 0) {
+                if (actual().lexema == "<") {
+                    ++profundidad;
+                } else if (actual().lexema == ">") {
+                    --profundidad;
+                    if (profundidad == 0) {
+                        fin_tipo = actual().span.fin;
                     }
-                    avanzar();
                 }
-                if (fin_tipo != 0 && actual().lexema == "{") {
-                    const std::string_view contenido = fuentes_.contenido(archivo_);
-                    return analizar_construccion(
-                        contenido.substr(inicio_tipo, fin_tipo - inicio_tipo));
-                }
-                indice_ = guardado;
+                avanzar();
             }
-            return nodo;
+            if (fin_tipo != 0 && actual().lexema == "{") {
+                const std::string_view contenido = fuentes_.contenido(archivo_);
+                return analizar_construccion(contenido.substr(inicio_tipo, fin_tipo - inicio_tipo));
+            }
+            indice_ = guardado;
         }
-        default:
-            break;
+        return nodo;
+    }
+    default:
+        break;
     }
 
     if (token.es(TipoToken::PalabraClave)) {

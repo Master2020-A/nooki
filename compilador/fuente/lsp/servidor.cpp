@@ -81,22 +81,20 @@ Json diagnosticos_de(std::string_view texto) {
         desde.poner("character", static_cast<int>(ubicacion_inicio.columna) - 1);
         Json hasta = Json::objeto();
         hasta.poner("line", static_cast<int>(ubicacion_fin.linea) - 1);
-        hasta.poner("character",
-                    static_cast<int>(ubicacion_fin.columna) -
-                        (ubicacion_fin.linea == ubicacion_inicio.linea ? 1 : 0));
+        hasta.poner("character", static_cast<int>(ubicacion_fin.columna) -
+                                     (ubicacion_fin.linea == ubicacion_inicio.linea ? 1 : 0));
         rango.poner("start", std::move(desde));
         rango.poner("end", std::move(hasta));
 
         Json diagnostico_json = Json::objeto();
         diagnostico_json.poner("range", std::move(rango));
-        diagnostico_json.poner(
-            "severity",
-            dato.gravedad() == diagnostico::Gravedad::Error ? Json(1) : Json(2));
+        diagnostico_json.poner("severity",
+                               dato.gravedad() == diagnostico::Gravedad::Error ? Json(1) : Json(2));
         diagnostico_json.poner("code", Json(std::string(dato.codigo())));
         diagnostico_json.poner("source", Json("nooki"));
 
-        std::string mensaje = diagnostico::componer(dato.codigo(), dato.parametros(),
-                                                    diagnostico::Idioma::Espanol);
+        std::string mensaje =
+            diagnostico::componer(dato.codigo(), dato.parametros(), diagnostico::Idioma::Espanol);
         for (const std::string& nota : dato.notas()) {
             mensaje += "\n= nota: " + nota;
         }
@@ -112,13 +110,12 @@ Json diagnosticos_de(std::string_view texto) {
 
 /// Palabras del lenguaje, para ofrecerlas al escribir.
 const char* const PALABRAS[] = {
-    "funcion",   "variable", "constante", "retornar", "si",       "sino",
-    "mientras",  "para",     "en",        "romper",   "continuar", "coincide",
-    "caso",      "clase",    "estructura", "rasgo",   "implementa", "hereda",
-    "publico",   "privado",  "nuevo",     "este",     "usar",     "como",
-    "externo",   "inseguro", "asm",       "verdadero", "falso",   "nulo",
-    "entero",    "texto",    "flotante",  "booleano", "caracter", "vacio",
-    "Vector",    "Mapa",     "Caja",      "resultado"};
+    "funcion",    "variable", "constante",  "retornar",  "si",       "sino",     "mientras",
+    "para",       "en",       "romper",     "continuar", "coincide", "caso",     "clase",
+    "estructura", "rasgo",    "implementa", "hereda",    "publico",  "privado",  "nuevo",
+    "este",       "usar",     "como",       "externo",   "inseguro", "asm",      "verdadero",
+    "falso",      "nulo",     "entero",     "texto",     "flotante", "booleano", "caracter",
+    "vacio",      "Vector",   "Mapa",       "Caja",      "resultado"};
 
 /// Nombres declarados en el documento: tipos, funciones y variables conocidas.
 void recoger_nombres(const sintactico::Programa& programa, std::vector<std::string>& salida) {
@@ -156,8 +153,8 @@ std::string palabra_en(const std::string& texto, int linea, int columna) {
         fin_linea = texto.size();
     }
     const auto vale = [](unsigned char c) {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-               (c >= '0' && c <= '9') || c == '_' || c >= 0x80;
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+               c == '_' || c >= 0x80;
     };
     std::size_t centro = inicio_linea + static_cast<std::size_t>(columna);
     if (centro > fin_linea) {
@@ -486,8 +483,8 @@ int servir(std::istream& entrada, std::ostream& salida) {
             }
 
             // Una sola edición: reemplaza el documento entero.
-            const int lineas = static_cast<int>(std::count(
-                guardado->second.begin(), guardado->second.end(), '\n'));
+            const int lineas = static_cast<int>(
+                std::count(guardado->second.begin(), guardado->second.end(), '\n'));
             Json rango = Json::objeto();
             Json desde = Json::objeto();
             desde.poner("line", Json(0));

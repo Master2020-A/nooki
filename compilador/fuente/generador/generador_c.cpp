@@ -1,9 +1,9 @@
 #include "nooki/generador/generador_c.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <map>
 #include <set>
-#include <algorithm>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -20,10 +20,8 @@ inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
 /// Estructuras que tienen vector propio; lo fija el emisor al empezar.
 inline const std::set<std::string>* VECTORES_DE_ESTRUCTURA = nullptr;
 
-
 bool es_rasgo_c(std::string_view nombre) {
-    return RASGOS_DEL_PROGRAMA != nullptr &&
-           RASGOS_DEL_PROGRAMA->count(std::string(nombre)) != 0;
+    return RASGOS_DEL_PROGRAMA != nullptr && RASGOS_DEL_PROGRAMA->count(std::string(nombre)) != 0;
 }
 
 std::string tipo_c(std::string_view escrito) {
@@ -64,25 +62,24 @@ std::string tipo_c(std::string_view escrito) {
         const std::size_t cierra = escrito.find('>');
         if (cierra != std::string_view::npos) {
             const std::string dentro(escrito.substr(7, cierra - 7));
-            if (VECTORES_DE_ESTRUCTURA != nullptr &&
-                VECTORES_DE_ESTRUCTURA->count(dentro) != 0) {
+            if (VECTORES_DE_ESTRUCTURA != nullptr && VECTORES_DE_ESTRUCTURA->count(dentro) != 0) {
                 return "nooki_vector_" + dentro;
             }
         }
         return "nooki_vector_entero";
     }
     switch (nooki::semantico::desde_nombre(escrito)) {
-        case nooki::semantico::Tipo::Texto:
-            return "nooki_texto";
-        case nooki::semantico::Tipo::Booleano:
-            return "int";
-        case nooki::semantico::Tipo::Flotante:
-            return "double";
-        case nooki::semantico::Tipo::Vacio:
-            return "void";
-        case nooki::semantico::Tipo::Desconocido:
-        case nooki::semantico::Tipo::Entero:
-            return "long long";
+    case nooki::semantico::Tipo::Texto:
+        return "nooki_texto";
+    case nooki::semantico::Tipo::Booleano:
+        return "int";
+    case nooki::semantico::Tipo::Flotante:
+        return "double";
+    case nooki::semantico::Tipo::Vacio:
+        return "void";
+    case nooki::semantico::Tipo::Desconocido:
+    case nooki::semantico::Tipo::Entero:
+        return "long long";
     }
     return "long long";
 }
@@ -99,32 +96,32 @@ std::string desescapar(std::string_view texto) {
             continue;
         }
         switch (texto[i + 1]) {
-            case 'n':
-                salida += '\n';
-                break;
-            case 'r':
-                salida += '\r';
-                break;
-            case 't':
-                salida += '\t';
-                break;
-            case '0':
-                salida += '\0';
-                break;
-            case '\\':
-                salida += '\\';
-                break;
-            case '"':
-                salida += '"';
-                break;
-            case '\'':
-                salida += '\'';
-                break;
-            default:
-                // Una secuencia desconocida (el lexer ya avisó) se deja tal cual.
-                salida += '\\';
-                salida += texto[i + 1];
-                break;
+        case 'n':
+            salida += '\n';
+            break;
+        case 'r':
+            salida += '\r';
+            break;
+        case 't':
+            salida += '\t';
+            break;
+        case '0':
+            salida += '\0';
+            break;
+        case '\\':
+            salida += '\\';
+            break;
+        case '"':
+            salida += '"';
+            break;
+        case '\'':
+            salida += '\'';
+            break;
+        default:
+            // Una secuencia desconocida (el lexer ya avisó) se deja tal cual.
+            salida += '\\';
+            salida += texto[i + 1];
+            break;
         }
         ++i;
     }
@@ -136,24 +133,24 @@ std::string escapar_c(std::string_view texto) {
     salida.reserve(texto.size() + 2);
     for (const char caracter : texto) {
         switch (caracter) {
-            case '"':
-                salida += "\\\"";
-                break;
-            case '\\':
-                salida += "\\\\";
-                break;
-            case '\n':
-                salida += "\\n";
-                break;
-            case '\r':
-                salida += "\\r";
-                break;
-            case '\t':
-                salida += "\\t";
-                break;
-            default:
-                salida += caracter;
-                break;
+        case '"':
+            salida += "\\\"";
+            break;
+        case '\\':
+            salida += "\\\\";
+            break;
+        case '\n':
+            salida += "\\n";
+            break;
+        case '\r':
+            salida += "\\r";
+            break;
+        case '\t':
+            salida += "\\t";
+            break;
+        default:
+            salida += caracter;
+            break;
         }
     }
     return salida;
@@ -230,7 +227,9 @@ std::string constante_enum(std::string_view enumeracion, std::string_view varian
     return "NOOKI_" + mayusculas(enumeracion) + "_" + mayusculas(variante);
 }
 
-std::string tipo_estructura(std::string_view nombre) { return "nooki_" + std::string(nombre); }
+std::string tipo_estructura(std::string_view nombre) {
+    return "nooki_" + std::string(nombre);
+}
 
 /// Nombre de C de una estructura, con el módulo por delante cuando lo tiene.
 std::string tipo_estructura(const sintactico::DefinicionTipo& definicion) {
@@ -568,7 +567,8 @@ const char* PRELUDIO =
     "    return v->largo;\n"
     "}\n"
     "\n"
-    "static void nooki_vector_entero_modificar(nooki_vector_entero* v, long long indice, long long valor) {\n"
+    "static void nooki_vector_entero_modificar(nooki_vector_entero* v, long long indice, long long "
+    "valor) {\n"
     "    if (indice < 0 || indice >= v->largo) {\n"
     "        return;\n"
     "    }\n"
@@ -604,7 +604,8 @@ const char* PRELUDIO =
     "static void nooki_vector_texto_agregar(nooki_vector_texto* v, nooki_texto valor) {\n"
     "    if (v->largo == v->capacidad) {\n"
     "        long long nueva = v->capacidad == 0 ? 4 : v->capacidad * 2;\n"
-    "        nooki_texto* datos = (nooki_texto*)realloc(v->datos, sizeof(nooki_texto) * (size_t)nueva);\n"
+    "        nooki_texto* datos = (nooki_texto*)realloc(v->datos, sizeof(nooki_texto) * "
+    "(size_t)nueva);\n"
     "        if (datos == NULL) {\n"
     "            return;\n"
     "        }\n"
@@ -632,7 +633,8 @@ const char* PRELUDIO =
     "    return v->largo;\n"
     "}\n"
     "\n"
-    "static void nooki_vector_texto_modificar(nooki_vector_texto* v, long long indice, nooki_texto valor) {\n"
+    "static void nooki_vector_texto_modificar(nooki_vector_texto* v, long long indice, nooki_texto "
+    "valor) {\n"
     "    if (indice < 0 || indice >= v->largo) {\n"
     "        return;\n"
     "    }\n"
@@ -688,7 +690,8 @@ const char* PRELUDIO =
     "    return v->largo;\n"
     "}\n"
     "\n"
-    "static void nooki_vector_flotante_modificar(nooki_vector_flotante* v, long long indice, double valor) {\n"
+    "static void nooki_vector_flotante_modificar(nooki_vector_flotante* v, long long indice, "
+    "double valor) {\n"
     "    if (indice < 0 || indice >= v->largo) {\n"
     "        return;\n"
     "    }\n"
@@ -742,7 +745,8 @@ const char* PRELUDIO =
     "    nooki_mapa_texto_entero m;\n"
     "    m.capacidad = 16;\n"
     "    m.largo = 0;\n"
-    "    m.cubetas = (nooki_mapa_entrada**)calloc((size_t)m.capacidad, sizeof(nooki_mapa_entrada*));\n"
+    "    m.cubetas = (nooki_mapa_entrada**)calloc((size_t)m.capacidad, "
+    "sizeof(nooki_mapa_entrada*));\n"
     "    return m;\n"
     "}\n"
     "\n"
@@ -752,11 +756,13 @@ const char* PRELUDIO =
     "\n"
     "static void nooki_mapa_texto_entero_rehash(nooki_mapa_texto_entero* m);\n"
     "\n"
-    "static void nooki_mapa_texto_entero_insertar(nooki_mapa_texto_entero* m, nooki_texto clave, long long valor) {\n"
+    "static void nooki_mapa_texto_entero_insertar(nooki_mapa_texto_entero* m, nooki_texto clave, "
+    "long long valor) {\n"
     "    if (m->cubetas == NULL) {\n"
     "        return;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            /* La clave es del llamante: aquí no se libera. */\n"
@@ -779,11 +785,13 @@ const char* PRELUDIO =
     "    }\n"
     "}\n"
     "\n"
-    "static long long nooki_mapa_texto_entero_obtener(nooki_mapa_texto_entero* m, nooki_texto clave) {\n"
+    "static long long nooki_mapa_texto_entero_obtener(nooki_mapa_texto_entero* m, nooki_texto "
+    "clave) {\n"
     "    if (m->cubetas == NULL) {\n"
     "        return 0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            return e->valor;\n"
@@ -796,7 +804,8 @@ const char* PRELUDIO =
     "    if (m->cubetas == NULL) {\n"
     "        return 0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            return 1;\n"
@@ -807,7 +816,8 @@ const char* PRELUDIO =
     "\n"
     "static void nooki_mapa_texto_entero_rehash(nooki_mapa_texto_entero* m) {\n"
     "    const long long nueva = m->capacidad * 2;\n"
-    "    nooki_mapa_entrada** cubetas = (nooki_mapa_entrada**)calloc((size_t)nueva, sizeof(nooki_mapa_entrada*));\n"
+    "    nooki_mapa_entrada** cubetas = (nooki_mapa_entrada**)calloc((size_t)nueva, "
+    "sizeof(nooki_mapa_entrada*));\n"
     "    if (cubetas == NULL) {\n"
     "        return;\n"
     "    }\n"
@@ -815,7 +825,8 @@ const char* PRELUDIO =
     "        nooki_mapa_entrada* e = m->cubetas[i];\n"
     "        while (e != NULL) {\n"
     "            nooki_mapa_entrada* siguiente = e->siguiente;\n"
-    "            const unsigned long long indice = nooki_mapa_hash(e->clave) % (unsigned long long)nueva;\n"
+    "            const unsigned long long indice = nooki_mapa_hash(e->clave) % (unsigned long "
+    "long)nueva;\n"
     "            e->siguiente = cubetas[indice];\n"
     "            cubetas[indice] = e;\n"
     "            e = siguiente;\n"
@@ -832,7 +843,8 @@ const char* PRELUDIO =
     "    if (m->cubetas == NULL) {\n"
     "        return 0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    nooki_mapa_entrada* anterior = NULL;\n"
     "    for (nooki_mapa_entrada* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
@@ -926,7 +938,8 @@ const char* PRELUDIO =
     "    if (m->cubetas == NULL) {\n"
     "        return;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada_texto* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            /* La clave es del llamante; el valor viejo si es del mapa. */\n"
@@ -960,7 +973,8 @@ const char* PRELUDIO =
     "    if (m->cubetas == NULL) {\n"
     "        return vista;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada_texto* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            /* Vista: el texto sigue siendo del mapa. */\n"
@@ -976,7 +990,8 @@ const char* PRELUDIO =
     "    if (m->cubetas == NULL) {\n"
     "        return 0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada_texto* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            return 1;\n"
@@ -989,7 +1004,8 @@ const char* PRELUDIO =
     "    if (m->cubetas == NULL) {\n"
     "        return 0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    nooki_mapa_entrada_texto* anterior = NULL;\n"
     "    for (nooki_mapa_entrada_texto* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
@@ -1062,17 +1078,20 @@ const char* PRELUDIO =
     "    nooki_mapa_texto_flotante m;\n"
     "    m.capacidad = 16;\n"
     "    m.largo = 0;\n"
-    "    m.cubetas = (nooki_mapa_entrada_flotante**)calloc((size_t)m.capacidad, sizeof(nooki_mapa_entrada_flotante*));\n"
+    "    m.cubetas = (nooki_mapa_entrada_flotante**)calloc((size_t)m.capacidad, "
+    "sizeof(nooki_mapa_entrada_flotante*));\n"
     "    return m;\n"
     "}\n"
     "\n"
     "static void nooki_mapa_texto_flotante_rehash(nooki_mapa_texto_flotante* m);\n"
     "\n"
-    "static void nooki_mapa_texto_flotante_insertar(nooki_mapa_texto_flotante* m, nooki_texto clave, double valor) {\n"
+    "static void nooki_mapa_texto_flotante_insertar(nooki_mapa_texto_flotante* m, nooki_texto "
+    "clave, double valor) {\n"
     "    if (m->cubetas == NULL) {\n"
     "        return;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            /* La clave es del llamante: aquí no se libera. */\n"
@@ -1080,7 +1099,8 @@ const char* PRELUDIO =
     "            return;\n"
     "        }\n"
     "    }\n"
-    "    nooki_mapa_entrada_flotante* nueva = (nooki_mapa_entrada_flotante*)malloc(sizeof(nooki_mapa_entrada_flotante));\n"
+    "    nooki_mapa_entrada_flotante* nueva = "
+    "(nooki_mapa_entrada_flotante*)malloc(sizeof(nooki_mapa_entrada_flotante));\n"
     "    if (nueva == NULL) {\n"
     "        return;\n"
     "    }\n"
@@ -1095,11 +1115,13 @@ const char* PRELUDIO =
     "    }\n"
     "}\n"
     "\n"
-    "static double nooki_mapa_texto_flotante_obtener(nooki_mapa_texto_flotante* m, nooki_texto clave) {\n"
+    "static double nooki_mapa_texto_flotante_obtener(nooki_mapa_texto_flotante* m, nooki_texto "
+    "clave) {\n"
     "    if (m->cubetas == NULL) {\n"
     "        return 0.0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            return e->valor;\n"
@@ -1108,11 +1130,13 @@ const char* PRELUDIO =
     "    return 0.0;\n"
     "}\n"
     "\n"
-    "static int nooki_mapa_texto_flotante_contiene(nooki_mapa_texto_flotante* m, nooki_texto clave) {\n"
+    "static int nooki_mapa_texto_flotante_contiene(nooki_mapa_texto_flotante* m, nooki_texto "
+    "clave) {\n"
     "    if (m->cubetas == NULL) {\n"
     "        return 0.0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
     "            return 1;\n"
@@ -1123,7 +1147,8 @@ const char* PRELUDIO =
     "\n"
     "static void nooki_mapa_texto_flotante_rehash(nooki_mapa_texto_flotante* m) {\n"
     "    const long long nueva = m->capacidad * 2;\n"
-    "    nooki_mapa_entrada_flotante** cubetas = (nooki_mapa_entrada_flotante**)calloc((size_t)nueva, sizeof(nooki_mapa_entrada_flotante*));\n"
+    "    nooki_mapa_entrada_flotante** cubetas = "
+    "(nooki_mapa_entrada_flotante**)calloc((size_t)nueva, sizeof(nooki_mapa_entrada_flotante*));\n"
     "    if (cubetas == NULL) {\n"
     "        return;\n"
     "    }\n"
@@ -1131,7 +1156,8 @@ const char* PRELUDIO =
     "        nooki_mapa_entrada_flotante* e = m->cubetas[i];\n"
     "        while (e != NULL) {\n"
     "            nooki_mapa_entrada_flotante* siguiente = e->siguiente;\n"
-    "            const unsigned long long indice = nooki_mapa_hash(e->clave) % (unsigned long long)nueva;\n"
+    "            const unsigned long long indice = nooki_mapa_hash(e->clave) % (unsigned long "
+    "long)nueva;\n"
     "            e->siguiente = cubetas[indice];\n"
     "            cubetas[indice] = e;\n"
     "            e = siguiente;\n"
@@ -1144,11 +1170,13 @@ const char* PRELUDIO =
     "\n"
     "static nooki_vector_texto nooki_mapa_texto_flotante_claves(nooki_mapa_texto_flotante* m);\n"
     "\n"
-    "static int nooki_mapa_texto_flotante_quitar(nooki_mapa_texto_flotante* m, nooki_texto clave) {\n"
+    "static int nooki_mapa_texto_flotante_quitar(nooki_mapa_texto_flotante* m, nooki_texto clave) "
+    "{\n"
     "    if (m->cubetas == NULL) {\n"
     "        return 0.0;\n"
     "    }\n"
-    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long long)m->capacidad;\n"
+    "    const unsigned long long indice = nooki_mapa_hash(clave) % (unsigned long "
+    "long)m->capacidad;\n"
     "    nooki_mapa_entrada_flotante* anterior = NULL;\n"
     "    for (nooki_mapa_entrada_flotante* e = m->cubetas[indice]; e != NULL; e = e->siguiente) {\n"
     "        if (nooki_texto_igual(e->clave, clave)) {\n"
@@ -1281,7 +1309,8 @@ const char* PRELUDIO =
     "    }\n"
     "    return nooki_texto_subtexto(t, desde, hasta - desde);\n"
     "}\n"
-    "\n"    "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
+    "\n"
+    "/* Caja<T>: valor en el montículo con un único dueño (S20). */\n"
     "typedef struct {\n"
     "    long long* datos;\n"
     "} nooki_caja;\n"
@@ -1588,7 +1617,6 @@ std::string manglear(const std::string& nombre, const std::vector<std::string_vi
     return salida;
 }
 
-
 bool es_comparacion(std::string_view operador) {
     return operador == "==" || operador == "!=" || operador == "<" || operador == ">" ||
            operador == "<=" || operador == ">=";
@@ -1607,7 +1635,8 @@ public:
         // llamar a otra).
         std::set<std::string> emitidas;
         for (int vuelta = 0; vuelta < 4; ++vuelta) {
-            std::vector<std::pair<std::string, std::pair<std::string, std::vector<std::string_view>>>>
+            std::vector<
+                std::pair<std::string, std::pair<std::string, std::vector<std::string_view>>>>
                 pendientes;
             for (const auto& [mangle, datos] : instancias_) {
                 if (emitidas.count(mangle) == 0) {
@@ -1702,7 +1731,8 @@ public:
 
     std::string firma_con_nombre(const sintactico::Funcion& funcion,
                                  const std::string& nombre) const {
-        std::string salida = "static " + tipo_declarado_c(funcion.tipo_retorno) + " " + nombre + "(";
+        std::string salida =
+            "static " + tipo_declarado_c(funcion.tipo_retorno) + " " + nombre + "(";
         if (funcion.parametros.empty()) {
             salida += "void";
         } else {
@@ -1745,8 +1775,12 @@ public:
         sustitucion_.clear();
     }
 
-    [[nodiscard]] bool soportado() const noexcept { return soportado_; }
-    [[nodiscard]] const std::string& motivo() const noexcept { return motivo_; }
+    [[nodiscard]] bool soportado() const noexcept {
+        return soportado_;
+    }
+    [[nodiscard]] const std::string& motivo() const noexcept {
+        return motivo_;
+    }
 
 private:
     // --- Registro ----------------------------------------------------------
@@ -1808,8 +1842,7 @@ private:
                     }
                     for (const sintactico::Campo& campo : definicion.campos) {
                         const std::string_view tipo_campo = campo.tipo;
-                        if (tipo_campo == "texto" ||
-                            tipo_campo.rfind("Vector<", 0) == 0 ||
+                        if (tipo_campo == "texto" || tipo_campo.rfind("Vector<", 0) == 0 ||
                             tipo_campo.rfind("Mapa<", 0) == 0 ||
                             tipo_campo.rfind("Caja<", 0) == 0) {
                             no_soportado("un Vector de la estructura «" + dentro +
@@ -1869,7 +1902,6 @@ private:
                 }
                 por_cuerpo(funcion.cuerpo);
             }
-
         }
         for (const std::string& instancia : instancias_tipo_) {
             tipo_c_de_[instancia] = nombre_de_instancia(instancia);
@@ -1888,8 +1920,8 @@ private:
             const std::vector<std::string> argumentos = argumentos_de_instancia(instancia);
             bool con_dueno = false;
             for (const sintactico::Campo& campo : generico->second->campos) {
-                const std::string tipo_campo = tipo_declarado_c(
-                    sustituir_tipo(campo.tipo, *generico->second, argumentos));
+                const std::string tipo_campo =
+                    tipo_declarado_c(sustituir_tipo(campo.tipo, *generico->second, argumentos));
                 campos_[nombre_c][std::string(campo.nombre)] = tipo_campo;
                 if (tipo_campo == "nooki_texto" || tipo_campo == "nooki_caja" ||
                     tipo_campo.rfind("nooki_vector_", 0) == 0 ||
@@ -1914,13 +1946,13 @@ private:
             tipo_ptr_[std::string(definicion.nombre)] = &definicion;
             por_c_[tipo_estructura(definicion)] = &definicion;
             if (!definicion.modulo.empty()) {
-                tipo_ptr_[std::string(definicion.modulo) + "." +
-                          std::string(definicion.nombre)] = &definicion;
+                tipo_ptr_[std::string(definicion.modulo) + "." + std::string(definicion.nombre)] =
+                    &definicion;
             }
             tipo_c_de_[std::string(definicion.nombre)] = nombre_c;
             if (!definicion.modulo.empty()) {
-                tipo_c_de_[std::string(definicion.modulo) + "." +
-                          std::string(definicion.nombre)] = nombre_c;
+                tipo_c_de_[std::string(definicion.modulo) + "." + std::string(definicion.nombre)] =
+                    nombre_c;
             }
         }
         for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
@@ -1988,13 +2020,13 @@ private:
                 "nooki_" + std::string(enumeracion.nombre);
             if (!enumeracion.modulo.empty()) {
                 tipo_c_de_[std::string(enumeracion.modulo) + "." +
-                          std::string(enumeracion.nombre)] =
+                           std::string(enumeracion.nombre)] =
                     "nooki_" + std::string(enumeracion.nombre);
             }
         }
         for (const sintactico::Funcion& funcion : programa.funciones) {
             retornos_[std::string(funcion.nombre)] = tipo_declarado_c(funcion.tipo_retorno);
-        retorno_actual_ = retornos_[std::string(funcion.nombre)];
+            retorno_actual_ = retornos_[std::string(funcion.nombre)];
 
             std::vector<std::string> tipos;
             tipos.reserve(funcion.parametros.size());
@@ -2011,10 +2043,11 @@ private:
         for (const sintactico::Enumeracion& enumeracion : programa.enumeraciones) {
             enumeraciones_[std::string(enumeracion.nombre)] = &enumeracion;
             // El nombre del tipo de una enumeración se resuelve a su nombre de C.
-            tipo_c_de_[std::string(enumeracion.nombre)] = "nooki_" + std::string(enumeracion.nombre);
+            tipo_c_de_[std::string(enumeracion.nombre)] =
+                "nooki_" + std::string(enumeracion.nombre);
             if (!enumeracion.modulo.empty()) {
                 tipo_c_de_[std::string(enumeracion.modulo) + "." +
-                          std::string(enumeracion.nombre)] =
+                           std::string(enumeracion.nombre)] =
                     "nooki_" + std::string(enumeracion.nombre);
             }
             for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
@@ -2053,8 +2086,7 @@ private:
                     if (i != 0) {
                         salida_ << ", ";
                     }
-                    salida_ << constante_enum(enumeracion.nombre,
-                                              enumeracion.variantes[i].nombre)
+                    salida_ << constante_enum(enumeracion.nombre, enumeracion.variantes[i].nombre)
                             << " = " << i;
                 }
                 salida_ << "};\n\n";
@@ -2069,8 +2101,8 @@ private:
             salida_ << "    union {\n";
             for (const sintactico::Variante& variante : enumeracion.variantes) {
                 for (const sintactico::Campo& campo : variante.campos) {
-                    salida_ << "        " << tipo_declarado_c(campo.tipo) << ' '
-                            << variante.nombre << "_" << campo.nombre << ";\n";
+                    salida_ << "        " << tipo_declarado_c(campo.tipo) << ' ' << variante.nombre
+                            << "_" << campo.nombre << ";\n";
                 }
             }
             salida_ << "    } datos;\n";
@@ -2096,8 +2128,7 @@ private:
                 }
             }
             if (lleva_texto) {
-                salida_ << "static void " << nombre_c << "_soltar(" << nombre_c
-                        << "* valor) {\n";
+                salida_ << "static void " << nombre_c << "_soltar(" << nombre_c << "* valor) {\n";
                 for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
                     const sintactico::Variante& variante = enumeracion.variantes[i];
                     bool texto = false;
@@ -2287,8 +2318,7 @@ private:
                     }
                 }
                 campos_[nombre_c][std::string(campo.nombre)] = tipo_declarado_c(tipo_campo);
-                salida_ << "    " << tipo_declarado_c(tipo_campo) << ' ' << campo.nombre
-                        << ";\n";
+                salida_ << "    " << tipo_declarado_c(tipo_campo) << ' ' << campo.nombre << ";\n";
             }
             salida_ << "} " << nombre_c << ";\n\n";
 
@@ -2296,8 +2326,8 @@ private:
             bool con_dueno = false;
             salida_ << "static void " << nombre_c << "_soltar(" << nombre_c << "* valor) {\n";
             for (const sintactico::Campo& campo : generico->second->campos) {
-                const std::string tipo_campo = tipo_declarado_c(
-                    sustituir_tipo(campo.tipo, *generico->second, argumentos));
+                const std::string tipo_campo =
+                    tipo_declarado_c(sustituir_tipo(campo.tipo, *generico->second, argumentos));
                 if (tipo_campo == "nooki_texto") {
                     salida_ << "    nooki_texto_soltar(&valor->" << campo.nombre << ");\n";
                     con_dueno = true;
@@ -2306,8 +2336,7 @@ private:
                     con_dueno = true;
                 } else if (tipo_campo.rfind("nooki_vector_", 0) == 0 ||
                            tipo_campo.rfind("nooki_mapa_", 0) == 0) {
-                    salida_ << "    " << tipo_campo << "_soltar(&valor->" << campo.nombre
-                            << ");\n";
+                    salida_ << "    " << tipo_campo << "_soltar(&valor->" << campo.nombre << ");\n";
                     con_dueno = true;
                 }
             }
@@ -2369,7 +2398,6 @@ private:
         if (genericos_tipo_.count(base) != 0) {
             instancias_tipo_.insert(std::string(texto));
         }
-
     }
 
     void recoger_tipos_de(const std::vector<sintactico::Sentencia>& cuerpo) {
@@ -2449,8 +2477,7 @@ private:
     static std::string sustituir_tipo(std::string_view tipo,
                                       const sintactico::DefinicionTipo& generico,
                                       const std::vector<std::string>& argumentos) {
-        for (std::size_t i = 0; i < generico.tipo_parametros.size() && i < argumentos.size();
-             ++i) {
+        for (std::size_t i = 0; i < generico.tipo_parametros.size() && i < argumentos.size(); ++i) {
             if (tipo == generico.tipo_parametros[i]) {
                 return argumentos[i];
             }
@@ -2508,19 +2535,18 @@ private:
                 }
 
                 const std::string tipo_c = tipo_estructura(definicion);
-                const std::string tabla_c =
-                    tipo_c + "_" + std::string(nombre_rasgo) + "_tabla";
+                const std::string tabla_c = tipo_c + "_" + std::string(nombre_rasgo) + "_tabla";
 
                 for (const sintactico::Funcion& exigido : rasgo->metodos) {
-                    salida_ << "static " << tipo_declarado_c(exigido.tipo_retorno) << " "
-                            << tabla_c << "_" << exigido.nombre << "(void* objeto";
+                    salida_ << "static " << tipo_declarado_c(exigido.tipo_retorno) << " " << tabla_c
+                            << "_" << exigido.nombre << "(void* objeto";
                     for (const sintactico::Parametro& parametro : exigido.parametros) {
                         salida_ << ", " << tipo_declarado_c(parametro.tipo) << ' '
                                 << parametro.nombre;
                     }
                     salida_ << ") {\n";
-                    salida_ << "    return " << tipo_c << "_" << exigido.nombre << "(("
-                            << tipo_c << "*)objeto";
+                    salida_ << "    return " << tipo_c << "_" << exigido.nombre << "((" << tipo_c
+                            << "*)objeto";
                     for (const sintactico::Parametro& parametro : exigido.parametros) {
                         salida_ << ", " << parametro.nombre;
                     }
@@ -2570,8 +2596,8 @@ private:
                 }
             }
             salida_ << ") {\n";
-            salida_ << "    " << nombre_c << "* objeto = (" << nombre_c
-                    << "*)malloc(sizeof(" << nombre_c << "));\n";
+            salida_ << "    " << nombre_c << "* objeto = (" << nombre_c << "*)malloc(sizeof("
+                    << nombre_c << "));\n";
             salida_ << "    if (objeto == NULL) {\n        return NULL;\n    }\n";
             if (tiene_virtuales(nombre_c)) {
                 salida_ << "    objeto->vtabla = &" << nombre_c << "_tabla;\n";
@@ -2586,8 +2612,7 @@ private:
     }
 
     /// Clase de la jerarquía que implementa el método (la más derivada que lo define).
-    std::string implementacion_de(const std::string& clase,
-                                  const std::string& metodo) const {
+    std::string implementacion_de(const std::string& clase, const std::string& metodo) const {
         std::string actual = clase;
         for (int guarda = 0; guarda < 32; ++guarda) {
             const auto tipo = por_c_.find(actual);
@@ -2609,8 +2634,7 @@ private:
 
     std::vector<std::string> virtuales_de_at(const std::string& nombre) const {
         const auto virtuales = virtuales_de_.find(raiz_c(nombre));
-        return virtuales != virtuales_de_.end() ? virtuales->second
-                                                : std::vector<std::string>{};
+        return virtuales != virtuales_de_.end() ? virtuales->second : std::vector<std::string>{};
     }
 
     std::string tipo_de_campo(const std::string& clase, const std::string& campo,
@@ -2649,7 +2673,9 @@ private:
         std::vector<Liberable> liberables;
     };
 
-    void abrir_ambito() { ambitos_.emplace_back(); }
+    void abrir_ambito() {
+        ambitos_.emplace_back();
+    }
     void cerrar_ambito() {
         if (ambitos_.empty()) {
             return;
@@ -2664,8 +2690,8 @@ private:
             if (conservar.count(it->nombre) != 0) {
                 continue;  // se devuelve: la propiedad pasa al llamante
             }
-            salida_ << indentacion() << it->funcion << "("
-                    << (it->por_puntero ? "" : "&") << it->nombre << ");\n";
+            salida_ << indentacion() << it->funcion << "(" << (it->por_puntero ? "" : "&")
+                    << it->nombre << ");\n";
         }
         ambito.liberables.clear();
     }
@@ -2675,7 +2701,9 @@ private:
         explicit GuardiaProfundidad(EmisorC& emisor) : emisor_(emisor) {
             ++emisor_.profundidad_expresion_;
         }
-        ~GuardiaProfundidad() { --emisor_.profundidad_expresion_; }
+        ~GuardiaProfundidad() {
+            --emisor_.profundidad_expresion_;
+        }
         GuardiaProfundidad(const GuardiaProfundidad&) = delete;
         GuardiaProfundidad& operator=(const GuardiaProfundidad&) = delete;
 
@@ -2840,8 +2868,7 @@ private:
         if (conocido != tipo_c_de_.end()) {
             // Una clase es siempre una referencia: el tipo declarado lleva el puntero.
             const auto definicion = tipo_ptr_.find(std::string(escrito));
-            const bool es_clase =
-                definicion != tipo_ptr_.end() && definicion->second->es_clase;
+            const bool es_clase = definicion != tipo_ptr_.end() && definicion->second->es_clase;
             return conocido->second + (es_clase ? "*" : "");
         }
         return tipo_c(escrito);
@@ -2977,8 +3004,8 @@ private:
         const std::string anterior = estructura_actual_c_;
         estructura_actual_c_ = tipo_estructura(definicion);
         if (es_virtual(definicion, metodo)) {
-            salida_ << "    " << estructura_actual_c_ << "* este = ("
-                    << estructura_actual_c_ << "*)este_v;\n";
+            salida_ << "    " << estructura_actual_c_ << "* este = (" << estructura_actual_c_
+                    << "*)este_v;\n";
         }
 
         abrir_ambito();
@@ -3049,131 +3076,128 @@ private:
         using sintactico::TipoSentencia;
 
         switch (sentencia.tipo) {
-            case TipoSentencia::Expresion:
-                if (sentencia.expresion) {
-                    salida_ << indentacion() << expresion(*sentencia.expresion) << ";\n";
-                    emitir_movimientos_de_llamada(*sentencia.expresion);
-                }
-                return;
+        case TipoSentencia::Expresion:
+            if (sentencia.expresion) {
+                salida_ << indentacion() << expresion(*sentencia.expresion) << ";\n";
+                emitir_movimientos_de_llamada(*sentencia.expresion);
+            }
+            return;
 
-            case TipoSentencia::Retornar: {
-                // Devolver un valor con dueño lo mueve: no se libera aquí, ni él
-                // ni las variables que aparezcan dentro de un compuesto devuelto.
-                // Lo que viaja dentro del valor devuelto se conserva; el objeto de
-                // una llamada a método, no: `v.largo()` devuelve un número, no `v`,
-                // así que `v` se libera.
-                std::set<std::string> conservar;
-                if (sentencia.expresion) {
-                    recoger_devueltos(*sentencia.expresion, conservar);
-                }
-                // Si hay algo que liberar y la expresión usa esos valores (por
-                // ejemplo `v.largo()`), se evalúa primero en un temporal: liberar
-                // antes sería leer memoria liberada.
-                const bool quedan_liberables = hay_liberables();
-                if (sentencia.expresion && quedan_liberables) {
-                    const std::string temporal =
-                        "__nooki_retorno" + std::to_string(contador_temporal_++);
-                    const std::string tipo_retorno =
-                        (retorno_actual_.empty() || retorno_actual_ == "void")
-                            ? "long long"
-                            : retorno_actual_;
-                    salida_ << indentacion() << tipo_retorno << " " << temporal << " = "
-                            << expresion(*sentencia.expresion) << ";\n";
-                    liberar_todo(conservar);
-                    salida_ << indentacion() << "return " << temporal << ";\n";
-                    return;
-                }
+        case TipoSentencia::Retornar: {
+            // Devolver un valor con dueño lo mueve: no se libera aquí, ni él
+            // ni las variables que aparezcan dentro de un compuesto devuelto.
+            // Lo que viaja dentro del valor devuelto se conserva; el objeto de
+            // una llamada a método, no: `v.largo()` devuelve un número, no `v`,
+            // así que `v` se libera.
+            std::set<std::string> conservar;
+            if (sentencia.expresion) {
+                recoger_devueltos(*sentencia.expresion, conservar);
+            }
+            // Si hay algo que liberar y la expresión usa esos valores (por
+            // ejemplo `v.largo()`), se evalúa primero en un temporal: liberar
+            // antes sería leer memoria liberada.
+            const bool quedan_liberables = hay_liberables();
+            if (sentencia.expresion && quedan_liberables) {
+                const std::string temporal =
+                    "__nooki_retorno" + std::to_string(contador_temporal_++);
+                const std::string tipo_retorno =
+                    (retorno_actual_.empty() || retorno_actual_ == "void") ? "long long"
+                                                                           : retorno_actual_;
+                salida_ << indentacion() << tipo_retorno << " " << temporal << " = "
+                        << expresion(*sentencia.expresion) << ";\n";
                 liberar_todo(conservar);
-                if (sentencia.expresion) {
-                    salida_ << indentacion() << "return " << expresion(*sentencia.expresion)
-                            << ";\n";
-                } else {
-                    salida_ << indentacion() << (principal ? "return 0;\n" : "return;\n");
-                }
+                salida_ << indentacion() << "return " << temporal << ";\n";
                 return;
             }
-
-            case TipoSentencia::Variable:
-            case TipoSentencia::Constante:
-                emitir_declaracion(sentencia);
-                return;
-
-            case TipoSentencia::Si:
-                emitir_si(sentencia);
-                return;
-
-            case TipoSentencia::Mientras:
-                salida_ << indentacion() << "while (" << condicion(sentencia.expresion.get())
-                        << ") {\n";
-                bucles_.push_back(ambitos_.size());
-                emitir_cuerpo(sentencia.cuerpo);
-                bucles_.pop_back();
-                salida_ << indentacion() << "}\n";
-                return;
-
-            case TipoSentencia::Para:
-                emitir_para(sentencia);
-                return;
-
-            case TipoSentencia::Hacer:
-                salida_ << indentacion() << "do {\n";
-                bucles_.push_back(ambitos_.size());
-                emitir_cuerpo(sentencia.cuerpo);
-                bucles_.pop_back();
-                salida_ << indentacion() << "} while (" << condicion(sentencia.paso.get())
-                        << ");\n";
-                return;
-
-            case TipoSentencia::Bucle:
-                salida_ << indentacion() << "for (;;) {\n";
-                emitir_cuerpo(sentencia.cuerpo);
-                salida_ << indentacion() << "}\n";
-                return;
-
-            case TipoSentencia::Romper:
-                if (!bucles_.empty()) {
-                    liberar_desde(bucles_.back());
-                }
-                salida_ << indentacion() << "break;\n";
-                return;
-
-            case TipoSentencia::Continuar:
-                if (!bucles_.empty()) {
-                    liberar_desde(bucles_.back());
-                }
-                salida_ << indentacion() << "continue;\n";
-                return;
-
-            case TipoSentencia::Asm:
-                // MSVC no admite ensamblador en línea en x64: se avisa al compilar.
-                salida_ << "#if defined(_MSC_VER)\n";
-                salida_ << indentacion() << "#error \"asm! necesita GCC, Clang o MinGW\"\n";
-                salida_ << "#else\n";
-                salida_ << indentacion() << "__asm__ __volatile__(\"" << escapar_c(sentencia.nombre)
-                        << "\");\n";
-                salida_ << "#endif\n";
-                return;
-
-            case TipoSentencia::Inseguro: {
-                // Dentro de un bloque `inseguro` la aritmética no se comprueba.
-                const bool anterior = sin_comprobacion_;
-                sin_comprobacion_ = true;
-                salida_ << indentacion() << "{\n";
-                emitir_cuerpo(sentencia.cuerpo);
-                salida_ << indentacion() << "}\n";
-                sin_comprobacion_ = anterior;
-                return;
+            liberar_todo(conservar);
+            if (sentencia.expresion) {
+                salida_ << indentacion() << "return " << expresion(*sentencia.expresion) << ";\n";
+            } else {
+                salida_ << indentacion() << (principal ? "return 0;\n" : "return;\n");
             }
+            return;
+        }
 
-            case TipoSentencia::Bloque:
-                salida_ << indentacion() << "{\n";
-                emitir_cuerpo(sentencia.cuerpo);
-                salida_ << indentacion() << "}\n";
-                return;
+        case TipoSentencia::Variable:
+        case TipoSentencia::Constante:
+            emitir_declaracion(sentencia);
+            return;
 
-            case TipoSentencia::Coincide:
-                emitir_coincide(sentencia);
-                return;
+        case TipoSentencia::Si:
+            emitir_si(sentencia);
+            return;
+
+        case TipoSentencia::Mientras:
+            salida_ << indentacion() << "while (" << condicion(sentencia.expresion.get())
+                    << ") {\n";
+            bucles_.push_back(ambitos_.size());
+            emitir_cuerpo(sentencia.cuerpo);
+            bucles_.pop_back();
+            salida_ << indentacion() << "}\n";
+            return;
+
+        case TipoSentencia::Para:
+            emitir_para(sentencia);
+            return;
+
+        case TipoSentencia::Hacer:
+            salida_ << indentacion() << "do {\n";
+            bucles_.push_back(ambitos_.size());
+            emitir_cuerpo(sentencia.cuerpo);
+            bucles_.pop_back();
+            salida_ << indentacion() << "} while (" << condicion(sentencia.paso.get()) << ");\n";
+            return;
+
+        case TipoSentencia::Bucle:
+            salida_ << indentacion() << "for (;;) {\n";
+            emitir_cuerpo(sentencia.cuerpo);
+            salida_ << indentacion() << "}\n";
+            return;
+
+        case TipoSentencia::Romper:
+            if (!bucles_.empty()) {
+                liberar_desde(bucles_.back());
+            }
+            salida_ << indentacion() << "break;\n";
+            return;
+
+        case TipoSentencia::Continuar:
+            if (!bucles_.empty()) {
+                liberar_desde(bucles_.back());
+            }
+            salida_ << indentacion() << "continue;\n";
+            return;
+
+        case TipoSentencia::Asm:
+            // MSVC no admite ensamblador en línea en x64: se avisa al compilar.
+            salida_ << "#if defined(_MSC_VER)\n";
+            salida_ << indentacion() << "#error \"asm! necesita GCC, Clang o MinGW\"\n";
+            salida_ << "#else\n";
+            salida_ << indentacion() << "__asm__ __volatile__(\"" << escapar_c(sentencia.nombre)
+                    << "\");\n";
+            salida_ << "#endif\n";
+            return;
+
+        case TipoSentencia::Inseguro: {
+            // Dentro de un bloque `inseguro` la aritmética no se comprueba.
+            const bool anterior = sin_comprobacion_;
+            sin_comprobacion_ = true;
+            salida_ << indentacion() << "{\n";
+            emitir_cuerpo(sentencia.cuerpo);
+            salida_ << indentacion() << "}\n";
+            sin_comprobacion_ = anterior;
+            return;
+        }
+
+        case TipoSentencia::Bloque:
+            salida_ << indentacion() << "{\n";
+            emitir_cuerpo(sentencia.cuerpo);
+            salida_ << indentacion() << "}\n";
+            return;
+
+        case TipoSentencia::Coincide:
+            emitir_coincide(sentencia);
+            return;
         }
     }
 
@@ -3187,29 +3211,26 @@ private:
         if (sentencia.expresion->tipo == sintactico::TipoExpresion::Propagacion &&
             sentencia.expresion->izquierda) {
             const std::string tipo_resultado = tipo_de(*sentencia.expresion->izquierda);
-            const auto enumeracion = enumeraciones_.find(
-                tipo_resultado.rfind("nooki_", 0) == 0
-                    ? tipo_resultado.substr(std::string("nooki_").size())
-                    : tipo_resultado);
-            if (enumeracion == enumeraciones_.end() ||
-                enumeracion->second->variantes.size() < 2 ||
+            const auto enumeracion =
+                enumeraciones_.find(tipo_resultado.rfind("nooki_", 0) == 0
+                                        ? tipo_resultado.substr(std::string("nooki_").size())
+                                        : tipo_resultado);
+            if (enumeracion == enumeraciones_.end() || enumeracion->second->variantes.size() < 2 ||
                 enumeracion->second->variantes[0].campos.size() != 1) {
                 no_soportado("«?» sobre un valor que no tiene forma de resultado");
                 return;
             }
             const sintactico::Variante& exito = enumeracion->second->variantes[0];
             const std::string campo_exito = tipo_declarado_c(exito.campos[0].tipo);
-            const std::string temporal =
-                "__nooki_r" + std::to_string(contador_temporal_++);
+            const std::string temporal = "__nooki_r" + std::to_string(contador_temporal_++);
 
             salida_ << indentacion() << tipo_resultado << " " << temporal << " = "
                     << expresion(*sentencia.expresion->izquierda) << ";\n";
             salida_ << indentacion() << "if (" << temporal << ".etiqueta != 0) {\n";
             salida_ << indentacion() << "    return " << temporal << ";\n";
             salida_ << indentacion() << "}\n";
-            salida_ << indentacion() << campo_exito << " " << sentencia.nombre << " = "
-                    << temporal << ".datos." << exito.nombre << "_" << exito.campos[0].nombre
-                    << ";\n";
+            salida_ << indentacion() << campo_exito << " " << sentencia.nombre << " = " << temporal
+                    << ".datos." << exito.nombre << "_" << exito.campos[0].nombre << ";\n";
             declarar(sentencia.nombre, campo_exito);
             return;
         }
@@ -3224,7 +3245,6 @@ private:
             salida_ << indentacion();
         }
 
-
         // Un puntero derivado puede guardarse en una variable de tipo base: se
         // convierte explícitamente, porque la estructura base está al principio.
         std::string valor = expresion(*sentencia.expresion);
@@ -3235,31 +3255,31 @@ private:
         }
 
         // `variable d: &Rasgo = &objeto`: se guarda el objeto y su tabla.
-        if (tipo.rfind("nooki_ref_", 0) == 0 && sentencia.expresion->tipo ==
-                sintactico::TipoExpresion::Unaria &&
+        if (tipo.rfind("nooki_ref_", 0) == 0 &&
+            sentencia.expresion->tipo == sintactico::TipoExpresion::Unaria &&
             sentencia.expresion->lexema == "&" && sentencia.expresion->izquierda) {
             const std::string tipo_interno = tipo_de(*sentencia.expresion->izquierda);
             std::string tipo_objeto = tipo_interno;
-            const bool ya_es_puntero =
-                !tipo_objeto.empty() && tipo_objeto.back() == '*';
+            const bool ya_es_puntero = !tipo_objeto.empty() && tipo_objeto.back() == '*';
             if (ya_es_puntero) {
                 tipo_objeto.pop_back();
             }
             // Una clase ya es una referencia: se guarda tal cual. Algo por valor
             // necesita que se tome su dirección.
-            const std::string objeto =
-                ya_es_puntero ? expresion(*sentencia.expresion->izquierda)
-                              : "&" + expresion(*sentencia.expresion->izquierda);
+            const std::string objeto = ya_es_puntero
+                                           ? expresion(*sentencia.expresion->izquierda)
+                                           : "&" + expresion(*sentencia.expresion->izquierda);
             const std::string rasgo = tipo.substr(std::string("nooki_ref_").size());
-            valor = "(" + tipo + "){ .objeto = (void*)" + objeto + ", .tabla = &" +
-                    tipo_objeto + "_" + rasgo + "_tabla }";
+            valor = "(" + tipo + "){ .objeto = (void*)" + objeto + ", .tabla = &" + tipo_objeto +
+                    "_" + rasgo + "_tabla }";
         }
 
         // `variable x = *prestamo` copia: compartir el búfer del prestamista haría
         // que los dos lo liberaran.
         std::string valor_inicial = valor;
         const bool copia_de_prestamo =
-            tipo == "nooki_texto" && sentencia.expresion->tipo == sintactico::TipoExpresion::Unaria &&
+            tipo == "nooki_texto" &&
+            sentencia.expresion->tipo == sintactico::TipoExpresion::Unaria &&
             sentencia.expresion->lexema == "*" && sentencia.expresion->izquierda &&
             tipo_de(*sentencia.expresion->izquierda) == "nooki_texto*";
         if (copia_de_prestamo) {
@@ -3284,9 +3304,8 @@ private:
             (sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion ||
              sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada);
 
-        if (tipo == "nooki_caja" || tipo == "nooki_texto" ||
-            tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0 ||
-            compuesto_fresco || referencia_de_clase) {
+        if (tipo == "nooki_caja" || tipo == "nooki_texto" || tipo.rfind("nooki_vector_", 0) == 0 ||
+            tipo.rfind("nooki_mapa_", 0) == 0 || compuesto_fresco || referencia_de_clase) {
             // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
                 const std::string& origen = std::string(sentencia.expresion->lexema);
@@ -3304,8 +3323,8 @@ private:
                 liberar = "nooki_caja_soltar";
             } else if (referencia_de_clase) {
                 liberar = tipo.substr(0, tipo.size() - 1) + "_soltar";
-            } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
-                       tipo.rfind("nooki_mapa_", 0) == 0 || compuesto_fresco) {
+            } else if (tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0 ||
+                       compuesto_fresco) {
                 liberar = tipo + "_soltar";
             }
             registrar_liberable(sentencia.nombre, std::move(liberar), referencia_de_clase);
@@ -3371,8 +3390,7 @@ private:
     }
 
     /// `para (n en numeros)` → recorrido por índice con una variable interna.
-    void emitir_para_coleccion(const sintactico::Sentencia& sentencia,
-                               const std::string& tipo) {
+    void emitir_para_coleccion(const sintactico::Sentencia& sentencia, const std::string& tipo) {
         const std::string nombre(sentencia.nombre);
         const std::string elemento = elemento_de_vector(tipo);
         const std::string indice = "__nooki_i" + std::to_string(contador_temporal_++);
@@ -3430,396 +3448,369 @@ private:
         using sintactico::TipoExpresion;
 
         switch (expresion.tipo) {
-            case TipoExpresion::Texto:
-                return "nooki_texto";
-            case TipoExpresion::Entero:
-                return "long long";
-            case TipoExpresion::Flotante:
-                return "double";
-            case TipoExpresion::Booleano:
-                return "int";
-            case TipoExpresion::Nulo:
-                return "nooki_nulo";
-            case TipoExpresion::Identificador:
-                return buscar(expresion.lexema);
-            case TipoExpresion::Construccion: {
-                const auto conocido = tipo_c_de_.find(std::string(expresion.anotacion));
-                const std::string tipo =
-                    conocido != tipo_c_de_.end() ? conocido->second
-                                                 : tipo_estructura(expresion.anotacion);
-                return expresion.monticulo ? tipo + "*" : tipo;
-            }
-            case TipoExpresion::Propagacion:
-                return "long long";
-            case TipoExpresion::Miembro: {
-                if (!expresion.izquierda) {
-                    return "long long";
-                }
-                if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
-                    const auto enumeracion =
-                        enumeraciones_.find(std::string(expresion.izquierda->lexema));
-                    if (enumeracion != enumeraciones_.end()) {
-                        return "nooki_" + std::string(expresion.izquierda->lexema);
-                    }
-                }
-                std::string objeto = tipo_de(*expresion.izquierda);
-                if (!objeto.empty() && objeto.back() == '*') {
-                    objeto.pop_back();  // una clase por referencia
-                }
-                constexpr std::string_view PREFIJO = "nooki_";
-                if (objeto.rfind(PREFIJO, 0) != 0) {
-                    return "long long";
-                }
-                const std::string nombre_estructura = objeto;
-
-                const auto tipo = campos_.find(nombre_estructura);
-                if (tipo != campos_.end()) {
-                    const auto campo = tipo->second.find(expresion.anotacion);
-                    if (campo != tipo->second.end()) {
-                        return campo->second;
-                    }
-                }
-
-                const auto metodos = metodos_.find(nombre_estructura);
-                if (metodos != metodos_.end()) {
-                    const auto metodo = metodos->second.find(expresion.anotacion);
-                    if (metodo != metodos->second.end()) {
-                        return tipo_declarado_c(metodo->second->tipo_retorno);
-                    }
-                }
+        case TipoExpresion::Texto:
+            return "nooki_texto";
+        case TipoExpresion::Entero:
+            return "long long";
+        case TipoExpresion::Flotante:
+            return "double";
+        case TipoExpresion::Booleano:
+            return "int";
+        case TipoExpresion::Nulo:
+            return "nooki_nulo";
+        case TipoExpresion::Identificador:
+            return buscar(expresion.lexema);
+        case TipoExpresion::Construccion: {
+            const auto conocido = tipo_c_de_.find(std::string(expresion.anotacion));
+            const std::string tipo = conocido != tipo_c_de_.end()
+                                         ? conocido->second
+                                         : tipo_estructura(expresion.anotacion);
+            return expresion.monticulo ? tipo + "*" : tipo;
+        }
+        case TipoExpresion::Propagacion:
+            return "long long";
+        case TipoExpresion::Miembro: {
+            if (!expresion.izquierda) {
                 return "long long";
             }
-            case TipoExpresion::Este:
-                return estructura_actual_c_.empty() ? "long long" : estructura_actual_c_;
-            case TipoExpresion::Llamada: {
-                if (!expresion.izquierda) {
-                    return "void";
+            if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
+                const auto enumeracion =
+                    enumeraciones_.find(std::string(expresion.izquierda->lexema));
+                if (enumeracion != enumeraciones_.end()) {
+                    return "nooki_" + std::string(expresion.izquierda->lexema);
                 }
-                if (expresion.izquierda->tipo == TipoExpresion::Identificador &&
-                    !expresion.tipos_aplicados.empty()) {
-                    const auto generico =
-                        genericos_.find(std::string(expresion.izquierda->lexema));
-                    if (generico != genericos_.end()) {
-                        const sintactico::Funcion& funcion = *generico->second;
-                        for (std::size_t i = 0; i < funcion.tipo_parametros.size(); ++i) {
-                            if (i < expresion.tipos_aplicados.size() &&
-                                funcion.tipo_retorno == funcion.tipo_parametros[i]) {
-                                return tipo_declarado_c(expresion.tipos_aplicados[i]);
-                            }
-                        }
-                        return tipo_declarado_c(funcion.tipo_retorno);
-                    }
-                }
-                if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
-                    const sintactico::Expresion& acceso = *expresion.izquierda;
+            }
+            std::string objeto = tipo_de(*expresion.izquierda);
+            if (!objeto.empty() && objeto.back() == '*') {
+                objeto.pop_back();  // una clase por referencia
+            }
+            constexpr std::string_view PREFIJO = "nooki_";
+            if (objeto.rfind(PREFIJO, 0) != 0) {
+                return "long long";
+            }
+            const std::string nombre_estructura = objeto;
 
-                    // `&Rasgo`: el tipo del resultado lo da el rasgo.
-                    if (acceso.izquierda) {
-                        const std::string tipo_ref = tipo_de(*acceso.izquierda);
-                        if (tipo_ref.rfind("nooki_ref_", 0) == 0) {
-                            const auto rasgo = rasgos_def_.find(
-                                tipo_ref.substr(std::string("nooki_ref_").size()));
-                            if (rasgo != rasgos_def_.end()) {
-                                for (const sintactico::Funcion& metodo :
-                                     rasgo->second->metodos) {
-                                    if (metodo.nombre == acceso.anotacion) {
-                                        return tipo_declarado_c(metodo.tipo_retorno);
-                                    }
+            const auto tipo = campos_.find(nombre_estructura);
+            if (tipo != campos_.end()) {
+                const auto campo = tipo->second.find(expresion.anotacion);
+                if (campo != tipo->second.end()) {
+                    return campo->second;
+                }
+            }
+
+            const auto metodos = metodos_.find(nombre_estructura);
+            if (metodos != metodos_.end()) {
+                const auto metodo = metodos->second.find(expresion.anotacion);
+                if (metodo != metodos->second.end()) {
+                    return tipo_declarado_c(metodo->second->tipo_retorno);
+                }
+            }
+            return "long long";
+        }
+        case TipoExpresion::Este:
+            return estructura_actual_c_.empty() ? "long long" : estructura_actual_c_;
+        case TipoExpresion::Llamada: {
+            if (!expresion.izquierda) {
+                return "void";
+            }
+            if (expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                !expresion.tipos_aplicados.empty()) {
+                const auto generico = genericos_.find(std::string(expresion.izquierda->lexema));
+                if (generico != genericos_.end()) {
+                    const sintactico::Funcion& funcion = *generico->second;
+                    for (std::size_t i = 0; i < funcion.tipo_parametros.size(); ++i) {
+                        if (i < expresion.tipos_aplicados.size() &&
+                            funcion.tipo_retorno == funcion.tipo_parametros[i]) {
+                            return tipo_declarado_c(expresion.tipos_aplicados[i]);
+                        }
+                    }
+                    return tipo_declarado_c(funcion.tipo_retorno);
+                }
+            }
+            if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
+                const sintactico::Expresion& acceso = *expresion.izquierda;
+
+                // `&Rasgo`: el tipo del resultado lo da el rasgo.
+                if (acceso.izquierda) {
+                    const std::string tipo_ref = tipo_de(*acceso.izquierda);
+                    if (tipo_ref.rfind("nooki_ref_", 0) == 0) {
+                        const auto rasgo =
+                            rasgos_def_.find(tipo_ref.substr(std::string("nooki_ref_").size()));
+                        if (rasgo != rasgos_def_.end()) {
+                            for (const sintactico::Funcion& metodo : rasgo->second->metodos) {
+                                if (metodo.nombre == acceso.anotacion) {
+                                    return tipo_declarado_c(metodo.tipo_retorno);
                                 }
                             }
-                            return "long long";
-                        }
-                    }
-
-                    // `super.metodo(...)`: el tipo lo da la clase base.
-                    if (acceso.izquierda &&
-                        acceso.izquierda->tipo == TipoExpresion::Super) {
-                        std::string donde = estructura_actual_c_;
-                        for (int guarda = 0; guarda < 32; ++guarda) {
-                            const auto base = base_de_.find(donde);
-                            if (base == base_de_.end()) {
-                                break;
-                            }
-                            donde = base->second;
-                            const auto metodos = metodos_.find(donde);
-                            if (metodos != metodos_.end()) {
-                                const auto metodo = metodos->second.find(acceso.anotacion);
-                                if (metodo != metodos->second.end()) {
-                                    return tipo_declarado_c(metodo->second->tipo_retorno);
-                                }
-                            }
-                        }
-                    }
-
-
-                    if (acceso.izquierda &&
-                        (tipo_de(*acceso.izquierda) == "nooki_texto" ||
-                         tipo_de(*acceso.izquierda) == "nooki_texto*")) {
-                        const std::string& metodo = acceso.anotacion;
-                        if (metodo == "dividir") {
-                            return "nooki_vector_texto";
-                        }
-                        if (metodo == "subtexto" || metodo == "mayusculas" ||
-                            metodo == "minusculas" || metodo == "recortar" ||
-                            metodo == "sin_ultimo" || metodo == "agregar_codigo") {
-                            return "nooki_texto";
-                        }
-                        if (metodo == "contiene" || metodo == "empieza_con") {
-                            return "int";
-                        }
-                        if (metodo == "a_flotante") {
-                            return "double";
                         }
                         return "long long";
                     }
-                    if (acceso.izquierda &&
-                        tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
-                        if (acceso.anotacion == "agregar" ||
-                            acceso.anotacion == "modificar" ||
-                            acceso.anotacion == "vaciar") {
-                            return "void";
-                        }
-                        // El elemento depende del vector: texto, flotante o entero.
-                        if (acceso.anotacion == "obtener") {
-                            return elemento_de_vector(tipo_de(*acceso.izquierda));
-                        }
-                        return "long long";
-                    }
-                    // Una variable de tipo `Caja<entero>` o `Caja<texto>`.
-                    if (acceso.izquierda &&
-                        tipo_de(*acceso.izquierda).rfind("nooki_caja", 0) == 0) {
-                        if (acceso.anotacion == "poner") {
-                            return "void";
-                        }
-                        if (acceso.anotacion == "sacar") {
-                            return tipo_de(*acceso.izquierda).find("texto") !=
-                                           std::string::npos
-                                       ? "nooki_texto"
-                                       : "long long";
-                        }
-                        // Cualquier otro método sigue su camino: puede ser de una
-                        // clase del usuario que también se llama Caja.
-                    }
-                    // Una variable de tipo mapa.
-                    if (acceso.izquierda &&
-                        tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
-                        if (acceso.anotacion == "insertar") {
-                            return "void";
-                        }
-                        // `obtener` devuelve el tipo del valor del mapa.
-                        if (acceso.anotacion == "obtener") {
-                            if (tipo_de(*acceso.izquierda).find("flotante") !=
-                                std::string::npos) {
-                                return "double";
-                            }
-                            if (tipo_de(*acceso.izquierda).rfind("nooki_mapa_texto_texto", 0) ==
-                                0) {
-                                return "nooki_texto";
-                            }
-                        }
-                        // `quitar` dice si quitó algo: 1 o 0.
-                        if (acceso.anotacion == "quitar") {
-                            return "int";
-                        }
-                        if (acceso.anotacion == "contiene") {
-                            return "int";
-                        }
-                        if (acceso.anotacion == "obtener") {
-                            return tipo_de(*acceso.izquierda).find("texto_entero") !=
-                                           std::string::npos
-                                       ? "long long"
-                                       : "nooki_texto";
-                        }
-                        // `claves()` y lo demás lo resuelve el código de más abajo.
-                    }
-                    if (acceso.izquierda &&
-                        acceso.izquierda->tipo == TipoExpresion::Identificador &&
-                        acceso.izquierda->lexema == "Caja") {
-                        return "nooki_caja";
-                    }
-                    if (acceso.izquierda &&
-                        acceso.izquierda->tipo == TipoExpresion::Identificador) {
-                        const auto modulo = modulos_.find(acceso.izquierda->lexema);
-                        if (modulo != modulos_.end()) {
-                            const auto funcion = modulo->second.find(acceso.anotacion);
-                            if (funcion != modulo->second.end()) {
-                                return tipo_declarado_c(funcion->second->tipo_retorno);
-                            }
-                        }
-                    }
-                    if (acceso.izquierda &&
-                        acceso.izquierda->tipo == TipoExpresion::Identificador &&
-                        acceso.izquierda->lexema == "Mapa") {
-                        // `Mapa<texto, T>.nuevo()`: el valor manda.
-                        const std::string_view valor =
-                            acceso.izquierda->tipos_aplicados.size() == 2
-                                ? acceso.izquierda->tipos_aplicados[1]
-                                : std::string_view{};
-                        if (valor == "flotante") {
-                            return "nooki_mapa_texto_flotante";
-                        }
-                        if (valor == "texto") {
-                            return "nooki_mapa_texto_texto";
-                        }
-                        return "nooki_mapa_texto_entero";
-                    }
-                    if (acceso.izquierda &&
-                        acceso.izquierda->tipo == TipoExpresion::Identificador &&
-                        acceso.izquierda->lexema == "Vector") {
-                        // `Vector<T>.nuevo()`: el tipo del vector sale del tipo aplicado.
-                        const std::string_view elemento =
-                            acceso.izquierda->tipos_aplicados.empty()
-                                ? std::string_view{}
-                                : acceso.izquierda->tipos_aplicados.front();
-                        if (elemento == "texto") {
-                            return "nooki_vector_texto";
-                        }
-                        if (elemento == "flotante") {
-                            return "nooki_vector_flotante";
-                        }
-                        if (!elemento.empty() &&
-                            vectores_de_estructura_.count(std::string(elemento)) != 0) {
-                            return "nooki_vector_" + std::string(elemento);
-                        }
-                        return "nooki_vector_entero";
-                    }
-                    if (acceso.izquierda &&
-                        tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
-                        if (acceso.anotacion == "insertar") {
-                            return "void";
-                        }
-                        // `obtener` devuelve el tipo del valor del mapa.
-                        if (acceso.anotacion == "obtener") {
-                            if (tipo_de(*acceso.izquierda).find("flotante") !=
-                                std::string::npos) {
-                                return "double";
-                            }
-                            if (tipo_de(*acceso.izquierda).rfind("nooki_mapa_texto_texto", 0) ==
-                                0) {
-                                return "nooki_texto";
-                            }
-                        }
-                        if (acceso.anotacion == "claves") {
-                            return "nooki_vector_texto";
-                        }
-                        return "long long";
-                    }
-                    if (acceso.izquierda &&
-                        tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
-                        if (acceso.anotacion == "agregar" ||
-                            acceso.anotacion == "modificar" ||
-                            acceso.anotacion == "vaciar") {
-                            return "void";
-                        }
-                        // El elemento depende del vector: texto, flotante o entero.
-                        if (acceso.anotacion == "obtener") {
-                            return elemento_de_vector(tipo_de(*acceso.izquierda));
-                        }
-                        return "long long";
-                    }
-                    std::string tipo_objeto =
-                        acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
-                    if (!tipo_objeto.empty() && tipo_objeto.back() == '*') {
-                        tipo_objeto.pop_back();  // una clase por referencia
-                    }
-                    constexpr std::string_view PREFIJO = "nooki_";
-                    if (tipo_objeto.rfind(PREFIJO, 0) == 0) {
-                        // Un método puede venir de una clase base.
-                        std::string donde = tipo_objeto;
-                        for (int guarda = 0; guarda < 32; ++guarda) {
-                            const auto metodos = metodos_.find(donde);
-                            if (metodos != metodos_.end()) {
-                                const auto metodo = metodos->second.find(acceso.anotacion);
-                                if (metodo != metodos->second.end()) {
-                                    return tipo_declarado_c(metodo->second->tipo_retorno);
-                                }
-                            }
-                            const auto base = base_de_.find(donde);
-                            if (base == base_de_.end()) {
-                                break;
-                            }
-                            donde = base->second;
-                        }
-                    }
-                    return "void";
                 }
-                if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
 
-                    if (const auto variante =
-                            variantes_.find(std::string(expresion.izquierda->lexema));
-                        variante != variantes_.end()) {
-                        return "nooki_" + std::string(variante->second.first->nombre);
+                // `super.metodo(...)`: el tipo lo da la clase base.
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Super) {
+                    std::string donde = estructura_actual_c_;
+                    for (int guarda = 0; guarda < 32; ++guarda) {
+                        const auto base = base_de_.find(donde);
+                        if (base == base_de_.end()) {
+                            break;
+                        }
+                        donde = base->second;
+                        const auto metodos = metodos_.find(donde);
+                        if (metodos != metodos_.end()) {
+                            const auto metodo = metodos->second.find(acceso.anotacion);
+                            if (metodo != metodos->second.end()) {
+                                return tipo_declarado_c(metodo->second->tipo_retorno);
+                            }
+                        }
                     }
-                    if (expresion.izquierda->lexema == "leer_linea" ||
-                        expresion.izquierda->lexema == "leer_archivo") {
+                }
+
+                if (acceso.izquierda && (tipo_de(*acceso.izquierda) == "nooki_texto" ||
+                                         tipo_de(*acceso.izquierda) == "nooki_texto*")) {
+                    const std::string& metodo = acceso.anotacion;
+                    if (metodo == "dividir") {
+                        return "nooki_vector_texto";
+                    }
+                    if (metodo == "subtexto" || metodo == "mayusculas" || metodo == "minusculas" ||
+                        metodo == "recortar" || metodo == "sin_ultimo" ||
+                        metodo == "agregar_codigo") {
                         return "nooki_texto";
                     }
-                    if (expresion.izquierda->lexema == "escribir_archivo" ||
-                        expresion.izquierda->lexema == "agregar_archivo" ||
-                        expresion.izquierda->lexema == "existe_archivo") {
+                    if (metodo == "contiene" || metodo == "empieza_con") {
                         return "int";
                     }
-                    if (expresion.izquierda->lexema == "leer_entero") {
-                        return "long long";
+                    if (metodo == "a_flotante") {
+                        return "double";
                     }
-                    const auto encontrada =
-                        retornos_.find(std::string(expresion.izquierda->lexema));
-                    if (encontrada != retornos_.end()) {
-                        return encontrada->second;
+                    return "long long";
+                }
+                if (acceso.izquierda && tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
+                    if (acceso.anotacion == "agregar" || acceso.anotacion == "modificar" ||
+                        acceso.anotacion == "vaciar") {
+                        return "void";
+                    }
+                    // El elemento depende del vector: texto, flotante o entero.
+                    if (acceso.anotacion == "obtener") {
+                        return elemento_de_vector(tipo_de(*acceso.izquierda));
+                    }
+                    return "long long";
+                }
+                // Una variable de tipo `Caja<entero>` o `Caja<texto>`.
+                if (acceso.izquierda && tipo_de(*acceso.izquierda).rfind("nooki_caja", 0) == 0) {
+                    if (acceso.anotacion == "poner") {
+                        return "void";
+                    }
+                    if (acceso.anotacion == "sacar") {
+                        return tipo_de(*acceso.izquierda).find("texto") != std::string::npos
+                                   ? "nooki_texto"
+                                   : "long long";
+                    }
+                    // Cualquier otro método sigue su camino: puede ser de una
+                    // clase del usuario que también se llama Caja.
+                }
+                // Una variable de tipo mapa.
+                if (acceso.izquierda && tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
+                    if (acceso.anotacion == "insertar") {
+                        return "void";
+                    }
+                    // `obtener` devuelve el tipo del valor del mapa.
+                    if (acceso.anotacion == "obtener") {
+                        if (tipo_de(*acceso.izquierda).find("flotante") != std::string::npos) {
+                            return "double";
+                        }
+                        if (tipo_de(*acceso.izquierda).rfind("nooki_mapa_texto_texto", 0) == 0) {
+                            return "nooki_texto";
+                        }
+                    }
+                    // `quitar` dice si quitó algo: 1 o 0.
+                    if (acceso.anotacion == "quitar") {
+                        return "int";
+                    }
+                    if (acceso.anotacion == "contiene") {
+                        return "int";
+                    }
+                    if (acceso.anotacion == "obtener") {
+                        return tipo_de(*acceso.izquierda).find("texto_entero") != std::string::npos
+                                   ? "long long"
+                                   : "nooki_texto";
+                    }
+                    // `claves()` y lo demás lo resuelve el código de más abajo.
+                }
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                    acceso.izquierda->lexema == "Caja") {
+                    return "nooki_caja";
+                }
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador) {
+                    const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                    if (modulo != modulos_.end()) {
+                        const auto funcion = modulo->second.find(acceso.anotacion);
+                        if (funcion != modulo->second.end()) {
+                            return tipo_declarado_c(funcion->second->tipo_retorno);
+                        }
+                    }
+                }
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                    acceso.izquierda->lexema == "Mapa") {
+                    // `Mapa<texto, T>.nuevo()`: el valor manda.
+                    const std::string_view valor = acceso.izquierda->tipos_aplicados.size() == 2
+                                                       ? acceso.izquierda->tipos_aplicados[1]
+                                                       : std::string_view{};
+                    if (valor == "flotante") {
+                        return "nooki_mapa_texto_flotante";
+                    }
+                    if (valor == "texto") {
+                        return "nooki_mapa_texto_texto";
+                    }
+                    return "nooki_mapa_texto_entero";
+                }
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                    acceso.izquierda->lexema == "Vector") {
+                    // `Vector<T>.nuevo()`: el tipo del vector sale del tipo aplicado.
+                    const std::string_view elemento =
+                        acceso.izquierda->tipos_aplicados.empty()
+                            ? std::string_view{}
+                            : acceso.izquierda->tipos_aplicados.front();
+                    if (elemento == "texto") {
+                        return "nooki_vector_texto";
+                    }
+                    if (elemento == "flotante") {
+                        return "nooki_vector_flotante";
+                    }
+                    if (!elemento.empty() &&
+                        vectores_de_estructura_.count(std::string(elemento)) != 0) {
+                        return "nooki_vector_" + std::string(elemento);
+                    }
+                    return "nooki_vector_entero";
+                }
+                if (acceso.izquierda && tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0) {
+                    if (acceso.anotacion == "insertar") {
+                        return "void";
+                    }
+                    // `obtener` devuelve el tipo del valor del mapa.
+                    if (acceso.anotacion == "obtener") {
+                        if (tipo_de(*acceso.izquierda).find("flotante") != std::string::npos) {
+                            return "double";
+                        }
+                        if (tipo_de(*acceso.izquierda).rfind("nooki_mapa_texto_texto", 0) == 0) {
+                            return "nooki_texto";
+                        }
+                    }
+                    if (acceso.anotacion == "claves") {
+                        return "nooki_vector_texto";
+                    }
+                    return "long long";
+                }
+                if (acceso.izquierda && tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
+                    if (acceso.anotacion == "agregar" || acceso.anotacion == "modificar" ||
+                        acceso.anotacion == "vaciar") {
+                        return "void";
+                    }
+                    // El elemento depende del vector: texto, flotante o entero.
+                    if (acceso.anotacion == "obtener") {
+                        return elemento_de_vector(tipo_de(*acceso.izquierda));
+                    }
+                    return "long long";
+                }
+                std::string tipo_objeto =
+                    acceso.izquierda ? tipo_de(*acceso.izquierda) : std::string{};
+                if (!tipo_objeto.empty() && tipo_objeto.back() == '*') {
+                    tipo_objeto.pop_back();  // una clase por referencia
+                }
+                constexpr std::string_view PREFIJO = "nooki_";
+                if (tipo_objeto.rfind(PREFIJO, 0) == 0) {
+                    // Un método puede venir de una clase base.
+                    std::string donde = tipo_objeto;
+                    for (int guarda = 0; guarda < 32; ++guarda) {
+                        const auto metodos = metodos_.find(donde);
+                        if (metodos != metodos_.end()) {
+                            const auto metodo = metodos->second.find(acceso.anotacion);
+                            if (metodo != metodos->second.end()) {
+                                return tipo_declarado_c(metodo->second->tipo_retorno);
+                            }
+                        }
+                        const auto base = base_de_.find(donde);
+                        if (base == base_de_.end()) {
+                            break;
+                        }
+                        donde = base->second;
                     }
                 }
                 return "void";
             }
-            case TipoExpresion::Unaria: {
-                if (expresion.lexema == "!") {
-                    return "int";
+            if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
+
+                if (const auto variante = variantes_.find(std::string(expresion.izquierda->lexema));
+                    variante != variantes_.end()) {
+                    return "nooki_" + std::string(variante->second.first->nombre);
                 }
-                // `&x` es un puntero a lo que sea x.
-                if ((expresion.lexema == "&" || expresion.lexema == "&mutable") &&
-                    expresion.izquierda) {
-                    return tipo_de(*expresion.izquierda) + "*";
-                }
-                // `*prestamo` de texto devuelve el texto prestado.
-                // `*prestamo` da el tipo apuntado, sea texto, vector o mapa.
-                if (expresion.lexema == "*" && expresion.izquierda) {
-                    const std::string apuntado = tipo_de(*expresion.izquierda);
-                    if (!apuntado.empty() && apuntado.back() == '*') {
-                        return apuntado.substr(0, apuntado.size() - 1);
-                    }
-                }
-                if (expresion.izquierda && tipo_de(*expresion.izquierda) == "double") {
-                    return "double";
-                }
-                return "long long";
-            }
-            case TipoExpresion::Binaria: {
-                const std::string_view operador = expresion.lexema;
-                const bool comparacion = operador == "==" || operador == "!=" ||
-                                         operador == "<" || operador == ">" ||
-                                         operador == "<=" || operador == ">=" ||
-                                         operador == "&&" || operador == "||";
-                if (!comparacion && expresion.izquierda && expresion.derecha &&
-                    expresion.lexema == "+" &&
-                    tipo_de(*expresion.izquierda) == "nooki_texto" &&
-                    tipo_de(*expresion.derecha) == "nooki_texto") {
+                if (expresion.izquierda->lexema == "leer_linea" ||
+                    expresion.izquierda->lexema == "leer_archivo") {
                     return "nooki_texto";
                 }
-                if (comparacion) {
+                if (expresion.izquierda->lexema == "escribir_archivo" ||
+                    expresion.izquierda->lexema == "agregar_archivo" ||
+                    expresion.izquierda->lexema == "existe_archivo") {
                     return "int";
                 }
-                // Si algún operando es flotante, el resultado también lo es.
-                if ((expresion.izquierda && tipo_de(*expresion.izquierda) == "double") ||
-                    (expresion.derecha && tipo_de(*expresion.derecha) == "double")) {
-                    return "double";
+                if (expresion.izquierda->lexema == "leer_entero") {
+                    return "long long";
                 }
-                return "long long";
+                const auto encontrada = retornos_.find(std::string(expresion.izquierda->lexema));
+                if (encontrada != retornos_.end()) {
+                    return encontrada->second;
+                }
             }
-            case TipoExpresion::Como:
-                return tipo_c(expresion.anotacion);
-            case TipoExpresion::Asignacion:
-                return expresion.izquierda ? tipo_de(*expresion.izquierda) : "long long";
-            default:
-                return "long long";
+            return "void";
+        }
+        case TipoExpresion::Unaria: {
+            if (expresion.lexema == "!") {
+                return "int";
+            }
+            // `&x` es un puntero a lo que sea x.
+            if ((expresion.lexema == "&" || expresion.lexema == "&mutable") &&
+                expresion.izquierda) {
+                return tipo_de(*expresion.izquierda) + "*";
+            }
+            // `*prestamo` de texto devuelve el texto prestado.
+            // `*prestamo` da el tipo apuntado, sea texto, vector o mapa.
+            if (expresion.lexema == "*" && expresion.izquierda) {
+                const std::string apuntado = tipo_de(*expresion.izquierda);
+                if (!apuntado.empty() && apuntado.back() == '*') {
+                    return apuntado.substr(0, apuntado.size() - 1);
+                }
+            }
+            if (expresion.izquierda && tipo_de(*expresion.izquierda) == "double") {
+                return "double";
+            }
+            return "long long";
+        }
+        case TipoExpresion::Binaria: {
+            const std::string_view operador = expresion.lexema;
+            const bool comparacion = operador == "==" || operador == "!=" || operador == "<" ||
+                                     operador == ">" || operador == "<=" || operador == ">=" ||
+                                     operador == "&&" || operador == "||";
+            if (!comparacion && expresion.izquierda && expresion.derecha &&
+                expresion.lexema == "+" && tipo_de(*expresion.izquierda) == "nooki_texto" &&
+                tipo_de(*expresion.derecha) == "nooki_texto") {
+                return "nooki_texto";
+            }
+            if (comparacion) {
+                return "int";
+            }
+            // Si algún operando es flotante, el resultado también lo es.
+            if ((expresion.izquierda && tipo_de(*expresion.izquierda) == "double") ||
+                (expresion.derecha && tipo_de(*expresion.derecha) == "double")) {
+                return "double";
+            }
+            return "long long";
+        }
+        case TipoExpresion::Como:
+            return tipo_c(expresion.anotacion);
+        case TipoExpresion::Asignacion:
+            return expresion.izquierda ? tipo_de(*expresion.izquierda) : "long long";
+        default:
+            return "long long";
         }
     }
 
@@ -3829,36 +3820,36 @@ private:
 
         const GuardiaProfundidad guardia(*this);
         switch (nodo.tipo) {
-            case TipoExpresion::Texto:
-                return "nooki_texto_literal(\"" + escapar_c(desescapar(nodo.lexema)) + "\")";
-            case TipoExpresion::Entero:
-                return limpiar_separadores(nodo.lexema);
-            case TipoExpresion::Flotante:
-                return limpiar_separadores(nodo.lexema);
-            case TipoExpresion::Como:
-                return conversion(nodo);
-            case TipoExpresion::Booleano:
-                return nodo.lexema == "verdadero" ? "1" : "0";
-            case TipoExpresion::Nulo:
-                return "NULL";
-            case TipoExpresion::Identificador:
-                return std::string(nodo.lexema);
-            case TipoExpresion::Construccion:
-                return construccion(nodo);
-            case TipoExpresion::Este:
-                return "(*este)";
-            case TipoExpresion::Miembro:
-                return miembro(nodo);
-            case TipoExpresion::Unaria:
-                return unaria(nodo);
-            case TipoExpresion::Binaria:
-                return binaria(nodo);
-            case TipoExpresion::Asignacion:
-                return asignacion(nodo);
-            case TipoExpresion::Llamada:
-                return llamada(nodo);
-            default:
-                break;
+        case TipoExpresion::Texto:
+            return "nooki_texto_literal(\"" + escapar_c(desescapar(nodo.lexema)) + "\")";
+        case TipoExpresion::Entero:
+            return limpiar_separadores(nodo.lexema);
+        case TipoExpresion::Flotante:
+            return limpiar_separadores(nodo.lexema);
+        case TipoExpresion::Como:
+            return conversion(nodo);
+        case TipoExpresion::Booleano:
+            return nodo.lexema == "verdadero" ? "1" : "0";
+        case TipoExpresion::Nulo:
+            return "NULL";
+        case TipoExpresion::Identificador:
+            return std::string(nodo.lexema);
+        case TipoExpresion::Construccion:
+            return construccion(nodo);
+        case TipoExpresion::Este:
+            return "(*este)";
+        case TipoExpresion::Miembro:
+            return miembro(nodo);
+        case TipoExpresion::Unaria:
+            return unaria(nodo);
+        case TipoExpresion::Binaria:
+            return binaria(nodo);
+        case TipoExpresion::Asignacion:
+            return asignacion(nodo);
+        case TipoExpresion::Llamada:
+            return llamada(nodo);
+        default:
+            break;
         }
 
         no_soportado(descripcion_expresion(nodo.tipo));
@@ -3963,8 +3954,8 @@ private:
                 for (std::size_t i = 0;
                      i < variante->campos.size() && i < rama.patron.ligaduras.size(); ++i) {
                     const std::string campo_c = tipo_declarado_c(variante->campos[i].tipo);
-                    salida_ << indentacion() << campo_c << " " << rama.patron.ligaduras[i]
-                            << " = " << temporal << ".datos." << variante->nombre << "_"
+                    salida_ << indentacion() << campo_c << " " << rama.patron.ligaduras[i] << " = "
+                            << temporal << ".datos." << variante->nombre << "_"
                             << variante->campos[i].nombre << ";\n";
                     declarar(rama.patron.ligaduras[i], campo_c);
                 }
@@ -4006,8 +3997,7 @@ private:
             }
         }
 
-        const std::string temporal =
-            "__nooki_valor" + std::to_string(contador_temporal_++);
+        const std::string temporal = "__nooki_valor" + std::to_string(contador_temporal_++);
 
         salida_ << indentacion() << "{\n";
         ++nivel_;
@@ -4047,22 +4037,22 @@ private:
         using sintactico::Patron;
 
         switch (patron.clase) {
-            case Patron::Clase::Variante:
-                return constante_enum(patron.enumeracion, patron.valor);
-            case Patron::Clase::Literal:
-                if (patron.valor == "verdadero") {
-                    return "1";
-                }
-                if (patron.valor == "falso") {
-                    return "0";
-                }
-                if (!patron.valor.empty() && (patron.valor.front() == '"' ||
-                                              patron.valor.front() == '\'')) {
-                    return {};
-                }
-                return limpiar_separadores(patron.valor);
-            case Patron::Clase::Comodin:
-                break;
+        case Patron::Clase::Variante:
+            return constante_enum(patron.enumeracion, patron.valor);
+        case Patron::Clase::Literal:
+            if (patron.valor == "verdadero") {
+                return "1";
+            }
+            if (patron.valor == "falso") {
+                return "0";
+            }
+            if (!patron.valor.empty() &&
+                (patron.valor.front() == '"' || patron.valor.front() == '\'')) {
+                return {};
+            }
+            return limpiar_separadores(patron.valor);
+        case Patron::Clase::Comodin:
+            break;
         }
         return {};
     }
@@ -4073,8 +4063,7 @@ private:
             return "0";
         }
         if (nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador) {
-            const auto enumeracion =
-                enumeraciones_.find(std::string(nodo.izquierda->lexema));
+            const auto enumeracion = enumeraciones_.find(std::string(nodo.izquierda->lexema));
             if (enumeracion != enumeraciones_.end()) {
                 // Una variante sin datos de una enumeración con datos es una
                 // estructura con su etiqueta, no un número suelto.
@@ -4180,8 +4169,7 @@ private:
         const std::string_view operador = nodo.lexema;
         const std::string tipo_izquierda = tipo_de(*nodo.izquierda);
         const std::string tipo_derecha = tipo_de(*nodo.derecha);
-        const bool ambos_texto =
-            tipo_izquierda == "nooki_texto" && tipo_derecha == "nooki_texto";
+        const bool ambos_texto = tipo_izquierda == "nooki_texto" && tipo_derecha == "nooki_texto";
 
         if (ambos_texto && operador == "+") {
             return "nooki_texto_concatenar(" + expresion(*nodo.izquierda) + ", " +
@@ -4198,10 +4186,26 @@ private:
         }
 
         static constexpr std::string_view OPERADORES[] = {
-            "+",  "-",  "*",  "/",  "%",  "==", "!=", "<", ">",  "<=", ">=", "&&", "||",
+            "+",
+            "-",
+            "*",
+            "/",
+            "%",
+            "==",
+            "!=",
+            "<",
+            ">",
+            "<=",
+            ">=",
+            "&&",
+            "||",
             // De bits y desplazamientos: el parser los acepta y las asignaciones
             // compuestas ya los usaban, pero en una expresión se rechazaban.
-            "&",  "|",  "^",  "<<", ">>",
+            "&",
+            "|",
+            "^",
+            "<<",
+            ">>",
         };
         bool conocido = false;
         for (const std::string_view conocido_operador : OPERADORES) {
@@ -4219,17 +4223,16 @@ private:
         // división y módulo avisan de un desbordamiento o de una división por cero.
         const bool entero_izquierda = tipo_izquierda == "long long" || tipo_izquierda == "int";
         const bool entero_derecha = tipo_derecha == "long long" || tipo_derecha == "int";
-        if (entero_izquierda && entero_derecha && !es_comparacion(operador) &&
-            !sin_comprobacion_) {
+        if (entero_izquierda && entero_derecha && !es_comparacion(operador) && !sin_comprobacion_) {
             static const std::map<std::string_view, std::string_view> COMPROBADAS = {
-                {"+", "nooki_ent_sumar"},   {"-", "nooki_ent_restar"},
+                {"+", "nooki_ent_sumar"},       {"-", "nooki_ent_restar"},
                 {"*", "nooki_ent_multiplicar"}, {"/", "nooki_ent_dividir"},
                 {"%", "nooki_ent_modulo"},
             };
             const auto comprobada = COMPROBADAS.find(operador);
             if (comprobada != COMPROBADAS.end()) {
-                return std::string(comprobada->second) + "(" + expresion(*nodo.izquierda) +
-                       ", " + expresion(*nodo.derecha) + ")";
+                return std::string(comprobada->second) + "(" + expresion(*nodo.izquierda) + ", " +
+                       expresion(*nodo.derecha) + ")";
             }
         }
 
@@ -4274,15 +4277,14 @@ private:
         // Asignar una colección la mueve: el origen queda vacío para que su
         if (nodo.lexema == "=") {
             const std::string tipo = tipo_de(*nodo.izquierda);
-            const bool coleccion = tipo.rfind("nooki_vector_", 0) == 0 ||
-                                   tipo.rfind("nooki_mapa_", 0) == 0;
-            if (coleccion &&
-                (nodo.derecha->tipo == sintactico::TipoExpresion::Identificador ||
-                 nodo.derecha->tipo == sintactico::TipoExpresion::Miembro)) {
+            const bool coleccion =
+                tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0;
+            if (coleccion && (nodo.derecha->tipo == sintactico::TipoExpresion::Identificador ||
+                              nodo.derecha->tipo == sintactico::TipoExpresion::Miembro)) {
                 // Se libera lo que tuviera el destino, se mueve el origen y se
                 // vacía el origen para que su limpieza no libere lo movido.
-                return "(" + tipo + "_soltar(&(" + destino + ")), " + destino + " = " +
-                       origen + ", " + vaciar_coleccion(origen) + ")";
+                return "(" + tipo + "_soltar(&(" + destino + ")), " + destino + " = " + origen +
+                       ", " + vaciar_coleccion(origen) + ")";
             }
         }
         return destino + " " + std::string(nodo.lexema) + " " + origen;
@@ -4321,8 +4323,8 @@ private:
                         continue;
                     }
                     std::string valor = expresion(*nodo.lista[i]);
-        
-            // Un literal que llega a un parámetro prestado necesita dirección propia.
+
+                    // Un literal que llega a un parámetro prestado necesita dirección propia.
                     if (modulo_funcion != nullptr && i < modulo_funcion->parametros.size()) {
                         const std::string_view declarado = modulo_funcion->parametros[i].tipo;
                         if (!declarado.empty() && declarado.front() == '&' &&
@@ -4341,13 +4343,12 @@ private:
                 const std::string tipo = tipo_de(*acceso.izquierda);
                 const bool prestado = tipo == "nooki_texto*";
                 if (tipo == "nooki_texto" || prestado) {
-                    const std::string objeto =
-                        prestado ? "(*" + expresion(*acceso.izquierda) + ")"
-                                 : expresion(*acceso.izquierda);
+                    const std::string objeto = prestado ? "(*" + expresion(*acceso.izquierda) + ")"
+                                                        : expresion(*acceso.izquierda);
                     static const std::set<std::string> METODOS_TEXTO = {
-                        "largo", "subtexto", "caracter", "buscar", "contiene",
-                        "empieza_con", "a_entero", "a_flotante", "dividir", "mayusculas",
-                        "minusculas", "recortar", "agregar_codigo", "sin_ultimo"};
+                        "largo",       "subtexto", "caracter",       "buscar",    "contiene",
+                        "empieza_con", "a_entero", "a_flotante",     "dividir",   "mayusculas",
+                        "minusculas",  "recortar", "agregar_codigo", "sin_ultimo"};
                     if (METODOS_TEXTO.count(std::string(acceso.anotacion)) != 0) {
                         std::string llamada =
                             "nooki_texto_" + std::string(acceso.anotacion) + "(" + objeto;
@@ -4359,8 +4360,7 @@ private:
                             // El runtime recibe el texto por valor: un préstamo se
                             // desreferencia, venga de `&x` o de un parámetro `&texto`.
                             if (argumento->tipo == sintactico::TipoExpresion::Unaria &&
-                                (argumento->lexema == "&" ||
-                                 argumento->lexema == "&mutable")) {
+                                (argumento->lexema == "&" || argumento->lexema == "&mutable")) {
                                 llamada += "(*" + expresion(*argumento) + ")";
                             } else if (tipo_de(*argumento) == "nooki_texto*") {
                                 llamada += "(*" + expresion(*argumento) + ")";
@@ -4376,10 +4376,9 @@ private:
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
                 acceso.izquierda->lexema == "Mapa" && acceso.anotacion == "nuevo") {
-                const std::string_view valor =
-                    acceso.izquierda->tipos_aplicados.size() == 2
-                        ? acceso.izquierda->tipos_aplicados[1]
-                        : std::string_view{};
+                const std::string_view valor = acceso.izquierda->tipos_aplicados.size() == 2
+                                                   ? acceso.izquierda->tipos_aplicados[1]
+                                                   : std::string_view{};
                 if (valor == "flotante") {
                     return "nooki_mapa_texto_flotante_nuevo()";
                 }
@@ -4450,10 +4449,8 @@ private:
             const sintactico::Variante& datos = enumeracion.variantes[indice];
             if (!datos.campos.empty()) {
                 std::string salida = "(nooki_" + std::string(enumeracion.nombre) +
-                                     "){ .etiqueta = " + std::to_string(indice) +
-                                     ", .datos = {";
-                for (std::size_t i = 0;
-                     i < datos.campos.size() && i < nodo.lista.size(); ++i) {
+                                     "){ .etiqueta = " + std::to_string(indice) + ", .datos = {";
+                for (std::size_t i = 0; i < datos.campos.size() && i < nodo.lista.size(); ++i) {
                     salida += " .";
                     salida += datos.nombre;
                     salida += "_";
@@ -4466,7 +4463,6 @@ private:
                 return salida;
             }
         }
-
 
         if (nombre_llamado == "leer_archivo" || nombre_llamado == "escribir_archivo" ||
             nombre_llamado == "agregar_archivo" || nombre_llamado == "existe_archivo") {
@@ -4516,20 +4512,17 @@ private:
             const sintactico::Expresion& argumento = *nodo.lista.front();
             const std::string tipo = tipo_de(argumento);
             const char* funcion = tipo == "nooki_texto" || tipo == "nooki_texto*"
-                                  ? "nooki_imprimir_texto"
-                                  : (tipo == "long long" || tipo == "int")
-                                      ? "nooki_imprimir_entero"
-        : (tipo == "double")
-        ? "nooki_imprimir_flotante"
-                                      : nullptr;
+                                      ? "nooki_imprimir_texto"
+                                  : (tipo == "long long" || tipo == "int") ? "nooki_imprimir_entero"
+                                  : (tipo == "double") ? "nooki_imprimir_flotante"
+                                                       : nullptr;
             if (funcion == nullptr) {
                 no_soportado("«imprimir» con un valor que el backend no sabe imprimir");
                 return "0";
             }
             // Un préstamo de texto se imprime por su valor.
             const std::string valor =
-                tipo == "nooki_texto*" ? "(*" + expresion(argumento) + ")"
-                                       : expresion(argumento);
+                tipo == "nooki_texto*" ? "(*" + expresion(argumento) + ")" : expresion(argumento);
             return std::string(funcion) + "(" + valor + ")";
         }
 
@@ -4537,10 +4530,9 @@ private:
         std::string nombre_para_c = nombre_c(nombre_llamado);
         if (!modulo_actual_.empty()) {
             const auto modulo = modulos_.find(modulo_actual_);
-            if (modulo != modulos_.end() &&
-                modulo->second.count(nombre_llamado) != 0) {
-                nombre_para_c = "nooki_" + std::string(modulo_actual_) + "_" +
-                                std::string(nombre_llamado);
+            if (modulo != modulos_.end() && modulo->second.count(nombre_llamado) != 0) {
+                nombre_para_c =
+                    "nooki_" + std::string(modulo_actual_) + "_" + std::string(nombre_llamado);
             }
         }
         // Una llamada que mueve un valor con dueño no puede ir anidada en otra
@@ -4548,8 +4540,8 @@ private:
         if (profundidad_expresion_ > 1) {
             const auto declarados = parametros_.find(std::string(nombre_llamado));
             if (declarados != parametros_.end()) {
-                for (std::size_t i = 0;
-                     i < nodo.lista.size() && i < declarados->second.size(); ++i) {
+                for (std::size_t i = 0; i < nodo.lista.size() && i < declarados->second.size();
+                     ++i) {
                     if (!nodo.lista[i] ||
                         nodo.lista[i]->tipo != sintactico::TipoExpresion::Identificador) {
                         continue;
@@ -4594,12 +4586,11 @@ private:
 
             std::string valor = expresion(*argumento);
 
-
             // `&p` donde `p` ya es una referencia (una clase): se pasa tal cual.
             if (declarados != parametros_.end() && i < declarados->second.size() &&
                 !declarados->second[i].empty() && declarados->second[i].front() == '&' &&
-                argumento->tipo == sintactico::TipoExpresion::Unaria &&
-                argumento->lexema == "&" && argumento->izquierda) {
+                argumento->tipo == sintactico::TipoExpresion::Unaria && argumento->lexema == "&" &&
+                argumento->izquierda) {
                 const std::string tipo_interno = tipo_de(*argumento->izquierda);
                 if (!tipo_interno.empty() && tipo_interno.back() == '*') {
                     valor = expresion(*argumento->izquierda);
@@ -4619,19 +4610,16 @@ private:
                     if (puntero) {
                         base.pop_back();
                     }
-                    const std::string objeto =
-                        puntero ? expresion(*argumento->izquierda)
-                                : "&" + expresion(*argumento->izquierda);
+                    const std::string objeto = puntero ? expresion(*argumento->izquierda)
+                                                       : "&" + expresion(*argumento->izquierda);
                     valor = "(nooki_ref_" + std::string(declarado).substr(1) +
                             "){ .objeto = (void*)" + objeto + ", .tabla = &" + base + "_" +
                             std::string(declarado).substr(1) + "_tabla }";
                 }
             }
 
-
             // Un literal que llega a un parámetro prestado necesita dirección propia.
-            if (!externa && declarados != parametros_.end() &&
-                i < declarados->second.size()) {
+            if (!externa && declarados != parametros_.end() && i < declarados->second.size()) {
                 const std::string& declarado = declarados->second[i];
                 if (!declarado.empty() && declarado.front() == '&' &&
                     (argumento->tipo == sintactico::TipoExpresion::Texto ||
@@ -4703,8 +4691,7 @@ private:
             salida_ << indentacion() << nombre << ".datos = NULL;\n";
             salida_ << indentacion() << nombre << ".largo = 0;\n";
             salida_ << indentacion() << nombre << ".propio = 0;\n";
-        } else if (tipo.rfind("nooki_vector_", 0) == 0 ||
-                   tipo.rfind("nooki_mapa_", 0) == 0) {
+        } else if (tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0) {
             salida_ << indentacion() << nombre << ".datos = NULL;\n";
             salida_ << indentacion() << nombre << ".largo = 0;\n";
             salida_ << indentacion() << nombre << ".capacidad = 0;\n";
@@ -4715,8 +4702,7 @@ private:
                             const std::vector<sintactico::Parametro>& declarados) {
         for (std::size_t i = 0; i < nodo.lista.size() && i < declarados.size(); ++i) {
             const sintactico::ExpresionPtr& argumento = nodo.lista[i];
-            if (!argumento ||
-                argumento->tipo != sintactico::TipoExpresion::Identificador) {
+            if (!argumento || argumento->tipo != sintactico::TipoExpresion::Identificador) {
                 continue;
             }
             const std::string_view declarado = declarados[i].tipo;
@@ -4782,20 +4768,18 @@ private:
 
         std::string tipo_objeto = tipo_de(*acceso.izquierda);
         // `este` siempre es una referencia al objeto, aunque su tipo no lleve «*».
-        const bool objeto_puntero =
-            (!tipo_objeto.empty() && tipo_objeto.back() == '*') ||
-            acceso.izquierda->tipo == sintactico::TipoExpresion::Este;
+        const bool objeto_puntero = (!tipo_objeto.empty() && tipo_objeto.back() == '*') ||
+                                    acceso.izquierda->tipo == sintactico::TipoExpresion::Este;
         if (!tipo_objeto.empty() && tipo_objeto.back() == '*') {
             tipo_objeto.pop_back();
         }
-
 
         if (tipo_objeto.rfind("nooki_vector_", 0) == 0 ||
             tipo_objeto.rfind("nooki_mapa_", 0) == 0) {
             // Si llega como préstamo (`&Vector<T>`), ya es un puntero.
             std::string salida = tipo_objeto + "_" + std::string(acceso.anotacion) + "(";
-            salida += objeto_puntero ? expresion(*acceso.izquierda)
-                                     : "&" + expresion(*acceso.izquierda);
+            salida +=
+                objeto_puntero ? expresion(*acceso.izquierda) : "&" + expresion(*acceso.izquierda);
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
                 if (!argumento) {
                     continue;
@@ -4811,11 +4795,9 @@ private:
             salida += ')';
 
             // `agregar` e `insertar` toman el dueño del valor: el origen queda vacío.
-            const bool toma_dueno =
-                (acceso.anotacion == "agregar" && nodo.lista.size() == 1) ||
-                (acceso.anotacion == "insertar" && nodo.lista.size() == 2);
-            if (toma_dueno && nodo.lista.front() &&
-                tipo_de(*nodo.lista.front()) == "nooki_texto" &&
+            const bool toma_dueno = (acceso.anotacion == "agregar" && nodo.lista.size() == 1) ||
+                                    (acceso.anotacion == "insertar" && nodo.lista.size() == 2);
+            if (toma_dueno && nodo.lista.front() && tipo_de(*nodo.lista.front()) == "nooki_texto" &&
                 (nodo.lista.front()->tipo == sintactico::TipoExpresion::Identificador ||
                  nodo.lista.front()->tipo == sintactico::TipoExpresion::Miembro)) {
                 // Vale un nombre o un campo: en ambos casos el origen se vacía.
@@ -4841,11 +4823,10 @@ private:
                 virtuales.end();
 
         // Expresión de C que da un puntero al objeto, sea `este` o un valor.
-        std::string objeto_ptr =
-            acceso.izquierda->tipo == sintactico::TipoExpresion::Este
-                ? "este"
-                : (objeto_puntero ? expresion(*acceso.izquierda)
-                                  : "&" + expresion(*acceso.izquierda));
+        std::string objeto_ptr = acceso.izquierda->tipo == sintactico::TipoExpresion::Este
+                                     ? "este"
+                                     : (objeto_puntero ? expresion(*acceso.izquierda)
+                                                       : "&" + expresion(*acceso.izquierda));
         // `(*x).metodo()` sobre una referencia: el runtime quiere `x`.
         if (acceso.izquierda->tipo == sintactico::TipoExpresion::Unaria &&
             acceso.izquierda->lexema == "*" && acceso.izquierda->izquierda) {
@@ -4874,22 +4855,22 @@ private:
 
     static std::string descripcion_expresion(sintactico::TipoExpresion tipo) {
         switch (tipo) {
-            case sintactico::TipoExpresion::Caracter:
-                return "un literal de carácter";
-            case sintactico::TipoExpresion::Flotante:
-                return "un número flotante";
-            case sintactico::TipoExpresion::Nulo:
-                return "el valor nulo";
-            case sintactico::TipoExpresion::MiembroOpcional:
-                return "el acceso opcional a un miembro";
-            case sintactico::TipoExpresion::Indice:
-                return "el acceso por índice";
-            case sintactico::TipoExpresion::Propagacion:
-                return "el operador «?»";
-            case sintactico::TipoExpresion::Como:
-                return "la conversión «como»";
-            default:
-                return "una expresión";
+        case sintactico::TipoExpresion::Caracter:
+            return "un literal de carácter";
+        case sintactico::TipoExpresion::Flotante:
+            return "un número flotante";
+        case sintactico::TipoExpresion::Nulo:
+            return "el valor nulo";
+        case sintactico::TipoExpresion::MiembroOpcional:
+            return "el acceso opcional a un miembro";
+        case sintactico::TipoExpresion::Indice:
+            return "el acceso por índice";
+        case sintactico::TipoExpresion::Propagacion:
+            return "el operador «?»";
+        case sintactico::TipoExpresion::Como:
+            return "la conversión «como»";
+        default:
+            return "una expresión";
         }
     }
 
@@ -4926,8 +4907,7 @@ private:
     int profundidad_expresion_ = 0;
     std::map<std::string, std::map<std::string, const sintactico::Funcion*>> metodos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
-    std::map<std::string,
-             std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
+    std::map<std::string, std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
     std::map<std::string, const sintactico::Funcion*> genericos_;
     std::map<std::string, std::pair<std::string, std::vector<std::string_view>>> instancias_;
     std::map<std::string, std::string> sustitucion_;

@@ -28,7 +28,9 @@ ArchivoId GestorFuentes::anadir(std::string ruta, std::string contenido) {
     return static_cast<ArchivoId>(archivos_.size() - 1);
 }
 
-bool GestorFuentes::existe(ArchivoId id) const noexcept { return buscar(id) != nullptr; }
+bool GestorFuentes::existe(ArchivoId id) const noexcept {
+    return buscar(id) != nullptr;
+}
 
 std::string_view GestorFuentes::ruta(ArchivoId id) const {
     const Archivo* archivo = buscar(id);

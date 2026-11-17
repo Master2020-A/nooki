@@ -25,9 +25,9 @@
 #include "nooki/diagnostico/emisor.hpp"
 #include "nooki/diagnostico/gestor_fuentes.hpp"
 #include "nooki/lexico/lexer.hpp"
+#include "nooki/proceso.hpp"
 #include "nooki/semantico/verificaciones.hpp"
 #include "nooki/sintactico/parser.hpp"
-#include "nooki/proceso.hpp"
 
 namespace fs = std::filesystem;
 
@@ -155,7 +155,8 @@ bool compilar_y_comparar(const Caso& caso, std::string& esperado, std::string& o
     Emisor emisor;
     std::ostringstream silencio;
 
-    const auto resultado = nooki::conductor::compilar(opciones, fuentes, emisor, silencio, silencio);
+    const auto resultado =
+        nooki::conductor::compilar(opciones, fuentes, emisor, silencio, silencio);
 
     esperado = nooki::normalizar_saltos(leer(caso.directorio / "esperado.txt"));
     if (resultado.codigo != 0) {
@@ -198,8 +199,8 @@ bool analizar_codigos(const Caso& caso, std::vector<std::string>& esperados,
     }
 
     obtenidos = codigos_de(emisor);
-    esperados = caso.invalido ? leer_codigos(caso.directorio / "esperado.txt")
-                              : std::vector<std::string>{};
+    esperados =
+        caso.invalido ? leer_codigos(caso.directorio / "esperado.txt") : std::vector<std::string>{};
     return obtenidos == esperados;
 }
 
@@ -237,14 +238,13 @@ void medir(const std::vector<Caso>& casos) {
     const auto fin = std::chrono::steady_clock::now();
 
     const double segundos = std::chrono::duration<double>(fin - inicio).count();
-    const double megabytes =
-        static_cast<double>(corpus.size() * repeticiones) / (1024.0 * 1024.0);
+    const double megabytes = static_cast<double>(corpus.size() * repeticiones) / (1024.0 * 1024.0);
     const double millones_tokens =
         static_cast<double>(tokens_totales * repeticiones) / (1000000.0 * segundos);
 
     std::cout << "\n  rendimiento del lexer: " << (megabytes / segundos) << " MB/s · "
-              << millones_tokens << " M tokens/s (" << corpus.size() << " bytes × "
-              << repeticiones << " pasadas)\n";
+              << millones_tokens << " M tokens/s (" << corpus.size() << " bytes × " << repeticiones
+              << " pasadas)\n";
 }
 
 }  // namespace
@@ -284,8 +284,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> fallidos;
 
     for (const Caso& caso : casos) {
-        const bool es_programa =
-            !caso.invalido && fs::exists(caso.directorio / "esperado.txt");
+        const bool es_programa = !caso.invalido && fs::exists(caso.directorio / "esperado.txt");
 
         if (es_programa && !hay_compilador_c) {
             ++omitidos;

@@ -7,8 +7,9 @@
 #include <vector>
 
 #if defined(_WIN32)
+// `windows.h` ya trae `shellapi.h`; incluirlo antes rompe el orden que necesita
+// MinGW (`EXTERN_C` se define en `windef.h`, que viene de `windows.h`).
 #include <windows.h>
-#include <shellapi.h>
 #endif
 
 namespace {
@@ -27,8 +28,8 @@ std::vector<std::string> argumentos_utf8() {
     }
 
     for (int i = 1; i < cantidad; ++i) {
-        const int bytes = WideCharToMultiByte(CP_UTF8, 0, lista[i], -1, nullptr, 0, nullptr,
-                                              nullptr);
+        const int bytes =
+            WideCharToMultiByte(CP_UTF8, 0, lista[i], -1, nullptr, 0, nullptr, nullptr);
         if (bytes <= 1) {
             argumentos.emplace_back();
             continue;

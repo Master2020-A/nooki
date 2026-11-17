@@ -89,8 +89,7 @@ constexpr Caso VALIDOS[] = {
      "funcion principal() -> entero {\n    retornar f(1)\n}",
      ""},
     {"funcion principal() -> entero {\n    variable x = 1\n    x = 2\n    retornar x\n}", ""},
-    {"funcion principal() -> entero {\n    si (1 < 2) { imprimir(\"sí\") }\n    retornar 0\n}",
-     ""},
+    {"funcion principal() -> entero {\n    si (1 < 2) { imprimir(\"sí\") }\n    retornar 0\n}", ""},
     {"funcion principal() -> entero {\n    variable b = 1 < 2\n    si (b) { imprimir(\"sí\") }\n"
      "    retornar 0\n}",
      ""},
@@ -169,7 +168,8 @@ constexpr Caso INVALIDOS[] = {
     {"funcion f(n: entero) -> entero {\n    retornar n\n}\n"
      "funcion principal() -> entero {\n    retornar f(\"texto\")\n}",
      "NOK4002"},
-    {"funcion principal() -> entero {\n    variable x: entero = \"a\"\n    retornar 0\n}", "NOK4001"},
+    {"funcion principal() -> entero {\n    variable x: entero = \"a\"\n    retornar 0\n}",
+     "NOK4001"},
     {"funcion principal() -> entero {\n    variable x = 1 + \"a\"\n    retornar 0\n}", "NOK4001"},
     {"funcion principal() -> entero {\n    si (1) { }\n    retornar 0\n}", "NOK4005"},
     {"funcion principal() -> entero {\n    mientras (\"a\") { }\n    retornar 0\n}", "NOK4005"},
@@ -259,8 +259,7 @@ constexpr Caso INVALIDOS[] = {
      "NOK4001"},
 
     // --- Tipos, rasgos y propagación ---------------------------------------
-    {"funcion principal() -> entero {\n    variable x = 1?\n    retornar x\n}",
-     "NOK4011"},
+    {"funcion principal() -> entero {\n    variable x = 1?\n    retornar x\n}", "NOK4011"},
 
     {"rasgo Saluda {\n    funcion saludar() -> texto\n}\n"
      "clase muda implementa Saluda {\n    publico nombre: texto\n"
@@ -269,7 +268,8 @@ constexpr Caso INVALIDOS[] = {
      "NOK4012"},
 
     {"clase base {\n    publico funcion f() -> entero {\n        retornar 1\n    }\n}\n"
-     "clase hija hereda base {\n    publico funcion f() -> texto {\n        retornar \"x\"\n    }\n}\n"
+     "clase hija hereda base {\n    publico funcion f() -> texto {\n        retornar \"x\"\n    "
+     "}\n}\n"
      "funcion principal() -> entero {\n    retornar 0\n}",
      "NOK4010"},
 

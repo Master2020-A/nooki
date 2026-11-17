@@ -80,8 +80,7 @@ int main() {
         comprobar(contiene(resultado.salida, "publico funcion sumar") ||
                       contiene(resultado.salida, "sumar(a: entero, b: entero) -> entero"),
                   "incluye la función pública");
-        comprobar(!contiene(resultado.salida, "privada"),
-                  "deja fuera lo que no es público");
+        comprobar(!contiene(resultado.salida, "privada"), "deja fuera lo que no es público");
 
         std::filesystem::remove_all(directorio, ignorado);
     }
@@ -129,7 +128,8 @@ int main() {
                   "un programa con biblioteca pasa la verificación");
 
         const Resultado sin_archivo = invocar({"verificar"});
-        comprobar(sin_archivo.codigo == nooki::cli::USO_INCORRECTO, "sin archivo es uso incorrecto");
+        comprobar(sin_archivo.codigo == nooki::cli::USO_INCORRECTO,
+                  "sin archivo es uso incorrecto");
 
         std::filesystem::remove_all(directorio, ignorado);
     }
@@ -213,8 +213,7 @@ int main() {
     caso("compilar un archivo que no existe");
     {
         const Resultado resultado = invocar({"compilar", "no-existe-jamas.oki"});
-        comprobar(resultado.codigo == nooki::cli::DATOS_INCORRECTOS,
-                  "devuelve datos incorrectos");
+        comprobar(resultado.codigo == nooki::cli::DATOS_INCORRECTOS, "devuelve datos incorrectos");
         comprobar(contiene(resultado.error, "NOK0001"), "lo marca con NOK0001");
     }
 
@@ -259,7 +258,6 @@ int main() {
         }
         comprobar(todos_presentes, "aparecen todos los comandos");
     }
-
 
     caso("comando inexistente");
     {

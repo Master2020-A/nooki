@@ -26,14 +26,14 @@ constexpr const char* ANSI_FIN = "\x1b[0m";
 
 const char* color_de(Gravedad gravedad) {
     switch (gravedad) {
-        case Gravedad::Error:
-            return ANSI_ROJO;
-        case Gravedad::Advertencia:
-            return ANSI_AMARILLO;
-        case Gravedad::Nota:
-            return ANSI_CIAN;
-        case Gravedad::Ayuda:
-            return ANSI_VERDE;
+    case Gravedad::Error:
+        return ANSI_ROJO;
+    case Gravedad::Advertencia:
+        return ANSI_AMARILLO;
+    case Gravedad::Nota:
+        return ANSI_CIAN;
+    case Gravedad::Ayuda:
+        return ANSI_VERDE;
     }
     return ANSI_ROJO;
 }
@@ -113,8 +113,7 @@ Marca construir_marca(const GestorFuentes& fuentes, ArchivoId archivo, Span span
 
     const std::uint32_t inicio_linea = fuentes.inicio_de_linea(archivo, ubicacion.linea);
     const std::string_view texto_linea = fuentes.linea(archivo, ubicacion.linea);
-    const std::uint32_t fin_linea =
-        inicio_linea + static_cast<std::uint32_t>(texto_linea.size());
+    const std::uint32_t fin_linea = inicio_linea + static_cast<std::uint32_t>(texto_linea.size());
 
     const std::uint32_t desde = std::min(span.inicio, fin_linea);
     const std::uint32_t hasta = std::min(span.fin, fin_linea);

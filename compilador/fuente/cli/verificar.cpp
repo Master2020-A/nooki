@@ -18,9 +18,7 @@
 #include "nooki/sintactico/parser.hpp"
 
 namespace nooki::cli {
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 int comando_verificar(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error) {

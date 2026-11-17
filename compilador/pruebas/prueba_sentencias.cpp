@@ -29,8 +29,7 @@ struct Caso {
 constexpr Caso CASOS[] = {
     // --- Funciones y bloques ---------------------------------------------
     {"funcion f() {\n}", "(programa (funcion f -> vacio))"},
-    {"funcion f() -> entero {\n    retornar 1\n}",
-     "(programa (funcion f -> entero (retornar 1)))"},
+    {"funcion f() -> entero {\n    retornar 1\n}", "(programa (funcion f -> entero (retornar 1)))"},
     {"funcion f() {\n    retornar\n}", "(programa (funcion f -> vacio (retornar)))"},
     {"funcion f() {\n    a()\n}", "(programa (funcion f -> vacio (llamada a)))"},
     {"funcion f() {\n    {}\n}", "(programa (funcion f -> vacio (bloque)))"},
@@ -47,8 +46,7 @@ constexpr Caso CASOS[] = {
      "(programa (funcion f -> vacio (variable x (+ 1 (* 2 3)))))"},
 
     // --- Condicionales -----------------------------------------------------
-    {"funcion f() {\n    si (x) { a() }\n}",
-     "(programa (funcion f -> vacio (si x (llamada a))))"},
+    {"funcion f() {\n    si (x) { a() }\n}", "(programa (funcion f -> vacio (si x (llamada a))))"},
     {"funcion f() {\n    si (x) { a() } sino { b() }\n}",
      "(programa (funcion f -> vacio (si x (llamada a) (sino (llamada b)))))"},
     {"funcion f() {\n    si (x) { a() } sinosi (y) { b() } sino { c() }\n}",
@@ -68,8 +66,7 @@ constexpr Caso CASOS[] = {
      "(programa (funcion f -> vacio (para e en lista (llamada a e))))"},
     {"funcion f() {\n    hacer { a() } mientras (x)\n}",
      "(programa (funcion f -> vacio (hacer (llamada a) mientras x)))"},
-    {"funcion f() {\n    bucle { romper }\n}",
-     "(programa (funcion f -> vacio (bucle (romper))))"},
+    {"funcion f() {\n    bucle { romper }\n}", "(programa (funcion f -> vacio (bucle (romper))))"},
     {"funcion f() {\n    mientras (x) { continuar }\n}",
      "(programa (funcion f -> vacio (mientras x (continuar))))"},
 
@@ -78,8 +75,7 @@ constexpr Caso CASOS[] = {
      "(programa (funcion f -> vacio (mientras x (si y (romper)))))"},
     {"funcion f() {\n    para (i en 0..3) { bucle { romper } }\n}",
      "(programa (funcion f -> vacio (para i en (.. 0 3) (bucle (romper)))))"},
-    {"funcion f() {\n    x = 1\n}",
-     "(programa (funcion f -> vacio (= x 1)))"},
+    {"funcion f() {\n    x = 1\n}", "(programa (funcion f -> vacio (= x 1)))"},
     {"funcion f() {\n    a()\n}\nfuncion g() {\n    b()\n}",
      "(programa (funcion f -> vacio (llamada a)) (funcion g -> vacio (llamada b)))"},
     {"funcion f() {\n    si (x) {\n        variable y = 1\n        a(y)\n    }\n}",
@@ -92,15 +88,14 @@ constexpr Caso CASOS[] = {
     // --- Parámetros --------------------------------------------------------
     {"funcion f(a: entero) -> entero {\n    retornar a\n}",
      "(programa (funcion f (a entero) -> entero (retornar a)))"},
-    {"funcion f(a: entero, b: texto) {\n}",
-     "(programa (funcion f (a entero, b texto) -> vacio))"},
-    {"funcion f() {\n    g(1, \"dos\")\n}", "(programa (funcion f -> vacio (llamada g 1 \"dos\")))"},
+    {"funcion f(a: entero, b: texto) {\n}", "(programa (funcion f (a entero, b texto) -> vacio))"},
+    {"funcion f() {\n    g(1, \"dos\")\n}",
+     "(programa (funcion f -> vacio (llamada g 1 \"dos\")))"},
 
     // --- Tipos -------------------------------------------------------------
     {"estructura punto {\n    publico x: entero\n    publico y: entero\n}",
      "(programa (estructura punto (x entero) (y entero)))"},
-    {"clase persona {\n    privado edad: entero\n}",
-     "(programa (clase persona (edad entero)))"},
+    {"clase persona {\n    privado edad: entero\n}", "(programa (clase persona (edad entero)))"},
     {"funcion f() {\n    variable p = punto { x: 1, y: 2 }\n}",
      "(programa (funcion f -> vacio (variable p (construir punto (x 1) (y 2)))))"},
     {"funcion f() {\n    variable p = punto { x: 1 }\n    p.x = 2\n}",
@@ -114,8 +109,7 @@ constexpr Caso CASOS[] = {
      "5)))"},
 
     // --- Enumeraciones y patrones -----------------------------------------
-    {"enumeracion color {\n    rojo,\n    verde,\n}",
-     "(programa (enumeracion color rojo verde))"},
+    {"enumeracion color {\n    rojo,\n    verde,\n}", "(programa (enumeracion color rojo verde))"},
     {"funcion f() {\n    coincide (x) {\n        caso 1 => a()\n        caso _ => b()\n    }\n}",
      "(programa (funcion f -> vacio (coincide x (rama 1 (llamada a)) (rama _ (llamada b)))))"},
     {"funcion f() {\n    coincide (c) {\n        caso color.rojo => a()\n        caso _ => b()\n"
@@ -129,13 +123,8 @@ constexpr Caso CASOS[] = {
 };
 
 constexpr std::string_view INVALIDOS[] = {
-    "variable = 1",
-    "si x { }",
-    "mientras { }",
-    "para (i 0..10) { }",
-    "funcion f( {",
-    "coincide (x) { }",
-    "funcion f(a) { }",
+    "variable = 1", "si x { }",         "mientras { }",     "para (i 0..10) { }",
+    "funcion f( {", "coincide (x) { }", "funcion f(a) { }",
 };
 
 void analizar_y_comparar(const Caso& caso) {

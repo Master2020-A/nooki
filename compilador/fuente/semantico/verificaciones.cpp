@@ -55,7 +55,8 @@ public:
         }
         for (const sintactico::Enumeracion& enumeracion : programa_.enumeraciones) {
             for (std::size_t i = 0; i < enumeracion.variantes.size(); ++i) {
-                variantes_.emplace(enumeracion.variantes[i].nombre, std::make_pair(&enumeracion, i));
+                variantes_.emplace(enumeracion.variantes[i].nombre,
+                                   std::make_pair(&enumeracion, i));
             }
         }
         for (const Funcion& funcion : programa_.funciones) {
@@ -359,8 +360,7 @@ private:
         const Expresion& destino = *expresion.izquierda;
         if (destino.tipo == TipoExpresion::Identificador) {
             const auto funcion = funciones_.find(destino.lexema);
-            return funcion != funciones_.end() ? funcion->second->tipo_retorno
-                                               : std::string_view{};
+            return funcion != funciones_.end() ? funcion->second->tipo_retorno : std::string_view{};
         }
         if (destino.tipo == TipoExpresion::Miembro && destino.izquierda &&
             destino.izquierda->tipo == TipoExpresion::Identificador) {
@@ -405,14 +405,15 @@ private:
                destino.izquierda->lexema == "Caja" && destino.anotacion == "nuevo";
     }
 
-    void abrir_ambito() { ambitos_.emplace_back(); }
+    void abrir_ambito() {
+        ambitos_.emplace_back();
+    }
     void cerrar_ambito() {
         if (!ambitos_.empty()) {
             ambitos_.pop_back();
         }
     }
-    void declarar(std::string_view nombre_variable, Tipo tipo,
-                  std::string_view estructura = {}) {
+    void declarar(std::string_view nombre_variable, Tipo tipo, std::string_view estructura = {}) {
         if (ambitos_.empty()) {
             return;
         }
@@ -452,34 +453,33 @@ private:
     /// Nombre del tipo de estructura de una expresión, si lo tiene.
     std::string_view estructura_de(const Expresion& expresion) const {
         switch (expresion.tipo) {
-            case TipoExpresion::Identificador:
-                return buscar_estructura(expresion.lexema);
-            case TipoExpresion::Este:
-            case TipoExpresion::Super:
-                return estructura_actual_;
-            case TipoExpresion::Miembro: {
-                if (!expresion.izquierda) {
-                    return {};
-                }
-                const sintactico::DefinicionTipo* definicion =
-                    tipo_por_nombre(estructura_de(*expresion.izquierda));
-                if (definicion == nullptr) {
-                    return {};
-                }
-                for (const sintactico::Campo& campo : definicion->campos) {
-                    if (campo.nombre == expresion.anotacion) {
-                        // El `string_view` se construye explícito: si no, el
-                        // ternario crea un `std::string` temporal y la vista
-                        // queda apuntando a memoria muerta.
-                        return tipo_por_nombre(campo.tipo) != nullptr
-                                   ? std::string_view(campo.tipo)
-                                   : std::string_view{};
-                    }
-                }
+        case TipoExpresion::Identificador:
+            return buscar_estructura(expresion.lexema);
+        case TipoExpresion::Este:
+        case TipoExpresion::Super:
+            return estructura_actual_;
+        case TipoExpresion::Miembro: {
+            if (!expresion.izquierda) {
                 return {};
             }
-            default:
+            const sintactico::DefinicionTipo* definicion =
+                tipo_por_nombre(estructura_de(*expresion.izquierda));
+            if (definicion == nullptr) {
                 return {};
+            }
+            for (const sintactico::Campo& campo : definicion->campos) {
+                if (campo.nombre == expresion.anotacion) {
+                    // El `string_view` se construye explícito: si no, el
+                    // ternario crea un `std::string` temporal y la vista
+                    // queda apuntando a memoria muerta.
+                    return tipo_por_nombre(campo.tipo) != nullptr ? std::string_view(campo.tipo)
+                                                                  : std::string_view{};
+                }
+            }
+            return {};
+        }
+        default:
+            return {};
         }
     }
 
@@ -496,7 +496,7 @@ private:
     // --- Funciones ---------------------------------------------------------
     /// Busca un método por nombre en la jerarquía de una clase.
     const sintactico::Funcion* metodo_en_jerarquia(const sintactico::DefinicionTipo& definicion,
-                                                    std::string_view nombre) const {
+                                                   std::string_view nombre) const {
         const sintactico::DefinicionTipo* actual = &definicion;
         for (int guarda = 0; guarda < 32 && actual != nullptr; ++guarda) {
             for (const sintactico::Funcion& metodo : actual->metodos) {
@@ -673,397 +673,377 @@ private:
             rasgos_.count(nombre) != 0) {
             return;
         }
-        error(diagnostico::codigos::TIPO_DESCONOCIDO, span)
-            .parametro("nombre", std::string(base));
+        error(diagnostico::codigos::TIPO_DESCONOCIDO, span).parametro("nombre", std::string(base));
     }
 
     void revisar_sentencia(const Sentencia& sentencia, const Funcion& funcion) {
         switch (sentencia.tipo) {
-            case TipoSentencia::Expresion:
-                if (sentencia.expresion) {
-                    // Reasignar es mover: el dueño no puede estar prestado.
-                    if (sentencia.expresion->tipo == TipoExpresion::Asignacion &&
-                        sentencia.expresion->izquierda &&
-                        sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
-                        comprobar_prestamo(sentencia.expresion->izquierda->lexema,
-                                           sentencia.expresion->span);
-                    }
-                    tipo_de(*sentencia.expresion);
+        case TipoSentencia::Expresion:
+            if (sentencia.expresion) {
+                // Reasignar es mover: el dueño no puede estar prestado.
+                if (sentencia.expresion->tipo == TipoExpresion::Asignacion &&
+                    sentencia.expresion->izquierda &&
+                    sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
+                    comprobar_prestamo(sentencia.expresion->izquierda->lexema,
+                                       sentencia.expresion->span);
                 }
+                tipo_de(*sentencia.expresion);
+            }
+            return;
+
+        case TipoSentencia::Variable:
+        case TipoSentencia::Constante: {
+            if (!sentencia.expresion) {
                 return;
+            }
+            // El tipo que se escribe tiene que existir. Sin esto, `variable n:
+            // natural = 1` se aceptaba y acababa siendo un `entero` en C.
+            revisar_tipo_declarado(sentencia.tipo_declarado, sentencia.span);
+            const Tipo real = tipo_de(*sentencia.expresion);
 
-            case TipoSentencia::Variable:
-            case TipoSentencia::Constante: {
-                if (!sentencia.expresion) {
-                    return;
-                }
-                // El tipo que se escribe tiene que existir. Sin esto, `variable n:
-                // natural = 1` se aceptaba y acababa siendo un `entero` en C.
-                revisar_tipo_declarado(sentencia.tipo_declarado, sentencia.span);
-                const Tipo real = tipo_de(*sentencia.expresion);
+            // Un préstamo no se puede guardar, salvo como referencia a un rasgo.
+            const bool referencia_a_rasgo =
+                sentencia.tipo_declarado.rfind("&", 0) == 0 &&
+                rasgos_.count(std::string(sentencia.tipo_declarado.substr(1))) != 0;
+            if (referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
+                sentencia.expresion->izquierda &&
+                sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
+                prestamos_[std::string(sentencia.expresion->izquierda->lexema)] =
+                    std::string(sentencia.nombre);
+            }
+            if (!referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
+                (sentencia.expresion->lexema == "&" || sentencia.expresion->lexema == "&mutable")) {
+                error(diagnostico::codigos::PRESTAMO_GUARDADO, sentencia.expresion->span)
+                    .ayuda("pase el préstamo directamente como argumento");
+                return;
+            }
 
-                // Un préstamo no se puede guardar, salvo como referencia a un rasgo.
-                const bool referencia_a_rasgo =
-                    sentencia.tipo_declarado.rfind("&", 0) == 0 &&
-                    rasgos_.count(std::string(sentencia.tipo_declarado.substr(1))) != 0;
-                if (referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
-                    sentencia.expresion->izquierda &&
-                    sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
-                    prestamos_[std::string(sentencia.expresion->izquierda->lexema)] =
-                        std::string(sentencia.nombre);
-                }
-                if (!referencia_a_rasgo && sentencia.expresion->tipo == TipoExpresion::Unaria &&
-                    (sentencia.expresion->lexema == "&" ||
-                     sentencia.expresion->lexema == "&mutable")) {
-                    error(diagnostico::codigos::PRESTAMO_GUARDADO, sentencia.expresion->span)
-                        .ayuda("pase el préstamo directamente como argumento");
-                    return;
-                }
+            if (sentencia.tipo_declarado.rfind("Vector<", 0) == 0 ||
+                sentencia.tipo_declarado.rfind("Mapa<", 0) == 0 ||
+                es_llamada_vector(*sentencia.expresion) || es_llamada_mapa(*sentencia.expresion)) {
+                declarar_prestable(sentencia.nombre);
+            }
 
-                if (sentencia.tipo_declarado.rfind("Vector<", 0) == 0 ||
-                    sentencia.tipo_declarado.rfind("Mapa<", 0) == 0 ||
-                    es_llamada_vector(*sentencia.expresion) ||
-                    es_llamada_mapa(*sentencia.expresion)) {
-                    declarar_prestable(sentencia.nombre);
-                }
-
-                // `Vector<MiEstructura>`: se recuerda qué estructura guarda,
-                // para que `obtener` devuelva una y se puedan tocar sus campos.
-                {
-                    std::string dentro;
-                    const std::string_view declarado = sentencia.tipo_declarado;
-                    const std::size_t abre = declarado.find("Vector<");
-                    if (abre != std::string_view::npos) {
-                        const std::size_t cierra = declarado.find('>', abre);
-                        if (cierra != std::string_view::npos) {
-                            dentro = std::string(declarado.substr(abre + 7, cierra - abre - 7));
-                        }
-                    } else if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
-                               sentencia.expresion->izquierda &&
-                               sentencia.expresion->izquierda->tipo ==
-                                   TipoExpresion::Miembro &&
-                               sentencia.expresion->izquierda->izquierda &&
-                               sentencia.expresion->izquierda->izquierda->tipo ==
-                                   TipoExpresion::Identificador &&
-                               sentencia.expresion->izquierda->izquierda->lexema ==
-                                   "Vector" &&
-                               sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() ==
-                                   1) {
-                        dentro = std::string(
-                            sentencia.expresion->izquierda->izquierda->tipos_aplicados.front());
+            // `Vector<MiEstructura>`: se recuerda qué estructura guarda,
+            // para que `obtener` devuelva una y se puedan tocar sus campos.
+            {
+                std::string dentro;
+                const std::string_view declarado = sentencia.tipo_declarado;
+                const std::size_t abre = declarado.find("Vector<");
+                if (abre != std::string_view::npos) {
+                    const std::size_t cierra = declarado.find('>', abre);
+                    if (cierra != std::string_view::npos) {
+                        dentro = std::string(declarado.substr(abre + 7, cierra - abre - 7));
                     }
-                    if (!dentro.empty() && tipos_.count(dentro) != 0) {
-                        declarar_vector_de_estructura(sentencia.nombre, dentro);
-                    }
+                } else if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                           sentencia.expresion->izquierda &&
+                           sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                           sentencia.expresion->izquierda->izquierda &&
+                           sentencia.expresion->izquierda->izquierda->tipo ==
+                               TipoExpresion::Identificador &&
+                           sentencia.expresion->izquierda->izquierda->lexema == "Vector" &&
+                           sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 1) {
+                    dentro = std::string(
+                        sentencia.expresion->izquierda->izquierda->tipos_aplicados.front());
                 }
+                if (!dentro.empty() && tipos_.count(dentro) != 0) {
+                    declarar_vector_de_estructura(sentencia.nombre, dentro);
+                }
+            }
 
-                // Y si la variable es una estructura sacada de un vector, se
-                // declara como estructura para poder prestarla y tocar campos.
-                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
-                    sentencia.expresion->izquierda &&
-                    sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
-                    sentencia.expresion->izquierda->anotacion == "obtener" &&
-                    sentencia.expresion->izquierda->izquierda &&
-                    sentencia.expresion->izquierda->izquierda->tipo ==
-                        TipoExpresion::Identificador) {
-                    const std::string guarda = estructura_de_vector(
-                        sentencia.expresion->izquierda->izquierda->lexema);
-                    if (!guarda.empty()) {
-                        declarar(sentencia.nombre, Tipo::Desconocido, guarda);
+            // Y si la variable es una estructura sacada de un vector, se
+            // declara como estructura para poder prestarla y tocar campos.
+            if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                sentencia.expresion->izquierda &&
+                sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                sentencia.expresion->izquierda->anotacion == "obtener" &&
+                sentencia.expresion->izquierda->izquierda &&
+                sentencia.expresion->izquierda->izquierda->tipo == TipoExpresion::Identificador) {
+                const std::string guarda =
+                    estructura_de_vector(sentencia.expresion->izquierda->izquierda->lexema);
+                if (!guarda.empty()) {
+                    declarar(sentencia.nombre, Tipo::Desconocido, guarda);
+                }
+            }
+            if (!sentencia.tipo_declarado.empty() &&
+                tipos_.count(std::string(sentencia.tipo_declarado)) != 0) {
+                declarar(sentencia.nombre, Tipo::Desconocido,
+                         std::string(sentencia.tipo_declarado));
+            }
+            // Un `Vector<flotante>` se recuerda para saber que su elemento es
+            // un flotante, tanto al obtener como al recorrerlo.
+            if (sentencia.tipo_declarado.find("Mapa<") != std::string_view::npos &&
+                sentencia.tipo_declarado.find("flotante") != std::string_view::npos) {
+                declarar_mapa_flotante(sentencia.nombre);
+            }
+            // `variable m = Mapa<texto, flotante>.nuevo()`: el tipo está en
+            // los tipos aplicados, no en una anotación.
+            if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                sentencia.expresion->izquierda &&
+                sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                sentencia.expresion->izquierda->izquierda &&
+                sentencia.expresion->izquierda->izquierda->tipo == TipoExpresion::Identificador &&
+                sentencia.expresion->izquierda->izquierda->lexema == "Mapa" &&
+                sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 2 &&
+                sentencia.expresion->izquierda->izquierda->tipos_aplicados[1] == "flotante") {
+                declarar_mapa_flotante(sentencia.nombre);
+            }
+            if (sentencia.tipo_declarado.find("Vector<flotante>") != std::string_view::npos ||
+                (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                 sentencia.expresion->izquierda &&
+                 sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                 sentencia.expresion->izquierda->izquierda &&
+                 sentencia.expresion->izquierda->izquierda->tipo == TipoExpresion::Identificador &&
+                 sentencia.expresion->izquierda->izquierda->lexema == "Vector" &&
+                 sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 1 &&
+                 sentencia.expresion->izquierda->izquierda->tipos_aplicados.front() ==
+                     "flotante")) {
+                declarar_vector_flotante(sentencia.nombre);
+            }
+            // Una función propia que devuelve una colección deja un valor
+            // prestable, igual que si se hubiera creado aquí.
+            if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                sentencia.expresion->izquierda &&
+                sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
+                const auto propia =
+                    funciones_.find(std::string(sentencia.expresion->izquierda->lexema));
+                if (propia != funciones_.end()) {
+                    const std::string_view devuelto = propia->second->tipo_retorno;
+                    if (devuelto.rfind("Vector<", 0) == 0 || devuelto.rfind("Mapa<", 0) == 0 ||
+                        devuelto.rfind("Caja<", 0) == 0) {
+                        declarar_prestable(sentencia.nombre);
                     }
-                }
-                if (!sentencia.tipo_declarado.empty() &&
-                    tipos_.count(std::string(sentencia.tipo_declarado)) != 0) {
-                    declarar(sentencia.nombre, Tipo::Desconocido,
-                             std::string(sentencia.tipo_declarado));
-                }
-                // Un `Vector<flotante>` se recuerda para saber que su elemento es
-                // un flotante, tanto al obtener como al recorrerlo.
-                if (sentencia.tipo_declarado.find("Mapa<") != std::string_view::npos &&
-                    sentencia.tipo_declarado.find("flotante") != std::string_view::npos) {
-                    declarar_mapa_flotante(sentencia.nombre);
-                }
-                // `variable m = Mapa<texto, flotante>.nuevo()`: el tipo está en
-                // los tipos aplicados, no en una anotación.
-                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
-                    sentencia.expresion->izquierda &&
-                    sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
-                    sentencia.expresion->izquierda->izquierda &&
-                    sentencia.expresion->izquierda->izquierda->tipo ==
-                        TipoExpresion::Identificador &&
-                    sentencia.expresion->izquierda->izquierda->lexema == "Mapa" &&
-                    sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 2 &&
-                    sentencia.expresion->izquierda->izquierda->tipos_aplicados[1] ==
-                        "flotante") {
-                    declarar_mapa_flotante(sentencia.nombre);
-                }
-                if (sentencia.tipo_declarado.find("Vector<flotante>") != std::string_view::npos ||
-                    (sentencia.expresion->tipo == TipoExpresion::Llamada &&
-                     sentencia.expresion->izquierda &&
-                     sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
-                     sentencia.expresion->izquierda->izquierda &&
-                     sentencia.expresion->izquierda->izquierda->tipo ==
-                         TipoExpresion::Identificador &&
-                     sentencia.expresion->izquierda->izquierda->lexema == "Vector" &&
-                     sentencia.expresion->izquierda->izquierda->tipos_aplicados.size() == 1 &&
-                     sentencia.expresion->izquierda->izquierda->tipos_aplicados.front() ==
-                         "flotante")) {
-                    declarar_vector_flotante(sentencia.nombre);
-                }
-                // Una función propia que devuelve una colección deja un valor
-                // prestable, igual que si se hubiera creado aquí.
-                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
-                    sentencia.expresion->izquierda &&
-                    sentencia.expresion->izquierda->tipo == TipoExpresion::Identificador) {
-                    const auto propia =
-                        funciones_.find(std::string(sentencia.expresion->izquierda->lexema));
-                    if (propia != funciones_.end()) {
-                        const std::string_view devuelto = propia->second->tipo_retorno;
-                        if (devuelto.rfind("Vector<", 0) == 0 ||
-                            devuelto.rfind("Mapa<", 0) == 0 ||
-                            devuelto.rfind("Caja<", 0) == 0) {
-                            declarar_prestable(sentencia.nombre);
-                        }
-                        if (devuelto.find("Vector<flotante>") != std::string_view::npos) {
-                            declarar_vector_flotante(sentencia.nombre);
-                        }
-                        if (devuelto.find("Vector<texto>") != std::string_view::npos) {
-                            declarar_vector_texto(sentencia.nombre);
-                        }
+                    if (devuelto.find("Vector<flotante>") != std::string_view::npos) {
+                        declarar_vector_flotante(sentencia.nombre);
+                    }
+                    if (devuelto.find("Vector<texto>") != std::string_view::npos) {
+                        declarar_vector_texto(sentencia.nombre);
                     }
                 }
-                // Una llamada a un módulo que devuelve una colección también se presta.
-                if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
-                    sentencia.expresion->izquierda &&
-                    sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro) {
-                    const Expresion& acceso = *sentencia.expresion->izquierda;
-                    if (acceso.izquierda &&
-                        acceso.izquierda->tipo == TipoExpresion::Identificador) {
-                        const auto modulo = modulos_.find(acceso.izquierda->lexema);
-                        if (modulo != modulos_.end()) {
-                            const auto encontrada = modulo->second.find(acceso.anotacion);
-                            if (encontrada != modulo->second.end()) {
-                                const std::string_view devuelto =
-                                    encontrada->second->tipo_retorno;
-                                if (devuelto.rfind("Mapa<", 0) == 0 ||
-                                    devuelto.rfind("Vector<", 0) == 0 ||
-                                    devuelto.rfind("Caja<", 0) == 0) {
-                                    declarar_prestable(sentencia.nombre);
-                                }
-                                // Y se recuerda de qué es el vector, para que
-                                // `obtener` devuelva el tipo correcto.
-                                if (devuelto.find("Vector<texto>") != std::string_view::npos) {
-                                    declarar_vector_texto(sentencia.nombre);
-                                }
-                                if (devuelto.find("Vector<flotante>") !=
-                                    std::string_view::npos) {
-                                    declarar_vector_flotante(sentencia.nombre);
-                                }
+            }
+            // Una llamada a un módulo que devuelve una colección también se presta.
+            if (sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                sentencia.expresion->izquierda &&
+                sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro) {
+                const Expresion& acceso = *sentencia.expresion->izquierda;
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador) {
+                    const auto modulo = modulos_.find(acceso.izquierda->lexema);
+                    if (modulo != modulos_.end()) {
+                        const auto encontrada = modulo->second.find(acceso.anotacion);
+                        if (encontrada != modulo->second.end()) {
+                            const std::string_view devuelto = encontrada->second->tipo_retorno;
+                            if (devuelto.rfind("Mapa<", 0) == 0 ||
+                                devuelto.rfind("Vector<", 0) == 0 ||
+                                devuelto.rfind("Caja<", 0) == 0) {
+                                declarar_prestable(sentencia.nombre);
+                            }
+                            // Y se recuerda de qué es el vector, para que
+                            // `obtener` devuelva el tipo correcto.
+                            if (devuelto.find("Vector<texto>") != std::string_view::npos) {
+                                declarar_vector_texto(sentencia.nombre);
+                            }
+                            if (devuelto.find("Vector<flotante>") != std::string_view::npos) {
+                                declarar_vector_flotante(sentencia.nombre);
                             }
                         }
                     }
                 }
-                if (es_llamada_vector(*sentencia.expresion)) {
-                    const Expresion& destino = *sentencia.expresion->izquierda;
-                    if (destino.izquierda &&
-                        !destino.izquierda->tipos_aplicados.empty() &&
-                        destino.izquierda->tipos_aplicados.front() == "texto") {
-                        declarar_vector_texto(sentencia.nombre);
-                    }
-                }
-                if (real == Tipo::Texto && sentencia.tipo_declarado.empty()) {
-                    if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                        es_texto(sentencia.expresion->lexema)) {
-                        marcar_movida(sentencia.expresion->lexema, sentencia.span);
-                    }
-                    declarar_texto(sentencia.nombre);
-                    declarar_prestable(sentencia.nombre);
-                    declarar(sentencia.nombre, real);
-                    return;
-                }
-
-                // Un compuesto genérico con campos con dueño no se puede copiar.
-                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                    es_compuesto(sentencia.expresion->lexema)) {
-                    error(diagnostico::codigos::COPIA_COMPUESTO, sentencia.expresion->span)
-                        .parametro("nombre", std::string(sentencia.expresion->lexema))
-                        .ayuda("construya otro o páselo con «&»");
-                }
-
-                // Se construye un compuesto: puede tener campos con dueño.
-                if (sentencia.expresion->tipo == TipoExpresion::Construccion &&
-                    sentencia.expresion->anotacion.find('<') != std::string::npos) {
-                    declarar_compuesto(sentencia.nombre);
-                }
-
-                // ¿Declara una clase por referencia?
-                if (sentencia.expresion->tipo == TipoExpresion::Construccion &&
-                    sentencia.expresion->monticulo) {
-                    declarar_referencia(sentencia.nombre);
-                    declarar_prestable(sentencia.nombre);
-                    // Se recuerda el tipo concreto para leer sus campos, salvo que
-                    // se haya declarado un tipo base: ahí manda el declarado.
-                    declarar(sentencia.nombre, real,
-                             sentencia.tipo_declarado.empty()
-                                 ? sentencia.expresion->anotacion
-                                 : sentencia.tipo_declarado);
-                    return;
-                }
-                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                    es_referencia(sentencia.expresion->lexema)) {
-                    marcar_movida(sentencia.expresion->lexema, sentencia.span);
-                    declarar_referencia(sentencia.nombre);
-                    declarar_prestable(sentencia.nombre);
-                    declarar(sentencia.nombre, real);
-                    return;
-                }
-
-                // ¿Declara una caja nueva, o mueve una que ya existía?
-                if (es_llamada_caja(*sentencia.expresion) && sentencia.tipo_declarado.empty()) {
-                    declarar_caja(sentencia.nombre);
-                    declarar(sentencia.nombre, real);
-                    return;
-                }
-                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                    es_caja(sentencia.expresion->lexema) && sentencia.tipo_declarado.empty()) {
-                    marcar_movida(sentencia.expresion->lexema, sentencia.span);
-                    declarar_caja(sentencia.nombre);
-                    declarar(sentencia.nombre, real);
-                    return;
-                }
-
-                const bool es_construccion =
-                    sentencia.expresion->tipo == TipoExpresion::Construccion;
-                std::string_view estructura;
-                if (es_construccion) {
-                    estructura = sentencia.expresion->anotacion;
-                } else {
-                    const std::string_view devuelto = retorno_de_llamada(*sentencia.expresion);
-                    if (!devuelto.empty() && tipo_por_nombre(devuelto) != nullptr) {
-                        estructura = devuelto;
-                    }
-                }
-                if (sentencia.tipo_declarado.empty()) {
-                    declarar(sentencia.nombre, real, estructura);
-                    return;
-                }
-                const Tipo declarado = desde_nombre(sentencia.tipo_declarado);
-                exigir(declarado, real, sentencia.expresion->span);
-                declarar(sentencia.nombre, declarado,
-                         tipo_por_nombre(sentencia.tipo_declarado) != nullptr
-                             ? sentencia.tipo_declarado
-                             : std::string_view{});
-                return;
             }
-
-            case TipoSentencia::Si: {
-                if (sentencia.expresion) {
-                    exigir_booleano(tipo_de(*sentencia.expresion), sentencia.expresion->span);
-                }
-                revisar_cuerpo(sentencia.cuerpo, funcion);
-                if (!sentencia.sino.empty()) {
-                    revisar_cuerpo(sentencia.sino, funcion);
-                }
-                return;
-            }
-
-            case TipoSentencia::Mientras: {
-                if (sentencia.expresion) {
-                    exigir_booleano(tipo_de(*sentencia.expresion), sentencia.expresion->span);
-                }
-                revisar_cuerpo(sentencia.cuerpo, funcion);
-                return;
-            }
-
-            case TipoSentencia::Para: {
-                if (sentencia.expresion) {
-                    tipo_de(*sentencia.expresion);
-                }
-                if (sentencia.paso) {
-                    exigir(Tipo::Entero, tipo_de(*sentencia.paso), sentencia.paso->span);
-                }
-                abrir_ambito();
-                // La variable de un `para` sobre una colección toma el tipo del
-                // elemento: texto si el vector es de textos, entero si no.
-                const bool sobre_textos =
-                    sentencia.expresion &&
-                    sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                    es_vector_texto(sentencia.expresion->lexema);
-                const bool sobre_flotantes =
-                    sentencia.expresion &&
-                    sentencia.expresion->tipo == TipoExpresion::Identificador &&
-                    es_vector_flotante(sentencia.expresion->lexema);
-                if (!sentencia.indice.empty()) {
-                    declarar(sentencia.indice, Tipo::Entero);
-                }
-                declarar(sentencia.nombre, sobre_textos ? Tipo::Texto
-                                            : sobre_flotantes ? Tipo::Flotante
-                                                              : Tipo::Entero);
-                if (sobre_textos) {
+            if (es_llamada_vector(*sentencia.expresion)) {
+                const Expresion& destino = *sentencia.expresion->izquierda;
+                if (destino.izquierda && !destino.izquierda->tipos_aplicados.empty() &&
+                    destino.izquierda->tipos_aplicados.front() == "texto") {
                     declarar_vector_texto(sentencia.nombre);
                 }
-                if (sobre_flotantes) {
-                    declarar_vector_flotante(sentencia.nombre);
+            }
+            if (real == Tipo::Texto && sentencia.tipo_declarado.empty()) {
+                if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                    es_texto(sentencia.expresion->lexema)) {
+                    marcar_movida(sentencia.expresion->lexema, sentencia.span);
                 }
-                for (const Sentencia& hija : sentencia.cuerpo) {
-                    revisar_sentencia(hija, funcion);
-                }
-                cerrar_ambito();
+                declarar_texto(sentencia.nombre);
+                declarar_prestable(sentencia.nombre);
+                declarar(sentencia.nombre, real);
                 return;
             }
 
-            case TipoSentencia::Hacer: {
-                revisar_cuerpo(sentencia.cuerpo, funcion);
-                if (sentencia.paso) {
-                    exigir_booleano(tipo_de(*sentencia.paso), sentencia.paso->span);
-                }
+            // Un compuesto genérico con campos con dueño no se puede copiar.
+            if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                es_compuesto(sentencia.expresion->lexema)) {
+                error(diagnostico::codigos::COPIA_COMPUESTO, sentencia.expresion->span)
+                    .parametro("nombre", std::string(sentencia.expresion->lexema))
+                    .ayuda("construya otro o páselo con «&»");
+            }
+
+            // Se construye un compuesto: puede tener campos con dueño.
+            if (sentencia.expresion->tipo == TipoExpresion::Construccion &&
+                sentencia.expresion->anotacion.find('<') != std::string::npos) {
+                declarar_compuesto(sentencia.nombre);
+            }
+
+            // ¿Declara una clase por referencia?
+            if (sentencia.expresion->tipo == TipoExpresion::Construccion &&
+                sentencia.expresion->monticulo) {
+                declarar_referencia(sentencia.nombre);
+                declarar_prestable(sentencia.nombre);
+                // Se recuerda el tipo concreto para leer sus campos, salvo que
+                // se haya declarado un tipo base: ahí manda el declarado.
+                declarar(sentencia.nombre, real,
+                         sentencia.tipo_declarado.empty() ? sentencia.expresion->anotacion
+                                                          : sentencia.tipo_declarado);
+                return;
+            }
+            if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                es_referencia(sentencia.expresion->lexema)) {
+                marcar_movida(sentencia.expresion->lexema, sentencia.span);
+                declarar_referencia(sentencia.nombre);
+                declarar_prestable(sentencia.nombre);
+                declarar(sentencia.nombre, real);
                 return;
             }
 
-            case TipoSentencia::Bucle:
-                revisar_cuerpo(sentencia.cuerpo, funcion);
+            // ¿Declara una caja nueva, o mueve una que ya existía?
+            if (es_llamada_caja(*sentencia.expresion) && sentencia.tipo_declarado.empty()) {
+                declarar_caja(sentencia.nombre);
+                declarar(sentencia.nombre, real);
                 return;
-
-            case TipoSentencia::Romper:
-            case TipoSentencia::Continuar:
+            }
+            if (sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                es_caja(sentencia.expresion->lexema) && sentencia.tipo_declarado.empty()) {
+                marcar_movida(sentencia.expresion->lexema, sentencia.span);
+                declarar_caja(sentencia.nombre);
+                declarar(sentencia.nombre, real);
                 return;
+            }
 
-            case TipoSentencia::Retornar:
-                if (sentencia.expresion) {
-                    revisar_escape(*sentencia.expresion, funcion);
-                } {
+            const bool es_construccion = sentencia.expresion->tipo == TipoExpresion::Construccion;
+            std::string_view estructura;
+            if (es_construccion) {
+                estructura = sentencia.expresion->anotacion;
+            } else {
+                const std::string_view devuelto = retorno_de_llamada(*sentencia.expresion);
+                if (!devuelto.empty() && tipo_por_nombre(devuelto) != nullptr) {
+                    estructura = devuelto;
+                }
+            }
+            if (sentencia.tipo_declarado.empty()) {
+                declarar(sentencia.nombre, real, estructura);
+                return;
+            }
+            const Tipo declarado = desde_nombre(sentencia.tipo_declarado);
+            exigir(declarado, real, sentencia.expresion->span);
+            declarar(sentencia.nombre, declarado,
+                     tipo_por_nombre(sentencia.tipo_declarado) != nullptr ? sentencia.tipo_declarado
+                                                                          : std::string_view{});
+            return;
+        }
+
+        case TipoSentencia::Si: {
+            if (sentencia.expresion) {
+                exigir_booleano(tipo_de(*sentencia.expresion), sentencia.expresion->span);
+            }
+            revisar_cuerpo(sentencia.cuerpo, funcion);
+            if (!sentencia.sino.empty()) {
+                revisar_cuerpo(sentencia.sino, funcion);
+            }
+            return;
+        }
+
+        case TipoSentencia::Mientras: {
+            if (sentencia.expresion) {
+                exigir_booleano(tipo_de(*sentencia.expresion), sentencia.expresion->span);
+            }
+            revisar_cuerpo(sentencia.cuerpo, funcion);
+            return;
+        }
+
+        case TipoSentencia::Para: {
+            if (sentencia.expresion) {
+                tipo_de(*sentencia.expresion);
+            }
+            if (sentencia.paso) {
+                exigir(Tipo::Entero, tipo_de(*sentencia.paso), sentencia.paso->span);
+            }
+            abrir_ambito();
+            // La variable de un `para` sobre una colección toma el tipo del
+            // elemento: texto si el vector es de textos, entero si no.
+            const bool sobre_textos = sentencia.expresion &&
+                                      sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                                      es_vector_texto(sentencia.expresion->lexema);
+            const bool sobre_flotantes =
+                sentencia.expresion && sentencia.expresion->tipo == TipoExpresion::Identificador &&
+                es_vector_flotante(sentencia.expresion->lexema);
+            if (!sentencia.indice.empty()) {
+                declarar(sentencia.indice, Tipo::Entero);
+            }
+            declarar(sentencia.nombre, sobre_textos      ? Tipo::Texto
+                                       : sobre_flotantes ? Tipo::Flotante
+                                                         : Tipo::Entero);
+            if (sobre_textos) {
+                declarar_vector_texto(sentencia.nombre);
+            }
+            if (sobre_flotantes) {
+                declarar_vector_flotante(sentencia.nombre);
+            }
+            for (const Sentencia& hija : sentencia.cuerpo) {
+                revisar_sentencia(hija, funcion);
+            }
+            cerrar_ambito();
+            return;
+        }
+
+        case TipoSentencia::Hacer: {
+            revisar_cuerpo(sentencia.cuerpo, funcion);
+            if (sentencia.paso) {
+                exigir_booleano(tipo_de(*sentencia.paso), sentencia.paso->span);
+            }
+            return;
+        }
+
+        case TipoSentencia::Bucle:
+            revisar_cuerpo(sentencia.cuerpo, funcion);
+            return;
+
+        case TipoSentencia::Romper:
+        case TipoSentencia::Continuar:
+            return;
+
+        case TipoSentencia::Retornar:
+            if (sentencia.expresion) {
+                revisar_escape(*sentencia.expresion, funcion);
+            }
+            {
                 revisar_retorno(sentencia, funcion);
                 return;
             }
 
-            case TipoSentencia::Asm:
-                if (profundidad_inseguro_ == 0) {
-                    error(diagnostico::codigos::ASM_FUERA_DE_INSEGURO, sentencia.span)
-                        .ayuda("envuélvalo en «inseguro { }» y documente por qué");
-                }
-                return;
+        case TipoSentencia::Asm:
+            if (profundidad_inseguro_ == 0) {
+                error(diagnostico::codigos::ASM_FUERA_DE_INSEGURO, sentencia.span)
+                    .ayuda("envuélvalo en «inseguro { }» y documente por qué");
+            }
+            return;
 
-            case TipoSentencia::Inseguro:
-                ++profundidad_inseguro_;
-                revisar_cuerpo(sentencia.cuerpo, funcion);
-                --profundidad_inseguro_;
-                return;
+        case TipoSentencia::Inseguro:
+            ++profundidad_inseguro_;
+            revisar_cuerpo(sentencia.cuerpo, funcion);
+            --profundidad_inseguro_;
+            return;
 
-            case TipoSentencia::Bloque:
-                revisar_cuerpo(sentencia.cuerpo, funcion);
-                return;
+        case TipoSentencia::Bloque:
+            revisar_cuerpo(sentencia.cuerpo, funcion);
+            return;
 
-            case TipoSentencia::Coincide:
-                revisar_coincide(sentencia, funcion);
-                return;
+        case TipoSentencia::Coincide:
+            revisar_coincide(sentencia, funcion);
+            return;
         }
     }
 
     /// Un préstamo a una variable local no puede salir de la función.
     void revisar_escape(const Expresion& expresion, const Funcion& funcion) {
         if (expresion.tipo == TipoExpresion::Unaria &&
-            (expresion.lexema == "&" || expresion.lexema == "&mutable") &&
-            expresion.izquierda &&
+            (expresion.lexema == "&" || expresion.lexema == "&mutable") && expresion.izquierda &&
             expresion.izquierda->tipo == TipoExpresion::Identificador) {
             const std::string_view nombre = expresion.izquierda->lexema;
             if (parametros_actuales_.count(std::string(nombre)) == 0) {
@@ -1120,8 +1100,8 @@ private:
                         .parametro("dados", std::to_string(rama.patron.ligaduras.size()));
                 }
                 abrir_ambito();
-                for (std::size_t i = 0;
-                     i < datos.campos.size() && i < rama.patron.ligaduras.size(); ++i) {
+                for (std::size_t i = 0; i < datos.campos.size() && i < rama.patron.ligaduras.size();
+                     ++i) {
                     declarar(rama.patron.ligaduras[i], desde_nombre(datos.campos[i].tipo));
                 }
                 revisar_cuerpo(rama.cuerpo, funcion);
@@ -1144,8 +1124,7 @@ private:
                     }
                     if (!existe) {
                         error(diagnostico::codigos::VARIANTE_DESCONOCIDA, rama.patron.span)
-                            .parametro("enumeracion",
-                                       std::string(enumeracion->second->nombre))
+                            .parametro("enumeracion", std::string(enumeracion->second->nombre))
                             .parametro("variante", std::string(rama.patron.valor));
                     }
                 }
@@ -1217,79 +1196,79 @@ private:
     // --- Expresiones -------------------------------------------------------
     Tipo tipo_de(const Expresion& expresion) {
         switch (expresion.tipo) {
-            case TipoExpresion::Texto:
-                return Tipo::Texto;
-            case TipoExpresion::Entero:
-                return Tipo::Entero;
-            case TipoExpresion::Booleano:
-                return Tipo::Booleano;
-            case TipoExpresion::Identificador: {
-                if (expresion.lexema == "Caja" || expresion.lexema == "Vector" ||
-                    expresion.lexema == "Mapa") {
-                    return Tipo::Desconocido;
-                }
-                if (esta_movida(expresion.lexema)) {
-                    error(diagnostico::codigos::USO_TRAS_MOVER, expresion.span)
-                        .parametro("nombre", std::string(expresion.lexema))
-                        .ayuda("se movió a otro sitio: use «&» para prestarlo sin transferirlo");
-                    return Tipo::Desconocido;
-                }
-                return buscar(expresion.lexema, expresion.span);
-            }
-            case TipoExpresion::Unaria:
-                return tipo_unaria(expresion);
-            case TipoExpresion::Binaria:
-                return tipo_binaria(expresion);
-            case TipoExpresion::Asignacion:
-                return tipo_asignacion(expresion);
-            case TipoExpresion::Llamada:
-                return tipo_llamada(expresion);
-            case TipoExpresion::Construccion:
-                return tipo_construccion(expresion);
-            case TipoExpresion::Propagacion: {
-                // `?` solo tiene sentido en una función que devuelve un resultado.
-                bool devuelve_resultado = false;
-                if (funcion_actual_ != nullptr) {
-                    const auto enumeracion =
-                        enumeraciones_.find(std::string(funcion_actual_->tipo_retorno));
-                    if (enumeracion != enumeraciones_.end() &&
-                        enumeracion->second->variantes.size() >= 2 &&
-                        enumeracion->second->variantes[0].campos.size() == 1) {
-                        devuelve_resultado = true;
-                    }
-                }
-                if (!devuelve_resultado) {
-                    error(diagnostico::codigos::PROPAGACION_SIN_RESULTADO, expresion.span)
-                        .ayuda("devuelva un resultado desde esta función o trate el error");
-                }
-                return Tipo::Entero;
-            }
-            case TipoExpresion::Miembro:
-                return tipo_miembro(expresion);
-            case TipoExpresion::Este:
-            case TipoExpresion::Super:
+        case TipoExpresion::Texto:
+            return Tipo::Texto;
+        case TipoExpresion::Entero:
+            return Tipo::Entero;
+        case TipoExpresion::Booleano:
+            return Tipo::Booleano;
+        case TipoExpresion::Identificador: {
+            if (expresion.lexema == "Caja" || expresion.lexema == "Vector" ||
+                expresion.lexema == "Mapa") {
                 return Tipo::Desconocido;
-            case TipoExpresion::Flotante:
-                return Tipo::Flotante;
-            case TipoExpresion::Como: {
-                // `x como tipo`: el resultado tiene el tipo pedido, si existe.
-                const Tipo destino = desde_nombre(expresion.anotacion);
-                if (destino == Tipo::Desconocido) {
-                    error(diagnostico::codigos::TIPO_DESCONOCIDO, expresion.span)
-                        .parametro("nombre", std::string(expresion.anotacion));
-                }
-                return destino;
             }
-            default:
-                // Caracteres, índices y conversiones: el generador los rechaza con
-                // NOK6003 cuando llegue el momento.
+            if (esta_movida(expresion.lexema)) {
+                error(diagnostico::codigos::USO_TRAS_MOVER, expresion.span)
+                    .parametro("nombre", std::string(expresion.lexema))
+                    .ayuda("se movió a otro sitio: use «&» para prestarlo sin transferirlo");
                 return Tipo::Desconocido;
+            }
+            return buscar(expresion.lexema, expresion.span);
+        }
+        case TipoExpresion::Unaria:
+            return tipo_unaria(expresion);
+        case TipoExpresion::Binaria:
+            return tipo_binaria(expresion);
+        case TipoExpresion::Asignacion:
+            return tipo_asignacion(expresion);
+        case TipoExpresion::Llamada:
+            return tipo_llamada(expresion);
+        case TipoExpresion::Construccion:
+            return tipo_construccion(expresion);
+        case TipoExpresion::Propagacion: {
+            // `?` solo tiene sentido en una función que devuelve un resultado.
+            bool devuelve_resultado = false;
+            if (funcion_actual_ != nullptr) {
+                const auto enumeracion =
+                    enumeraciones_.find(std::string(funcion_actual_->tipo_retorno));
+                if (enumeracion != enumeraciones_.end() &&
+                    enumeracion->second->variantes.size() >= 2 &&
+                    enumeracion->second->variantes[0].campos.size() == 1) {
+                    devuelve_resultado = true;
+                }
+            }
+            if (!devuelve_resultado) {
+                error(diagnostico::codigos::PROPAGACION_SIN_RESULTADO, expresion.span)
+                    .ayuda("devuelva un resultado desde esta función o trate el error");
+            }
+            return Tipo::Entero;
+        }
+        case TipoExpresion::Miembro:
+            return tipo_miembro(expresion);
+        case TipoExpresion::Este:
+        case TipoExpresion::Super:
+            return Tipo::Desconocido;
+        case TipoExpresion::Flotante:
+            return Tipo::Flotante;
+        case TipoExpresion::Como: {
+            // `x como tipo`: el resultado tiene el tipo pedido, si existe.
+            const Tipo destino = desde_nombre(expresion.anotacion);
+            if (destino == Tipo::Desconocido) {
+                error(diagnostico::codigos::TIPO_DESCONOCIDO, expresion.span)
+                    .parametro("nombre", std::string(expresion.anotacion));
+            }
+            return destino;
+        }
+        default:
+            // Caracteres, índices y conversiones: el generador los rechaza con
+            // NOK6003 cuando llegue el momento.
+            return Tipo::Desconocido;
         }
     }
 
     Tipo tipo_unaria(const Expresion& expresion) {
-        const Tipo operando = expresion.izquierda ? tipo_de(*expresion.izquierda)
-                                                  : Tipo::Desconocido;
+        const Tipo operando =
+            expresion.izquierda ? tipo_de(*expresion.izquierda) : Tipo::Desconocido;
         if (expresion.lexema == "!") {
             exigir(Tipo::Booleano, operando, expresion.span);
             return Tipo::Booleano;
@@ -1303,8 +1282,7 @@ private:
         }
         if (expresion.lexema == "*") {
             // Desreferenciar un `&texto` da un texto, no un entero.
-            if (expresion.izquierda &&
-                expresion.izquierda->tipo == TipoExpresion::Identificador &&
+            if (expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Identificador &&
                 prestamos_texto_.count(std::string(expresion.izquierda->lexema)) != 0) {
                 return Tipo::Texto;
             }
@@ -1312,8 +1290,7 @@ private:
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
                               es_caja(expresion.izquierda->lexema);
             const bool prestamo_de_caja =
-                expresion.izquierda &&
-                expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Identificador &&
                 es_prestamo_declarado(expresion.izquierda->lexema);
             if (!caja && !prestamo_de_caja) {
                 error(diagnostico::codigos::DEREFERENCIA_INVALIDA, expresion.span);
@@ -1322,8 +1299,8 @@ private:
         }
         if (expresion.lexema == "&" || expresion.lexema == "&mutable") {
             // Un campo es un sitio válido: `&objeto.campo` presta el campo.
-            const bool campo = expresion.izquierda &&
-                               expresion.izquierda->tipo == TipoExpresion::Miembro;
+            const bool campo =
+                expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Miembro;
             // Se puede prestar una caja, una colección o un texto.
             const bool caja = expresion.izquierda &&
                               expresion.izquierda->tipo == TipoExpresion::Identificador &&
@@ -1338,23 +1315,23 @@ private:
             // También se presta el resultado de una llamada (el compilador le da
             // un sitio temporal) y una variable cualquiera, incluidas las de un
             // tipo propio, que es como se pasa una estructura sin copiarla.
-            const bool llamada = expresion.izquierda &&
-                                 expresion.izquierda->tipo == TipoExpresion::Llamada;
+            const bool llamada =
+                expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Llamada;
             // Una variable suelta también: es como se pasa una estructura sin
             // copiarla. Lo que no vale es prestar algo que ya es un préstamo:
             // eso sería un puntero a puntero.
-            const bool variable = expresion.izquierda &&
-                                  (expresion.izquierda->tipo == TipoExpresion::Identificador ||
-                                   expresion.izquierda->tipo == TipoExpresion::Miembro ||
-                                   expresion.izquierda->tipo == TipoExpresion::Indice) &&
-                                  !es_prestamo_declarado(
-                                      std::string_view(expresion.izquierda->lexema)) &&
-                                  (expresion.izquierda->tipo != TipoExpresion::Identificador ||
-                                   !buscar_estructura(expresion.izquierda->lexema).empty() ||
-                                   es_caja(expresion.izquierda->lexema) ||
-                                   es_prestable(expresion.izquierda->lexema) ||
-                                   es_texto(expresion.izquierda->lexema) ||
-                                   tipo_de(*expresion.izquierda) == Tipo::Texto);
+            const bool variable =
+                expresion.izquierda &&
+                (expresion.izquierda->tipo == TipoExpresion::Identificador ||
+                 expresion.izquierda->tipo == TipoExpresion::Miembro ||
+                 expresion.izquierda->tipo == TipoExpresion::Indice) &&
+                !es_prestamo_declarado(std::string_view(expresion.izquierda->lexema)) &&
+                (expresion.izquierda->tipo != TipoExpresion::Identificador ||
+                 !buscar_estructura(expresion.izquierda->lexema).empty() ||
+                 es_caja(expresion.izquierda->lexema) ||
+                 es_prestable(expresion.izquierda->lexema) ||
+                 es_texto(expresion.izquierda->lexema) ||
+                 tipo_de(*expresion.izquierda) == Tipo::Texto);
             if (!caja && !llamada && !variable) {
                 error(diagnostico::codigos::PRESTAMO_INVALIDO, expresion.span);
             }
@@ -1489,8 +1466,7 @@ private:
 
         if (expresion.izquierda->tipo == TipoExpresion::Miembro) {
             const Expresion& acceso = *expresion.izquierda;
-            if (acceso.izquierda &&
-                acceso.izquierda->tipo == TipoExpresion::Identificador) {
+            if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador) {
                 // Una variable local con el nombre del módulo tiene prioridad.
                 const auto modulo = declarada(acceso.izquierda->lexema)
                                         ? modulos_.end()
@@ -1500,7 +1476,7 @@ private:
                     if (funcion == modulo->second.end()) {
                         error(diagnostico::codigos::FUNCION_NO_DECLARADA, expresion.span)
                             .parametro("nombre", std::string(acceso.izquierda->lexema) + "." +
-                                                   std::string(acceso.anotacion));
+                                                     std::string(acceso.anotacion));
                         return Tipo::Desconocido;
                     }
                     if (!funcion->second->publico) {
@@ -1509,10 +1485,9 @@ private:
                             .parametro("modulo", std::string(acceso.izquierda->lexema));
                         return Tipo::Desconocido;
                     }
-                    return comprobar_argumentos(
-                        *funcion->second, expresion,
-                        std::string(acceso.izquierda->lexema) + "." +
-                            std::string(acceso.anotacion));
+                    return comprobar_argumentos(*funcion->second, expresion,
+                                                std::string(acceso.izquierda->lexema) + "." +
+                                                    std::string(acceso.anotacion));
                 }
             }
             return tipo_llamada_metodo(expresion);
@@ -1540,20 +1515,18 @@ private:
                      ++i) {
                     if (expresion.lista[i]) {
                         const Tipo real = tipo_de(*expresion.lista[i]);
-                        exigir(desde_nombre(datos.campos[i].tipo), real,
-                               expresion.lista[i]->span);
+                        exigir(desde_nombre(datos.campos[i].tipo), real, expresion.lista[i]->span);
                     }
                 }
                 return Tipo::Desconocido;
             }
         }
 
-
         if (nombre_llamado == "leer_archivo" || nombre_llamado == "existe_archivo" ||
             nombre_llamado == "escribir_archivo" || nombre_llamado == "agregar_archivo") {
             const std::size_t esperados =
                 (nombre_llamado == "escribir_archivo" || nombre_llamado == "agregar_archivo") ? 2
-                                                                                            : 1;
+                                                                                              : 1;
             if (expresion.lista.size() != esperados) {
                 error(diagnostico::codigos::ARIDAD_INCORRECTA, expresion.span)
                     .parametro("funcion", std::string(nombre_llamado))
@@ -1590,7 +1563,7 @@ private:
                 expresion.lista.front() ? tipo_de(*expresion.lista.front()) : Tipo::Desconocido;
             if (argumento != Tipo::Entero && argumento != Tipo::Texto &&
                 argumento != Tipo::Booleano && argumento != Tipo::Flotante &&
-            argumento != Tipo::Desconocido) {
+                argumento != Tipo::Desconocido) {
                 error(diagnostico::codigos::TIPO_INCOMPATIBLE, expresion.lista.front()->span)
                     .parametro("esperado", "entero, texto, booleano o flotante")
                     .parametro("encontrado", nombre(argumento));
@@ -1629,8 +1602,7 @@ private:
         // `texto.a_flotante()` devuelve un flotante.
         if (acceso.anotacion == "a_flotante" && acceso.izquierda &&
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
-            (es_texto(acceso.izquierda->lexema) ||
-             tipo_de(*acceso.izquierda) == Tipo::Texto)) {
+            (es_texto(acceso.izquierda->lexema) || tipo_de(*acceso.izquierda) == Tipo::Texto)) {
             return Tipo::Flotante;
         }
         // `Vector<flotante>.obtener(i)` devuelve un flotante.
@@ -1645,10 +1617,9 @@ private:
             es_mapa_flotante(acceso.izquierda->lexema)) {
             return Tipo::Flotante;
         }
-        if ((acceso.anotacion == "obtener" || acceso.anotacion == "largo") &&
-            acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
-            declarada(acceso.izquierda->lexema) &&
-            !es_vector_texto(acceso.izquierda->lexema) &&
+        if ((acceso.anotacion == "obtener" || acceso.anotacion == "largo") && acceso.izquierda &&
+            acceso.izquierda->tipo == TipoExpresion::Identificador &&
+            declarada(acceso.izquierda->lexema) && !es_vector_texto(acceso.izquierda->lexema) &&
             estructura_de(*acceso.izquierda).empty()) {
             return Tipo::Entero;
         }
@@ -1657,7 +1628,8 @@ private:
         if (acceso.anotacion == "agregar" && acceso.izquierda &&
             acceso.izquierda->tipo == TipoExpresion::Identificador &&
             es_vector_texto(acceso.izquierda->lexema) && expresion.lista.size() == 1 &&
-            expresion.lista.front() && expresion.lista.front()->tipo == TipoExpresion::Identificador) {
+            expresion.lista.front() &&
+            expresion.lista.front()->tipo == TipoExpresion::Identificador) {
             marcar_movida(expresion.lista.front()->lexema, expresion.span);
         }
 
@@ -1683,9 +1655,9 @@ private:
             return Tipo::Desconocido;
         }
 
-        return comprobar_argumentos(
-            *metodo, expresion,
-            std::string(definicion->nombre) + "." + std::string(metodo->nombre));
+        return comprobar_argumentos(*metodo, expresion,
+                                    std::string(definicion->nombre) + "." +
+                                        std::string(metodo->nombre));
     }
 
     Tipo comprobar_argumentos(const Funcion& funcion, const Expresion& llamada,
@@ -1729,8 +1701,8 @@ private:
                         .parametro("parametro", std::string(funcion.parametros[i].nombre))
                         .parametro("funcion", nombre_visible)
                         .parametro("esperado", std::string(funcion.parametros[i].tipo))
-                        .parametro("encontrado", real.empty() ? std::string("otro tipo")
-                                                              : std::string(real));
+                        .parametro("encontrado",
+                                   real.empty() ? std::string("otro tipo") : std::string(real));
                 }
                 continue;
             }
@@ -1792,8 +1764,8 @@ private:
             return desde_nombre(metodo->tipo_retorno);
         }
         // Un método heredado también es un miembro del tipo.
-        for (const sintactico::DefinicionTipo* base = base_de(*definicion);
-             base != nullptr; base = base_de(*base)) {
+        for (const sintactico::DefinicionTipo* base = base_de(*definicion); base != nullptr;
+             base = base_de(*base)) {
             if (const Funcion* heredado = metodo_de(*base, expresion.anotacion);
                 heredado != nullptr) {
                 return desde_nombre(heredado->tipo_retorno);
@@ -1812,8 +1784,7 @@ private:
     }
 
     /// Clase base de una definición, si la tiene.
-    const sintactico::DefinicionTipo* base_de(
-        const sintactico::DefinicionTipo& definicion) const {
+    const sintactico::DefinicionTipo* base_de(const sintactico::DefinicionTipo& definicion) const {
         if (definicion.base.empty()) {
             return nullptr;
         }
@@ -1822,8 +1793,8 @@ private:
     }
 
     /// Campos de una clase, incluidos los heredados (base primero).
-    std::vector<const sintactico::Campo*> campos_con_heredados(
-        const sintactico::DefinicionTipo& definicion) const {
+    std::vector<const sintactico::Campo*>
+    campos_con_heredados(const sintactico::DefinicionTipo& definicion) const {
         std::vector<const sintactico::DefinicionTipo*> cadena;
         const sintactico::DefinicionTipo* actual = &definicion;
         for (int guarda = 0; guarda < 32 && actual != nullptr; ++guarda) {
@@ -1908,8 +1879,7 @@ private:
     std::map<std::string, const sintactico::DefinicionTipo*> tipos_;
     std::map<std::string, const sintactico::Enumeracion*> enumeraciones_;
     std::map<std::string, const sintactico::Rasgo*> rasgos_;
-    std::map<std::string,
-             std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
+    std::map<std::string, std::pair<const sintactico::Enumeracion*, std::size_t>> variantes_;
     std::map<std::string_view, std::map<std::string_view, const sintactico::Funcion*>> modulos_;
     std::set<std::string> parametros_tipo_;
     std::set<std::string> parametros_actuales_;

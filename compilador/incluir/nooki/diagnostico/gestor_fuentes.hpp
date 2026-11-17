@@ -42,7 +42,9 @@ public:
 
     [[nodiscard]] std::uint32_t numero_de_lineas(ArchivoId id) const noexcept;
 
-    [[nodiscard]] std::size_t cantidad() const noexcept { return archivos_.size() - 1; }
+    [[nodiscard]] std::size_t cantidad() const noexcept {
+        return archivos_.size() - 1;
+    }
 
 private:
     struct Archivo {

@@ -31,14 +31,14 @@ Diagnostico& Diagnostico::ayuda(std::string texto) {
 
 const char* nombre_gravedad(Gravedad gravedad, Idioma idioma) noexcept {
     switch (gravedad) {
-        case Gravedad::Error:
-            return texto_fijo("error", idioma).data();
-        case Gravedad::Advertencia:
-            return texto_fijo("advertencia", idioma).data();
-        case Gravedad::Nota:
-            return texto_fijo("nota", idioma).data();
-        case Gravedad::Ayuda:
-            return texto_fijo("ayuda", idioma).data();
+    case Gravedad::Error:
+        return texto_fijo("error", idioma).data();
+    case Gravedad::Advertencia:
+        return texto_fijo("advertencia", idioma).data();
+    case Gravedad::Nota:
+        return texto_fijo("nota", idioma).data();
+    case Gravedad::Ayuda:
+        return texto_fijo("ayuda", idioma).data();
     }
     return texto_fijo("error", idioma).data();
 }

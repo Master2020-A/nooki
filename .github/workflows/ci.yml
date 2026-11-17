@@ -113,9 +113,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-format
 
+      # Los `.in` son plantillas de CMake con `@VARIABLE@`, que clang-format
+      # rompe (mete un espacio antes del `@` y la sustitución deja de valer).
       - name: Comprobar el formato
         run: |
-          find compilador cmake -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.in' \) -print0 \
+          find compilador cmake -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 \
             | xargs -0 -r clang-format --dry-run --Werror
 
   # ---------------------------------------------------------------------------

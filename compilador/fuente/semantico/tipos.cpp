@@ -4,18 +4,18 @@ namespace nooki::semantico {
 
 const char* nombre(Tipo tipo) noexcept {
     switch (tipo) {
-        case Tipo::Vacio:
-            return "vacio";
-        case Tipo::Entero:
-            return "entero";
-        case Tipo::Texto:
-            return "texto";
-        case Tipo::Booleano:
-            return "booleano";
-        case Tipo::Flotante:
-            return "flotante";
-        case Tipo::Desconocido:
-            return "desconocido";
+    case Tipo::Vacio:
+        return "vacio";
+    case Tipo::Entero:
+        return "entero";
+    case Tipo::Texto:
+        return "texto";
+    case Tipo::Booleano:
+        return "booleano";
+    case Tipo::Flotante:
+        return "flotante";
+    case Tipo::Desconocido:
+        return "desconocido";
     }
     return "desconocido";
 }

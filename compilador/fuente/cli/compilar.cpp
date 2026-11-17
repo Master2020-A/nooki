@@ -11,7 +11,6 @@
 #include <string>
 #include <system_error>
 #include <vector>
-#include <vector>
 
 #include "nooki/cli/orden.hpp"
 #include "nooki/conductor/compilar.hpp"
@@ -106,8 +105,7 @@ int compilar_con_rutas(std::span<const std::string_view> argumentos,
 }
 
 /// `nooki lsp`: servidor de lenguaje por la entrada y salida estándar.
-int comando_lsp(std::span<const std::string_view>, std::ostream& salida,
-                std::ostream& error) {
+int comando_lsp(std::span<const std::string_view>, std::ostream& salida, std::ostream& error) {
     (void)salida;
     (void)error;
     return nooki::lsp::servir(std::cin, std::cout);
@@ -128,10 +126,9 @@ int comando_construir(std::span<const std::string_view> argumentos, std::ostream
     }
 
     // Entrada: `principal.oki` junto al manifiesto, o dentro de `fuente/`.
-    const std::filesystem::path fuente =
-        std::filesystem::exists(raiz / "principal.oki")
-            ? raiz / "principal.oki"
-            : raiz / "fuente" / "principal.oki";
+    const std::filesystem::path fuente = std::filesystem::exists(raiz / "principal.oki")
+                                             ? raiz / "principal.oki"
+                                             : raiz / "fuente" / "principal.oki";
     if (!std::filesystem::exists(fuente)) {
         // Sin manifiesto ni fuente no hay proyecto. Antes de dar el error, se
         // miran las carpetas de al lado: lo normal es estar un nivel por encima

@@ -42,8 +42,7 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
     {codigos::ESCAPE_DESCONOCIDO, "la secuencia de escape «{escape}» no existe",
      "unknown escape sequence “{escape}”"},
 
-    {codigos::PARENTESIS_SIN_CERRAR, "falta cerrar «{apertura}»",
-     "unclosed “{apertura}”"},
+    {codigos::PARENTESIS_SIN_CERRAR, "falta cerrar «{apertura}»", "unclosed “{apertura}”"},
 
     {codigos::TOKEN_INESPERADO, "se esperaba {esperado} y se encontró «{encontrado}»",
      "expected {esperado} but found “{encontrado}”"},
@@ -54,19 +53,18 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
     {codigos::NO_SOPORTADO, "«{construccion}» todavía no está soportado",
      "“{construccion}” is not supported yet"},
 
-    {codigos::RANGO_ENCADENADO, "los rangos no se pueden encadenar",
-     "ranges cannot be chained"},
+    {codigos::RANGO_ENCADENADO, "los rangos no se pueden encadenar", "ranges cannot be chained"},
 
     {codigos::SIN_COMPILADOR_C,
      "no se encontró un compilador de C; instale gcc, clang o MSVC, o indique uno con "
      "la variable NOOKI_CC",
      "no C compiler found; install gcc, clang or MSVC, or set the NOOKI_CC variable"},
 
-    {codigos::FALLO_COMPILADOR_C, "el compilador de C «{compilador}» terminó con el código {codigo}",
+    {codigos::FALLO_COMPILADOR_C,
+     "el compilador de C «{compilador}» terminó con el código {codigo}",
      "the C compiler “{compilador}” exited with code {codigo}"},
 
-    {codigos::BACKEND_NO_SOPORTA,
-     "el backend todavía no sabe traducir {construccion}",
+    {codigos::BACKEND_NO_SOPORTA, "el backend todavía no sabe traducir {construccion}",
      "the backend cannot translate {construccion} yet"},
 
     {codigos::NOMBRE_NO_DECLARADO, "no se ha declarado «{nombre}»",
@@ -96,16 +94,14 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
     {codigos::SIMBOLO_PRIVADO, "«{simbolo}» es privado del módulo «{modulo}»",
      "“{simbolo}” is private to module “{modulo}”"},
 
-    {codigos::ASM_FUERA_DE_INSEGURO,
-     "«asm!» solo se permite dentro de un bloque «inseguro { }»",
+    {codigos::ASM_FUERA_DE_INSEGURO, "«asm!» solo se permite dentro de un bloque «inseguro { }»",
      "“asm!” is only allowed inside an “inseguro { }” block"},
 
     {codigos::METODO_DE_RASGO_FALTANTE,
      "a «{tipo}» le falta «{metodo}», que exige el rasgo «{rasgo}»",
      "“{tipo}” is missing “{metodo}”, required by trait “{rasgo}”"},
 
-    {codigos::COINCIDE_NO_EXHAUSTIVO,
-     "el «coincide» no cubre todos los casos: añada un caso «_»",
+    {codigos::COINCIDE_NO_EXHAUSTIVO, "el «coincide» no cubre todos los casos: añada un caso «_»",
      "the “coincide” is not exhaustive: add a “_” case"},
 
     {codigos::DEREFERENCIA_INVALIDA, "«*» solo se puede aplicar a una «Caja»",
@@ -118,16 +114,13 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
      "no se puede escribir a través de un préstamo inmutable: use «&mutable»",
      "cannot write through an immutable borrow: use “&mutable”"},
 
-    {codigos::FIRMA_INCOMPATIBLE,
-     "«{metodo}» no coincide con la firma de «{base}.{metodo}»",
+    {codigos::FIRMA_INCOMPATIBLE, "«{metodo}» no coincide con la firma de «{base}.{metodo}»",
      "“{metodo}” does not match the signature of “{base}.{metodo}”"},
 
-    {codigos::PROPAGACION_SIN_RESULTADO,
-     "«?» solo se usa en una función que devuelve «Resultado»",
+    {codigos::PROPAGACION_SIN_RESULTADO, "«?» solo se usa en una función que devuelve «Resultado»",
      "“?” can only be used in a function returning “Resultado”"},
 
-    {codigos::FIRMA_DE_RASGO,
-     "«{metodo}» no coincide con la firma que exige el rasgo «{rasgo}»",
+    {codigos::FIRMA_DE_RASGO, "«{metodo}» no coincide con la firma que exige el rasgo «{rasgo}»",
      "“{metodo}” does not match the signature required by trait “{rasgo}”"},
 
     {codigos::PRESTAMO_GUARDADO,
@@ -162,7 +155,8 @@ constexpr std::array<EntradaMensaje, 47> MENSAJES{{
      "«{funcion}» espera {esperados} argumento(s) y se han pasado {dados}",
      "“{funcion}” expects {esperados} argument(s) but {dados} were given"},
 
-    {codigos::RETORNO_INCOMPATIBLE, "«{funcion}» debe devolver «{esperado}» y se devuelve «{encontrado}»",
+    {codigos::RETORNO_INCOMPATIBLE,
+     "«{funcion}» debe devolver «{esperado}» y se devuelve «{encontrado}»",
      "“{funcion}” must return “{esperado}” but “{encontrado}” is returned"},
 
     {codigos::CONDICION_NO_BOOLEANA, "la condición debe ser de tipo «booleano» y es «{tipo}»",

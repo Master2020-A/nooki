@@ -30,7 +30,9 @@ struct Token {
 
     diagnostico::Span span;
 
-    [[nodiscard]] bool es(TipoToken esperado) const noexcept { return tipo == esperado; }
+    [[nodiscard]] bool es(TipoToken esperado) const noexcept {
+        return tipo == esperado;
+    }
 };
 
 [[nodiscard]] const char* nombre_tipo(TipoToken tipo) noexcept;

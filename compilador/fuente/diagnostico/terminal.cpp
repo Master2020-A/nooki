@@ -18,7 +18,9 @@
 namespace nooki::diagnostico {
 namespace {
 
-bool color_desactivado_por_entorno() { return !nooki::leer_entorno("NO_COLOR").empty(); }
+bool color_desactivado_por_entorno() {
+    return !nooki::leer_entorno("NO_COLOR").empty();
+}
 
 bool es_terminal(std::FILE* flujo) {
 #ifdef _WIN32
@@ -59,8 +61,12 @@ bool admite(std::FILE* flujo) {
 
 }  // namespace
 
-bool admite_color_estandar() { return admite(stdout); }
+bool admite_color_estandar() {
+    return admite(stdout);
+}
 
-bool admite_color_error() { return admite(stderr); }
+bool admite_color_error() {
+    return admite(stderr);
+}
 
 }  // namespace nooki::diagnostico

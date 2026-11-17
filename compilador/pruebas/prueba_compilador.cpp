@@ -39,7 +39,9 @@ void omitir(std::string_view descripcion) {
     std::cout << "    omitido: " << descripcion << '\n';
 }
 
-void caso(std::string_view titulo) { std::cout << "  · " << titulo << '\n'; }
+void caso(std::string_view titulo) {
+    std::cout << "  · " << titulo << '\n';
+}
 
 bool contiene(const std::string& texto, std::string_view buscado) {
     return texto.find(buscado) != std::string::npos;
@@ -67,11 +69,10 @@ std::string ejecutar(const std::filesystem::path& binario) {
     return salida;
 }
 
-constexpr std::string_view FUENTE_HOLA =
-    "funcion principal() -> entero {\n"
-    "    imprimir(\"¡Hola, Nooki!\")\n"
-    "    retornar 0\n"
-    "}\n";
+constexpr std::string_view FUENTE_HOLA = "funcion principal() -> entero {\n"
+                                         "    imprimir(\"¡Hola, Nooki!\")\n"
+                                         "    retornar 0\n"
+                                         "}\n";
 
 }  // namespace
 
@@ -164,7 +165,8 @@ int main() {
             comprobar(resultado.codigo == 0, "la compilación termina bien");
             comprobar(std::filesystem::exists(resultado.binario), "el binario existe");
 
-            const std::string salida_programa = nooki::normalizar_saltos(ejecutar(resultado.binario));
+            const std::string salida_programa =
+                nooki::normalizar_saltos(ejecutar(resultado.binario));
             comprobar(salida_programa == "¡Hola, Nooki!\n",
                       "el programa imprime el saludo esperado");
 
@@ -224,8 +226,9 @@ int main() {
 #else
         opciones.salida = directorio / "falta";
 #endif
-        escribir(opciones.fuente,
-                 "usar modulo_que_no_existe\n\nfuncion principal() -> entero {\n    retornar 0\n}\n");
+        escribir(
+            opciones.fuente,
+            "usar modulo_que_no_existe\n\nfuncion principal() -> entero {\n    retornar 0\n}\n");
 
         diagnostico::GestorFuentes fuentes;
         diagnostico::Emisor emisor;

@@ -24,7 +24,9 @@ void comprobar(bool condicion, std::string_view descripcion) {
     }
 }
 
-void caso(std::string_view titulo) { std::cout << "  · " << titulo << '\n'; }
+void caso(std::string_view titulo) {
+    std::cout << "  · " << titulo << '\n';
+}
 
 struct Analisis {
     diagnostico::GestorFuentes fuentes;
@@ -100,7 +102,8 @@ int main() {
     {
         Analisis a;
         analizar(a, "función principal()");
-        comprobar(a.tokens[0].es(lexico::TipoToken::Identificador), "se tokeniza como identificador");
+        comprobar(a.tokens[0].es(lexico::TipoToken::Identificador),
+                  "se tokeniza como identificador");
         comprobar(primer_codigo(a) == "NOK1001", "emite NOK1001");
         comprobar(a.emisor.cantidad() == 1, "un solo diagnóstico");
     }

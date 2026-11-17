@@ -23,15 +23,31 @@ public:
     static Json arreglo();
     static Json objeto();
 
-    [[nodiscard]] Clase clase() const noexcept { return clase_; }
-    [[nodiscard]] bool es_objeto() const noexcept { return clase_ == Clase::Objeto; }
-    [[nodiscard]] bool es_arreglo() const noexcept { return clase_ == Clase::Arreglo; }
-    [[nodiscard]] bool es_cadena() const noexcept { return clase_ == Clase::Cadena; }
+    [[nodiscard]] Clase clase() const noexcept {
+        return clase_;
+    }
+    [[nodiscard]] bool es_objeto() const noexcept {
+        return clase_ == Clase::Objeto;
+    }
+    [[nodiscard]] bool es_arreglo() const noexcept {
+        return clase_ == Clase::Arreglo;
+    }
+    [[nodiscard]] bool es_cadena() const noexcept {
+        return clase_ == Clase::Cadena;
+    }
 
-    [[nodiscard]] const std::string& cadena() const noexcept { return cadena_; }
-    [[nodiscard]] double numero() const noexcept { return numero_; }
-    [[nodiscard]] int entero() const noexcept { return static_cast<int>(numero_); }
-    [[nodiscard]] bool booleano() const noexcept { return booleano_; }
+    [[nodiscard]] const std::string& cadena() const noexcept {
+        return cadena_;
+    }
+    [[nodiscard]] double numero() const noexcept {
+        return numero_;
+    }
+    [[nodiscard]] int entero() const noexcept {
+        return static_cast<int>(numero_);
+    }
+    [[nodiscard]] bool booleano() const noexcept {
+        return booleano_;
+    }
 
     /// Acceso a un campo de un objeto; devuelve un valor nulo si no está.
     [[nodiscard]] const Json& campo(std::string_view nombre) const;
@@ -39,7 +55,9 @@ public:
     /// Añade un campo a un objeto (o un elemento a un arreglo).
     Json& poner(std::string nombre, Json valor);
 
-    [[nodiscard]] const std::vector<Json>& elementos() const noexcept { return arreglo_; }
+    [[nodiscard]] const std::vector<Json>& elementos() const noexcept {
+        return arreglo_;
+    }
 
     /// Texto JSON del valor.
     [[nodiscard]] std::string escribir() const;

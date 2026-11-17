@@ -12,8 +12,7 @@ namespace {
 /// Quita los espacios del final de una línea.
 std::string sin_espacios_finales(const std::string& linea) {
     std::size_t fin = linea.size();
-    while (fin > 0 &&
-           (linea[fin - 1] == ' ' || linea[fin - 1] == '\t' || linea[fin - 1] == '\r')) {
+    while (fin > 0 && (linea[fin - 1] == ' ' || linea[fin - 1] == '\t' || linea[fin - 1] == '\r')) {
         --fin;
     }
     return linea.substr(0, fin);
@@ -103,8 +102,7 @@ std::string formatear(std::string_view texto) {
         // Una línea que empieza cerrando va un nivel por detrás.
         const std::string_view vista(limpia);
         const std::string::size_type primero = vista.find_first_not_of(" \t");
-        const bool empieza_cerrando =
-            primero != std::string_view::npos && vista[primero] == '}';
+        const bool empieza_cerrando = primero != std::string_view::npos && vista[primero] == '}';
 
         const int nivel = std::max(0, profundidad - (empieza_cerrando ? 1 : 0));
         salida << std::string(static_cast<std::size_t>(nivel) * SANGRIA, ' ')

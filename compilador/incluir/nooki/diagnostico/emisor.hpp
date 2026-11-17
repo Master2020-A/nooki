@@ -24,9 +24,13 @@ public:
     }
     [[nodiscard]] std::size_t contar(Gravedad gravedad) const noexcept;
     [[nodiscard]] bool hay_errores() const noexcept;
-    [[nodiscard]] std::size_t cantidad() const noexcept { return diagnosticos_.size(); }
+    [[nodiscard]] std::size_t cantidad() const noexcept {
+        return diagnosticos_.size();
+    }
 
-    void limpiar() noexcept { diagnosticos_.clear(); }
+    void limpiar() noexcept {
+        diagnosticos_.clear();
+    }
 
 private:
     Diagnostico& agregar(std::string_view codigo, Gravedad gravedad, Span span);

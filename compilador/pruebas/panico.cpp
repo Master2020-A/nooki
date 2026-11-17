@@ -33,8 +33,6 @@ struct Caso {
     std::string mensaje;  // fragmento que debe aparecer en la salida de error
 };
 
-
-
 const std::vector<Caso>& casos() {
     static const std::vector<Caso> lista = {
         {"suma desbordada", "suma-desbordada",
@@ -119,8 +117,8 @@ int main() {
 
         std::ostringstream salida;
         std::ostringstream errores;
-        const auto resultado = nooki::conductor::compilar(opciones, fuentes, emisor, salida,
-                                                          errores);
+        const auto resultado =
+            nooki::conductor::compilar(opciones, fuentes, emisor, salida, errores);
         if (resultado.codigo != 0) {
             std::cout << "FALLO " << caso.nombre << ": no compiló\n" << errores.str();
             ++fallos;
@@ -129,9 +127,9 @@ int main() {
 
         // Se ejecuta con la salida de error a un archivo para poder revisarla.
         const fs::path errores_programa = directorio / (caso.archivo + ".err");
-        const std::string comando =
-            nooki::entrecomillar_si_hace_falta(resultado.binario.string()) + " 2> " +
-            nooki::entrecomillar_si_hace_falta(errores_programa.string());
+        const std::string comando = nooki::entrecomillar_si_hace_falta(resultado.binario.string()) +
+                                    " 2> " +
+                                    nooki::entrecomillar_si_hace_falta(errores_programa.string());
         const int codigo = nooki::ejecutar_comando(comando);
 
         const std::string mensaje = leer(errores_programa);

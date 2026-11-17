@@ -1,15 +1,15 @@
 #include "nooki/conductor/compilar.hpp"
-#include "nooki/rutas.hpp"
 #include "nooki/ia/runtime_ia.hpp"
+#include "nooki/rutas.hpp"
 #include "nooki/ui/runtime_ui.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <algorithm>
 #include <vector>
 
 #include "nooki/diagnostico/codigos.hpp"
@@ -792,7 +792,8 @@ publico funcion cuantas(palabras: &Vector<texto>) -> entero {
     retornar (*palabras).largo()
 }
 )";
-    }    if (modulo == "tensor") {
+    }
+    if (modulo == "tensor") {
         return R"(// Biblioteca estándar: tensores (matrices de enteros de 64 bits).
 externo funcion nooki_ia_tensor_ceros(filas: entero, columnas: entero) -> entero
 externo funcion nooki_ia_tensor_lleno(filas: entero, columnas: entero, valor: entero) -> entero
@@ -1621,9 +1622,9 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
     // subiendo por los directorios padre hasta encontrar una.
     // Se parte de una ruta absoluta para poder subir por los directorios padre.
     std::error_code error_ruta;
-    const std::filesystem::path base =
-        directorio.empty() ? std::filesystem::current_path(error_ruta)
-                           : std::filesystem::absolute(directorio, error_ruta);
+    const std::filesystem::path base = directorio.empty()
+                                           ? std::filesystem::current_path(error_ruta)
+                                           : std::filesystem::absolute(directorio, error_ruta);
     std::filesystem::path ruta = base / (clave + ".oki");
 
     // Las dependencias del manifiesto se miran antes de subir por los padres.
@@ -1696,8 +1697,8 @@ bool cargar_modulo(const std::filesystem::path& directorio, std::string_view nom
             emisor.error(diagnostico::codigos::TOKEN_INESPERADO, funcion.span)
                 .parametro("esperado", "un módulo sin «principal»")
                 .parametro("encontrado", std::string(clave) + ".principal")
-                .ayuda("un módulo es una biblioteca: quite «principal» de «" +
-                       std::string(clave) + ".oki»");
+                .ayuda("un módulo es una biblioteca: quite «principal» de «" + std::string(clave) +
+                       ".oki»");
             return false;
         }
     }
@@ -1873,8 +1874,7 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     // y el binario se mueve después, que sí entiende Unicode.
     std::error_code error_mover;
     const bool necesita_mover =
-        !ruta_es_ascii(salida_binario) &&
-        std::filesystem::path(salida_binario).has_parent_path();
+        !ruta_es_ascii(salida_binario) && std::filesystem::path(salida_binario).has_parent_path();
     std::filesystem::path destino_enlace = salida_binario;
     if (necesita_mover) {
         destino_enlace = std::filesystem::temp_directory_path() /
@@ -1885,8 +1885,8 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     // La capa de tensores, igual: aparte y solo si se usa.
     std::filesystem::path ia_nativo;
     if (hace_falta_ia) {
-        const std::string fuente_ia = std::string(CABECERAS_RUNTIME) +
-                                        std::string(ia::fuente_runtime_ia());
+        const std::string fuente_ia =
+            std::string(CABECERAS_RUNTIME) + std::string(ia::fuente_runtime_ia());
         ia_nativo = std::filesystem::temp_directory_path() /
                     ("nooki_ia_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) + ".c");
         std::ofstream archivo_ia(ia_nativo, std::ios::binary | std::ios::trunc);
@@ -1897,8 +1897,7 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     std::filesystem::path ui_nativo;
     std::string fuente_ui;
     if (hace_falta_ui) {
-        fuente_ui = std::string(CABECERAS_RUNTIME) +
-                    std::string(ui::fuente_runtime_ui());
+        fuente_ui = std::string(CABECERAS_RUNTIME) + std::string(ui::fuente_runtime_ui());
         ui_nativo = std::filesystem::temp_directory_path() /
                     ("nooki_ui_" + nombre_ascii(ruta_a_utf8(opciones.fuente.stem())) + ".c");
         std::ofstream archivo_ui(ui_nativo, std::ios::binary | std::ios::trunc);
@@ -1937,8 +1936,7 @@ Resultado compilar(const Opciones& opciones, diagnostico::GestorFuentes& fuentes
     // El binario se enlazó en una ruta ASCII si el destino tenía tildes: se mueve.
     if (necesita_mover) {
         std::filesystem::copy_file(destino_enlace, salida_binario,
-                                   std::filesystem::copy_options::overwrite_existing,
-                                   error_mover);
+                                   std::filesystem::copy_options::overwrite_existing, error_mover);
         if (error_mover) {
             emisor.error(diagnostico::codigos::FALLO_COMPILADOR_C, diagnostico::Span{})
                 .parametro("compilador", compilador)

@@ -52,14 +52,26 @@ std::string leer(const fs::path& ruta) {
 
 /// Trozos sueltos del lenguaje, para entradas que lleguen lejos en el análisis.
 const char* PIEZAS[] = {
-    "funcion", "variable", "constante", "clase", "estructura", "rasgo", "enumeracion",
-    "publico", "privado", "si", "sino", "mientras", "para", "en", "retornar", "romper",
-    "continuar", "coincide", "caso", "nuevo", "este", "super", "hereda", "implementa",
-    "usar", "modulo", "entero", "texto", "booleano", "vacio", "verdadero", "falso",
-    "imprimir", "principal", "Vector", "Mapa", "Caja", "resultado",
-    "{", "}", "(", ")", "[", "]", ";", ",", ":", ".", "->", "=", "==", "!=", "<", ">",
-    "<=", ">=", "+", "-", "*", "/", "%", "&&", "||", "!", "&", "&mutable", "?", "..", "..=",
-    "\"texto\"", "'c'", "123", "4.5", "0xFF", "1_000", "// comentario\n", "\n", "  ",
+    "funcion",    "variable",  "constante",   "clase",
+    "estructura", "rasgo",     "enumeracion", "publico",
+    "privado",    "si",        "sino",        "mientras",
+    "para",       "en",        "retornar",    "romper",
+    "continuar",  "coincide",  "caso",        "nuevo",
+    "este",       "super",     "hereda",      "implementa",
+    "usar",       "modulo",    "entero",      "texto",
+    "booleano",   "vacio",     "verdadero",   "falso",
+    "imprimir",   "principal", "Vector",      "Mapa",
+    "Caja",       "resultado", "{",           "}",
+    "(",          ")",         "[",           "]",
+    ";",          ",",         ":",           ".",
+    "->",         "=",         "==",          "!=",
+    "<",          ">",         "<=",          ">=",
+    "+",          "-",         "*",           "/",
+    "%",          "&&",        "||",          "!",
+    "&",          "&mutable",  "?",           "..",
+    "..=",        "\"texto\"", "'c'",         "123",
+    "4.5",        "0xFF",      "1_000",       "// comentario\n",
+    "\n",         "  ",
 };
 
 std::string entrada_aleatoria(Azar& azar, std::uint32_t longitud) {
@@ -89,18 +101,18 @@ std::string mutar(Azar& azar, std::string base) {
     for (std::uint32_t i = 0; i < cambios; ++i) {
         const std::uint32_t posicion = azar.hasta(static_cast<std::uint32_t>(base.size()));
         switch (azar.hasta(4)) {
-            case 0:  // borrar
-                base.erase(posicion, 1 + azar.hasta(4));
-                break;
-            case 1:  // duplicar un trozo
-                base.insert(posicion, base.substr(posicion, 1 + azar.hasta(8)));
-                break;
-            case 2:  // sustituir por un byte cualquiera
-                base[posicion] = static_cast<char>(azar.hasta(256));
-                break;
-            default:  // insertar una pieza del lenguaje
-                base.insert(posicion, PIEZAS[azar.hasta(std::size(PIEZAS))]);
-                break;
+        case 0:  // borrar
+            base.erase(posicion, 1 + azar.hasta(4));
+            break;
+        case 1:  // duplicar un trozo
+            base.insert(posicion, base.substr(posicion, 1 + azar.hasta(8)));
+            break;
+        case 2:  // sustituir por un byte cualquiera
+            base[posicion] = static_cast<char>(azar.hasta(256));
+            break;
+        default:  // insertar una pieza del lenguaje
+            base.insert(posicion, PIEZAS[azar.hasta(std::size(PIEZAS))]);
+            break;
         }
         if (base.empty()) {
             break;
@@ -140,8 +152,7 @@ void analizar(const std::string& contenido, const std::string& nombre, bool gene
 
 int main(int argc, char** argv) {
     const int iteraciones = argc > 1 ? std::atoi(argv[1]) : 2000;
-    const std::uint64_t semilla =
-        argc > 2 ? std::strtoull(argv[2], nullptr, 10) : 0x5EED1234ULL;
+    const std::uint64_t semilla = argc > 2 ? std::strtoull(argv[2], nullptr, 10) : 0x5EED1234ULL;
 
     if (iteraciones <= 0) {
         std::cout << "uso: nooki_fuzz [iteraciones] [semilla]\n";

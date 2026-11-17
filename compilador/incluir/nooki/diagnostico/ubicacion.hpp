@@ -24,7 +24,9 @@ struct Span {
         return archivo != ARCHIVO_NINGUNO && fin >= inicio;
     }
 
-    [[nodiscard]] constexpr bool vacio() const noexcept { return inicio >= fin; }
+    [[nodiscard]] constexpr bool vacio() const noexcept {
+        return inicio >= fin;
+    }
 
     [[nodiscard]] constexpr std::uint32_t longitud() const noexcept {
         return fin > inicio ? fin - inicio : 0;

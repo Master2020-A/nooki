@@ -1,10 +1,10 @@
 #pragma once
 
+#include <filesystem>
 #include <iosfwd>
 #include <span>
 #include <string_view>
 #include <vector>
-#include <filesystem>
 
 namespace nooki::cli {
 

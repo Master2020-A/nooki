@@ -7,14 +7,12 @@
 #include <vector>
 
 #include "nooki/cli/comandos.hpp"
-#include "nooki/formato/formateador.hpp"
 #include "nooki/cli/orden.hpp"
+#include "nooki/formato/formateador.hpp"
 #include "nooki/rutas.hpp"
 
 namespace nooki::cli {
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 int comando_formatear(std::span<const std::string_view> argumentos, std::ostream& salida,
                       std::ostream& error) {

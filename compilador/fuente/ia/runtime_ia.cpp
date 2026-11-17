@@ -217,7 +217,8 @@ long long nooki_ia_tensor_determinante(long long manejador) {
             }
         }
         const double valor = copia[(size_t)pivote * n + columna];
-)nooki" R"nooki(
+)nooki"
+           R"nooki(
 
         if (valor == 0.0) {
             free(copia);
@@ -439,7 +440,8 @@ long long nooki_ia_tensor_sigmoides(long long manejador) {
         return 0;
     }
     const size_t total = (size_t)a->filas * (size_t)a->columnas;
-)nooki" R"nooki(
+)nooki"
+           R"nooki(
     for (size_t i = 0; i < total; ++i) {
         const double valor = 1000.0 / (1.0 + nooki_tensor_exp(-(double)a->datos[i]));
         s->datos[i] = (long long)(valor + 0.5);
@@ -656,7 +658,8 @@ static void nooki_auto_orden(nooki_auto_nodo* nodo, nooki_auto_pila* pila) {
     if (pila->cuantos >= pila->capacidad) {
         const int nueva_capacidad = pila->capacidad == 0 ? 16 : pila->capacidad * 2;
         nooki_auto_nodo** nueva = (nooki_auto_nodo**)realloc(
-)nooki" R"nooki(
+)nooki"
+           R"nooki(
             pila->datos, (size_t)nueva_capacidad * sizeof(nooki_auto_nodo*));
         if (nueva == NULL) {
             return;
@@ -851,7 +854,8 @@ double nooki_ia_red_predecir(long long manejador, double x1, double x2, double x
             z += entradas[i] * red->pesos1[i * red->ocultas + h]->valor;
         }
         ocultas[h] = 1.0 / (1.0 + nooki_auto_exponencial(-z));
-)nooki" R"nooki(
+)nooki"
+           R"nooki(
     }
     double salida = red->sesgo2->valor;
     for (int h = 0; h < red->ocultas; ++h) {
@@ -1026,7 +1030,8 @@ long long nooki_ia_red_cargar(const char* ruta) {
     int32_t cabecera[4] = {0, 0, 0, 0};
     long long resultado = 0;
     if (fread(magia, 1, 8, flujo) == 8 && memcmp(magia, "NOOKIRED", 8) == 0 &&
-)nooki" R"nooki(        fread(cabecera, sizeof(int32_t), 4, flujo) == 4 && cabecera[0] == 1 &&
+)nooki"
+           R"nooki(        fread(cabecera, sizeof(int32_t), 4, flujo) == 4 && cabecera[0] == 1 &&
 
         cabecera[1] >= 1 && cabecera[1] <= 64 && cabecera[2] >= 1 && cabecera[2] <= 64 &&
         cabecera[3] >= 0) {
@@ -1220,7 +1225,8 @@ void nooki_ia_clases_ejemplo(long long manejador, double x1, double x2, double x
     }
     fila[0] = x1;
     if (red->entradas > 1) {
-)nooki" R"nooki(        fila[1] = x2;
+)nooki"
+           R"nooki(        fila[1] = x2;
     }
     if (red->entradas > 2) {
         fila[2] = x3;
@@ -1461,7 +1467,8 @@ static long long nooki_tabla_anadir(long long manejador, const char* nombre, int
     const int cuantas = tabla->columnas + 1;
     nooki_columna* columnas =
         (nooki_columna*)realloc(tabla->columnas_datos, (size_t)cuantas * sizeof(nooki_columna));
-)nooki" R"nooki(    if (columnas == NULL) {
+)nooki"
+           R"nooki(    if (columnas == NULL) {
         return -1;
     }
     tabla->columnas_datos = columnas;
@@ -1673,7 +1680,8 @@ long long nooki_ia_tabla_filtrar_texto(long long manejador, long long columna,
     if (nueva == NULL) {
         return 0;
     }
-)nooki" R"nooki(    int destino = 0;
+)nooki"
+           R"nooki(    int destino = 0;
     for (int i = 0; i < tabla->filas; ++i) {
         if (c->textos[i] == NULL || strcmp(c->textos[i], valor) != 0) {
             continue;
@@ -1868,7 +1876,8 @@ int nooki_ia_clases_guardar(long long manejador, const char* ruta) {
     bien = bien && nooki_red_escribir_dobles(flujo, red->xs, red->cuantas * red->entradas);
     if (red->cuantas > 0) {
         bien = bien && fwrite(red->etiquetas, sizeof(int32_t), (size_t)red->cuantas, flujo) ==
-)nooki" R"nooki(                           (size_t)red->cuantas;
+)nooki"
+           R"nooki(                           (size_t)red->cuantas;
     }
 
     if (fclose(flujo) != 0) {
@@ -2077,7 +2086,8 @@ typedef struct {
 
 static nooki_red_profunda* nooki_profunda_de(long long manejador) {
     nooki_red_profunda* red = (nooki_red_profunda*)(intptr_t)manejador;
-)nooki" R"nooki(    if (red == NULL || red->tipo != 3) {
+)nooki"
+           R"nooki(    if (red == NULL || red->tipo != 3) {
         return NULL;
     }
     return red;
@@ -2279,7 +2289,8 @@ void nooki_ia_profunda_entrenar(long long manejador, long long vueltas, double t
     double* dz = (double*)malloc((size_t)c * sizeof(double));
     double* d2 = (double*)malloc((size_t)h * sizeof(double));
     double* d1 = (double*)malloc((size_t)h * sizeof(double));
-)nooki" R"nooki(    if (h1 == NULL || h2 == NULL || p == NULL || dz == NULL || d2 == NULL || d1 == NULL) {
+)nooki"
+           R"nooki(    if (h1 == NULL || h2 == NULL || p == NULL || dz == NULL || d2 == NULL || d1 == NULL) {
         free(h1);
         free(h2);
         free(p);

@@ -55,13 +55,13 @@ std::string_view marca_de(const sintactico::DefinicionTipo& tipo) {
 /// Añade la documentación de un archivo al flujo.
 void documentar_archivo(const std::string& nombre, const sintactico::Programa& programa,
                         std::ostream& salida) {
-    const bool hay_algo = std::any_of(programa.funciones.begin(), programa.funciones.end(),
-                                      [](const sintactico::Funcion& f) { return f.publico; }) ||
-                          std::any_of(programa.tipos.begin(), programa.tipos.end(),
-                                      [](const sintactico::DefinicionTipo& t) { return t.publico; }) ||
-                          std::any_of(programa.enumeraciones.begin(),
-                                      programa.enumeraciones.end(),
-                                      [](const sintactico::Enumeracion& e) { return e.publico; });
+    const bool hay_algo =
+        std::any_of(programa.funciones.begin(), programa.funciones.end(),
+                    [](const sintactico::Funcion& f) { return f.publico; }) ||
+        std::any_of(programa.tipos.begin(), programa.tipos.end(),
+                    [](const sintactico::DefinicionTipo& t) { return t.publico; }) ||
+        std::any_of(programa.enumeraciones.begin(), programa.enumeraciones.end(),
+                    [](const sintactico::Enumeracion& e) { return e.publico; });
     if (!hay_algo) {
         return;
     }

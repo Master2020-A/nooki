@@ -13,7 +13,9 @@ struct Comando {
     /// Sprint del plan en el que se implementa. 0 significa "ya disponible".
     int sprint;
 
-    [[nodiscard]] constexpr bool disponible() const noexcept { return sprint == 0; }
+    [[nodiscard]] constexpr bool disponible() const noexcept {
+        return sprint == 0;
+    }
 };
 
 /// Tabla única de comandos: la usan el despachador y la ayuda.

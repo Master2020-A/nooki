@@ -33,7 +33,9 @@ void comprobar(bool condicion, std::string_view descripcion) {
     }
 }
 
-void caso(std::string_view titulo) { std::cout << "  · " << titulo << '\n'; }
+void caso(std::string_view titulo) {
+    std::cout << "  · " << titulo << '\n';
+}
 
 std::string leer(const std::filesystem::path& ruta) {
     std::ifstream entrada(ruta, std::ios::binary);
@@ -73,8 +75,7 @@ std::vector<Diagnostico> construir(std::string_view nombre, GestorFuentes& fuent
             .ayuda("escriba «funcion»");
     } else if (nombre == "nok2001-parentesis") {
         const std::size_t llamada = contenido.find("imprimir(");
-        emisor.error(codigos::PARENTESIS_SIN_CERRAR,
-                     localizar(archivo, contenido, "(", llamada))
+        emisor.error(codigos::PARENTESIS_SIN_CERRAR, localizar(archivo, contenido, "(", llamada))
             .parametro("apertura", "(")
             .nota("los paréntesis deben cerrarse en la misma expresión")
             .ayuda("añada «)» al final de la llamada");
@@ -92,8 +93,7 @@ std::vector<Diagnostico> construir(std::string_view nombre, GestorFuentes& fuent
         const std::size_t primera = contenido.find("datos");
         const std::size_t segunda = contenido.find("datos", primera + 1);
         const std::size_t tercera = contenido.find("datos", segunda + 1);
-        emisor.error(codigos::USO_TRAS_MOVER,
-                     localizar(archivo, contenido, "datos", tercera))
+        emisor.error(codigos::USO_TRAS_MOVER, localizar(archivo, contenido, "datos", tercera))
             .parametro("nombre", "datos")
             .etiqueta(localizar(archivo, contenido, "datos", segunda),
                       "el valor se movió aquí al asignarlo a «copia»")
@@ -109,11 +109,8 @@ struct Caso {
 };
 
 constexpr Caso CASOS[] = {
-    {"nok1001-tilde"},
-    {"nok2001-parentesis"},
-    {"nok3001-no-declarado"},
-    {"nok4001-tipos"},
-    {"nok5001-movido"},
+    {"nok1001-tilde"}, {"nok2001-parentesis"}, {"nok3001-no-declarado"},
+    {"nok4001-tipos"}, {"nok5001-movido"},
 };
 
 }  // namespace
@@ -155,7 +152,8 @@ int main(int argc, char* argv[]) {
     {
         GestorFuentes fuentes;
         const std::string contenido = leer(directorio / "nok5001-movido.oki");
-        const std::vector<Diagnostico> diagnosticos = construir("nok5001-movido", fuentes, contenido);
+        const std::vector<Diagnostico> diagnosticos =
+            construir("nok5001-movido", fuentes, contenido);
 
         std::ostringstream salida;
         renderizar_json(diagnosticos, fuentes, salida, OpcionesRender{});
@@ -176,7 +174,7 @@ int main(int argc, char* argv[]) {
         comprobar(!plantilla_mensaje(codigos::USO_TRAS_MOVER, Idioma::Espanol).empty(),
                   "el código tiene plantilla en español");
         comprobar(componer(codigos::USO_TRAS_MOVER, {{"nombre", "datos"}}, Idioma::Ingles)
-                      .find("cannot use") != std::string::npos,
+                          .find("cannot use") != std::string::npos,
                   "el catálogo traduce al inglés");
         comprobar(componer("NOK9999", {}, Idioma::Espanol).find("sin descripción") !=
                       std::string::npos,
@@ -190,7 +188,8 @@ int main(int argc, char* argv[]) {
     {
         GestorFuentes fuentes;
         const std::string contenido = leer(directorio / "nok1001-tilde.oki");
-        const std::vector<Diagnostico> diagnosticos = construir("nok1001-tilde", fuentes, contenido);
+        const std::vector<Diagnostico> diagnosticos =
+            construir("nok1001-tilde", fuentes, contenido);
 
         OpcionesRender con_color;
         con_color.color = true;

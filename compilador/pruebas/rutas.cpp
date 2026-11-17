@@ -23,7 +23,6 @@ constexpr const char* EXTENSION = ".exe";
 constexpr const char* EXTENSION = "";
 #endif
 
-
 }  // namespace
 
 int main() {
@@ -48,8 +47,7 @@ int main() {
 
     std::ostringstream salida;
     std::ostringstream errores;
-    const auto resultado =
-        nooki::conductor::compilar(opciones, fuentes, emisor, salida, errores);
+    const auto resultado = nooki::conductor::compilar(opciones, fuentes, emisor, salida, errores);
 
     if (resultado.codigo != 0) {
         std::cout << "FALLO: no compiló un archivo con tildes\n" << errores.str();

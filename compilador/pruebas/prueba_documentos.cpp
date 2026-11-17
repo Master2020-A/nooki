@@ -108,18 +108,18 @@ int main() {
     comprobar(version_cmake == version_historial,
               "la última versión del historial («" + version_historial +
                   "») no coincide con CMake («" + version_cmake + "»)");
-    comprobar(version_cmake == version_leeme,
-              "la versión de LEEME («" + version_leeme + "») no coincide con CMake («" +
-                  version_cmake + "»)");
+    comprobar(version_cmake == version_leeme, "la versión de LEEME («" + version_leeme +
+                                                  "») no coincide con CMake («" + version_cmake +
+                                                  "»)");
 
     // La especificación declara la misma versión menor.
-    const std::string version_spec =
-        version_de(especificacion, std::regex(R"(Especificación del lenguaje NOOKI v([0-9]+\.[0-9]+))"));
+    const std::string version_spec = version_de(
+        especificacion, std::regex(R"(Especificación del lenguaje NOOKI v([0-9]+\.[0-9]+))"));
     const std::string menor_cmake = version_cmake.substr(0, version_cmake.rfind('.'));
     comprobar(!version_spec.empty(), "la especificación no declara versión");
-    comprobar(version_spec == menor_cmake,
-              "la especificación («v" + version_spec + "») no coincide con CMake («" +
-                  version_cmake + "»)");
+    comprobar(version_spec == menor_cmake, "la especificación («v" + version_spec +
+                                               "») no coincide con CMake («" + version_cmake +
+                                               "»)");
 
     if (fallos == 0) {
         std::cout << "documentación coherente: " << sprints.size() << " sprints, versión "

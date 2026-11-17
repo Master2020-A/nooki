@@ -48,8 +48,7 @@ std::vector<std::string> cuerpos_de(const std::string& salida) {
 }  // namespace
 
 int main() {
-    const std::string apertura =
-        R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}})";
+    const std::string apertura = R"({"jsonrpc":"2.0","id":1,"method":"initialize","params":{}})";
     const std::string documento =
         R"({"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":)"
         R"({"uri":"file:///prueba.oki","text":"funcion principal() -> entero {\n)"
@@ -65,7 +64,8 @@ int main() {
     comprobar(codigo == 0, "el servidor debería terminar con 0");
 
     const std::vector<std::string> cuerpos = cuerpos_de(salida.str());
-    comprobar(cuerpos.size() == 3, "se esperaban tres mensajes: capacidades, diagnósticos y cierre");
+    comprobar(cuerpos.size() == 3,
+              "se esperaban tres mensajes: capacidades, diagnósticos y cierre");
 
     // 1. Respuesta a `initialize` con las capacidades de sincronización.
     if (cuerpos.size() >= 1) {
@@ -270,7 +270,8 @@ int main() {
     }
 
     if (fallos == 0) {
-        std::cout << "lsp: capacidades, diagnósticos, autocompletado, definición, formato y cierre\n";
+        std::cout
+            << "lsp: capacidades, diagnósticos, autocompletado, definición, formato y cierre\n";
         return 0;
     }
     std::cout << fallos << " comprobación(es) fallida(s)\n";

@@ -73,20 +73,13 @@ constexpr Caso ARITMETICA[] = {
 
 // --- Asociatividad ---------------------------------------------------------
 constexpr Caso ASOCIATIVIDAD[] = {
-    {"a - b - c", "(- (- a b) c)"},
-    {"a / b / c", "(/ (/ a b) c)"},
-    {"a ** b ** c", "(** a (** b c))"},
-    {"a = b = c", "(= a (= b c))"},
-    {"a ?? b ?? c", "(?? a (?? b c))"},
-    {"a && b && c", "(&& (&& a b) c)"},
-    {"a || b || c", "(|| (|| a b) c)"},
-    {"a | b | c", "(| (| a b) c)"},
-    {"a & b & c", "(& (& a b) c)"},
-    {"a ^ b ^ c", "(^ (^ a b) c)"},
-    {"a << b << c", "(<< (<< a b) c)"},
-    {"a + b + c", "(+ (+ a b) c)"},
-    {"a * b * c", "(* (* a b) c)"},
-    {"a += b += c", "(+= a (+= b c))"},
+    {"a - b - c", "(- (- a b) c)"},     {"a / b / c", "(/ (/ a b) c)"},
+    {"a ** b ** c", "(** a (** b c))"}, {"a = b = c", "(= a (= b c))"},
+    {"a ?? b ?? c", "(?? a (?? b c))"}, {"a && b && c", "(&& (&& a b) c)"},
+    {"a || b || c", "(|| (|| a b) c)"}, {"a | b | c", "(| (| a b) c)"},
+    {"a & b & c", "(& (& a b) c)"},     {"a ^ b ^ c", "(^ (^ a b) c)"},
+    {"a << b << c", "(<< (<< a b) c)"}, {"a + b + c", "(+ (+ a b) c)"},
+    {"a * b * c", "(* (* a b) c)"},     {"a += b += c", "(+= a (+= b c))"},
     {"a << b >> c", "(>> (<< a b) c)"},
 };
 
@@ -147,22 +140,16 @@ constexpr Caso BITS[] = {
 
 // --- Rangos ----------------------------------------------------------------
 constexpr Caso RANGOS[] = {
-    {"0..10", "(.. 0 10)"},
-    {"0..=10", "(..= 0 10)"},
-    {"a..b", "(.. a b)"},
-    {"a + 1..b * 2", "(.. (+ a 1) (* b 2))"},
-    {"0..n + 1", "(.. 0 (+ n 1))"},
-    {"a < b..c", "(< a (.. b c))"},
-    {"a..b < c", "(< (.. a b) c)"},
-    {"0..=n - 1", "(..= 0 (- n 1))"},
+    {"0..10", "(.. 0 10)"},         {"0..=10", "(..= 0 10)"},
+    {"a..b", "(.. a b)"},           {"a + 1..b * 2", "(.. (+ a 1) (* b 2))"},
+    {"0..n + 1", "(.. 0 (+ n 1))"}, {"a < b..c", "(< a (.. b c))"},
+    {"a..b < c", "(< (.. a b) c)"}, {"0..=n - 1", "(..= 0 (- n 1))"},
 };
 
 // --- Desplazamientos -------------------------------------------------------
 constexpr Caso DESPLAZAMIENTOS[] = {
-    {"a << b", "(<< a b)"},
-    {"a >> b", "(>> a b)"},
-    {"a << b + c", "(<< a (+ b c))"},
-    {"a + b << c", "(<< (+ a b) c)"},
+    {"a << b", "(<< a b)"},           {"a >> b", "(>> a b)"},
+    {"a << b + c", "(<< a (+ b c))"}, {"a + b << c", "(<< (+ a b) c)"},
     {"a >> b | c", "(| (>> a b) c)"},
 };
 
@@ -275,17 +262,10 @@ constexpr Caso MEZCLAS[] = {
 
 // --- Expresiones que deben fallar -----------------------------------------
 constexpr std::string_view INVALIDAS[] = {
-    "1 +",
-    "(1",
-    "a.",
-    "f(",
-    "x como",
-    "1 2",
-    "a..b..=c",
+    "1 +", "(1", "a.", "f(", "x como", "1 2", "a..b..=c",
 };
 
-template <std::size_t N>
-void ejecutar(const Caso (&casos)[N], std::string_view grupo) {
+template<std::size_t N> void ejecutar(const Caso (&casos)[N], std::string_view grupo) {
     std::cout << "  · " << grupo << " (" << N << ")\n";
     for (const Caso& caso : casos) {
         diagnostico::GestorFuentes fuentes;

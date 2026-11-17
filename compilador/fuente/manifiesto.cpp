@@ -77,8 +77,8 @@ bool leer_manifiesto(const std::filesystem::path& directorio, Manifiesto& manifi
 
         const auto igual = linea.find('=');
         if (igual == std::string::npos) {
-            error = ARCHIVO + std::string(":") + std::to_string(numero) +
-                    ": falta «=» en «" + linea + "»";
+            error = ARCHIVO + std::string(":") + std::to_string(numero) + ": falta «=» en «" +
+                    linea + "»";
             return false;
         }
 
@@ -100,8 +100,8 @@ bool leer_manifiesto(const std::filesystem::path& directorio, Manifiesto& manifi
             dependencia.nombre = clave;
             const auto ruta_clave = valor.find("ruta");
             if (ruta_clave == std::string::npos) {
-                error = ARCHIVO + std::string(":") + std::to_string(numero) +
-                        ": la dependencia «" + clave + "» necesita «ruta»";
+                error = ARCHIVO + std::string(":") + std::to_string(numero) + ": la dependencia «" +
+                        clave + "» necesita «ruta»";
                 return false;
             }
             const auto comillas = valor.find('"', ruta_clave);

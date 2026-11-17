@@ -45,7 +45,8 @@ Decodificado decodificar_impl(std::string_view texto, std::size_t indice) noexce
     }
 
     for (int i = 1; i <= extra; ++i) {
-        const auto siguiente = static_cast<unsigned char>(texto[indice + static_cast<std::size_t>(i)]);
+        const auto siguiente =
+            static_cast<unsigned char>(texto[indice + static_cast<std::size_t>(i)]);
         if ((siguiente & 0xC0) != 0x80) {
             return {false, Punto{REEMPLAZO, 1}};
         }

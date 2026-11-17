@@ -15,8 +15,7 @@ inline constexpr int ERROR_INTERNO = 70;
 
 /// Despacha la línea de comandos. No imprime por stdout/stderr directamente:
 /// recibe los flujos para que sea comprobable desde las pruebas.
-int ejecutar(std::span<const std::string_view> argumentos,
-             std::ostream& salida,
+int ejecutar(std::span<const std::string_view> argumentos, std::ostream& salida,
              std::ostream& error);
 
 }  // namespace nooki::cli

@@ -20,33 +20,33 @@ void escribir_cadena(std::ostream& salida, std::string_view texto) {
     for (const char crudo : texto) {
         const auto c = static_cast<unsigned char>(crudo);
         switch (c) {
-            case '"':
-                salida << "\\\"";
-                break;
-            case '\\':
-                salida << "\\\\";
-                break;
-            case '\n':
-                salida << "\\n";
-                break;
-            case '\r':
-                salida << "\\r";
-                break;
-            case '\t':
-                salida << "\\t";
-                break;
-            case '\b':
-                salida << "\\b";
-                break;
-            case '\f':
-                salida << "\\f";
-                break;
-            default:
-                if (c < 0x20) {
-                    salida << "\\u00" << HEXADECIMAL[c >> 4] << HEXADECIMAL[c & 0x0F];
-                } else {
-                    salida << static_cast<char>(c);
-                }
+        case '"':
+            salida << "\\\"";
+            break;
+        case '\\':
+            salida << "\\\\";
+            break;
+        case '\n':
+            salida << "\\n";
+            break;
+        case '\r':
+            salida << "\\r";
+            break;
+        case '\t':
+            salida << "\\t";
+            break;
+        case '\b':
+            salida << "\\b";
+            break;
+        case '\f':
+            salida << "\\f";
+            break;
+        default:
+            if (c < 0x20) {
+                salida << "\\u00" << HEXADECIMAL[c >> 4] << HEXADECIMAL[c & 0x0F];
+            } else {
+                salida << static_cast<char>(c);
+            }
         }
     }
     salida << '"';
@@ -54,14 +54,14 @@ void escribir_cadena(std::ostream& salida, std::string_view texto) {
 
 const char* nombre_gravedad_json(Gravedad gravedad) {
     switch (gravedad) {
-        case Gravedad::Error:
-            return "error";
-        case Gravedad::Advertencia:
-            return "advertencia";
-        case Gravedad::Nota:
-            return "nota";
-        case Gravedad::Ayuda:
-            return "ayuda";
+    case Gravedad::Error:
+        return "error";
+    case Gravedad::Advertencia:
+        return "advertencia";
+    case Gravedad::Nota:
+        return "nota";
+    case Gravedad::Ayuda:
+        return "ayuda";
     }
     return "error";
 }

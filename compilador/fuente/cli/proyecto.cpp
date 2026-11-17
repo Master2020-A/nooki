@@ -1,8 +1,8 @@
 #include <filesystem>
 #include <fstream>
 #include <ostream>
-#include <sstream>
 #include <span>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -42,7 +42,8 @@ int crear_proyecto(std::span<const std::string_view> argumentos, std::ostream& s
 
     {
         std::ofstream principal(raiz / "principal.oki");
-        principal << "// Programa principal de «" << nombre << "».\n"
+        principal << "// Programa principal de «" << nombre
+                  << "».\n"
                      "usar herramientas\n"
                      "\n"
                      "funcion principal() -> entero {\n"
@@ -74,8 +75,7 @@ int crear_proyecto(std::span<const std::string_view> argumentos, std::ostream& s
 }
 
 /// `nooki probar`: compila y ejecuta cada prueba; compara con su «.esperado».
-int probar_proyecto(std::span<const std::string_view>, std::ostream& salida,
-                    std::ostream& error) {
+int probar_proyecto(std::span<const std::string_view>, std::ostream& salida, std::ostream& error) {
     std::error_code error_fs;
     const std::filesystem::path pruebas("pruebas");
     if (!std::filesystem::exists(pruebas)) {
@@ -172,8 +172,7 @@ int probar_proyecto(std::span<const std::string_view>, std::ostream& salida,
 }
 
 /// `nooki limpiar`: borra los artefactos, sin tocar el código.
-int limpiar_proyecto(std::span<const std::string_view>, std::ostream& salida,
-                     std::ostream& error) {
+int limpiar_proyecto(std::span<const std::string_view>, std::ostream& salida, std::ostream& error) {
     (void)error;
     std::error_code error_fs;
     int borrados = 0;

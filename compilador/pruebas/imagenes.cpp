@@ -157,9 +157,9 @@ int main() {
 
     const fs::path binario = directorio / ("imagen" + std::string(EXTENSION));
     const std::string compilar =
-        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(compilador_nooki())) +
-        " compilar " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(fuente)) +
-        " -o " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario));
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(compilador_nooki())) + " compilar " +
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(fuente)) + " -o " +
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario));
     if (nooki::ejecutar_comando(compilar) != 0) {
         std::cout << "FALLO: no compiló el programa de imágenes\n";
         return 1;
@@ -168,15 +168,15 @@ int main() {
     // El programa busca la imagen en su directorio de trabajo: se ejecuta allí.
     const fs::path texto_salida = directorio / "salida.txt";
 #ifdef _WIN32
-    const std::string entrar = "cd /d " + nooki::entrecomillar_si_hace_falta(
-                                               nooki::ruta_a_utf8(directorio));
+    const std::string entrar =
+        "cd /d " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(directorio));
 #else
-    const std::string entrar = "cd " + nooki::entrecomillar_si_hace_falta(
-                                            nooki::ruta_a_utf8(directorio));
+    const std::string entrar =
+        "cd " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(directorio));
 #endif
     const std::string comando =
-        entrar + " && " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario)) +
-        " > " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(texto_salida));
+        entrar + " && " + nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(binario)) + " > " +
+        nooki::entrecomillar_si_hace_falta(nooki::ruta_a_utf8(texto_salida));
     const int codigo = nooki::ejecutar_comando(comando);
     const std::string obtenido = leer(texto_salida);
 
@@ -194,8 +194,9 @@ int main() {
     const std::string esperado =
         "4\n3\n16711680\n65280\n255\n16777215\n-1\nrechazo el archivo invalido\n";
     if (obtenido != esperado) {
-        std::cout << "FALLO: salida inesperada\n--- esperado ---\n" << esperado
-                  << "--- obtenido ---\n" << obtenido;
+        std::cout << "FALLO: salida inesperada\n--- esperado ---\n"
+                  << esperado << "--- obtenido ---\n"
+                  << obtenido;
         return 1;
     }
 

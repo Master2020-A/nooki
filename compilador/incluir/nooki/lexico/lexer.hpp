@@ -28,7 +28,9 @@ public:
     std::vector<Token> todos();
 
 private:
-    [[nodiscard]] bool fin() const noexcept { return pos_ >= contenido_.size(); }
+    [[nodiscard]] bool fin() const noexcept {
+        return pos_ >= contenido_.size();
+    }
     [[nodiscard]] char actual() const noexcept;
     [[nodiscard]] char mirar(std::size_t distancia) const noexcept;
     void avanzar(std::size_t cantidad = 1) noexcept;

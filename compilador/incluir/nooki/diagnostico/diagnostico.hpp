@@ -45,16 +45,29 @@ public:
     /// Añade una ayuda con la acción recomendada ("= ayuda: ...").
     Diagnostico& ayuda(std::string texto);
 
-    [[nodiscard]] std::string_view codigo() const noexcept { return codigo_; }
-    [[nodiscard]] Gravedad gravedad() const noexcept { return gravedad_; }
-    [[nodiscard]] Span span() const noexcept { return span_; }
+    [[nodiscard]] std::string_view codigo() const noexcept {
+        return codigo_;
+    }
+    [[nodiscard]] Gravedad gravedad() const noexcept {
+        return gravedad_;
+    }
+    [[nodiscard]] Span span() const noexcept {
+        return span_;
+    }
 
-    [[nodiscard]] const std::vector<std::pair<std::string, std::string>>& parametros() const noexcept {
+    [[nodiscard]] const std::vector<std::pair<std::string, std::string>>&
+    parametros() const noexcept {
         return parametros_;
     }
-    [[nodiscard]] const std::vector<Etiqueta>& etiquetas() const noexcept { return etiquetas_; }
-    [[nodiscard]] const std::vector<std::string>& notas() const noexcept { return notas_; }
-    [[nodiscard]] const std::vector<std::string>& ayudas() const noexcept { return ayudas_; }
+    [[nodiscard]] const std::vector<Etiqueta>& etiquetas() const noexcept {
+        return etiquetas_;
+    }
+    [[nodiscard]] const std::vector<std::string>& notas() const noexcept {
+        return notas_;
+    }
+    [[nodiscard]] const std::vector<std::string>& ayudas() const noexcept {
+        return ayudas_;
+    }
 
 private:
     std::string_view codigo_;

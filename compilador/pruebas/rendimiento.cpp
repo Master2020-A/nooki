@@ -40,7 +40,8 @@ std::string programa_de(std::size_t funciones) {
               "    }\n"
               "}\n\n";
     for (std::size_t i = 0; i < funciones; ++i) {
-        codigo << "funcion calcular_" << i << "(a: entero, b: entero) -> entero {\n"
+        codigo << "funcion calcular_" << i
+               << "(a: entero, b: entero) -> entero {\n"
                   "    variable total = a + b\n"
                   "    variable i = 0\n"
                   "    mientras (i < 10) {\n"
@@ -89,7 +90,7 @@ constexpr bool CON_SANITIZADOR = false;
 #endif
 
 // --- Umbrales (holgados: buscan regresiones, no récords) --------------------
-constexpr double LEXER_MINIMO_MB_S = 10.0;      // línea base medida: ~26
+constexpr double LEXER_MINIMO_MB_S = 10.0;        // línea base medida: ~26
 constexpr double COMPILAR_1000_LINEAS_MAX = 3.0;  // objetivo del plan: 2 s
 constexpr double GENERAR_1000_LINEAS_MAX = 3.0;
 
@@ -121,22 +122,21 @@ int main() {
             const auto tokens = lexer.todos();
             const double segundos = segundos_desde(inicio);
             const double mb_s = megabytes / (segundos > 0 ? segundos : 1e-9);
-            std::cout << "lexer: " << mb_s << " MB/s (" << tokens.size() << " tokens, "
-                      << megabytes << " MB)\n";
+            std::cout << "lexer: " << mb_s << " MB/s (" << tokens.size() << " tokens, " << megabytes
+                      << " MB)\n";
             mejor = std::min(mejor, segundos);
             (void)tokens;
         }
         const double mb_s = megabytes / (mejor > 0 ? mejor : 1e-9);
-        informar("lexer", mejor, codigo.size(),
-                 CON_SANITIZADOR || mb_s >= LEXER_MINIMO_MB_S);
+        informar("lexer", mejor, codigo.size(), CON_SANITIZADOR || mb_s >= LEXER_MINIMO_MB_S);
         std::cout << "  → " << mb_s << " MB/s (mínimo exigido " << LEXER_MINIMO_MB_S << ")\n";
     }
 
     // --- Compilación completa por cada 1 000 líneas -------------------------
     for (const std::size_t funciones : {std::size_t{45}, std::size_t{225}}) {
         const std::string codigo = programa_de(funciones);
-        const std::size_t lineas = static_cast<std::size_t>(
-            std::count(codigo.begin(), codigo.end(), '\n'));
+        const std::size_t lineas =
+            static_cast<std::size_t>(std::count(codigo.begin(), codigo.end(), '\n'));
 
         double mejor = 1e9;
         bool correcto = true;
@@ -175,8 +175,7 @@ int main() {
     }
     for (const Medida& medida : medidas) {
         if (!medida.correcto) {
-            std::cout << "FUERA DE UMBRAL: " << medida.nombre << " (" << medida.segundos
-                      << " s)\n";
+            std::cout << "FUERA DE UMBRAL: " << medida.nombre << " (" << medida.segundos << " s)\n";
         }
     }
     return 1;
