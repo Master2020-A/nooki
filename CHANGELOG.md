@@ -3,18 +3,21 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.0.4] — 2026-11-17
+
+Cuarta versión de la serie 1.0. Trae el análisis de datos dentro del lenguaje y deja el proyecto con la
+biblioteca que hace falta, sin que el usuario tenga que instalar nada.
 
 ### Sprint 132 — `datos` sin proceso y con la biblioteca dentro (2026-11-17)
 
-El módulo `datos` lanzaba el ejecutable de DuckDB para cada consulta. Ahora habla con su **API de C**, que
-se abre en tiempo de ejecución: el programa no se enlaza contra DuckDB al compilar y, si no analiza datos,
-ni siquiera la carga. La interfaz del módulo no ha cambiado.
+El módulo `datos` lanzaba el ejecutable de DuckDB para cada consulta. Ahora habla con su **API de C**, que se
+abre en tiempo de ejecución: el programa no se enlaza contra DuckDB al compilar y, si no analiza datos, ni
+siquiera la carga. La interfaz del módulo no ha cambiado.
 
 Y la biblioteca viaja con la distribución: `duckdb.dll` junto al ejecutable en Windows, `libduckdb.so` en
 Linux (la descarga la integración continua al empaquetar). Se puede usar otra con `NOOKI_DUCKDB`.
 
-Depurar esto costó, y quedan dos cosas aprendidas que están escritas en el código:
+Dos cosas que costó aprender y que quedan escritas en el código:
 
 - **El `duckdb_result` real es mayor que el que declara su cabecera**: con la estructura replicada (48
   bytes) el programa corrompía el montón. Ahora se reserva un colchón alineado de 4 KB, que es lo único que
@@ -22,9 +25,19 @@ Depurar esto costó, y quedan dos cosas aprendidas que están escritas en el có
 - **El nombre de una columna es de la biblioteca**, no del llamante: liberarlo con `duckdb_free` corrompe
   el montón y el programa revienta al destruir el resultado. Ese `free` sobraba.
 
-Probado con DuckDB **1.2.2** (la que se empaqueta, 28 MB) y con la **2.0.0**: las dos funcionan y dan los
-mismos resultados.
+Probado con DuckDB **1.2.2** (la que se empaqueta) y con la **2.0.0**.
 
+### Sprint 131 — Análisis de datos con SQL (2026-11-16)
+
+Las operaciones que se hacen con pandas —agrupar, pivotar, unir, ventanas deslizantes, describir— se pueden
+hacer desde Nooki con el módulo `datos`, sin pasar por Python: `consultar`, `ejecutar`, `a_csv`, `a_parquet`
+y `version`. Detrás está DuckDB, elegida después de comprobar contra datos reales que cubre `groupby`,
+`pivot_table`, `rolling`, `merge`, `describe`, filtrado, ordenación y lectura y escritura de CSV y Parquet.
+Lo que no cubre —`apply` con una función propia de Python, gráficas, Excel— sigue teniendo su camino con el
+módulo `sistema`. El ejemplo `ejemplos/12-datos` hace las siete operaciones con su equivalente en pandas al
+lado.
+
+**19 módulos y 197 firmas** en la biblioteca.
 ## [1.0.3] — 2026-11-16
 
 ### Sprint 131 — Análisis de datos con SQL nativo (2026-11-16)
