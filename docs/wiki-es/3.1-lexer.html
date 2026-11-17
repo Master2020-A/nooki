@@ -1,0 +1,59 @@
+<h1>Léxico</h1>
+
+<p>El subsistema léxico (<code>nooki::lexico</code>) convierte el texto UTF-8 en una secuencia de tokens
+para el analizador sintáctico. Vive en <code>fuente/lexico/lexer.cpp</code>, se declara en
+<code>incluir/nooki/lexico/lexer.hpp</code> y recorre el fuente carácter a carácter: entiende puntos de
+código UTF-8 de varios bytes, valida las secuencias de escape, normaliza las palabras con tilde y avisa de
+los errores léxicos sin lanzar excepciones.</p>
+
+<h2>Arquitectura y flujo</h2>
+
+<p>El analizador trabaja sobre una vista inmutable del fuente que le da el gestor de archivos
+(<code>GestorFuentes</code>). Lleva un cursor interno y habla con el emisor de diagnósticos para anotar los
+errores, pero no se detiene: sigue tokenizando el resto del archivo.</p>
+
+<h2>Interfaz</h2>
+
+<p>La clase ofrece dos formas de obtener los tokens: de uno en uno (<code>siguiente()</code>) o el archivo
+entero de golpe (<code>todos()</code>).</p>
+
+<h2>Clasificación de caracteres y UTF-8</h2>
+
+<p>Para que el fuente se pueda escribir en español, el léxico entiende puntos de código de varios bytes. Los
+caracteres ASCII se comprueban con ayudantes rápidos (<code>es_digito</code>, <code>es_hexadecimal</code>,
+<code>es_octal</code>, <code>es_binario</code>, <code>es_letra_ascii</code>).</p>
+
+<p>Los que no son ASCII (a partir de <code>0x80</code>) pasan por <code>es_letra(char32_t)</code>, que
+reconoce de forma explícita las vocales con tilde y la eñe, en minúscula y en mayúscula. Un identificador
+continúa con letras, dígitos o guion bajo, y las letras válidas de Unicode pasan por
+<code>es_continuacion(char32_t)</code>.</p>
+
+<h2>Palabras reservadas y tildes</h2>
+
+<p>Nooki reserva 85 palabras y tipos en <code>PALABRAS_RESERVADAS</code>, guardadas en una matriz ordenada
+alfabéticamente para poder buscarlas con búsqueda binaria.</p>
+
+<p>Y aquí está una de las decisiones de diseño más útiles del proyecto: existe <code>quitar_tildes()</code>.
+Si alguien escribe <code>función</code> en lugar de <code>funcion</code>, el léxico quita la tilde antes de
+validar, de modo que un despiste tipográfico —que en otro lenguaje sería un «identificador desconocido»
+desconcertante— no se convierte en un error críptico. El compilador puede entonces avisar con precisión o
+tratarlo como lo que el programador quería escribir.</p>
+
+<h2>Operadores y secuencias de escape</h2>
+
+<p>Los operadores se reconocen con <code>OPERADORES</code>, una matriz ordenada de mayor a menor longitud
+(<code>..=</code> antes que <code>..</code>, <code>&lt;&lt;=</code> antes que <code>&lt;&lt;</code>) para
+que gane siempre el operador más largo. La puntuación suelta se valida con
+<code>es_operador_simple()</code>.</p>
+
+<p>Los literales de texto admiten las secuencias habituales —<code>\n</code>, <code>\r</code>,
+<code>\t</code>, <code>\\</code>, <code>\"</code>, <code>\'</code>, <code>\u</code>— comprobadas por
+<code>es_escape_valido()</code>. El byte nulo (<code>\0</code>) se rechaza a propósito: un cero dentro de un
+texto lo truncaría al hablar con C. El caso de conformidad <code>0074-escapes</code> fija que
+<code>\n</code> y <code>\"</code> se interpreten de verdad.</p>
+
+<h2>Errores</h2>
+
+<p>El analizador no lanza excepciones. Cuando encuentra un carácter que no reconoce o un literal mal
+formado, registra el diagnóstico y avanza un carácter. Gracias a eso, una sola compilación informa de
+todos los errores léxicos del archivo, en lugar de uno por intento.</p>

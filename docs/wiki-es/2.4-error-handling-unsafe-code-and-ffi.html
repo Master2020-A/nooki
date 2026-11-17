@@ -1,0 +1,69 @@
+<h1>Errores, código inseguro y FFI</h1>
+
+<p>Esta página reúne cuatro fronteras del lenguaje: cómo se trata lo que puede fallar
+(<code>resultado</code> y <code>?</code>), qué ocurre cuando algo irrecuperable se rompe (los pánicos y el
+código de salida 70), dónde se puede bajar al metal (<code>inseguro</code>, los punteros y
+<code>asm!</code>) y cómo se habla con C y desde C (<code>externo</code> y <code>@exportar</code>).</p>
+
+<h2>Propagar errores: <code>resultado</code> y <code>?</code></h2>
+
+<p>Nooki no tiene excepciones. Lo que puede fallar devuelve un <code>resultado</code>, que es una
+enumeración de la biblioteca estándar —no un tipo mágico del compilador, por decisión del ADR-025—:</p>
+
+<pre><code>publico enumeracion resultado {
+    Ok(valor: entero)
+    Error(mensaje: texto)
+}</code></pre>
+
+<p>Y el operador <code>?</code> es azúcar para propagar. En lugar de emparejar con <code>coincide</code> en
+cada llamada que puede fallar, se pone <code>?</code> detrás de la expresión: si el valor es un
+<code>Ok</code>, se desempaqueta; si es un <code>Error</code>, se devuelve ese error tal cual desde la
+función en la que estamos.</p>
+
+<p>La comprobación es <strong>estructural</strong>: sirve cualquier enumeración cuya primera variante lleve
+un solo campo. Por eso una biblioteca puede definir su propio tipo de resultado sin pedirle permiso al
+compilador.</p>
+
+<h2>Pánicos y el código 70</h2>
+
+<p>Cuando ocurre algo irrecuperable —un índice fuera de rango, una aserción que falla, una división
+imposible—, el programa aborta: el runtime escribe el diagnóstico por la salida de error y termina con el
+código <strong>70</strong> (<code>EX_SOFTWARE</code>), que es la convención de los sistemas para «fallo
+interno del programa». Quien llama a un programa de Nooki desde un guion puede distinguir así un error
+controlado (código devuelto por <code>principal</code>) de un fallo no controlado.</p>
+
+<h2><code>inseguro</code>, punteros y <code>asm!</code></h2>
+
+<p>Fuera de un bloque <code>inseguro</code> el lenguaje mantiene sus invariantes: la aritmética está
+comprobada y un desbordamiento de entero es un pánico, no un valor negativo sorpresa.</p>
+
+<p><code>inseguro</code> es la escotilla explícita. Dentro se puede:</p>
+
+<ul>
+  <li>hacer aritmética sin comprobar;</li>
+  <li>pedir memoria con <code>reservar</code>, liberarla con <code>liberar</code>, leer y escribir en ella
+  con <code>leer_en</code> y <code>escribir_en</code>, y construir un puntero a una dirección concreta con
+  <code>desde_direccion</code> —que es como se habla con un registro del hardware—;</li>
+  <li>insertar ensamblador con <code>asm!</code>.</li>
+</ul>
+
+<p>Las tres cosas están restringidas al bloque, y no por estilo: <code>asm!</code> fuera de
+<code>inseguro</code> es <code>NOK3012</code>, y usar los punteros fuera es <code>NOK3013</code>. Así, quien
+lee el código sabe exactamente dónde se rompen las garantías, y el compilador se lo recuerda.</p>
+
+<h2>Hablar con C</h2>
+
+<h3>Traer funciones de C: <code>externo</code></h3>
+
+<p>Una función que vive en una biblioteca de C se declara con <code>externo</code>:</p>
+
+<pre><code>externo funcion puts(cadena: &amp;texto) -> booleano
+externo funcion time(zona: &amp;entero) -> entero</code></pre>
+
+<p>Los tipos se traducen solos: un <code>&amp;texto</code> llega a C como <code>const char*</code>, y un
+puntero crudo o un valor ausente se representa con <code>nulo</code>.</p>
+
+<h3>Exponer funciones a C: <code>@exportar</code></h3>
+
+<p>Al revés también funciona: una función de Nooki marcada con <code>@exportar</code> se emite en el C
+generado con enlace externo y sin deformación del nombre, de modo que un programa en C puede llamarla.</p>

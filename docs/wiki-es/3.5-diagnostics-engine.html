@@ -1,0 +1,64 @@
+<h1>Motor de diagnósticos</h1>
+
+<p>El subsistema de diagnósticos (<code>fuente/diagnostico/</code>) se encarga de llevar la cuenta de los
+archivos fuente (<code>GestorFuentes</code>), de recoger los mensajes de error y aviso
+(<code>Emisor</code>), de mantener el catálogo normativo (<code>catalogo.cpp</code> y
+<code>codigos.hpp</code>) y de presentar la salida de dos maneras: para una persona —texto con color y el
+fragmento del fuente— o para una herramienta —JSON—.</p>
+
+<h2>Arquitectura</h2>
+
+<p>El motor es el puente entre las fases del compilador —léxico, sintáctico, semántica y generador— y quien
+lee el mensaje. Cada una de esas fases no escribe texto libre: emite un código y unos parámetros, y el motor
+decide cómo se presenta.</p>
+
+<h2>El catálogo de códigos</h2>
+
+<p>Según la especificación (§11.1), todo diagnóstico lleva un identificador estable con la forma
+<code>NOK</code> más cuatro dígitos. Los códigos **no cambian** entre versiones del compilador, porque de eso
+depende que las herramientas externas y las pruebas puedan reconocerlos.</p>
+
+<ul>
+  <li><code>NOK0xxx</code>: uso del compilador y entrada y salida de archivos.</li>
+  <li><code>NOK1xxx</code>: análisis léxico (palabra con tilde, texto sin cerrar, escape desconocido).</li>
+  <li><code>NOK2xxx</code>: análisis sintáctico (delimitador sin cerrar, token inesperado, falta
+  <code>principal</code>).</li>
+  <li><code>NOK3xxx</code>: símbolos y ligaduras (nombre no declarado, módulo no encontrado, puntero fuera de
+  <code>inseguro</code>).</li>
+  <li><code>NOK4xxx</code>: sistema de tipos y comprobaciones (tipo incompatible, <code>coincide</code> no
+  exhaustivo).</li>
+  <li><code>NOK5xxx</code>: propiedad, préstamos y memoria (uso tras mover, préstamo mutable no exclusivo,
+  préstamo que escapa).</li>
+  <li><code>NOK6xxx</code>: generación de código y enlace (no hay compilador de C, el compilador de C
+  falló).</li>
+</ul>
+
+<p>Hoy son <strong>47 códigos</strong>, y la tabla completa se genera desde el propio compilador.</p>
+
+<h2><code>GestorFuentes</code> y <code>Emisor</code></h2>
+
+<ul>
+  <li><strong><code>GestorFuentes</code></strong>: guarda los búferes de los archivos que se van cargando,
+  asigna a cada ruta un identificador y sabe traducir una posición a línea y columna para poder dibujar el
+  fragmento.</li>
+  <li><strong><code>Emisor</code></strong>: recoge los diagnósticos según el compilador avanza por las fases,
+  consulta el catálogo y rellena la plantilla del mensaje con sus parámetros
+  (<code>{archivo}</code>, <code>{nombre}</code>, <code>{esperado}</code>…).</li>
+</ul>
+
+<h2>Presentación: texto o JSON</h2>
+
+<p>Los mensajes existen en español y en inglés (las dos cadenas están en el catálogo), y la salida cambia
+según la orden o según quién pregunte:</p>
+
+<ul>
+  <li><strong>Texto para personas</strong>: con color cuando la terminal lo admite, el fragmento del fuente,
+  la línea culpable y los acentos (<code>^^^</code>) bajo el fragmento exacto, más el código y la
+  explicación.</li>
+  <li><strong>JSON</strong>: para el servidor de lenguaje y para las herramientas, con el código, la
+  ubicación y los parámetros por separado.</li>
+</ul>
+
+<p>Esa separación —código, ubicación y parámetros por un lado; presentación por otro— es lo que permite que
+la misma comprobación sirva para el terminal, para el editor y para una prueba automática sin duplicar el
+mensaje en tres sitios.</p>

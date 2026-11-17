@@ -1,0 +1,64 @@
+<h1>Conductor y resolución de módulos</h1>
+
+<p>El conductor es la pieza que une todo: lee el fuente, resuelve los módulos, sirve la biblioteca estándar,
+localiza el compilador de C del sistema, enlaza los runtimes nativos de interfaz e inteligencia artificial
+cuando hacen falta y compila. Vive en <code>fuente/conductor/compilar.cpp</code> y se declara en
+<code>incluir/nooki/conductor/compilar.hpp</code>.</p>
+
+<h2>La orden de compilar</h2>
+
+<p>La entrada es <code>nooki::conductor::compilar()</code>, que recibe una estructura <code>Opciones</code> y
+los gestores de diagnóstico, y va pasando por las fases.</p>
+
+<h3>Opciones y resultado</h3>
+
+<p><code>Opciones</code> lleva la ruta del fuente, dónde dejar el binario, si se conserva el C intermedio
+(<code>conservar_intermedios</code>) y si hay que parar antes: en la verificación semántica
+(<code>solo_verificar</code>) o en la emisión de C (<code>solo_c</code>). <code>Resultado</code> devuelve el
+código de salida, el C generado como cadena y la ruta del binario final.</p>
+
+<p>Esas dos paradas anticipadas son las que usan las pruebas y la herramienta de documentación: comprobar
+que un ejemplo verifica no necesita compilarlo entero, y ver el C generado es la forma más rápida de
+entender qué hace el generador con una construcción.</p>
+
+<h2>Los módulos y la biblioteca incrustada</h2>
+
+<p>Nooki lleva la biblioteca estándar <strong>dentro del propio binario</strong>. No hay archivos sueltos que
+copiar ni que puedan faltar: cuando un <code>usar</code> pide un módulo conocido, el conductor entrega
+directamente el texto incrustado al analizador.</p>
+
+<p>La función <code>fuente_biblioteca(modulo)</code> guarda el fuente de cada módulo —<code>resultado</code>,
+<code>textos</code>, <code>listas</code>, <code>matematicas</code>, <code>fechas</code>,
+<code>archivo</code>, <code>csv</code>, <code>redes</code>, los de interfaz…— y devuelve la vista
+correspondiente. Todos están escritos en Nooki, salvo los runtimes de interfaz e IA, que son C y se emiten
+junto al programa solo cuando se usan.</p>
+
+<pre><code>std::string_view fuente_biblioteca(std::string_view modulo) {
+    if (modulo == "resultado") {
+        return R"(// Biblioteca estándar: el resultado de una operación que puede fallar.
+publico enumeracion resultado {
+    Ok(valor: entero)
+    Error(mensaje: texto)
+})";
+    }
+    // ...
+}</code></pre>
+
+<h2>El proyecto y sus dependencias</h2>
+
+<p>Un proyecto se describe con <code>nooki.toml</code>, que se lee con
+<code>nooki::leer_manifiesto()</code> y se representa con la estructura <code>Manifiesto</code>. El
+manifiesto declara el nombre y la versión del proyecto y sus dependencias locales, y el conductor las añade
+a las rutas de búsqueda de módulos.</p>
+
+<p>La búsqueda va en este orden: junto al archivo que hace el <code>usar</code>, en <code>biblioteca/</code>,
+en las carpetas padre, en las dependencias del manifiesto y, por último, en la biblioteca estándar. Ese orden
+es el que hace que un módulo del proyecto pueda llamarse igual que uno de la biblioteca sin pisarla por
+accidente.</p>
+
+<h2>El compilador de C</h2>
+
+<p>El conductor busca <code>cc</code>, <code>gcc</code>, <code>clang</code> o MSVC —se puede forzar uno con
+la variable <code>NOOKI_CC</code>—, lanza la compilación del C generado y devuelve el binario. Si no
+encuentra compilador, el diagnóstico es <code>NOK6001</code>; si el compilador falla, <code>NOK6002</code>,
+con la salida del propio compilador de C para que el problema se pueda ver.</p>

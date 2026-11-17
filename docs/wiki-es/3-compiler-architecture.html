@@ -1,0 +1,73 @@
+<h1>Arquitectura del compilador</h1>
+
+<p>El compilador de Nooki está escrito en C++20 y es una cadena de traducción <em>ahead-of-time</em>: toma
+archivos <code>.oki</code> y produce un ejecutable nativo apoyándose en un compilador de C del sistema
+(<code>gcc</code>, <code>clang</code> o MSVC) como backend.</p>
+
+<p>Esta página da la visión de conjunto: cómo fluye la compilación, cómo se reparte el código dentro de
+<code>compilador/</code> y qué hace cada fase. El detalle de cada una está en su página.</p>
+
+<h2>El flujo de compilación</h2>
+
+<p>Todo va en una dirección, sin idas y venidas: el fuente en texto pasa por análisis léxico, análisis
+sintáctico, verificación semántica, generación de C y, por último, compilación nativa a través del
+conductor.</p>
+
+<pre><code>.oki  →  léxico  →  sintáctico (AST)  →  semántico  →  C  →  binario nativo</code></pre>
+
+<p>Ese orden importa porque cada fase puede rechazar el programa: el léxico se queja de un carácter que no
+existe, el sintáctico de una llave sin cerrar, el semántico de un tipo que no encaja o de un valor que se
+usó después de moverse. Cuanto antes se detecta, mejor es el mensaje: el compilador nunca genera C de un
+programa que no ha verificado.</p>
+
+<h2>Las fases, una a una</h2>
+
+<h3>Léxico</h3>
+
+<p>Convierte el texto UTF-8 en una secuencia de tokens. Se encarga de los identificadores con tilde, de las
+secuencias de escape de los textos, de los números y de llevar la línea y la columna de cada token, que es
+lo que después permite señalar el error exacto.</p>
+
+<h3>Sintáctico y AST</h3>
+
+<p>Con un analizador Pratt construye el árbol de sintaxis abstracta. La precedencia de operadores está en
+la tabla del analizador, no repartida por el código, y el árbol se puede volcar con <code>nooki ast</code>
+para depurar.</p>
+
+<h3>Verificador semántico</h3>
+
+<p>Recorre el árbol con ámbitos: comprueba que los nombres existan, que los tipos encajen, que las llamadas
+tengan la aridad correcta, que los campos estén, que el <code>coincide</code> cubra todos los casos y que
+la propiedad se respete (movimientos y préstamos). Aquí es donde se emite la mayor parte de los
+diagnósticos <code>NOK3xxx</code>, <code>NOK4xxx</code> y <code>NOK5xxx</code>.</p>
+
+<h3>Generador de C</h3>
+
+<p>Traduce el árbol a C legible, con un preludio de runtime (textos, vectores, mapas, cajas, aritmética
+comprobada) y los runtimes de interfaz e inteligencia artificial cuando el programa los usa. El C generado
+se puede conservar para inspeccionarlo.</p>
+
+<h3>Conductor</h3>
+
+<p>Orquesta lo anterior: resuelve los módulos (<code>usar</code>), localiza el compilador de C del sistema
+—o el que diga <code>NOOKI_CC</code>—, lanza la compilación y devuelve el binario o el error con su código
+de salida.</p>
+
+<h2>Cómo se reparte el código</h2>
+
+<p>El repositorio se organiza por fases, no por capas genéricas: <code>lexico/</code>,
+<code>sintactico/</code>, <code>semantico/</code>, <code>generador/</code> y <code>conductor/</code>, cada
+una con su prueba unitaria en <code>compilador/pruebas/</code>. Alrededor están <code>diagnostico/</code>
+(los códigos, los mensajes y su presentación), <code>cli/</code> (las órdenes), <code>lsp/</code> (el
+servidor de lenguaje) y <code>ui/</code> e <code>ia/</code> (los runtimes nativos).</p>
+
+<h2>Las páginas de esta sección</h2>
+
+<ul>
+  <li><strong>3.1 Léxico</strong>: tokens, escapes y UTF-8.</li>
+  <li><strong>3.2 Analizador y AST</strong>: Pratt, precedencia y volcado del árbol.</li>
+  <li><strong>3.3 Verificador semántico</strong>: ámbitos, tipos y propiedad.</li>
+  <li><strong>3.4 Generador de C</strong>: el preludio, la emisión y los runtimes.</li>
+  <li><strong>3.5 Diagnósticos</strong>: códigos, mensajes y presentación.</li>
+  <li><strong>3.6 Conductor y módulos</strong>: resolución de <code>usar</code> y compilación.</li>
+</ul>

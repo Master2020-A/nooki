@@ -1,0 +1,57 @@
+<h1>Analizador sintáctico y AST</h1>
+
+<p>El analizador convierte la secuencia lineal de tokens en un árbol de sintaxis abstracta (AST). Combina dos
+técnicas: descenso recursivo para las declaraciones, las sentencias y el control de flujo, y un analizador
+Pratt (precedencia de operadores de arriba abajo) para las expresiones.</p>
+
+<h2>Los nodos del árbol</h2>
+
+<p>El AST se define en <code>incluir/nooki/sintactico/ast.hpp</code> con estructuras de C++ moderno:
+punteros únicos para la propiedad (<code>std::unique_ptr&lt;Expresion&gt;</code>) y vistas de cadena
+(<code>std::string_view</code>) que apuntan al búfer del fuente, sin copiarlo.</p>
+
+<ul>
+  <li><strong><code>TipoExpresion</code></strong>: qué clase de expresión es —literal, operador binario o
+  unario, acceso a miembro (normal u opcional), índice, llamada o construcción—.</li>
+  <li><strong><code>Expresion</code></strong>: un nodo de expresión, con su lexema, sus hijos
+  (<code>izquierda</code>, <code>derecha</code>), la lista de argumentos, los tipos aplicados y su ubicación
+  en el fuente.</li>
+  <li><strong><code>TipoSentencia</code></strong>: qué clase de sentencia es —declaración de variable o
+  constante, condicional, bucles (<code>mientras</code>, <code>para</code>, <code>hacer</code>,
+  <code>bucle</code>), salto de flujo (<code>romper</code>, <code>continuar</code>, <code>retornar</code>),
+  emparejamiento (<code>coincide</code>), bloque <code>inseguro</code> y <code>asm!</code>—.</li>
+  <li><strong><code>Sentencia</code></strong>: un nodo de sentencia, con su cuerpo, sus ramas
+  <code>sino</code> y los brazos de un <code>coincide</code>.</li>
+  <li><strong><code>Programa</code></strong>: la raíz, con las funciones, los tipos, los rasgos, las
+  enumeraciones y los <code>usar</code>.</li>
+</ul>
+
+<h2>El analizador Pratt</h2>
+
+<h3>Precedencia y potencia de enlace</h3>
+
+<p>Las expresiones se analizan con la técnica de Pratt. Los niveles de precedencia son constantes enteras
+entre <code>POTENCIA_ASIGNACION</code> (10) y <code>POTENCIA_UNARIA</code> (140). La asignación
+(<code>=</code>, <code>+=</code>…) y la potencia (<code>**</code>) se marcan como asociativas por la
+derecha con el indicador <code>derecha</code> de <code>Enlace</code>; la aritmética binaria y los operadores
+lógicos son asociativos por la izquierda.</p>
+
+<h3>Cómo avanza</h3>
+
+<p>El analizador distingue los saltos de línea significativos, que es lo que permite diferenciar un
+<code>retornar</code> sin valor de un <code>retornar valor</code>.</p>
+
+<ul>
+  <li><code>analizar()</code>: el punto de entrada. Recorre los tokens de nivel superior y construye los
+  nodos de función, estructura, clase, enumeración, rasgo y los <code>usar</code>.</li>
+  <li><code>expresion(potencia_minima)</code>: el núcleo del Pratt. Enlaza la expresión prefija y sigue
+  mientras la potencia del operador siguiente supere el mínimo pedido.</li>
+  <li><code>analizar_expresion_completa()</code>: analiza una expresión suelta y comprueba que se hayan
+  consumido todos los tokens.</li>
+</ul>
+
+<h2>Detalles que se ven en los errores</h2>
+
+<p>Como cada nodo guarda su ubicación (<code>span</code>), los mensajes pueden señalar la columna exacta y
+subrayar el fragmento culpable. Y como el árbol se puede volcar con <code>nooki ast</code>, cuando algo se
+analiza de una forma que no esperas puedes mirar el árbol en lugar de adivinarlo.</p>

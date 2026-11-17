@@ -1,0 +1,52 @@
+<h1>Verificador semántico</h1>
+
+<p>La fase semántica recorre el árbol que produce el analizador para comprobar la seguridad de tipos, las
+reglas de ámbito, la visibilidad de símbolos, el cumplimiento de rasgos, las sobrescrituras de métodos y las
+restricciones de propiedad y préstamos. El punto de entrada es
+<code>nooki::semantico::verificar()</code>, que coordina la clase <code>Verificador</code>.</p>
+
+<h2>Cómo está organizada</h2>
+
+<p>La verificación va en orden dentro de <code>Verificador::ejecutar()</code>: primero indexa las
+declaraciones de nivel superior, después verifica los cuerpos de las funciones y por último las
+comprobaciones de orientación a objetos y rasgos.</p>
+
+<h2>Índice de símbolos y ámbitos</h2>
+
+<p>Antes de mirar el interior de ninguna sentencia, el verificador indexa todas las definiciones globales en
+sus tablas internas. Eso es lo que permite referirse a una función declarada más abajo y resolver símbolos
+entre módulos.</p>
+
+<h3>Los ámbitos</h3>
+
+<p>El seguimiento de variables locales y de préstamos se lleva en una pila de ámbitos. Cada nivel guarda los
+tipos de las variables, con qué estructura se corresponde cada una, las cajas, los textos, los préstamos
+activos y —desde hace poco— qué variables ya se movieron y cuáles son vectores o mapas de un tipo
+concreto, para saber qué devuelve <code>obtener</code>.</p>
+
+<h2>Tipos e inferencia</h2>
+
+<p>El sistema de tipos del verificador usa la enumeración <code>Tipo</code> para los primitivos —enteros,
+booleanos, números en coma flotante, texto y vacío—. Los nombres que se escriben en el fuente se traducen
+con <code>desde_nombre()</code>, y la compatibilidad se exige con ayudantes como <code>exigir()</code> y
+<code>exigir_booleano()</code>, que además producen el mensaje con el tipo esperado y el encontrado.</p>
+
+<h2>Comprobaciones de rasgos, sobrescrituras y préstamos</h2>
+
+<p>Después de los cuerpos, el verificador lanza sus comprobaciones específicas:</p>
+
+<ul>
+  <li><strong>Rasgos</strong> (<code>revisar_rasgos</code>): que un tipo que dice implementar un rasgo
+  tenga de verdad todas las firmas que el rasgo exige, con sus tipos.</li>
+  <li><strong>Sobrescrituras</strong> (<code>revisar_sobrescrituras</code>): que un método que sobrescribe
+  a otro de la base tenga una firma y una visibilidad compatibles.</li>
+  <li><strong>Préstamos</strong>: que no haya a la vez un préstamo mutable y otro cualquiera al mismo dato,
+  que un préstamo no escape de donde vive el valor y que nadie use una variable después de moverla.</li>
+</ul>
+
+<h2>Un detalle que cuesta y se agradece</h2>
+
+<p>El verificador es la fase que más crece, porque cada característica del lenguaje añade reglas que
+interactúan con las anteriores: un <code>Vector</code> de estructuras necesita saber el tipo del elemento
+para tipar <code>obtener</code> y para que <code>para (x en v)</code> dé a <code>x</code> el tipo
+correcto. Por eso tiene una batería de pruebas unitarias propia, además de los casos de conformidad.</p>

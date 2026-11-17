@@ -1,0 +1,58 @@
+<h1>Generador de código C</h1>
+
+<p>El generador (<code>EmisorC</code>), en <code>fuente/generador/generador_c.cpp</code>, traduce el árbol ya
+verificado a C estándar y portable. Ese C se compila después con la cadena de C del sistema hasta un
+ejecutable autónomo. El subsistema se encarga de bajar los tipos a C, del runtime que va en el preludio, de
+la instanciación de genéricos, de las tablas virtuales de los rasgos, de la aritmética comprobada y de la
+liberación de recursos por ámbito.</p>
+
+<h2>Cómo fluye</h2>
+
+<p>Toma los nodos que le deja la fase semántica, resuelve los ámbitos, traduce las construcciones del
+lenguaje y las restricciones de tipo a construcciones equivalentes de C, y pega el preludio del runtime
+delante del todo. El resultado es un archivo <code>.c</code> legible, que se puede conservar para
+inspeccionarlo.</p>
+
+<h2>El preludio y el mapa de tipos</h2>
+
+<p>El preludio define las piezas de C que el programa necesita: el texto con dueño
+(<code>nooki_texto</code>), las colecciones (<code>nooki_vector_entero</code>,
+<code>nooki_vector_texto</code>, <code>nooki_vector_flotante</code>, los tres mapas), las cajas
+(<code>nooki_caja</code>), los punteros (<code>nooki_puntero</code>), la aritmética comprobada y las
+funciones de archivo y de entrada.</p>
+
+<p>La bajada de tipos está centralizada en una sola función, <code>tipo_c(std::string_view)</code>, que
+evalúa los modificadores de préstamo, detecta los rasgos y traduce los primitivos:</p>
+
+<table>
+  <tr><th>Nooki</th><th>C</th></tr>
+  <tr><td><code>texto</code></td><td><code>nooki_texto</code></td></tr>
+  <tr><td><code>booleano</code></td><td><code>int</code></td></tr>
+  <tr><td><code>flotante</code></td><td><code>double</code></td></tr>
+  <tr><td><code>vacio</code></td><td><code>void</code></td></tr>
+  <tr><td><code>entero</code></td><td><code>long long</code></td></tr>
+  <tr><td><code>Puntero</code></td><td><code>nooki_puntero</code></td></tr>
+</table>
+
+<h2>Genéricos y tablas virtuales</h2>
+
+<p>Los genéricos y los rasgos se resuelven por especialización de código y punteros gordos. Cuando un tipo
+o una referencia implica un rasgo, el generador emite una estructura de referencia de rasgo
+(<code>nooki_ref_&lt;Rasgo&gt;</code>) que empareja el puntero a los datos con el puntero a la tabla de
+métodos virtuales.</p>
+
+<p>Los contenedores se monomorfizan: <code>Vector&lt;T&gt;</code> y <code>Mapa&lt;K, V&gt;</code> se
+convierten en estructuras concretas de C según sus parámetros, y en el caso de las estructuras propias se
+genera un vector nuevo por cada una. La función <code>elemento_de_vector</code> extrae el tipo del elemento a
+partir del nombre ya transformado, que es lo que permite que <code>obtener</code> y el bucle
+<code>para</code> devuelvan el tipo correcto.</p>
+
+<h2>Aritmética comprobada y liberación por ámbito</h2>
+
+<p>Las operaciones aritméticas se emiten con patrones seguros: una suma que desborda no da un valor
+sorprendente, da un pánico. La comprobación se puede desactivar dentro de <code>inseguro</code>.</p>
+
+<p>La memoria va atada a los ámbitos. Lo que se crea dentro de un bloque —variables con dueño, cajas,
+colecciones— se anota y se libera al salir, con las llamadas de destrucción correspondientes. Eso es lo que
+permite tener la comodidad de un lenguaje con recolector sin tener recolector: el programador no escribe la
+liberación, pero el compilador sí sabe dónde va.</p>
