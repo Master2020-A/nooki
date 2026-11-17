@@ -1390,6 +1390,64 @@ publico funcion columnas(ruta: &texto) -> entero {
 }
 )";
     }
+    if (modulo == "datos") {
+        return R"nooki(// Biblioteca estándar: análisis de datos con SQL.
+//
+// Detrás está DuckDB: lee CSV y Parquet, agrupa, une, pivota y calcula ventanas,
+// que es lo que se hace con pandas. La consulta se escribe en SQL y el resultado
+// vuelve como CSV, con su cabecera.
+//
+// Necesita el binario de DuckDB en el PATH (o NOOKI_DUCKDB apuntando a él).
+usar sistema
+usar archivo
+
+// El archivo donde se deja la consulta: así el SQL no se pasa por la línea de
+// órdenes y no hay que escapar comillas.
+publico funcion archivo_de_consulta() -> texto {
+    retornar "nooki_datos.sql" + ""
+}
+
+// Ejecuta la consulta y devuelve el resultado en CSV (con cabecera).
+publico funcion consultar(consulta: &texto) -> texto {
+    variable ruta = archivo_de_consulta()
+    variable escrito = archivo.escribir(&ruta, consulta)
+    variable orden = "duckdb -csv -c \".read " + ruta + "\"" + ""
+    retornar sistema.capturar(&orden)
+}
+
+// Ejecuta una orden que no devuelve filas (crear, copiar, borrar) y dice si fue bien.
+publico funcion ejecutar(consulta: &texto) -> booleano {
+    variable ruta = archivo_de_consulta()
+    variable escrito = archivo.escribir(&ruta, consulta)
+    variable orden = "duckdb -c \".read " + ruta + "\"" + ""
+    variable codigo = sistema.ejecutar(&orden)
+    retornar codigo == 0
+}
+
+// Guarda el resultado de la consulta en un CSV.
+publico funcion a_csv(consulta: &texto, destino: &texto) -> booleano {
+    variable orden_sql = "COPY (" + *consulta + ") TO '" + *destino + "' (HEADER)" + ""
+    variable ruta = archivo_de_consulta()
+    variable escrito = archivo.escribir(&ruta, &orden_sql)
+    variable orden = "duckdb -c \".read " + ruta + "\"" + ""
+    retornar sistema.ejecutar(&orden) == 0
+}
+
+// Guarda el resultado en Parquet, que es más rápido y pesa menos.
+publico funcion a_parquet(consulta: &texto, destino: &texto) -> booleano {
+    variable orden_sql = "COPY (" + *consulta + ") TO '" + *destino + "' (FORMAT PARQUET)" + ""
+    variable ruta = archivo_de_consulta()
+    variable escrito = archivo.escribir(&ruta, &orden_sql)
+    variable orden = "duckdb -c \".read " + ruta + "\"" + ""
+    retornar sistema.ejecutar(&orden) == 0
+}
+
+// La versión del motor, para saber si está disponible.
+publico funcion version() -> texto {
+    retornar sistema.capturar("duckdb --version")
+}
+)nooki";
+    }
     if (modulo == "sistema") {
         return R"(// Biblioteca estándar: hablar con otros programas.
 //

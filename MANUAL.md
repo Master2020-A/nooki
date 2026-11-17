@@ -1632,6 +1632,26 @@ comprobación en cada suma.
 
 ### `asm!`
 
+### Análisis de datos con SQL
+
+Para lo que en pandas sería un `groupby`, un `pivot_table`, un `merge` o un `rolling`, hay un módulo `datos`
+con SQL y un motor de verdad detrás:
+
+```nooki
+usar datos
+
+funcion principal() -> entero {
+    variable consulta = "SELECT ciudad, SUM(unidades) AS total FROM read_csv('ventas.csv', delim=';') GROUP BY ciudad" + ""
+    imprimir(datos.consultar(&consulta))
+    retornar 0
+}
+```
+
+`consultar` devuelve el resultado en CSV; `a_csv` y `a_parquet` lo guardan en un archivo. Necesita el
+binario de **DuckDB** en el `PATH` (o la variable `NOOKI_DUCKDB` apuntando a él). Si lo que necesitas es
+Python con pandas —un `apply` con una función tuya, una gráfica—, usa `sistema` con el guion de Python:
+las dos cosas conviven.
+
 ### Hablar con otro programa
 
 A veces la herramienta existe ya y no tiene sentido reescribirla: un guion de Python con pandas, un

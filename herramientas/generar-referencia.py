@@ -51,7 +51,7 @@ def modulos() -> dict[str, list[str]]:
     fuente = (RAIZ / "compilador" / "fuente" / "conductor" / "compilar.cpp").read_text(
         encoding="utf-8")
     salida: dict[str, list[str]] = {}
-    for m in re.finditer(r'if \(modulo == "(\w+)"\) \{\s*return R"\((.*?)\)";', fuente, re.S):
+    for m in re.finditer(r'if \(modulo == "(\w+)"\) \{\s*return R"(?:nooki)?\((.*?)\)(?:nooki)?";', fuente, re.S):
         nombre, cuerpo = m.group(1), m.group(2)
         firmas = []
         for linea in cuerpo.splitlines():

@@ -68,7 +68,7 @@ o o o o o + + + + + + + + + +
 | Errores como valores (`resultado` y `?`), sin excepciones | sí |
 | Colecciones: `Vector<entero>`, `Vector<texto>`, `Vector<flotante>`, `Mapa<texto, entero>`, `Mapa<texto, flotante>` | sí |
 | Módulos con visibilidad y proyectos con `biblioteca/` | sí |
-| Biblioteca estándar escrita en Nooki | 18 módulos: datos y textos, interfaz gráfica, IA y procesos |
+| Biblioteca estándar escrita en Nooki | 19 módulos: datos y textos, interfaz gráfica, IA y procesos |
 | Interfaz gráfica de escritorio | sí (Windows y Linux; macOS compila, sin backend de ventana) |
 | Redes neuronales y datos | sí: una y dos capas ocultas, CSV, tensores, tablas |
 | Control de hardware: punteros, `reservar`/`liberar`, `desde_direccion` y `asm!` | sí, dentro de `inseguro` |

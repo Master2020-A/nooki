@@ -1,6 +1,6 @@
 <!-- GENERADO por herramientas/generar-referencia.py: no editar a mano -->
 
-**18 módulos**, todos escritos en Nooki. Estas son sus declaraciones públicas,
+**19 módulos**, todos escritos en Nooki. Estas son sus declaraciones públicas,
 copiadas de la fuente que va dentro del compilador.
 
 ### `accesibilidad`
@@ -136,6 +136,27 @@ publico funcion a_entero(campo: &texto) -> entero {
 ```
 ```text
 publico funcion columnas(ruta: &texto) -> entero {
+```
+
+### `datos`
+
+```text
+publico funcion archivo_de_consulta() -> texto {
+```
+```text
+publico funcion consultar(consulta: &texto) -> texto {
+```
+```text
+publico funcion ejecutar(consulta: &texto) -> booleano {
+```
+```text
+publico funcion a_csv(consulta: &texto, destino: &texto) -> booleano {
+```
+```text
+publico funcion a_parquet(consulta: &texto, destino: &texto) -> booleano {
+```
+```text
+publico funcion version() -> texto {
 ```
 
 ### `diseno`

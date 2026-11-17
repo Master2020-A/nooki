@@ -5,6 +5,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Sin publicar]
 
+### Sprint 131 — Análisis de datos con SQL nativo (2026-11-16)
+
+Las operaciones que se hacen con pandas —agrupar, pivotar, unir, ventanas deslizantes, describir— ya se
+pueden hacer desde Nooki con un módulo **`datos`**, sin pasar por Python.
+
+```nooki
+variable consulta = "SELECT ciudad, SUM(unidades) FROM read_csv('ventas.csv') GROUP BY ciudad" + ""
+imprimir(datos.consultar(&consulta))
+```
+
+`consultar` devuelve CSV; `a_csv` y `a_parquet` guardan el resultado. Detrás está **DuckDB**, que se eligió
+después de comprobar contra datos reales que cubre lo que se usa de pandas: `groupby`, `pivot_table`
+(`PIVOT`), `rolling` (ventanas), `merge` (join), `describe`, filtrado, ordenación y lectura y escritura de
+CSV y Parquet. Lo que no cubre —`apply` con una función propia de Python, gráficas, Excel— sigue teniendo
+su camino: el módulo `sistema` con un guion de Python.
+
+El ejemplo `ejemplos/12-datos` hace las siete operaciones y las imprime, con su equivalente en pandas
+comentado al lado. **19 módulos** y **196 firmas** en la biblioteca.
+
+## [1.0.3] — 2026-11-16
+
 ### Sprint 130 — Hablar con otros programas (2026-11-16)
 
 Hasta ahora un programa de Nooki no podía lanzar otro. Eso dejaba fuera todo lo que ya existe hecho: un

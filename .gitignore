@@ -37,3 +37,8 @@ Thumbs.db
 # Datos que generan los ejemplos al ejecutarse
 ejemplos/*/*.csv
 
+
+# Consultas y datos que generan los ejemplos
+nooki_datos.sql
+ejemplos/*/*.parquet
+

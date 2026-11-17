@@ -1,0 +1,67 @@
+// Las operaciones de pandas, en SQL, desde Nooki.
+//
+// Cada bloque dice qué haría en pandas y hace lo mismo con `datos`, que lleva
+// DuckDB detrás. Necesita el binario de `duckdb` en el PATH.
+//
+//   nooki ejecutar ejemplos/12-datos/principal.oki
+
+usar datos
+usar archivo
+
+funcion principal() -> entero {
+    variable version = datos.version()
+    imprimir("motor: " + version)
+
+    variable ruta = "ventas.csv" + ""
+    variable contenido = "ciudad;mes;unidades;precio\n" + ""
+    contenido = contenido + "Madrid;enero;10;5\n"
+    contenido = contenido + "Madrid;febrero;20;5\n"
+    contenido = contenido + "Lima;enero;7;4\n"
+    contenido = contenido + "Lima;febrero;9;4\n"
+    contenido = contenido + "Bogota;enero;12;3\n"
+    contenido = contenido + "Bogota;febrero;15;3\n"
+    variable escrito = archivo.escribir(&ruta, &contenido)
+
+    // 1. df.groupby("ciudad").agg(...)
+    imprimir("--- groupby ---")
+    variable agrupado = "SELECT ciudad, SUM(unidades) AS unidades, SUM(unidades * precio) AS importe FROM read_csv('ventas.csv', delim=';') GROUP BY ciudad ORDER BY importe DESC" + ""
+    imprimir(datos.consultar(&agrupado))
+
+    // 2. df.pivot_table(index="ciudad", columns="mes", values="unidades", aggfunc="sum")
+    imprimir("--- pivot_table ---")
+    variable pivote = "PIVOT read_csv('ventas.csv', delim=';') ON mes USING SUM(unidades) GROUP BY ciudad ORDER BY ciudad" + ""
+    imprimir(datos.consultar(&pivote))
+
+    // 3. df.groupby("ciudad")["unidades"].rolling(2).sum()
+    imprimir("--- rolling ---")
+    variable deslizante = "SELECT ciudad, mes, unidades, SUM(unidades) OVER (PARTITION BY ciudad ORDER BY mes ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) AS dos_meses FROM read_csv('ventas.csv', delim=';') ORDER BY ciudad, mes" + ""
+    imprimir(datos.consultar(&deslizante))
+
+    // 4. df.merge(paises, on="ciudad")
+    imprimir("--- merge ---")
+    variable unido = "SELECT v.ciudad, SUM(v.unidades) AS unidades, p.pais FROM read_csv('ventas.csv', delim=';') v JOIN (VALUES ('Madrid', 'España'), ('Lima', 'Perú'), ('Bogota', 'Colombia')) AS p(ciudad, pais) ON v.ciudad = p.ciudad GROUP BY v.ciudad, p.pais ORDER BY unidades DESC" + ""
+    imprimir(datos.consultar(&unido))
+
+    // 5. df.describe()
+    imprimir("--- describe ---")
+    variable descrito = "SELECT 'unidades' AS columna, COUNT(*) AS n, MIN(unidades) AS minimo, MAX(unidades) AS maximo, ROUND(AVG(unidades), 2) AS media FROM read_csv('ventas.csv', delim=';')" + ""
+    imprimir(datos.consultar(&descrito))
+
+    // 6. df[df.unidades > 10].sort_values("unidades", ascending=False)
+    imprimir("--- filtrar y ordenar ---")
+    variable filtrado = "SELECT ciudad, unidades FROM read_csv('ventas.csv', delim=';') WHERE unidades > 10 ORDER BY unidades DESC" + ""
+    imprimir(datos.consultar(&filtrado))
+
+    // 7. df.to_csv("resumen.csv") y a Parquet
+    variable destino_csv = "resumen.csv" + ""
+    variable destino_parquet = "resumen.parquet" + ""
+    variable guardado = datos.a_csv(&agrupado, &destino_csv)
+    variable parquet = datos.a_parquet(&agrupado, &destino_parquet)
+    si (guardado) {
+        imprimir("--- el resumen está en resumen.csv ---")
+    }
+    si (parquet) {
+        imprimir("--- y en resumen.parquet ---")
+    }
+    retornar 0
+}
