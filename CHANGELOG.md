@@ -3,7 +3,29 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.0.3] — 2026-11-16
+
+### Sprint 129 — Punteros en `inseguro` y la wiki en español (2026-11-16)
+
+**Control del hardware.** Dentro de `inseguro { }` hay un tipo `Puntero` y ocho operaciones: `reservar`,
+`liberar`, `leer_en`, `escribir_en`, `leer_flotante_en`, `escribir_flotante_en`, `desde_direccion` y
+`direccion_de`. Permiten pedir memoria, leerla y escribirla con desplazamientos y construir un puntero a una
+dirección concreta, que es como se habla con los registros de un dispositivo. Fuera de `inseguro` no existen
+(`NOK3013`). Las lecturas van con `memcpy`, así que valen en direcciones alineadas o no.
+
+**Formato del código.** Se pasó `clang-format` a todo el compilador (2 321 desviaciones a cero) y el trabajo
+de formato de la integración continua quedó en verde. Hubo que excluir la plantilla `version.hpp.in`, que
+`clang-format` rompe, y quitar un `#include <shellapi.h>` que el orden alfabético ponía antes de
+`windows.h`.
+
+**La wiki en español.** Las 34 páginas de la wiki que DeepWiki genera para el repositorio, traducidas y
+versionadas en `docs/wiki-es/`, con una herramienta que las descarga y las ensambla en HTML y PDF
+(`herramientas/descargar-wiki.ps1`). Se corrigieron además los datos desfasados del original y se recuperaron
+los diagramas, que la primera versión tiraba.
+
+**113 → 116 casos** de conformidad y **47 diagnósticos**.
+
+## [1.0.2] — 2026-11-16
 
 ### Sprint 128 — Punteros y memoria manual (2026-11-16)
 
