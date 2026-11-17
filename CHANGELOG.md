@@ -3,7 +3,27 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [1.0.2] — 2026-11-16
+
+Segunda versión de la serie 1.0. Cierra la API de inteligencia artificial, añade colecciones que faltaban y
+deja el repositorio presentable.
+
+**Datos y colecciones.** `Vector<flotante>`, `Vector` de estructuras propias, `Mapa<texto, flotante>` y
+`Mapa<texto, texto>`. Módulo `csv` para leer datos, `archivo.agregar` para escribir un registro y
+`textos.de_entero` / `de_flotante` para meter números dentro de un mensaje.
+
+**Inteligencia artificial.** Redes de una y dos capas ocultas, de 1 a 64 entradas y 2 a 16 clases,
+entrenamiento por lotes con momento, y guardar y cargar las tres redes. `evaluar_profunda` para medir con
+datos que no se vieron al entrenar.
+
+**Lenguaje.** `sino si` encadenado, `para (i, x en coleccion)` con el índice, y prestar el resultado de una
+llamada o una variable de tipo propio.
+
+**Repositorio.** Portada con distintivos y captura, guías por audiencia verificadas, paquete de Linux
+publicado por la integración continua en cada versión, y una herramienta para bajar la wiki de DeepWiki en
+HTML y PDF. Los diez ejemplos del repositorio se compilan en cada `ctest`.
+
+**115 casos de conformidad · 18 suites · Windows y Linux en verde.**
 
 ### Sprint 127 — `Vector` de estructuras (2026-11-15)
 

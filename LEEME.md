@@ -74,7 +74,7 @@ o o o o o + + + + + + + + + +
 | Control de hardware (`inseguro`, `asm!`) | `asm!` sí; lo demás, fase posterior |
 | **Verificación** | **111 casos de conformidad · 18 suites · Windows, Linux y ASan+UBSan** |
 
-**Versión actual: 1.0.1.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o son
+**Versión actual: 1.0.2.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o son
 error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Probar sin instalar nada
