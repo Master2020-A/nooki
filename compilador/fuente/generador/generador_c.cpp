@@ -2323,21 +2323,24 @@ private:
                 if (!es_estructura(dentro)) {
                     return;
                 }
-                // Una estructura con campos con dueño (textos, colecciones,
-                // cajas) necesitaría copia y liberación profundas; de momento no
-                // se admite dentro de un vector.
+                // Un campo de texto sí se admite: el vector guarda su propia copia
+                // y la libera. Una colección o una caja dentro de la estructura
+                // exigiría copiarlas también, y eso todavía no está.
                 for (const sintactico::DefinicionTipo& definicion : programa.tipos) {
                     if (definicion.nombre != dentro) {
                         continue;
                     }
                     for (const sintactico::Campo& campo : definicion.campos) {
                         const std::string_view tipo_campo = campo.tipo;
-                        if (tipo_campo == "texto" || tipo_campo.rfind("Vector<", 0) == 0 ||
+                        if (tipo_campo.rfind("Vector<", 0) == 0 ||
                             tipo_campo.rfind("Mapa<", 0) == 0 ||
                             tipo_campo.rfind("Caja<", 0) == 0) {
                             no_soportado("un Vector de la estructura «" + dentro +
-                                         "», que tiene campos con dueño");
+                                         "», que tiene una colección o una caja dentro");
                             return;
+                        }
+                        if (tipo_campo == "texto") {
+                            estructuras_con_texto_.insert(dentro);
                         }
                     }
                 }
@@ -2680,6 +2683,37 @@ private:
         for (const std::string& nombre : vectores_de_estructura_) {
             const std::string tipo = "nooki_" + nombre;
             const std::string vec = "nooki_vector_" + nombre;
+            const bool con_texto = estructuras_con_texto_.count(nombre) != 0;
+
+            // Con campos de texto hacen falta tres ayudantes: copiar de verdad,
+            // dar una vista (para leer sin liberar) y liberar.
+            if (con_texto) {
+                const auto& campos = campos_planos_[tipo];
+                salida_ << "static " << tipo << " " << tipo << "_copiar(" << tipo << " valor) {\n";
+                for (const auto& [campo, tipo_campo] : campos) {
+                    if (tipo_campo == "nooki_texto") {
+                        salida_ << "    valor." << campo << " = nooki_texto_copiar(valor." << campo
+                                << ");\n";
+                    }
+                }
+                salida_ << "    return valor;\n}\n\n";
+
+                salida_ << "static " << tipo << " " << tipo << "_vista(" << tipo << " valor) {\n";
+                for (const auto& [campo, tipo_campo] : campos) {
+                    if (tipo_campo == "nooki_texto") {
+                        salida_ << "    valor." << campo << ".propio = 0;\n";
+                    }
+                }
+                salida_ << "    return valor;\n}\n\n";
+
+                salida_ << "static void " << tipo << "_liberar(" << tipo << "* valor) {\n";
+                for (const auto& [campo, tipo_campo] : campos) {
+                    if (tipo_campo == "nooki_texto") {
+                        salida_ << "    nooki_texto_soltar(&valor->" << campo << ");\n";
+                    }
+                }
+                salida_ << "}\n\n";
+            }
             salida_ << "typedef struct {\n"
                     << "    " << tipo << "* datos;\n"
                     << "    long long largo;\n"
@@ -2706,7 +2740,8 @@ private:
                     << "        v->datos = datos;\n"
                     << "        v->capacidad = nueva;\n"
                     << "    }\n"
-                    << "    v->datos[v->largo] = valor;\n"
+                    << "    v->datos[v->largo] = "
+                    << (con_texto ? tipo + "_copiar(valor)" : std::string("valor")) << ";\n"
                     << "    v->largo += 1;\n"
                     << "}\n\n";
 
@@ -2717,7 +2752,10 @@ private:
                     << "    if (indice < 0 || indice >= v->largo) {\n"
                     << "        return vacio;\n"
                     << "    }\n"
-                    << "    return v->datos[indice];\n"
+                    << "    return "
+                    << (con_texto ? tipo + "_vista(v->datos[indice])"
+                                  : std::string("v->datos[indice]"))
+                    << ";\n"
                     << "}\n\n";
 
             salida_ << "static long long " << vec << "_largo(" << vec << "* v) {\n"
@@ -2729,15 +2767,28 @@ private:
                     << "    if (indice < 0 || indice >= v->largo) {\n"
                     << "        return;\n"
                     << "    }\n"
-                    << "    v->datos[indice] = valor;\n"
+                    << "    "
+                    << (con_texto ? tipo + "_liberar(&v->datos[indice]);\n    v->datos[indice] = " +
+                                        tipo + "_copiar(valor);"
+                                  : std::string("v->datos[indice] = valor;"))
+                    << "\n}\n\n";
+
+            salida_ << "static void " << vec << "_vaciar(" << vec << "* v) {\n";
+            if (con_texto) {
+                salida_ << "    for (long long i = 0; i < v->largo; ++i) {\n"
+                        << "        " << tipo << "_liberar(&v->datos[i]);\n"
+                        << "    }\n";
+            }
+            salida_ << "    v->largo = 0;\n"
                     << "}\n\n";
 
-            salida_ << "static void " << vec << "_vaciar(" << vec << "* v) {\n"
-                    << "    v->largo = 0;\n"
-                    << "}\n\n";
-
-            salida_ << "static void " << vec << "_soltar(" << vec << "* v) {\n"
-                    << "    free(v->datos);\n"
+            salida_ << "static void " << vec << "_soltar(" << vec << "* v) {\n";
+            if (con_texto) {
+                salida_ << "    for (long long i = 0; i < v->largo; ++i) {\n"
+                        << "        " << tipo << "_liberar(&v->datos[i]);\n"
+                        << "    }\n";
+            }
+            salida_ << "    free(v->datos);\n"
                     << "    v->datos = NULL;\n"
                     << "    v->largo = 0;\n"
                     << "    v->capacidad = 0;\n"
@@ -5523,6 +5574,8 @@ private:
     std::set<std::string> instancias_tipo_;
     /// Estructuras usadas dentro de un `Vector<...>`.
     std::set<std::string> vectores_de_estructura_;
+    /// Estructuras con algún campo de texto, para copiarlo y liberarlo.
+    std::set<std::string> estructuras_con_texto_;
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::set<std::string> externas_;

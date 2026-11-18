@@ -630,8 +630,31 @@ funcion principal() -> entero {
 ```
 
 El vector se queda con el valor que le das (como `Vector<texto>`), así que no lo uses después de
-meterlo. Y las estructuras del vector no pueden tener campos con dueño —`texto`, `Vector`, `Mapa` o
-`Caja`—: esas necesitan copia y liberación profundas, que todavía no están.
+meterlo. La estructura puede tener campos de `texto`: el vector guarda su propia copia y la libera, así que
+la variable de la que salió sigue siendo tuya:
+
+```nooki
+estructura ficha {
+    publico nombre: texto
+    publico edad: entero
+}
+
+funcion principal() -> entero {
+    variable lista = Vector<ficha>.nuevo()
+    variable ana = "Ana" + ""
+    lista.agregar(ficha { nombre: ana, edad: 30 })
+
+    variable primera = lista.obtener(0)
+    imprimir(primera.nombre)   // Ana
+    imprimir(ana)              // Ana, la original sigue viva
+    lista.soltar()
+    retornar 0
+}
+```
+
+`obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes. Lo que
+todavía no se admite es una estructura con una **colección o una caja** dentro (`Vector`, `Mapa`,
+`Caja`): copiarlas en profundidad es otro trabajo, y el compilador lo dice con `NOK6003`.
 
 ### Con el índice
 

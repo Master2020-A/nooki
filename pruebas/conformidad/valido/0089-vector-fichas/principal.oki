@@ -1,0 +1,37 @@
+estructura ficha {
+    publico nombre: texto
+    publico edad: entero
+}
+
+funcion principal() -> entero {
+    variable lista = Vector<ficha>.nuevo()
+
+    variable ana = "Ana" + ""
+    variable luis = "Luis" + ""
+    lista.agregar(ficha { nombre: ana, edad: 30 })
+    lista.agregar(ficha { nombre: luis, edad: 25 })
+
+    imprimir(lista.largo())
+
+    variable primera = lista.obtener(0)
+    imprimir(primera.nombre)
+    imprimir(primera.edad)
+
+    // Cambiar un elemento: el vector libera el nombre viejo.
+    variable pepe = "Pepe" + ""
+    lista.modificar(1, ficha { nombre: pepe, edad: 40 })
+    variable segunda = lista.obtener(1)
+    imprimir(segunda.nombre)
+    imprimir(segunda.edad)
+
+    // Recorrer.
+    para (i, f en lista) {
+        imprimir(f.nombre)
+    }
+
+    // La variable original sigue siendo suya.
+    imprimir(ana)
+    lista.soltar()
+    imprimir(ana)
+    retornar 0
+}

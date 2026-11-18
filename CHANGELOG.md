@@ -3,6 +3,36 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.8] — 2026-11-17
+
+### Sprint 136 — Un vector de fichas, con su texto (2026-11-17)
+
+Un `Vector` de estructuras solo admitía estructuras **sin campos con dueño**: meter una `ficha { nombre:
+texto, edad: entero }` era `NOK6003`. Y un registro con un nombre es justo lo que se guarda en una lista.
+
+Ahora se admite. El vector guarda **su propia copia** del texto y la libera, así que la variable de la que
+salió sigue siendo de quien la escribió:
+
+```nooki
+variable lista = Vector<ficha>.nuevo()
+lista.agregar(ficha { nombre: ana, edad: 30 })
+variable primera = lista.obtener(0)
+imprimir(primera.nombre)
+```
+
+El generador emite, para cada una de esas estructuras, tres ayudantes: copiar de verdad, dar una **vista**
+(para leer sin liberar) y liberar. Con eso:
+
+- `agregar` y `modificar` copian el texto; `modificar` libera el que había.
+- `obtener` devuelve una vista: el texto es del vector, como en `Vector<texto>`.
+- `vaciar` y `soltar` liberan los textos de todos los elementos.
+
+Comprobado con ASan **sobre el código C generado** —no solo sobre el compilador—: sin fugas ni dobles
+liberaciones. Caso `0089-vector-fichas`.
+
+Lo que sigue sin admitirse es una estructura con una **colección o una caja** dentro, que exigiría copiarlas
+en profundidad; el mensaje ahora lo dice así.
+
 ## [1.0.7] — 2026-11-17
 
 ### Sprint 135 — `.largo()` sobre el resultado de una llamada (2026-11-17)
