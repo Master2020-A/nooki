@@ -1750,6 +1750,48 @@ Los accesos: `filas(t)`, `columnas(t)`, `nombre_columna(t, c)`, `valor(t, f, c)`
 columna entera) y `a_texto(t)` (la tabla en CSV). Hay que **liberarla** con `datos.liberar(t)`: la tabla
 vive en memoria del programa, no en la base de datos.
 
+### Funciones como argumento
+
+Una función se puede pasar a otra, siempre que su tipo encaje. Se escribe con `funcion(...) -> tipo`:
+
+```nooki
+usar textos
+
+funcion es_par(n: entero) -> booleano {
+    retornar n % 2 == 0
+}
+
+funcion filtrar(numeros: &Vector<entero>, cumple: funcion(entero) -> booleano) -> Vector<entero> {
+    variable salida = Vector<entero>.nuevo()
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        si (cumple(numeros.obtener(i))) {
+            salida.agregar(numeros.obtener(i))
+        }
+        i = i + 1
+    }
+    retornar salida
+}
+
+funcion principal() -> entero {
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(1)
+    numeros.agregar(2)
+    numeros.agregar(3)
+    numeros.agregar(4)
+
+    variable pares = filtrar(&numeros, es_par)
+    variable k = 0
+    mientras (k < pares.largo()) {
+        imprimir(textos.de_entero(pares.obtener(k)))
+        k = k + 1
+    }
+    retornar 0
+}
+```
+
+Dentro de la función que la recibe, el parámetro se llama como cualquier función. **Lo que no se puede** (todavía) es guardar una función en una variable ni devolverla: es un puntero, sin memoria propia, así que no hay cierres ni `lambda`.
+
 ### Recibir argumentos
 
 Un programa puede leer con qué argumentos se lanzó:

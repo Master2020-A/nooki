@@ -2471,7 +2471,7 @@ public:
         abrir_ambito();
         ++nivel_;
         for (const sintactico::Parametro& parametro : funcion.parametros) {
-            declarar(parametro.nombre, tipo_declarado_c(parametro.tipo));
+            declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, false);
@@ -3021,7 +3021,7 @@ private:
                     salida_ << "    " << tipo_declarado_c(metodo.tipo_retorno) << " (*"
                             << metodo.nombre << ")(void*";
                     for (const sintactico::Parametro& parametro : metodo.parametros) {
-                        salida_ << ", " << tipo_declarado_c(parametro.tipo);
+                        salida_ << ", " << tipo_de_parametro_c(parametro.tipo);
                     }
                     salida_ << ");\n";
                 }
@@ -3129,7 +3129,7 @@ private:
                 salida_ << "    " << tipo_declarado_c(metodo->tipo_retorno) << " (*" << nombre
                         << ")(void*";
                 for (const sintactico::Parametro& parametro : metodo->parametros) {
-                    salida_ << ", " << tipo_declarado_c(parametro.tipo);
+                    salida_ << ", " << tipo_de_parametro_c(parametro.tipo);
                 }
                 salida_ << ");\n";
             }
@@ -3300,7 +3300,7 @@ private:
                     salida_ << "static " << tipo_declarado_c(exigido.tipo_retorno) << " " << tabla_c
                             << "_" << exigido.nombre << "(void* objeto";
                     for (const sintactico::Parametro& parametro : exigido.parametros) {
-                        salida_ << ", " << tipo_declarado_c(parametro.tipo) << ' '
+                        salida_ << ", " << tipo_de_parametro_c(parametro.tipo) << ' '
                                 << parametro.nombre;
                     }
                     salida_ << ") {\n";
@@ -3597,9 +3597,49 @@ private:
         return "long long";
     }
 
+    /// ¿Hay una variable con ese nombre en algún ámbito?
+    bool declarada_aqui(const std::string& nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->tipos.count(nombre) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // --- Utilidades --------------------------------------------------------
     /// Tipo de C de un tipo declarado: si el nombre corresponde a una estructura
     /// del programa, se usa su `typedef`; si no, el tipo primitivo.
+    /// Tipos de C de una lista separada por comas: `entero, texto` → `long long,
+    /// nooki_texto`. Se usa en los tipos función.
+    std::string tipo_lista_c(const std::string& lista) const {
+        std::string salida;
+        std::size_t inicio = 0;
+        int profundidad = 0;
+        for (std::size_t i = 0; i <= lista.size(); ++i) {
+            const bool fin = i == lista.size();
+            const char caracter = fin ? ',' : lista[i];
+            if (caracter == '<' || caracter == '(') {
+                ++profundidad;
+            } else if (caracter == '>' || caracter == ')') {
+                --profundidad;
+            }
+            if (caracter == ',' && profundidad == 0) {
+                std::string trozo = lista.substr(inicio, i - inicio);
+                const std::size_t primero = trozo.find_first_not_of(' ');
+                const std::size_t ultimo = trozo.find_last_not_of(' ');
+                if (primero != std::string::npos) {
+                    trozo = trozo.substr(primero, ultimo - primero + 1);
+                }
+                if (!salida.empty()) {
+                    salida += ", ";
+                }
+                salida += tipo_declarado_c(trozo);
+                inicio = i + 1;
+            }
+        }
+        return salida;
+    }
     std::string tipo_declarado_c(std::string_view escrito) const {
         // Un préstamo o un puntero se resuelve sobre el tipo que envuelve, para
         // que una clase conserve su referencia (`&persona` → `nooki_persona*`).
@@ -3631,6 +3671,34 @@ private:
             return conocido->second + (es_clase ? "*" : "");
         }
         return tipo_c(escrito);
+    }
+
+    /// Tipo de C de un tipo escrito, con los tipos función resueltos.
+    std::string tipo_de_parametro_c(std::string_view escrito) const {
+        if (escrito.rfind("funcion(", 0) == 0) {
+            const std::size_t cierra = escrito.find(')');
+            const std::size_t flecha = escrito.find("->");
+            if (cierra == std::string_view::npos || flecha == std::string_view::npos) {
+                return "void*";
+            }
+            std::string parametros(escrito.substr(8, cierra - 8));
+            std::string vuelta(escrito.substr(flecha + 2));
+            // El tipo se toma del fuente, así que puede venir con espacios.
+            const auto limpiar = [](std::string& texto) {
+                const std::size_t primero = texto.find_first_not_of(" \t\n");
+                const std::size_t ultimo = texto.find_last_not_of(" \t\n");
+                texto = primero == std::string::npos ? std::string()
+                                                     : texto.substr(primero, ultimo - primero + 1);
+            };
+            limpiar(parametros);
+            limpiar(vuelta);
+            std::string salida = tipo_declarado_c(vuelta);
+            salida += " (*)(";
+            salida += parametros.empty() ? "void" : tipo_lista_c(parametros);
+            salida += ')';
+            return salida;
+        }
+        return tipo_declarado_c(escrito);
     }
 
     std::string indentacion() const {
@@ -3683,6 +3751,7 @@ private:
         if (escrito == "Puntero") {
             return "nooki_puntero";
         }
+
         if (escrito == "vacio") {
             return "void";
         }
@@ -3727,9 +3796,18 @@ private:
                     salida += ", ";
                 }
                 primero = false;
-                salida += tipo_declarado_c(parametro.tipo);
-                salida += ' ';
-                salida += parametro.nombre;
+                const std::string tipo_parametro = tipo_de_parametro_c(parametro.tipo);
+                // Un tipo función lleva el nombre dentro: `R (*f)(A, B)`.
+                if (parametro.tipo.rfind("funcion(", 0) == 0) {
+                    const std::size_t posicion = tipo_parametro.find("(*)");
+                    salida += tipo_parametro.substr(0, posicion + 2);
+                    salida += std::string(parametro.nombre);
+                    salida += tipo_parametro.substr(posicion + 2);
+                } else {
+                    salida += tipo_parametro;
+                    salida += ' ';
+                    salida += parametro.nombre;
+                }
             }
         }
 
@@ -3750,7 +3828,7 @@ private:
 
         for (const sintactico::Parametro& parametro : metodo.parametros) {
             salida += ", ";
-            salida += tipo_declarado_c(parametro.tipo);
+            salida += tipo_de_parametro_c(parametro.tipo);
             salida += ' ';
             salida += parametro.nombre;
         }
@@ -3773,7 +3851,7 @@ private:
         abrir_ambito();
         ++nivel_;
         for (const sintactico::Parametro& parametro : metodo.parametros) {
-            declarar(parametro.nombre, tipo_declarado_c(parametro.tipo));
+            declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
         }
         for (const sintactico::Sentencia& sentencia : metodo.cuerpo) {
             emitir_sentencia(sentencia, false);
@@ -3806,7 +3884,7 @@ private:
         abrir_ambito();
         ++nivel_;
         for (const sintactico::Parametro& parametro : funcion.parametros) {
-            declarar(parametro.nombre, tipo_declarado_c(parametro.tipo));
+            declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, principal);
@@ -4640,8 +4718,15 @@ private:
             return nodo.lexema == "verdadero" ? "1" : "0";
         case TipoExpresion::Nulo:
             return "NULL";
-        case TipoExpresion::Identificador:
-            return std::string(nodo.lexema);
+        case TipoExpresion::Identificador: {
+            // Una función usada como valor (para pasarla como argumento) se
+            // emite con su nombre en C.
+            const std::string nombre = std::string(nodo.lexema);
+            if (!declarada_aqui(nombre) && retornos_.count(nombre) != 0) {
+                return nombre_c(nombre);
+            }
+            return nombre;
+        }
         case TipoExpresion::Construccion:
             return construccion(nodo);
         case TipoExpresion::Este:
@@ -5491,8 +5576,15 @@ private:
             return std::string(funcion) + "(" + valor + ")";
         }
 
-        // Dentro de un módulo, una llamada a otro símbolo suyo lleva su prefijo.
+        // Llamar a un parámetro de tipo función es llamar a su puntero: el nombre
+        // va tal cual, sin el prefijo `nooki_`.
         std::string nombre_para_c = nombre_c(nombre_llamado);
+        {
+            const std::string tipo_declarado = buscar(nombre_llamado);
+            if (tipo_declarado.find("(*)") != std::string::npos) {
+                nombre_para_c = std::string(nombre_llamado);
+            }
+        }
         if (!modulo_actual_.empty()) {
             const auto modulo = modulos_.find(modulo_actual_);
             if (modulo != modulos_.end() && modulo->second.count(nombre_llamado) != 0) {

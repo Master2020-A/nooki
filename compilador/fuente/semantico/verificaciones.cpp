@@ -178,6 +178,10 @@ private:
         if (tipo.rfind("Vector<", 0) == 0) {
             return true;
         }
+        // Un tipo función: `funcion(entero) -> entero`.
+        if (tipo.rfind("funcion(", 0) == 0) {
+            return true;
+        }
         if (tipo.rfind("Mapa<", 0) == 0) {
             return true;
         }
@@ -430,6 +434,10 @@ private:
                 return encontrada->second;
             }
         }
+        // Un nombre que es una función, sin llamarla, es una función como valor.
+        if (funciones_.count(std::string(nombre_variable)) != 0) {
+            return Tipo::Desconocido;
+        }
         error(diagnostico::codigos::NOMBRE_NO_DECLARADO, span)
             .parametro("nombre", std::string(nombre_variable))
             .ayuda("declare la variable antes de usarla");
@@ -618,6 +626,10 @@ private:
             // Un parámetro `&Vector<texto>` también es un vector de textos.
             if (parametro.tipo.find("Vector<texto>") != std::string_view::npos) {
                 declarar_vector_texto(parametro.nombre);
+            }
+            // Un parámetro que es una función se recuerda para poder llamarlo.
+            if (parametro.tipo.rfind("funcion(", 0) == 0) {
+                funciones_parametro[std::string(parametro.nombre)] = std::string(parametro.tipo);
             }
         }
 
@@ -1736,6 +1748,20 @@ private:
 
         const auto encontrada = funciones_.find(nombre_llamado);
         if (encontrada == funciones_.end()) {
+            // Un parámetro de tipo función se llama igual que una función.
+            if (const auto parametro = funciones_parametro.find(std::string(nombre_llamado));
+                parametro != funciones_parametro.end()) {
+                for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                    if (argumento) {
+                        tipo_de(*argumento);
+                    }
+                }
+                const std::size_t flecha = parametro->second.find("->");
+                if (flecha != std::string::npos) {
+                    return desde_nombre(std::string_view(parametro->second).substr(flecha + 2));
+                }
+                return Tipo::Desconocido;
+            }
             error(diagnostico::codigos::FUNCION_NO_DECLARADA, expresion.span)
                 .parametro("nombre", std::string(nombre_llamado))
                 .ayuda("compruebe el nombre o declare la función");
@@ -2048,6 +2074,8 @@ private:
     std::set<std::string> parametros_actuales_;
     /// Dentro de cuántos bloques `inseguro` estamos.
     int profundidad_inseguro_ = 0;
+    /// Parámetros de tipo función en la función actual: nombre → tipo.
+    std::map<std::string, std::string> funciones_parametro;
     /// Parámetros que son un préstamo de texto: `*parametro` es un texto.
     std::set<std::string> prestamos_texto_;
     /// Dueño prestado → variable que guarda el préstamo.

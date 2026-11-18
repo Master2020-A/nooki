@@ -3,6 +3,44 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.12] — 2026-11-18
+
+### Sprint 140 — Funciones como argumento (2026-11-18)
+
+Hasta hoy una función no se podía pasar a otra: `filtrar(numeros, es_par)` era imposible, y con eso no había
+manera de escribir un `apply`, un `map` ni un `filtrar` propios.
+
+Ahora sí, con un tipo `funcion(...) -> tipo` que es un **puntero a función**:
+
+```nooki
+funcion filtrar(numeros: &Vector<entero>, cumple: funcion(entero) -> booleano) -> Vector<entero> {
+    variable salida = Vector<entero>.nuevo()
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        si (cumple(numeros.obtener(i))) {
+            salida.agregar(numeros.obtener(i))
+        }
+        i = i + 1
+    }
+    retornar salida
+}
+
+variable pares = filtrar(&numeros, es_par)
+```
+
+Dentro de la función que la recibe, el parámetro se llama como cualquier función. El nombre de una función
+sin paréntesis es su valor.
+
+Por debajo: el tipo se traduce a `R (*)(A, B)`; el parámetro se emite con el nombre dentro
+(`R (*cumple)(A, B)`); la llamada va sin el prefijo `nooki_`; y un nombre de función pasado como argumento se
+emite con su nombre en C.
+
+**Lo que no entra, y es a propósito:** no es un valor de primera clase. No se puede guardar en una variable
+ni devolver desde una función, porque no hay cierres: es un puntero, sin memoria propia. Eso —funciones que
+capturan su entorno— es otro trabajo, y bastante más grande.
+
+Caso `0090-funciones-valor`, con `filtrar` y `mapear` sobre un vector.
+
 ## [1.0.11] — 2026-11-17
 
 ### Sprint 139 — Pedir una columna por su nombre (2026-11-17)

@@ -483,6 +483,28 @@ final del proceso (asunto abierto A-18). No corrompe nada.
 Desactiva las comprobaciones aritméticas y **abre la puerta a los punteros**. La propiedad y los tipos se
 siguen comprobando: lo único que cambia es que dentro se puede tocar la memoria a mano.
 
+### Funciones como valor
+
+Un tipo `funcion(A, B) -> R` es un **puntero a función**: no guarda memoria propia, así que no hay cierres
+ni `lambda`. Sirve para pasar una función a otra:
+
+```nooki
+funcion contar_si(numeros: &Vector<entero>, cumple: funcion(entero) -> booleano) -> entero {
+    variable i = 0
+    variable cuantos = 0
+    mientras (i < numeros.largo()) {
+        si (cumple(numeros.obtener(i))) {
+            cuantos = cuantos + 1
+        }
+        i = i + 1
+    }
+    retornar cuantos
+}
+```
+
+Dentro se llama como cualquier función. Un nombre de función sin paréntesis es su valor, y lo único que se
+puede hacer con él es pasarlo como argumento: todavía no se puede guardar en una variable ni devolver.
+
 ### Punteros y memoria manual
 
 Un `Puntero` es una dirección de memoria. Se pasa por valor, como en C: no tiene dueño, no se copia lo

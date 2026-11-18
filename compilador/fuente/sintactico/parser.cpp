@@ -1428,6 +1428,45 @@ std::string_view Parser::analizar_tipo_texto() {
         }
     }
 
+    // Tipo función: `funcion(entero, texto) -> flotante`. Se guarda el texto tal
+    // cual, como los genéricos, y el generador lo traduce a un puntero de C.
+    if (actual().lexema == "funcion") {
+        int parentesis = 0;
+        bool cerrado = false;
+        while (!actual().es(TipoToken::FinDeArchivo)) {
+            const std::string_view lexema = actual().lexema;
+            fin = actual().span.fin;
+            if (lexema == "(") {
+                ++parentesis;
+            } else if (lexema == ")") {
+                --parentesis;
+                if (parentesis == 0) {
+                    cerrado = true;
+                }
+            }
+            avanzar();
+            if (cerrado) {
+                break;
+            }
+        }
+        const std::string_view texto = fuentes_.contenido(archivo_);
+        // Y el tipo de vuelta, detrás de `->`.
+        if (cerrado && actual().lexema == "->") {
+            fin = actual().span.fin;
+            avanzar();
+            const std::string_view vuelta = analizar_tipo_texto();
+            if (vuelta.empty()) {
+                return {};
+            }
+            // La vista apunta al mismo búfer: su final da el final del tipo.
+            fin = static_cast<std::size_t>(vuelta.data() - texto.data()) + vuelta.size();
+        }
+        if (fin <= texto.size() && inicio < fin) {
+            return texto.substr(inicio, fin - inicio);
+        }
+        return {};
+    }
+
     if (!actual().es(TipoToken::PalabraClave) && !actual().es(TipoToken::Identificador)) {
         error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "un tipo");
         return {};

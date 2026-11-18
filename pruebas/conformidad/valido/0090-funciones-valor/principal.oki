@@ -1,0 +1,48 @@
+funcion es_par(n: entero) -> booleano {
+    retornar n % 2 == 0
+}
+
+funcion doblar(n: entero) -> entero {
+    retornar n * 2
+}
+
+funcion filtrar(numeros: &Vector<entero>, cumple: funcion(entero) -> booleano) -> Vector<entero> {
+    variable salida = Vector<entero>.nuevo()
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        si (cumple(numeros.obtener(i))) {
+            salida.agregar(numeros.obtener(i))
+        }
+        i = i + 1
+    }
+    retornar salida
+}
+
+funcion mapear(numeros: &Vector<entero>, cambio: funcion(entero) -> entero) -> Vector<entero> {
+    variable salida = Vector<entero>.nuevo()
+    variable i = 0
+    mientras (i < numeros.largo()) {
+        salida.agregar(cambio(numeros.obtener(i)))
+        i = i + 1
+    }
+    retornar salida
+}
+
+funcion principal() -> entero {
+    variable numeros = Vector<entero>.nuevo()
+    variable i = 1
+    mientras (i <= 8) {
+        numeros.agregar(i)
+        i = i + 1
+    }
+
+    variable pares = filtrar(&numeros, es_par)
+    variable dobles = mapear(&pares, doblar)
+
+    variable k = 0
+    mientras (k < dobles.largo()) {
+        imprimir(dobles.obtener(k))
+        k = k + 1
+    }
+    retornar 0
+}
