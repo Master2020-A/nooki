@@ -1711,6 +1711,35 @@ funcion principal() -> entero {
 }
 ```
 
+Y se le pueden **añadir columnas calculadas**: se construye un `Vector<texto>` con un bucle —lo que en pandas
+sería un `apply`— y se añade a la tabla.
+
+```nooki
+usar datos
+usar textos
+
+funcion principal() -> entero {
+    variable consulta = "SELECT * FROM (VALUES ('Madrid', 10, 5), ('Lima', 7, 4)) AS v(ciudad, unidades, precio)" + ""
+    variable t = datos.tabla(&consulta)
+
+    variable importes = Vector<texto>.nuevo()
+    variable f = 0
+    mientras (f < datos.filas(t)) {
+        variable unidades = datos.entero_de(t, f, 1)
+        variable precio = datos.numero(t, f, 2)
+        importes.agregar(textos.de_flotante((unidades como flotante) * precio) + "")
+        f = f + 1
+    }
+
+    variable nombre = "importe" + ""
+    si (datos.agregar_columna(t, &nombre, importes)) {
+        imprimir(datos.a_texto(t))
+    }
+    datos.liberar(t)
+    retornar 0
+}
+```
+
 Los accesos: `filas(t)`, `columnas(t)`, `nombre_columna(t, c)`, `valor(t, f, c)` (texto),
 `numero(t, f, c)` y `entero_de(t, f, c)` (ya convertidos), `columna(t, c)` (un `Vector<texto>` con la
 columna entera) y `a_texto(t)` (la tabla en CSV). Hay que **liberarla** con `datos.liberar(t)`: la tabla

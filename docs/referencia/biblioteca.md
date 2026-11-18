@@ -180,6 +180,9 @@ publico funcion columna(t: Tabla, indice: entero) -> Vector<texto> {
 publico funcion a_texto(t: Tabla) -> texto {
 ```
 ```text
+publico funcion agregar_columna(t: Tabla, nombre: &texto, valores: Vector<texto>) -> booleano {
+```
+```text
 publico funcion liberar(t: Tabla) -> vacio {
 ```
 ```text

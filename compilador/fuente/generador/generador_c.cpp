@@ -1950,6 +1950,49 @@ const char* PRELUDIO =
     "    }\n"
     "    return strtoll(tabla->valores[fila * tabla->columnas + columna], NULL, 10);\n"
     "}\n"
+    "/* Añade una columna con los valores dados. Devuelve 1 si se pudo.\n"
+    " * Los valores tienen que ser tantos como filas: si no, no se añade nada. */\n"
+    "long long nooki_dd_tabla_agregar_columna(long long manejador, const char* nombre,\n"
+    "                                        nooki_vector_texto valores) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    if (tabla == NULL || nombre == NULL || valores.largo != tabla->filas) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    if (tabla->columnas <= 0) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "\n"
+    "    char** nombres = (char**)realloc(tabla->nombres, (size_t)(tabla->columnas + 1) * "
+    "sizeof(char*));\n"
+    "    if (nombres == NULL) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    tabla->nombres = nombres;\n"
+    "\n"
+    "    const long long celdas = (tabla->columnas + 1) * tabla->filas;\n"
+    "    char** nuevos = (char**)calloc((size_t)celdas, sizeof(char*));\n"
+    "    if (nuevos == NULL) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    /* Se copian las columnas que había, haciendo hueco a la nueva al final. */\n"
+    "    for (long long f = 0; f < tabla->filas; ++f) {\n"
+    "        for (long long c = 0; c < tabla->columnas; ++c) {\n"
+    "            nuevos[f * (tabla->columnas + 1) + c] = tabla->valores[f * tabla->columnas + c];\n"
+    "        }\n"
+    "    }\n"
+    "    free(tabla->valores);\n"
+    "    tabla->valores = nuevos;\n"
+    "\n"
+    "    for (long long f = 0; f < tabla->filas; ++f) {\n"
+    "        const nooki_texto* valor = &valores.datos[f];\n"
+    "        tabla->valores[f * (tabla->columnas + 1) + tabla->columnas] =\n"
+    "            nooki_dd_copiar_cadena(valor->datos == NULL ? \"\" : valor->datos);\n"
+    "    }\n"
+    "\n"
+    "    tabla->nombres[tabla->columnas] = nooki_dd_copiar_cadena(nombre);\n"
+    "    tabla->columnas += 1;\n"
+    "    return 1;\n"
+    "}\n"
 
     "/* ------------------------------------------------------------------ */\n"
     "/* Argumentos de la línea de órdenes.                                  */\n"
@@ -4499,6 +4542,9 @@ private:
                     if (nombre == "numero_de_tabla") {
                         return "double";
                     }
+                    if (nombre == "agregar_columna_a_tabla") {
+                        return "long long";
+                    }
                     if (nombre == "liberar_tabla") {
                         return "void";
                     }
@@ -5234,16 +5280,18 @@ private:
         if (nombre_llamado == "tabla_de_consulta" || nombre_llamado == "filas_de_tabla" ||
             nombre_llamado == "columnas_de_tabla" || nombre_llamado == "valor_de_tabla" ||
             nombre_llamado == "nombre_de_columna" || nombre_llamado == "liberar_tabla" ||
-            nombre_llamado == "numero_de_tabla" || nombre_llamado == "entero_de_tabla") {
+            nombre_llamado == "numero_de_tabla" || nombre_llamado == "entero_de_tabla" ||
+            nombre_llamado == "agregar_columna_a_tabla") {
             const std::string en_c =
-                nombre_llamado == "tabla_de_consulta"   ? "nooki_dd_tabla"
-                : nombre_llamado == "filas_de_tabla"    ? "nooki_dd_tabla_filas"
-                : nombre_llamado == "columnas_de_tabla" ? "nooki_dd_tabla_columnas"
-                : nombre_llamado == "valor_de_tabla"    ? "nooki_dd_tabla_valor"
-                : nombre_llamado == "nombre_de_columna" ? "nooki_dd_tabla_nombre"
-                : nombre_llamado == "numero_de_tabla"   ? "nooki_dd_tabla_numero"
-                : nombre_llamado == "entero_de_tabla"   ? "nooki_dd_tabla_entero"
-                                                        : "nooki_dd_tabla_liberar";
+                nombre_llamado == "tabla_de_consulta"         ? "nooki_dd_tabla"
+                : nombre_llamado == "filas_de_tabla"          ? "nooki_dd_tabla_filas"
+                : nombre_llamado == "columnas_de_tabla"       ? "nooki_dd_tabla_columnas"
+                : nombre_llamado == "valor_de_tabla"          ? "nooki_dd_tabla_valor"
+                : nombre_llamado == "nombre_de_columna"       ? "nooki_dd_tabla_nombre"
+                : nombre_llamado == "numero_de_tabla"         ? "nooki_dd_tabla_numero"
+                : nombre_llamado == "entero_de_tabla"         ? "nooki_dd_tabla_entero"
+                : nombre_llamado == "agregar_columna_a_tabla" ? "nooki_dd_tabla_agregar_columna"
+                                                              : "nooki_dd_tabla_liberar";
             std::string salida = en_c + "(";
             bool primero = true;
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
@@ -5260,6 +5308,8 @@ private:
                     valor = argumento->tipo == sintactico::TipoExpresion::Identificador
                                 ? valor + ".datos"
                                 : "(" + valor + ").datos";
+                } else if (tipo == "nooki_texto*") {
+                    valor = "(" + valor + ")->datos";
                 }
                 salida += valor;
             }

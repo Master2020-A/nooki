@@ -1536,6 +1536,14 @@ private:
             }
             return Tipo::Entero;
         }
+        if (nombre_llamado == "agregar_columna_a_tabla") {
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            return Tipo::Entero;
+        }
         if (nombre_llamado == "numero_de_tabla" || nombre_llamado == "entero_de_tabla") {
             for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
                 if (argumento) {

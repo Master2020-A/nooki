@@ -3,6 +3,36 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.10] — 2026-11-17
+
+### Sprint 138 — Columnas calculadas en la tabla (2026-11-17)
+
+La `Tabla` de la 1.0.9 sabía leer, pero no crecer: no había forma de añadir una columna con un valor
+calculado. En pandas eso es `df["importe"] = df.unidades * df.precio`.
+
+Ahora se puede, y el cálculo se escribe **en Nooki**, que es lo que hacía falta para no depender de que el
+SQL supiera hacerlo:
+
+```nooki
+variable importes = Vector<texto>.nuevo()
+variable f = 0
+mientras (f < datos.filas(t)) {
+    variable unidades = datos.entero_de(t, f, 1)
+    variable precio = datos.numero(t, f, 2)
+    importes.agregar(textos.de_flotante((unidades como flotante) * precio) + "")
+    f = f + 1
+}
+
+variable nombre = "importe" + ""
+datos.agregar_columna(t, &nombre, importes)
+```
+
+`agregar_columna` comprueba que haya tantos valores como filas, copia los textos y libera la estructura
+anterior. El ejemplo `13-tabla` añade una columna `precio_medio` calculada fila a fila.
+
+Esto cierra la diferencia que quedaba con un `apply` de pandas para el caso normal: recorrer y calcular con
+código propio. Lo que sigue sin existir es pasarle **una función** a la tabla, y la indexación por etiqueta.
+
 ## [1.0.9] — 2026-11-17
 
 ### Sprint 137 — Una tabla en memoria, como un DataFrame (2026-11-17)

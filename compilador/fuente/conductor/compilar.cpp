@@ -1498,6 +1498,13 @@ publico funcion a_texto(t: Tabla) -> texto {
     retornar salida
 }
 
+// Añade una columna con los valores dados, que tienen que ser tantos como
+// filas. Es la forma de calcular una columna a medida: se construye el vector
+// con un bucle y se añade.
+publico funcion agregar_columna(t: Tabla, nombre: &texto, valores: Vector<texto>) -> booleano {
+    retornar agregar_columna_a_tabla(t.manejador, nombre, valores) != 0
+}
+
 // Libera la memoria de la tabla.
 publico funcion liberar(t: Tabla) -> vacio {
     liberar_tabla(t.manejador)

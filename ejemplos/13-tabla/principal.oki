@@ -61,6 +61,26 @@ funcion principal() -> entero {
     variable ciudades = datos.columna(t, 0)
     imprimir("ciudades: " + textos.de_entero(ciudades.largo()))
 
+    // Una columna calculada en Nooki: el precio medio por unidad.
+    variable medias = Vector<texto>.nuevo()
+    variable k = 0
+    mientras (k < datos.filas(t)) {
+        variable importe_fila = datos.numero(t, k, 2)
+        variable unidades_fila = datos.entero_de(t, k, 1)
+        si (unidades_fila > 0) {
+            medias.agregar(textos.de_flotante(importe_fila / (unidades_fila como flotante)) + "")
+        } sino {
+            medias.agregar("0" + "")
+        }
+        k = k + 1
+    }
+
+    variable nombre_columna_nueva = "precio_medio" + ""
+    si (datos.agregar_columna(t, &nombre_columna_nueva, medias)) {
+        imprimir("--- con la columna calculada ---")
+        imprimir(datos.a_texto(t))
+    }
+
     // Y la tabla como texto, para guardarla o imprimirla.
     variable resumen = datos.a_texto(t)
     imprimir(resumen)
