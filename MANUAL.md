@@ -657,15 +657,17 @@ una consecuencia que se paga cara: **una función que devuelve `v.obtener(i)` y 
 una vista a memoria que ya no existe**. Si el llamante la usa, lee basura.
 
 ```nooki
-// Mal: `d` muere al salir y la vista apunta a memoria liberada.
-funcion nombre_de(n: entero) -> texto {
-    variable d = nombres()
+// Mal: el vector es local y muere al salir; la vista apunta a memoria liberada.
+funcion nombre_malo(n: entero) -> texto {
+    variable d = Vector<texto>.nuevo()
+    d.agregar("Ana")
     retornar d.obtener(n)
 }
 
 // Bien: se copia el texto antes de devolverlo.
-funcion nombre_de(n: entero) -> texto {
-    variable d = nombres()
+funcion nombre_bueno(n: entero) -> texto {
+    variable d = Vector<texto>.nuevo()
+    d.agregar("Ana")
     variable copia = d.obtener(n) + ""
     retornar copia
 }
