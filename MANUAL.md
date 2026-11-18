@@ -652,7 +652,27 @@ funcion principal() -> entero {
 }
 ```
 
-`obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes. Lo que
+`obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes. Y eso tiene
+una consecuencia que se paga cara: **una función que devuelve `v.obtener(i)` y cuya `v` es local devuelve
+una vista a memoria que ya no existe**. Si el llamante la usa, lee basura.
+
+```nooki
+// Mal: `d` muere al salir y la vista apunta a memoria liberada.
+funcion nombre_de(n: entero) -> texto {
+    variable d = nombres()
+    retornar d.obtener(n)
+}
+
+// Bien: se copia el texto antes de devolverlo.
+funcion nombre_de(n: entero) -> texto {
+    variable d = nombres()
+    variable copia = d.obtener(n) + ""
+    retornar copia
+}
+```
+
+La regla, mientras no haya análisis de escape: **si un texto sale de una función y venía de un vector
+local, se copia con `+ ""`**. Lo que
 todavía no se admite es una estructura con una **colección o una caja** dentro (`Vector`, `Mapa`,
 `Caja`): copiarlas en profundidad es otro trabajo, y el compilador lo dice con `NOK6003`.
 
