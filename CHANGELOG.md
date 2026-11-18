@@ -3,6 +3,28 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.11] — 2026-11-17
+
+### Sprint 139 — Pedir una columna por su nombre (2026-11-17)
+
+La tabla se leía por índice de columna. Ahora también por nombre, que es lo que se escribe sin pensar:
+
+```nooki
+si (datos.hay_columna(t, "unidades")) {
+    variable unidades = datos.entero_por_nombre(t, f, "unidades")
+    variable precio = datos.numero_por_nombre(t, f, "precio")
+}
+```
+
+`indice_columna(t, &nombre)` da la posición (o `-1`), `hay_columna` dice si está, y
+`columna_por_nombre`, `valor_por_nombre`, `numero_por_nombre` y `entero_por_nombre` leen sin llevar el índice
+a mano. Además `guardar(t, &ruta)` escribe la tabla en un CSV.
+
+De paso, el módulo `datos` no importaba `archivo`, y al añadir `guardar` eso salió como `NOK3001` al usar el
+módulo. Corregido: el módulo declara sus importaciones.
+
+**220 firmas** en la biblioteca.
+
 ## [1.0.10] — 2026-11-17
 
 ### Sprint 138 — Columnas calculadas en la tabla (2026-11-17)

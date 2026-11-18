@@ -183,6 +183,27 @@ publico funcion a_texto(t: Tabla) -> texto {
 publico funcion agregar_columna(t: Tabla, nombre: &texto, valores: Vector<texto>) -> booleano {
 ```
 ```text
+publico funcion indice_columna(t: Tabla, nombre: &texto) -> entero {
+```
+```text
+publico funcion hay_columna(t: Tabla, nombre: &texto) -> booleano {
+```
+```text
+publico funcion columna_por_nombre(t: Tabla, nombre: &texto) -> Vector<texto> {
+```
+```text
+publico funcion valor_por_nombre(t: Tabla, fila: entero, nombre: &texto) -> texto {
+```
+```text
+publico funcion numero_por_nombre(t: Tabla, fila: entero, nombre: &texto) -> flotante {
+```
+```text
+publico funcion entero_por_nombre(t: Tabla, fila: entero, nombre: &texto) -> entero {
+```
+```text
+publico funcion guardar(t: Tabla, ruta: &texto) -> booleano {
+```
+```text
 publico funcion liberar(t: Tabla) -> vacio {
 ```
 ```text

@@ -1993,6 +1993,20 @@ const char* PRELUDIO =
     "    tabla->columnas += 1;\n"
     "    return 1;\n"
     "}\n"
+    "/* El índice de una columna por su nombre, o -1 si no está. */\n"
+    "long long nooki_dd_tabla_indice(long long manejador, const char* nombre) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    if (tabla == NULL || nombre == NULL) {\n"
+    "        return -1;\n"
+    "    }\n"
+    "    for (long long c = 0; c < tabla->columnas; ++c) {\n"
+    "        const char* suyo = tabla->nombres[c];\n"
+    "        if (suyo != NULL && strcmp(suyo, nombre) == 0) {\n"
+    "            return c;\n"
+    "        }\n"
+    "    }\n"
+    "    return -1;\n"
+    "}\n"
 
     "/* ------------------------------------------------------------------ */\n"
     "/* Argumentos de la línea de órdenes.                                  */\n"
@@ -4542,7 +4556,8 @@ private:
                     if (nombre == "numero_de_tabla") {
                         return "double";
                     }
-                    if (nombre == "agregar_columna_a_tabla") {
+                    if (nombre == "agregar_columna_a_tabla" ||
+                        nombre == "indice_de_columna_en_tabla") {
                         return "long long";
                     }
                     if (nombre == "liberar_tabla") {
@@ -5281,17 +5296,19 @@ private:
             nombre_llamado == "columnas_de_tabla" || nombre_llamado == "valor_de_tabla" ||
             nombre_llamado == "nombre_de_columna" || nombre_llamado == "liberar_tabla" ||
             nombre_llamado == "numero_de_tabla" || nombre_llamado == "entero_de_tabla" ||
-            nombre_llamado == "agregar_columna_a_tabla") {
+            nombre_llamado == "agregar_columna_a_tabla" ||
+            nombre_llamado == "indice_de_columna_en_tabla") {
             const std::string en_c =
-                nombre_llamado == "tabla_de_consulta"         ? "nooki_dd_tabla"
-                : nombre_llamado == "filas_de_tabla"          ? "nooki_dd_tabla_filas"
-                : nombre_llamado == "columnas_de_tabla"       ? "nooki_dd_tabla_columnas"
-                : nombre_llamado == "valor_de_tabla"          ? "nooki_dd_tabla_valor"
-                : nombre_llamado == "nombre_de_columna"       ? "nooki_dd_tabla_nombre"
-                : nombre_llamado == "numero_de_tabla"         ? "nooki_dd_tabla_numero"
-                : nombre_llamado == "entero_de_tabla"         ? "nooki_dd_tabla_entero"
-                : nombre_llamado == "agregar_columna_a_tabla" ? "nooki_dd_tabla_agregar_columna"
-                                                              : "nooki_dd_tabla_liberar";
+                nombre_llamado == "tabla_de_consulta"            ? "nooki_dd_tabla"
+                : nombre_llamado == "filas_de_tabla"             ? "nooki_dd_tabla_filas"
+                : nombre_llamado == "columnas_de_tabla"          ? "nooki_dd_tabla_columnas"
+                : nombre_llamado == "valor_de_tabla"             ? "nooki_dd_tabla_valor"
+                : nombre_llamado == "nombre_de_columna"          ? "nooki_dd_tabla_nombre"
+                : nombre_llamado == "numero_de_tabla"            ? "nooki_dd_tabla_numero"
+                : nombre_llamado == "entero_de_tabla"            ? "nooki_dd_tabla_entero"
+                : nombre_llamado == "agregar_columna_a_tabla"    ? "nooki_dd_tabla_agregar_columna"
+                : nombre_llamado == "indice_de_columna_en_tabla" ? "nooki_dd_tabla_indice"
+                                                                 : "nooki_dd_tabla_liberar";
             std::string salida = en_c + "(";
             bool primero = true;
             for (const sintactico::ExpresionPtr& argumento : nodo.lista) {

@@ -1740,6 +1740,11 @@ funcion principal() -> entero {
 }
 ```
 
+Y se puede pedir una columna **por su nombre**, que es lo más cómodo: `indice_columna(t, "unidades")` da su
+posición (o `-1`), `hay_columna(t, "unidades")` dice si está, y `columna_por_nombre`, `valor_por_nombre`,
+`numero_por_nombre` y `entero_por_nombre` leen directamente sin llevar el índice a mano. La tabla se guarda
+con `guardar(t, &ruta)`.
+
 Los accesos: `filas(t)`, `columnas(t)`, `nombre_columna(t, c)`, `valor(t, f, c)` (texto),
 `numero(t, f, c)` y `entero_de(t, f, c)` (ya convertidos), `columna(t, c)` (un `Vector<texto>` con la
 columna entera) y `a_texto(t)` (la tabla en CSV). Hay que **liberarla** con `datos.liberar(t)`: la tabla

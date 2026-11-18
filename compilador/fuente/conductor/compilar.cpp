@@ -1391,7 +1391,9 @@ publico funcion columnas(ruta: &texto) -> entero {
 )";
     }
     if (modulo == "datos") {
-        return R"nooki(// Biblioteca estándar: análisis de datos con SQL.
+        return R"nooki(usar archivo
+
+// Biblioteca estándar: análisis de datos con SQL.
 //
 // Detrás está DuckDB, que se carga cuando el programa lo usa: lee CSV y Parquet,
 // agrupa, une, pivota y calcula ventanas, que es lo que se hace con pandas.
@@ -1503,6 +1505,63 @@ publico funcion a_texto(t: Tabla) -> texto {
 // con un bucle y se añade.
 publico funcion agregar_columna(t: Tabla, nombre: &texto, valores: Vector<texto>) -> booleano {
     retornar agregar_columna_a_tabla(t.manejador, nombre, valores) != 0
+}
+
+// El índice de una columna por su nombre, o -1 si no está.
+publico funcion indice_columna(t: Tabla, nombre: &texto) -> entero {
+    retornar indice_de_columna_en_tabla(t.manejador, nombre)
+}
+
+// ¿Tiene esa columna?
+publico funcion hay_columna(t: Tabla, nombre: &texto) -> booleano {
+    retornar indice_de_columna_en_tabla(t.manejador, nombre) >= 0
+}
+
+// Los valores de una columna, por su nombre.
+publico funcion columna_por_nombre(t: Tabla, nombre: &texto) -> Vector<texto> {
+    variable indice = indice_de_columna_en_tabla(t.manejador, nombre)
+    retornar columna(t, indice)
+}
+
+// Un valor por el nombre de su columna. Vacío si la columna no está.
+publico funcion valor_por_nombre(t: Tabla, fila: entero, nombre: &texto) -> texto {
+    variable indice = indice_de_columna_en_tabla(t.manejador, nombre)
+    si (indice < 0) {
+        retornar "" + ""
+    }
+    retornar valor_de_tabla(t.manejador, fila, indice)
+}
+
+// Un número por el nombre de su columna.
+publico funcion numero_por_nombre(t: Tabla, fila: entero, nombre: &texto) -> flotante {
+    variable indice = indice_de_columna_en_tabla(t.manejador, nombre)
+    si (indice < 0) {
+        retornar 0.0
+    }
+    retornar numero_de_tabla(t.manejador, fila, indice)
+}
+
+// Un entero por el nombre de su columna.
+publico funcion entero_por_nombre(t: Tabla, fila: entero, nombre: &texto) -> entero {
+    variable indice = indice_de_columna_en_tabla(t.manejador, nombre)
+    si (indice < 0) {
+        retornar 0
+    }
+    retornar entero_de_tabla(t.manejador, fila, indice)
+}
+
+// Guarda la tabla en un archivo CSV.
+publico funcion guardar(t: Tabla, ruta: &texto) -> booleano {
+    variable contenido = a_texto(t)
+    variable escrito = archivo.escribir(ruta, &contenido)
+    coincide (escrito) {
+        caso Mal(m) => {
+            retornar falso
+        }
+        caso Bien(contenido) => {
+            retornar verdadero
+        }
+    }
 }
 
 // Libera la memoria de la tabla.
