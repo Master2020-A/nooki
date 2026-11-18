@@ -1,0 +1,72 @@
+// Una tabla en memoria, como un DataFrame: consultar, recorrer y sumar.
+//
+// Necesita el binario de DuckDB (va dentro de la distribución, junto al
+// ejecutable).
+//
+//   nooki ejecutar ejemplos/13-tabla/principal.oki
+
+usar datos
+usar textos
+usar archivo
+
+funcion principal() -> entero {
+    variable ruta = "ventas.csv" + ""
+    variable contenido = "ciudad;mes;unidades;precio\n" + ""
+    contenido = contenido + "Madrid;enero;10;5\n"
+    contenido = contenido + "Madrid;febrero;20;5\n"
+    contenido = contenido + "Lima;enero;7;4\n"
+    contenido = contenido + "Lima;febrero;9;4\n"
+    contenido = contenido + "Bogota;enero;12;3\n"
+    contenido = contenido + "Bogota;febrero;15;3\n"
+    variable escrito = archivo.escribir(&ruta, &contenido)
+
+    // La consulta, y el resultado como tabla.
+    variable consulta = "SELECT ciudad, SUM(unidades) AS unidades, SUM(unidades * precio) AS importe FROM read_csv('ventas.csv', delim=';') GROUP BY ciudad ORDER BY importe DESC" + ""
+    variable t = datos.tabla(&consulta)
+
+    si (!datos.hay(t)) {
+        imprimir("no se pudo consultar: " + datos.error())
+        retornar 1
+    }
+
+    // La forma de la tabla.
+    imprimir("filas: " + textos.de_entero(datos.filas(t)) + ", columnas: " + textos.de_entero(datos.columnas(t)))
+
+    // La cabecera, columna a columna.
+    variable c = 0
+    variable cabecera = "" + ""
+    mientras (c < datos.columnas(t)) {
+        si (c > 0) {
+            cabecera = cabecera + " | "
+        }
+        cabecera = cabecera + datos.nombre_columna(t, c)
+        c = c + 1
+    }
+    imprimir(cabecera)
+
+    // Recorrer las filas: el texto de una columna y el número de otra.
+    variable total = 0.0
+    variable f = 0
+    mientras (f < datos.filas(t)) {
+        variable ciudad = datos.valor(t, f, 0)
+        variable unidades = datos.entero_de(t, f, 1)
+        variable importe = datos.numero(t, f, 2)
+        total = total + importe
+        imprimir(ciudad + ": " + textos.de_entero(unidades) + " unidades, " + textos.de_flotante(importe))
+        f = f + 1
+    }
+    imprimir("total: " + textos.de_flotante(total))
+
+    // Una columna entera, como vector.
+    variable ciudades = datos.columna(t, 0)
+    imprimir("ciudades: " + textos.de_entero(ciudades.largo()))
+
+    // Y la tabla como texto, para guardarla o imprimirla.
+    variable resumen = datos.a_texto(t)
+    imprimir(resumen)
+    variable destino = "resumen.csv" + ""
+    variable guardado = archivo.escribir(&destino, &resumen)
+
+    datos.liberar(t)
+    retornar 0
+}

@@ -42,3 +42,7 @@ ejemplos/*/*.csv
 nooki_datos.sql
 ejemplos/*/*.parquet
 
+
+# La biblioteca de datos se copia para probar los ejemplos
+ejemplos/**/duckdb.dll
+

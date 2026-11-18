@@ -141,10 +141,46 @@ publico funcion columnas(ruta: &texto) -> entero {
 ### `datos`
 
 ```text
+publico estructura Tabla {
+```
+```text
 publico funcion disponible() -> booleano {
 ```
 ```text
 publico funcion error() -> texto {
+```
+```text
+publico funcion tabla(consulta: &texto) -> Tabla {
+```
+```text
+publico funcion hay(t: Tabla) -> booleano {
+```
+```text
+publico funcion filas(t: Tabla) -> entero {
+```
+```text
+publico funcion columnas(t: Tabla) -> entero {
+```
+```text
+publico funcion nombre_columna(t: Tabla, columna: entero) -> texto {
+```
+```text
+publico funcion valor(t: Tabla, fila: entero, columna: entero) -> texto {
+```
+```text
+publico funcion numero(t: Tabla, fila: entero, columna: entero) -> flotante {
+```
+```text
+publico funcion entero_de(t: Tabla, fila: entero, columna: entero) -> entero {
+```
+```text
+publico funcion columna(t: Tabla, indice: entero) -> Vector<texto> {
+```
+```text
+publico funcion a_texto(t: Tabla) -> texto {
+```
+```text
+publico funcion liberar(t: Tabla) -> vacio {
 ```
 ```text
 publico funcion version() -> texto {

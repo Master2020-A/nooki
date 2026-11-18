@@ -1527,6 +1527,37 @@ private:
             }
         }
 
+        // Tablas de datos.
+        if (nombre_llamado == "tabla_de_consulta") {
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            return Tipo::Entero;
+        }
+        if (nombre_llamado == "numero_de_tabla" || nombre_llamado == "entero_de_tabla") {
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            return nombre_llamado == "numero_de_tabla" ? Tipo::Flotante : Tipo::Entero;
+        }
+        if (nombre_llamado == "filas_de_tabla" || nombre_llamado == "columnas_de_tabla" ||
+            nombre_llamado == "valor_de_tabla" || nombre_llamado == "nombre_de_columna" ||
+            nombre_llamado == "liberar_tabla") {
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    tipo_de(*argumento);
+                }
+            }
+            if (nombre_llamado == "valor_de_tabla" || nombre_llamado == "nombre_de_columna") {
+                return Tipo::Texto;
+            }
+            return nombre_llamado == "liberar_tabla" ? Tipo::Vacio : Tipo::Entero;
+        }
+
         // Argumentos del programa.
         if (nombre_llamado == "cuantos_argumentos_programa" || nombre_llamado == "argumento_de" ||
             nombre_llamado == "argumentos_programa") {

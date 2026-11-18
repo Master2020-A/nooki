@@ -3,6 +3,38 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.9] — 2026-11-17
+
+### Sprint 137 — Una tabla en memoria, como un DataFrame (2026-11-17)
+
+Hasta ahora `datos.consultar(sql)` devolvía **texto CSV**: para recorrer un resultado había que partirlo con
+el módulo `csv` y convertir cada campo a mano. Faltaba el objeto.
+
+Ahora `datos.tabla(sql)` devuelve una **`Tabla`** —el resultado ya en memoria, con sus columnas— y se
+trabaja con ella:
+
+```nooki
+variable t = datos.tabla(&consulta)
+
+mientras (f < datos.filas(t)) {
+    variable ciudad = datos.valor(t, f, 0)        // texto
+    variable unidades = datos.entero_de(t, f, 1)  // ya convertido
+    total = total + datos.numero(t, f, 2)
+    f = f + 1
+}
+datos.liberar(t)
+```
+
+`filas`, `columnas`, `nombre_columna`, `valor` (texto), `numero` y `entero_de` (convertidos),
+`columna(t, c)` que devuelve la columna entera como `Vector<texto>`, y `a_texto` para el CSV. La tabla se
+libera con `datos.liberar`.
+
+DuckDB rellena la estructura en C directamente, sin pasar por el CSV intermedio: los nombres de columna y
+los valores se guardan ya en memoria y los números se convierten con `strtod` y `strtoll`.
+
+Ejemplo nuevo `ejemplos/13-tabla`, que consulta, recorre, suma y guarda el resultado. **212 firmas** en la
+biblioteca.
+
 ## [1.0.8] — 2026-11-17
 
 ### Sprint 136 — Un vector de fichas, con su texto (2026-11-17)

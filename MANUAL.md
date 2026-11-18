@@ -1677,6 +1677,45 @@ comprobación en cada suma.
 
 ### `asm!`
 
+### Una tabla en memoria
+
+`datos.tabla(sql)` devuelve una **`Tabla`**: el resultado ya cargado, con el que se trabaja fila a fila en
+lugar de leer texto.
+
+```nooki
+usar datos
+usar textos
+
+funcion principal() -> entero {
+    variable consulta = "SELECT ciudad, SUM(unidades) AS u FROM read_csv('ventas.csv') GROUP BY ciudad" + ""
+    variable t = datos.tabla(&consulta)
+
+    si (!datos.hay(t)) {
+        imprimir(datos.error())
+        retornar 1
+    }
+
+    variable total = 0
+    variable f = 0
+    mientras (f < datos.filas(t)) {
+        variable ciudad = datos.valor(t, f, 0)
+        variable unidades = datos.entero_de(t, f, 1)
+        imprimir(ciudad + ": " + textos.de_entero(unidades))
+        total = total + unidades
+        f = f + 1
+    }
+    imprimir(textos.de_entero(total))
+
+    datos.liberar(t)
+    retornar 0
+}
+```
+
+Los accesos: `filas(t)`, `columnas(t)`, `nombre_columna(t, c)`, `valor(t, f, c)` (texto),
+`numero(t, f, c)` y `entero_de(t, f, c)` (ya convertidos), `columna(t, c)` (un `Vector<texto>` con la
+columna entera) y `a_texto(t)` (la tabla en CSV). Hay que **liberarla** con `datos.liberar(t)`: la tabla
+vive en memoria del programa, no en la base de datos.
+
 ### Recibir argumentos
 
 Un programa puede leer con qué argumentos se lanzó:

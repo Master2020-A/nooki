@@ -1585,12 +1585,12 @@ const char* PRELUDIO =
     "    }\n"
     "#if defined(_WIN32)\n"
     "    NOOKI_DD.modulo = (nooki_dd_modulo)LoadLibraryA(ruta);\n"
-    "    if (NOOKI_DD.modulo == NULL && ruta == NOOKI_DD_NOMBRE) {\n"
+    "    if (NOOKI_DD.modulo == NULL && strcmp(ruta, NOOKI_DD_NOMBRE) == 0) {\n"
     "        NOOKI_DD.modulo = (nooki_dd_modulo)LoadLibraryA(\"datos\\\\\" NOOKI_DD_NOMBRE);\n"
     "    }\n"
     "#else\n"
     "    NOOKI_DD.modulo = dlopen(ruta, RTLD_NOW | RTLD_LOCAL);\n"
-    "    if (NOOKI_DD.modulo == NULL && ruta == NOOKI_DD_NOMBRE) {\n"
+    "    if (NOOKI_DD.modulo == NULL && strcmp(ruta, NOOKI_DD_NOMBRE) == 0) {\n"
     "        NOOKI_DD.modulo = dlopen(\"datos/\" NOOKI_DD_NOMBRE, RTLD_NOW | RTLD_LOCAL);\n"
     "    }\n"
     "#endif\n"
@@ -1788,6 +1788,167 @@ const char* PRELUDIO =
     "        return nooki_dd_texto_de(\"\");\n"
     "    }\n"
     "    return nooki_dd_texto_de(NOOKI_DD.error);\n"
+    "}\n"
+    "\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "/* Tablas: el resultado de una consulta, en memoria.                   */\n"
+    "/*                                                                    */\n"
+    "/* Un manejador guarda los nombres de las columnas y los valores ya    */\n"
+    "/* convertidos a texto. La tabla se libera con `nooki_dd_tabla_soltar`. */\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "\n"
+    "typedef struct {\n"
+    "    long long columnas;\n"
+    "    long long filas;\n"
+    "    char** nombres;\n"
+    "    char** valores; /* filas * columnas, por filas */\n"
+    "} nooki_dd_tabla_datos;\n"
+    "\n"
+    "static void nooki_dd_tabla_soltar(nooki_dd_tabla_datos* tabla) {\n"
+    "    if (tabla == NULL) {\n"
+    "        return;\n"
+    "    }\n"
+    "    if (tabla->nombres != NULL) {\n"
+    "        for (long long c = 0; c < tabla->columnas; ++c) {\n"
+    "            free(tabla->nombres[c]);\n"
+    "        }\n"
+    "        free(tabla->nombres);\n"
+    "    }\n"
+    "    if (tabla->valores != NULL) {\n"
+    "        for (long long i = 0; i < tabla->columnas * tabla->filas; ++i) {\n"
+    "            free(tabla->valores[i]);\n"
+    "        }\n"
+    "        free(tabla->valores);\n"
+    "    }\n"
+    "    free(tabla);\n"
+    "}\n"
+    "\n"
+    "static char* nooki_dd_copiar_cadena(const char* texto) {\n"
+    "    const char* origen = texto == NULL ? \"\" : texto;\n"
+    "    const size_t largo = strlen(origen);\n"
+    "    char* copia = (char*)malloc(largo + 1);\n"
+    "    if (copia == NULL) {\n"
+    "        return NULL;\n"
+    "    }\n"
+    "    memcpy(copia, origen, largo + 1);\n"
+    "    return copia;\n"
+    "}\n"
+    "\n"
+    "/* Ejecuta la consulta y devuelve un manejador a la tabla, o 0 si falló. */\n"
+    "long long nooki_dd_tabla(const char* consulta) {\n"
+    "    if (consulta == NULL || consulta[0] == '\\0') {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    if (!nooki_dd_cargar()) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "\n"
+    "    nooki_dd_resultado resultado;\n"
+    "    memset(&resultado, 0, sizeof resultado);\n"
+    "    if (NOOKI_DD.consulta(NOOKI_DD.conexion, consulta, &resultado) != 0) {\n"
+    "        nooki_dd_anotar(nooki_dd_mensaje(&resultado) != NULL ? nooki_dd_mensaje(&resultado)\n"
+    "                                                           : \"la consulta falló\");\n"
+    "        if (nooki_dd_mensaje(&resultado) != NULL) {\n"
+    "            NOOKI_DD.liberar(nooki_dd_mensaje(&resultado));\n"
+    "        }\n"
+    "        NOOKI_DD.destruir(&resultado);\n"
+    "        return 0;\n"
+    "    }\n"
+    "\n"
+    "    nooki_dd_tabla_datos* tabla = (nooki_dd_tabla_datos*)calloc(1, "
+    "sizeof(nooki_dd_tabla_datos));\n"
+    "    if (tabla == NULL) {\n"
+    "        NOOKI_DD.destruir(&resultado);\n"
+    "        return 0;\n"
+    "    }\n"
+    "    tabla->columnas = (long long)NOOKI_DD.cuenta_columnas(&resultado);\n"
+    "    tabla->filas = (long long)NOOKI_DD.cuenta_filas(&resultado);\n"
+    "\n"
+    "    if (tabla->columnas > 0) {\n"
+    "        tabla->nombres = (char**)calloc((size_t)tabla->columnas, sizeof(char*));\n"
+    "    }\n"
+    "    if (tabla->columnas > 0 && tabla->filas > 0) {\n"
+    "        tabla->valores = (char**)calloc((size_t)(tabla->columnas * tabla->filas), "
+    "sizeof(char*));\n"
+    "    }\n"
+    "    if ((tabla->columnas > 0 && tabla->nombres == NULL) ||\n"
+    "        (tabla->columnas > 0 && tabla->filas > 0 && tabla->valores == NULL)) {\n"
+    "        nooki_dd_tabla_soltar(tabla);\n"
+    "        NOOKI_DD.destruir(&resultado);\n"
+    "        nooki_dd_anotar(\"sin memoria para la tabla\");\n"
+    "        return 0;\n"
+    "    }\n"
+    "\n"
+    "    for (long long c = 0; c < tabla->columnas; ++c) {\n"
+    "        char* nombre = NOOKI_DD.nombre_columna(&resultado, (unsigned long long)c);\n"
+    "        tabla->nombres[c] = nooki_dd_copiar_cadena(nombre);\n"
+    "    }\n"
+    "    for (long long f = 0; f < tabla->filas; ++f) {\n"
+    "        for (long long c = 0; c < tabla->columnas; ++c) {\n"
+    "            char* valor = NOOKI_DD.valor(&resultado, (unsigned long long)c, (unsigned long "
+    "long)f);\n"
+    "            tabla->valores[f * tabla->columnas + c] = nooki_dd_copiar_cadena(valor);\n"
+    "            if (valor != NULL) {\n"
+    "                NOOKI_DD.liberar(valor);\n"
+    "            }\n"
+    "        }\n"
+    "    }\n"
+    "\n"
+    "    NOOKI_DD.destruir(&resultado);\n"
+    "    return (long long)(intptr_t)tabla;\n"
+    "}\n"
+    "\n"
+    "static nooki_dd_tabla_datos* nooki_dd_tabla_de(long long manejador) {\n"
+    "    return (nooki_dd_tabla_datos*)(intptr_t)manejador;\n"
+    "}\n"
+    "\n"
+    "long long nooki_dd_tabla_filas(long long manejador) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    return tabla == NULL ? 0 : tabla->filas;\n"
+    "}\n"
+    "\n"
+    "long long nooki_dd_tabla_columnas(long long manejador) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    return tabla == NULL ? 0 : tabla->columnas;\n"
+    "}\n"
+    "\n"
+    "nooki_texto nooki_dd_tabla_nombre(long long manejador, long long columna) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    if (tabla == NULL || columna < 0 || columna >= tabla->columnas) {\n"
+    "        return nooki_dd_texto_de(\"\");\n"
+    "    }\n"
+    "    return nooki_dd_texto_de(tabla->nombres[columna]);\n"
+    "}\n"
+    "\n"
+    "nooki_texto nooki_dd_tabla_valor(long long manejador, long long fila, long long columna) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    if (tabla == NULL || fila < 0 || fila >= tabla->filas || columna < 0 ||\n"
+    "        columna >= tabla->columnas) {\n"
+    "        return nooki_dd_texto_de(\"\");\n"
+    "    }\n"
+    "    return nooki_dd_texto_de(tabla->valores[fila * tabla->columnas + columna]);\n"
+    "}\n"
+    "\n"
+    "void nooki_dd_tabla_liberar(long long manejador) {\n"
+    "    nooki_dd_tabla_soltar(nooki_dd_tabla_de(manejador));\n"
+    "}\n"
+    "/* Un valor de la tabla como número, sin pasar por texto. */\n"
+    "double nooki_dd_tabla_numero(long long manejador, long long fila, long long columna) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    if (tabla == NULL || fila < 0 || fila >= tabla->filas || columna < 0 ||\n"
+    "        columna >= tabla->columnas) {\n"
+    "        return 0.0;\n"
+    "    }\n"
+    "    return strtod(tabla->valores[fila * tabla->columnas + columna], NULL);\n"
+    "}\n"
+    "\n"
+    "long long nooki_dd_tabla_entero(long long manejador, long long fila, long long columna) {\n"
+    "    nooki_dd_tabla_datos* tabla = nooki_dd_tabla_de(manejador);\n"
+    "    if (tabla == NULL || fila < 0 || fila >= tabla->filas || columna < 0 ||\n"
+    "        columna >= tabla->columnas) {\n"
+    "        return 0;\n"
+    "    }\n"
+    "    return strtoll(tabla->valores[fila * tabla->columnas + columna], NULL, 10);\n"
     "}\n"
 
     "/* ------------------------------------------------------------------ */\n"
@@ -4319,6 +4480,29 @@ private:
                         return "void";
                     }
                 }
+                // Integradas que no son de punteros.
+                {
+                    const std::string_view nombre = expresion.izquierda->lexema;
+                    if (nombre == "cuantos_argumentos_programa" || nombre == "tabla_de_consulta" ||
+                        nombre == "filas_de_tabla" || nombre == "columnas_de_tabla" ||
+                        nombre == "entero_de_tabla") {
+                        return "long long";
+                    }
+                    if (nombre == "argumento_de" || nombre == "argumentos_programa") {
+                        return nombre == "argumento_de" ? "nooki_texto" : "nooki_vector_texto";
+                    }
+                    if (nombre == "valor_de_tabla" || nombre == "nombre_de_columna" ||
+                        nombre == "consultar_orden" || nombre == "version_datos" ||
+                        nombre == "error_datos") {
+                        return "nooki_texto";
+                    }
+                    if (nombre == "numero_de_tabla") {
+                        return "double";
+                    }
+                    if (nombre == "liberar_tabla") {
+                        return "void";
+                    }
+                }
                 const auto encontrada = retornos_.find(std::string(expresion.izquierda->lexema));
                 if (encontrada != retornos_.end()) {
                     return encontrada->second;
@@ -5041,6 +5225,43 @@ private:
                 }
                 primero = false;
                 salida += expresion(*argumento);
+            }
+            salida += ')';
+            return salida;
+        }
+
+        // Tablas de datos: el nombre en Nooki es el de C con prefijo.
+        if (nombre_llamado == "tabla_de_consulta" || nombre_llamado == "filas_de_tabla" ||
+            nombre_llamado == "columnas_de_tabla" || nombre_llamado == "valor_de_tabla" ||
+            nombre_llamado == "nombre_de_columna" || nombre_llamado == "liberar_tabla" ||
+            nombre_llamado == "numero_de_tabla" || nombre_llamado == "entero_de_tabla") {
+            const std::string en_c =
+                nombre_llamado == "tabla_de_consulta"   ? "nooki_dd_tabla"
+                : nombre_llamado == "filas_de_tabla"    ? "nooki_dd_tabla_filas"
+                : nombre_llamado == "columnas_de_tabla" ? "nooki_dd_tabla_columnas"
+                : nombre_llamado == "valor_de_tabla"    ? "nooki_dd_tabla_valor"
+                : nombre_llamado == "nombre_de_columna" ? "nooki_dd_tabla_nombre"
+                : nombre_llamado == "numero_de_tabla"   ? "nooki_dd_tabla_numero"
+                : nombre_llamado == "entero_de_tabla"   ? "nooki_dd_tabla_entero"
+                                                        : "nooki_dd_tabla_liberar";
+            std::string salida = en_c + "(";
+            bool primero = true;
+            for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                if (!argumento) {
+                    continue;
+                }
+                if (!primero) {
+                    salida += ", ";
+                }
+                primero = false;
+                std::string valor = expresion(*argumento);
+                const std::string tipo = tipo_de(*argumento);
+                if (tipo == "nooki_texto") {
+                    valor = argumento->tipo == sintactico::TipoExpresion::Identificador
+                                ? valor + ".datos"
+                                : "(" + valor + ").datos";
+                }
+                salida += valor;
             }
             salida += ')';
             return salida;

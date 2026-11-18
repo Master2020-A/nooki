@@ -1397,6 +1397,12 @@ publico funcion columnas(ruta: &texto) -> entero {
 // agrupa, une, pivota y calcula ventanas, que es lo que se hace con pandas.
 // La consulta se escribe en SQL y el resultado vuelve como CSV, con cabecera.
 //
+// Una tabla: el resultado de una consulta, ya en memoria. Se lee por fila y
+// columna y se libera con `liberar`.
+publico estructura Tabla {
+    publico manejador: entero
+}
+
 // La biblioteca se busca en NOOKI_DUCKDB, junto al programa o en el PATH.
 
 
@@ -1408,6 +1414,93 @@ publico funcion disponible() -> booleano {
 // El motivo del último fallo (vacío si no hubo).
 publico funcion error() -> texto {
     retornar error_datos()
+}
+
+// Ejecuta la consulta y devuelve la tabla. Con manejador 0, no se pudo.
+publico funcion tabla(consulta: &texto) -> Tabla {
+    variable h = tabla_de_consulta(*consulta)
+    retornar Tabla { manejador: h }
+}
+
+// ¿Se pudo construir? Con un manejador a cero, no.
+publico funcion hay(t: Tabla) -> booleano {
+    retornar t.manejador != 0
+}
+
+// Cuántas filas tiene.
+publico funcion filas(t: Tabla) -> entero {
+    retornar filas_de_tabla(t.manejador)
+}
+
+// Cuántas columnas tiene.
+publico funcion columnas(t: Tabla) -> entero {
+    retornar columnas_de_tabla(t.manejador)
+}
+
+// El nombre de una columna.
+publico funcion nombre_columna(t: Tabla, columna: entero) -> texto {
+    retornar nombre_de_columna(t.manejador, columna)
+}
+
+// Un valor, como texto. Vacío si la posición no existe.
+publico funcion valor(t: Tabla, fila: entero, columna: entero) -> texto {
+    retornar valor_de_tabla(t.manejador, fila, columna)
+}
+
+// Un valor como número, para sumar o comparar.
+publico funcion numero(t: Tabla, fila: entero, columna: entero) -> flotante {
+    retornar numero_de_tabla(t.manejador, fila, columna)
+}
+
+// Un valor como entero.
+publico funcion entero_de(t: Tabla, fila: entero, columna: entero) -> entero {
+    retornar entero_de_tabla(t.manejador, fila, columna)
+}
+
+// Todos los valores de una columna, como texto.
+publico funcion columna(t: Tabla, indice: entero) -> Vector<texto> {
+    variable valores = Vector<texto>.nuevo()
+    variable f = 0
+    mientras (f < filas_de_tabla(t.manejador)) {
+        variable v = valor_de_tabla(t.manejador, f, indice)
+        valores.agregar(v + "")
+        f = f + 1
+    }
+    retornar valores
+}
+
+// La tabla como CSV, para imprimir o guardar.
+publico funcion a_texto(t: Tabla) -> texto {
+    variable salida = "" + ""
+    variable c = 0
+    mientras (c < columnas_de_tabla(t.manejador)) {
+        si (c > 0) {
+            salida = salida + ","
+        }
+        salida = salida + nombre_de_columna(t.manejador, c)
+        c = c + 1
+    }
+    salida = salida + "\n"
+
+    variable f = 0
+    mientras (f < filas_de_tabla(t.manejador)) {
+        variable k = 0
+        mientras (k < columnas_de_tabla(t.manejador)) {
+            si (k > 0) {
+                salida = salida + ","
+            }
+            salida = salida + valor_de_tabla(t.manejador, f, k)
+            k = k + 1
+        }
+        salida = salida + "\n"
+        f = f + 1
+    }
+    retornar salida
+}
+
+// Libera la memoria de la tabla.
+publico funcion liberar(t: Tabla) -> vacio {
+    liberar_tabla(t.manejador)
 }
 
 // La versión del motor, o vacío si no está.
