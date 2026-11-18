@@ -1790,7 +1790,30 @@ funcion principal() -> entero {
 }
 ```
 
-Dentro de la función que la recibe, el parámetro se llama como cualquier función. **Lo que no se puede** (todavía) es guardar una función en una variable ni devolverla: es un puntero, sin memoria propia, así que no hay cierres ni `lambda`.
+Dentro de la función que la recibe, el parámetro se llama como cualquier función.
+
+Y una función se puede **guardar en una variable**, escribiendo su tipo:
+
+```nooki
+funcion doblar(n: entero) -> entero {
+    retornar n * 2
+}
+
+funcion sumar_uno(n: entero) -> entero {
+    retornar n + 1
+}
+
+funcion principal() -> entero {
+    variable f: funcion(entero) -> entero = doblar
+    imprimir(f(21))
+
+    f = sumar_uno
+    imprimir(f(21))
+    retornar 0
+}
+```
+
+**Lo que no se puede** (todavía) es **devolver** una función desde otra, ni que capture variables: es un puntero, sin memoria propia, así que no hay cierres ni `lambda`.
 
 ### Recibir argumentos
 

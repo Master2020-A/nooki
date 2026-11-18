@@ -116,6 +116,8 @@ private:
         std::set<std::string> vectores_texto;
         std::set<std::string> vectores_flotante;
         std::set<std::string> mapas_flotante;
+        /// Variables de tipo función del ámbito: nombre → tipo.
+        std::map<std::string, std::string> funciones;
         /// Variables que son `Vector<MiEstructura>`: nombre → estructura.
         std::map<std::string, std::string> vector_de_estructura;
         std::set<std::string> movidas;
@@ -680,6 +682,10 @@ private:
         if (base == "Puntero") {
             return;
         }
+        // Un tipo función: `funcion(entero) -> entero`.
+        if (base.rfind("funcion(", 0) == 0) {
+            return;
+        }
         // Genéricos de la biblioteca.
         if (base == "Vector" || base == "Mapa" || base == "Caja" || base == "resultado") {
             return;
@@ -716,6 +722,10 @@ private:
             // El tipo que se escribe tiene que existir. Sin esto, `variable n:
             // natural = 1` se aceptaba y acababa siendo un `entero` en C.
             revisar_tipo_declarado(sentencia.tipo_declarado, sentencia.span);
+            if (sentencia.tipo_declarado.rfind("funcion(", 0) == 0) {
+                ambitos_.back().funciones[std::string(sentencia.nombre)] =
+                    std::string(sentencia.tipo_declarado);
+            }
             const Tipo real = tipo_de(*sentencia.expresion);
 
             // Un préstamo no se puede guardar, salvo como referencia a un rasgo.
@@ -1748,6 +1758,23 @@ private:
 
         const auto encontrada = funciones_.find(nombre_llamado);
         if (encontrada == funciones_.end()) {
+            // Una variable de tipo función se llama igual que una función.
+            for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+                const auto variable = it->funciones.find(std::string(nombre_llamado));
+                if (variable == it->funciones.end()) {
+                    continue;
+                }
+                for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                    if (argumento) {
+                        tipo_de(*argumento);
+                    }
+                }
+                const std::size_t flecha = variable->second.find("->");
+                if (flecha != std::string::npos) {
+                    return desde_nombre(std::string_view(variable->second).substr(flecha + 2));
+                }
+                return Tipo::Desconocido;
+            }
             // Un parámetro de tipo función se llama igual que una función.
             if (const auto parametro = funciones_parametro.find(std::string(nombre_llamado));
                 parametro != funciones_parametro.end()) {

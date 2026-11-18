@@ -502,8 +502,29 @@ funcion contar_si(numeros: &Vector<entero>, cumple: funcion(entero) -> booleano)
 }
 ```
 
-Dentro se llama como cualquier función. Un nombre de función sin paréntesis es su valor, y lo único que se
-puede hacer con él es pasarlo como argumento: todavía no se puede guardar en una variable ni devolver.
+Dentro se llama como cualquier función. Un nombre de función sin paréntesis es su valor, y se puede guardar
+en una variable con su tipo escrito:
+
+```nooki
+funcion doblar(n: entero) -> entero {
+    retornar n * 2
+}
+
+funcion sumar_uno(n: entero) -> entero {
+    retornar n + 1
+}
+
+funcion principal() -> entero {
+    variable f: funcion(entero) -> entero = doblar
+    imprimir(f(21))
+
+    f = sumar_uno
+    imprimir(f(21))
+    retornar 0
+}
+```
+
+Lo que todavía no se puede es **devolver** una función desde otra, ni capturar variables: no hay cierres.
 
 ### Punteros y memoria manual
 

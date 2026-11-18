@@ -1,0 +1,25 @@
+funcion doblar(n: entero) -> entero {
+    retornar n * 2
+}
+
+funcion sumar_uno(n: entero) -> entero {
+    retornar n + 1
+}
+
+funcion aplicar(valor: entero, cambio: funcion(entero) -> entero) -> entero {
+    retornar cambio(valor)
+}
+
+funcion principal() -> entero {
+    // Una función guardada en una variable, con su tipo escrito.
+    variable f: funcion(entero) -> entero = doblar
+    imprimir(f(21))
+
+    // Se puede cambiar por otra con la misma forma.
+    f = sumar_uno
+    imprimir(f(21))
+
+    // Y se puede pasar a otra función, como cualquier valor.
+    imprimir(aplicar(10, f))
+    retornar 0
+}

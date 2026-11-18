@@ -3,6 +3,31 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.13] — 2026-11-18
+
+### Sprint 141 — Una función en una variable (2026-11-18)
+
+La 1.0.12 dejaba pasar funciones como argumento, pero no guardarlas. Ahora sí, escribiendo el tipo:
+
+```nooki
+variable f: funcion(entero) -> entero = doblar
+imprimir(f(21))     // 42
+
+f = sumar_uno       // otra con la misma forma
+imprimir(f(21))     // 22
+
+imprimir(aplicar(10, f))   // y se pasa como cualquier valor
+```
+
+El verificador apunta las variables de tipo función en su ámbito para poder llamarlas; el generador emite la
+declaración con el nombre dentro del puntero (`long long (*f)(long long) = nooki_doblar;`) y resuelve el tipo
+de vuelta de la llamada.
+
+**Lo que sigue sin poder hacerse es devolver una función**, y con eso no hay cierres ni `lambda`: un puntero
+no lleva memoria consigo. Eso es el siguiente escalón, y es grande.
+
+Caso `0091-funcion-en-variable`.
+
 ## [1.0.12] — 2026-11-18
 
 ### Sprint 140 — Funciones como argumento (2026-11-18)

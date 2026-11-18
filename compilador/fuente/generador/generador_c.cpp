@@ -4077,6 +4077,19 @@ private:
             return;
         }
 
+        // `variable f: funcion(entero) -> entero = doblar`: el puntero lleva el
+        // nombre dentro, así que la declaración se emite aparte.
+        if (!sentencia.tipo_declarado.empty() &&
+            sentencia.tipo_declarado.rfind("funcion(", 0) == 0) {
+            const std::string puntero = tipo_de_parametro_c(sentencia.tipo_declarado);
+            const std::size_t posicion = puntero.find("(*)");
+            const std::string valor_inicial = expresion(*sentencia.expresion);
+            salida_ << indentacion() << puntero.substr(0, posicion + 2) << sentencia.nombre
+                    << puntero.substr(posicion + 2) << " = " << valor_inicial << ";\n";
+            declarar(sentencia.nombre, puntero);
+            return;
+        }
+
         const std::string tipo = sentencia.tipo_declarado.empty()
                                      ? tipo_de(*sentencia.expresion)
                                      : tipo_declarado_c(sentencia.tipo_declarado);
@@ -4640,6 +4653,16 @@ private:
                     }
                     if (nombre == "liberar_tabla") {
                         return "void";
+                    }
+                }
+                // Una variable de tipo función: su tipo de vuelta es el de delante
+                // de `(*)`.
+                if (expresion.izquierda->tipo == TipoExpresion::Identificador &&
+                    declarada_aqui(std::string(expresion.izquierda->lexema))) {
+                    const std::string declarado = buscar(expresion.izquierda->lexema);
+                    const std::size_t puntero = declarado.find(" (*)(");
+                    if (puntero != std::string::npos) {
+                        return declarado.substr(0, puntero);
                     }
                 }
                 const auto encontrada = retornos_.find(std::string(expresion.izquierda->lexema));
