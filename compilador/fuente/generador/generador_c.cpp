@@ -2390,6 +2390,34 @@ public:
             sustitucion_.clear();
         }
 
+        // Las lambdas, como funciones aparte: solo ven sus parámetros.
+        for (const sintactico::Expresion* lambda : lambdas_) {
+            const std::string nombre = nombres_lambda_.at(lambda);
+            salida_ << "static " << tipo_declarado_c(lambda->vuelta_lambda) << ' ' << nombre << '(';
+            if (lambda->nombres_lambda.empty()) {
+                salida_ << "void";
+            }
+            abrir_ambito();
+            bool primero_parametro = true;
+            for (std::size_t i = 0; i < lambda->nombres_lambda.size(); ++i) {
+                const std::string tipo_parametro = tipo_de_parametro_c(lambda->tipos_lambda[i]);
+                if (!primero_parametro) {
+                    salida_ << ", ";
+                }
+                primero_parametro = false;
+                salida_ << tipo_parametro << ' ' << lambda->nombres_lambda[i];
+                declarar(lambda->nombres_lambda[i], tipo_parametro);
+            }
+            salida_ << ") {\n";
+            ++nivel_;
+            salida_ << indentacion() << "return ";
+            salida_ << (lambda->cuerpo_lambda ? expresion(*lambda->cuerpo_lambda) : "0");
+            salida_ << ";\n";
+            --nivel_;
+            salida_ << "}\n\n";
+            cerrar_ambito();
+        }
+
         salida_ << cuerpos;
         return salida_.str();
     }
@@ -4077,8 +4105,8 @@ private:
             return;
         }
 
-        // `variable f: funcion(entero) -> entero = doblar`: el puntero lleva el
-        // nombre dentro, así que la declaración se emite aparte.
+        // `variable f: funcion(entero) -> entero = doblar` y las lambdas: el
+        // puntero lleva el nombre dentro, así que la declaración va aparte.
         if (!sentencia.tipo_declarado.empty() &&
             sentencia.tipo_declarado.rfind("funcion(", 0) == 0) {
             const std::string puntero = tipo_de_parametro_c(sentencia.tipo_declarado);
@@ -4090,9 +4118,18 @@ private:
             return;
         }
 
-        const std::string tipo = sentencia.tipo_declarado.empty()
-                                     ? tipo_de(*sentencia.expresion)
-                                     : tipo_declarado_c(sentencia.tipo_declarado);
+        std::string tipo = sentencia.tipo_declarado.empty()
+                               ? tipo_de(*sentencia.expresion)
+                               : tipo_declarado_c(sentencia.tipo_declarado);
+
+        // Un puntero a función, venga de donde venga: el nombre va dentro.
+        if (const std::size_t puntero = tipo.find(" (*)("); puntero != std::string::npos) {
+            const std::string valor_inicial = expresion(*sentencia.expresion);
+            salida_ << indentacion() << tipo.substr(0, puntero + 3) << sentencia.nombre
+                    << tipo.substr(puntero + 3) << " = " << valor_inicial << ";\n";
+            declarar(sentencia.nombre, tipo);
+            return;
+        }
 
         if (sentencia.tipo == sintactico::TipoSentencia::Constante) {
             salida_ << indentacion() << "const ";
@@ -4315,6 +4352,20 @@ private:
             return "nooki_nulo";
         case TipoExpresion::Identificador:
             return buscar(expresion.lexema);
+        case TipoExpresion::Lambda: {
+            std::string parametros;
+            for (const std::string_view tipo_parametro : expresion.tipos_lambda) {
+                if (!parametros.empty()) {
+                    parametros += ", ";
+                }
+                parametros += std::string(tipo_parametro);
+            }
+            std::string salida = tipo_declarado_c(expresion.vuelta_lambda);
+            salida += " (*)(";
+            salida += parametros.empty() ? "void" : tipo_lista_c(parametros);
+            salida += ')';
+            return salida;
+        }
         case TipoExpresion::Construccion: {
             const auto conocido = tipo_c_de_.find(std::string(expresion.anotacion));
             const std::string tipo = conocido != tipo_c_de_.end()
@@ -4748,6 +4799,17 @@ private:
             if (!declarada_aqui(nombre) && retornos_.count(nombre) != 0) {
                 return nombre_c(nombre);
             }
+            return nombre;
+        }
+        case TipoExpresion::Lambda: {
+            // La lambda se emite como una función aparte; aquí va su nombre.
+            const auto conocida = nombres_lambda_.find(&nodo);
+            if (conocida != nombres_lambda_.end()) {
+                return conocida->second;
+            }
+            const std::string nombre = "nooki_lambda_" + std::to_string(lambdas_.size());
+            nombres_lambda_[&nodo] = nombre;
+            lambdas_.push_back(&nodo);
             return nombre;
         }
         case TipoExpresion::Construccion:
@@ -5979,6 +6041,9 @@ private:
     std::set<std::string> vectores_de_estructura_;
     /// Estructuras con algún campo de texto, para copiarlo y liberarlo.
     std::set<std::string> estructuras_con_texto_;
+    /// Lambdas encontradas al emitir: su nodo y el nombre que se les dio.
+    std::vector<const sintactico::Expresion*> lambdas_;
+    std::map<const sintactico::Expresion*, std::string> nombres_lambda_;
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::set<std::string> externas_;

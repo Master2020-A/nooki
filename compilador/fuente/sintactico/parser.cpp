@@ -1283,6 +1283,58 @@ ExpresionPtr Parser::prefijo() {
             nodo->span = span;
             return nodo;
         }
+        // Lambda: `funcion(entero) -> entero => n * 2`.
+        if (token.lexema == "funcion") {
+            const diagnostico::Span span = token.span;
+            avanzar();
+            auto nodo = std::make_unique<Expresion>();
+            nodo->tipo = TipoExpresion::Lambda;
+            nodo->span = span;
+            if (!aceptar_lexema("(")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«(»");
+                return nodo;
+            }
+
+            if (actual().lexema != ")") {
+                for (;;) {
+                    if (const Token& nombre = actual(); nombre.es(TipoToken::Identificador)) {
+                        nodo->nombres_lambda.push_back(nombre.lexema);
+                        avanzar();
+                    } else {
+                        error_en(nombre, diagnostico::codigos::TOKEN_INESPERADO,
+                                 "un nombre de parámetro");
+                        return nodo;
+                    }
+                    if (!aceptar_lexema(":")) {
+                        error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«:»");
+                        return nodo;
+                    }
+                    nodo->tipos_lambda.push_back(analizar_tipo_texto());
+                    if (!aceptar_lexema(",")) {
+                        break;
+                    }
+                }
+            }
+            if (!aceptar_lexema(")")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«)»");
+                return nodo;
+            }
+            if (!aceptar_lexema("->")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO,
+                         "«->» con el tipo de vuelta");
+                return nodo;
+            }
+            nodo->vuelta_lambda = analizar_tipo_texto();
+            if (!aceptar_lexema("=>")) {
+                error_en(actual(), diagnostico::codigos::TOKEN_INESPERADO, "«=>» con el cuerpo");
+                return nodo;
+            }
+            nodo->cuerpo_lambda = expresion(0);
+            if (nodo->cuerpo_lambda) {
+                nodo->span = unir(span, nodo->cuerpo_lambda->span);
+            }
+            return nodo;
+        }
     }
 
     if (token.lexema == "(") {

@@ -3,6 +3,31 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.14] — 2026-11-18
+
+### Sprint 142 — Lambdas (2026-11-18)
+
+Pasar una función a otra ya se podía, pero había que declararla aparte y con nombre. Ahora se escribe donde
+hace falta:
+
+```nooki
+imprimir(aplicar(21, funcion(n: entero) -> entero => n * 2))
+
+variable triple = funcion(n: entero) -> entero => n * 3
+imprimir(triple(5))
+```
+
+La forma es `funcion(parámetros) -> tipo => expresión`; el cuerpo es una sola expresión, que es lo que cabe
+sin llaves ni `retornar`.
+
+Por debajo es azúcar: el generador emite cada lambda como una función `static` aparte y por donde aparecía
+deja su nombre. Se emiten **antes** de los cuerpos, con sus parámetros en un ámbito propio.
+
+Una lambda **no captura**: solo ve sus parámetros. Usar una variable de fuera es `NOK3001` en la línea
+exacta — lo comprueba el verificador, para que el error sea del lenguaje y no del compilador de C.
+
+Caso `0092-lambdas`, con lambda directa, en variable, de dos parámetros y de texto.
+
 ## [1.0.13] — 2026-11-18
 
 ### Sprint 141 — Una función en una variable (2026-11-18)

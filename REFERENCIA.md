@@ -524,7 +524,11 @@ funcion principal() -> entero {
 }
 ```
 
-Lo que todavía no se puede es **devolver** una función desde otra, ni capturar variables: no hay cierres.
+También se puede escribir en el sitio, con una lambda: `funcion(n: entero) -> entero => n * 2`, cuyo cuerpo
+es una sola expresión.
+
+Lo que todavía no se puede es **devolver** una función desde otra, ni capturar variables: no hay cierres, y
+una lambda solo ve sus parámetros.
 
 ### Punteros y memoria manual
 

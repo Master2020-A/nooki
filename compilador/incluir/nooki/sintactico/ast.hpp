@@ -33,6 +33,7 @@ enum class TipoExpresion : unsigned char {
     Construccion,
     Este,
     Super,
+    Lambda,
 };
 
 struct Expresion;
@@ -61,6 +62,16 @@ struct Expresion {
 
     /// Argumentos de tipo en una llamada genérica: `identidad<entero>(42)`.
     std::vector<std::string_view> tipos_aplicados;
+
+    /// Nombres de los parámetros de una lambda, en paralelo con sus tipos.
+    std::vector<std::string_view> nombres_lambda;
+    std::vector<std::string_view> tipos_lambda;
+
+    /// Tipo de vuelta de una lambda: `funcion(entero) -> entero => ...`.
+    std::string_view vuelta_lambda;
+
+    /// Cuerpo de una lambda, que es una sola expresión.
+    ExpresionPtr cuerpo_lambda;
 
     /// La construcción va al montículo (`nuevo persona { ... }`).
     bool monticulo = false;

@@ -725,6 +725,19 @@ private:
             if (sentencia.tipo_declarado.rfind("funcion(", 0) == 0) {
                 ambitos_.back().funciones[std::string(sentencia.nombre)] =
                     std::string(sentencia.tipo_declarado);
+            } else if (sentencia.expresion && sentencia.expresion->tipo == TipoExpresion::Lambda) {
+                // Una lambda guardada en una variable: su tipo se escribe con la
+                // forma del lenguaje, para poder llamarla después.
+                std::string firma = "funcion(";
+                const Expresion& lambda = *sentencia.expresion;
+                for (std::size_t i = 0; i < lambda.tipos_lambda.size(); ++i) {
+                    if (i > 0) {
+                        firma += ", ";
+                    }
+                    firma += std::string(lambda.tipos_lambda[i]);
+                }
+                firma += ") -> " + std::string(lambda.vuelta_lambda);
+                ambitos_.back().funciones[std::string(sentencia.nombre)] = firma;
             }
             const Tipo real = tipo_de(*sentencia.expresion);
 
@@ -1275,6 +1288,30 @@ private:
         case TipoExpresion::Este:
         case TipoExpresion::Super:
             return Tipo::Desconocido;
+        case TipoExpresion::Lambda: {
+            // Los parámetros son lo único que la lambda ve: una variable de
+            // fuera no se puede usar, porque no hay cierres.
+            abrir_ambito();
+            for (std::size_t i = 0; i < expresion.nombres_lambda.size(); ++i) {
+                const std::string_view tipo_parametro = i < expresion.tipos_lambda.size()
+                                                            ? expresion.tipos_lambda[i]
+                                                            : std::string_view("entero");
+                declarar(expresion.nombres_lambda[i], desde_nombre(tipo_parametro), tipo_parametro);
+            }
+            if (expresion.cuerpo_lambda) {
+                revisar_cuerpo_lambda(*expresion.cuerpo_lambda, expresion);
+                const Tipo cuerpo = tipo_de(*expresion.cuerpo_lambda);
+                const Tipo esperado = desde_nombre(expresion.vuelta_lambda);
+                if (esperado != Tipo::Desconocido && cuerpo != Tipo::Desconocido &&
+                    cuerpo != esperado) {
+                    error(diagnostico::codigos::TIPO_INCOMPATIBLE, expresion.span)
+                        .parametro("esperado", std::string(expresion.vuelta_lambda))
+                        .parametro("encontrado", "otra cosa");
+                }
+            }
+            cerrar_ambito();
+            return Tipo::Desconocido;
+        }
         case TipoExpresion::Flotante:
             return Tipo::Flotante;
         case TipoExpresion::Como: {
@@ -1482,6 +1519,46 @@ private:
                 error(diagnostico::codigos::PRESTAMO_EXCLUSIVO, llamada.span)
                     .parametro("nombre", std::string(nombre));
             }
+        }
+    }
+
+    /// Dentro de una lambda solo valen sus parámetros y las funciones: una
+    /// variable de fuera no existe, porque no hay cierres. Se revisa aquí para
+    /// que el error sea del lenguaje y no del compilador de C.
+    void revisar_cuerpo_lambda(const Expresion& expresion, const Expresion& lambda,
+                               bool raiz = true) {
+        if (!raiz && expresion.tipo == TipoExpresion::Identificador) {
+            const std::string_view nombre = expresion.lexema;
+            bool es_parametro = false;
+            for (const std::string_view suyo : lambda.nombres_lambda) {
+                if (suyo == nombre) {
+                    es_parametro = true;
+                    break;
+                }
+            }
+            const bool es_funcion = funciones_.count(std::string(nombre)) != 0;
+            const bool es_tipo = tipo_por_nombre(nombre) != nullptr ||
+                                 enumeraciones_.count(std::string(nombre)) != 0;
+            if (!es_parametro && !es_funcion && !es_tipo) {
+                error(diagnostico::codigos::NOMBRE_NO_DECLARADO, expresion.span)
+                    .parametro("nombre", std::string(nombre))
+                    .ayuda("una lambda solo ve sus parámetros: no hay cierres");
+            }
+            return;
+        }
+        if (expresion.izquierda) {
+            revisar_cuerpo_lambda(*expresion.izquierda, lambda, false);
+        }
+        if (expresion.derecha) {
+            revisar_cuerpo_lambda(*expresion.derecha, lambda, false);
+        }
+        for (const sintactico::ExpresionPtr& hijo : expresion.lista) {
+            if (hijo) {
+                revisar_cuerpo_lambda(*hijo, lambda, false);
+            }
+        }
+        if (expresion.cuerpo_lambda) {
+            revisar_cuerpo_lambda(*expresion.cuerpo_lambda, lambda, false);
         }
     }
 

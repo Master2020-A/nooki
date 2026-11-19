@@ -1813,7 +1813,27 @@ funcion principal() -> entero {
 }
 ```
 
-**Lo que no se puede** (todavía) es **devolver** una función desde otra, ni que capture variables: es un puntero, sin memoria propia, así que no hay cierres ni `lambda`.
+Y se puede escribir **ahí mismo**, sin declararla aparte, con una lambda:
+
+```nooki
+funcion aplicar(valor: entero, cambio: funcion(entero) -> entero) -> entero {
+    retornar cambio(valor)
+}
+
+funcion principal() -> entero {
+    imprimir(aplicar(21, funcion(n: entero) -> entero => n * 2))
+
+    variable triple = funcion(n: entero) -> entero => n * 3
+    imprimir(triple(5))
+    retornar 0
+}
+```
+
+La forma es `funcion(parámetros) -> tipo => expresión`, y el cuerpo es **una sola expresión**.
+
+**Lo que no se puede** (todavía) es **devolver** una función desde otra, ni que capture variables de fuera:
+es un puntero, sin memoria propia, así que no hay cierres. Una lambda solo ve sus parámetros, y usar otra
+cosa da `NOK3001` en la línea exacta.
 
 ### Recibir argumentos
 

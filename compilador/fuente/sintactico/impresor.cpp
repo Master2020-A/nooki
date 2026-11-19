@@ -48,6 +48,26 @@ std::string imprimir(const Expresion& expresion) {
     case TipoExpresion::Asignacion:
         return entre_parentesis(expresion.lexema, *expresion.izquierda, expresion.derecha.get());
 
+    case TipoExpresion::Lambda: {
+        std::string salida = "(lambda (";
+        for (std::size_t i = 0; i < expresion.nombres_lambda.size(); ++i) {
+            if (i > 0) {
+                salida += ' ';
+            }
+            salida += std::string(expresion.nombres_lambda[i]);
+            salida += ':';
+            if (i < expresion.tipos_lambda.size()) {
+                salida += std::string(expresion.tipos_lambda[i]);
+            }
+        }
+        salida += ") -> ";
+        salida += std::string(expresion.vuelta_lambda);
+        salida += ' ';
+        salida += expresion.cuerpo_lambda ? imprimir(*expresion.cuerpo_lambda) : "?";
+        salida += ')';
+        return salida;
+    }
+
     case TipoExpresion::Llamada: {
         std::string salida = "(llamada ";
         salida += expresion.izquierda ? imprimir(*expresion.izquierda) : "?";

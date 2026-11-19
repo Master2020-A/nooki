@@ -1,0 +1,25 @@
+funcion aplicar(valor: entero, cambio: funcion(entero) -> entero) -> entero {
+    retornar cambio(valor)
+}
+
+funcion combinar(a: entero, b: entero, f: funcion(entero, entero) -> entero) -> entero {
+    retornar f(a, b)
+}
+
+funcion principal() -> entero {
+    // Una lambda directa como argumento.
+    imprimir(aplicar(21, funcion(n: entero) -> entero => n * 2))
+
+    // Guardada en una variable, sin escribir el tipo.
+    variable triple = funcion(n: entero) -> entero => n * 3
+    imprimir(triple(5))
+    imprimir(aplicar(5, triple))
+
+    // Con dos parámetros.
+    imprimir(combinar(6, 7, funcion(x: entero, y: entero) -> entero => x * y))
+
+    // Y de texto.
+    variable saludo = funcion(nombre: texto) -> texto => "hola " + nombre
+    imprimir(saludo("Ana"))
+    retornar 0
+}
