@@ -1,0 +1,32 @@
+// Los agregados de una lista de enteros, con valores calculados a mano.
+usar listas
+usar textos
+
+funcion principal() -> entero {
+    variable numeros = Vector<entero>.nuevo()
+    numeros.agregar(4)
+    numeros.agregar(9)
+    numeros.agregar(2)
+    numeros.agregar(7)
+
+    // 4 + 9 + 2 + 7 = 22
+    imprimir(textos.de_entero(listas.suma(&numeros)))
+    imprimir(textos.de_entero(listas.mayor(&numeros)))
+    imprimir(textos.de_entero(listas.menor(&numeros)))
+
+    // 22 / 4 = 5, con división entera.
+    imprimir(textos.de_entero(listas.promedio(&numeros)))
+
+    si (listas.contiene(&numeros, 7)) {
+        imprimir("está el 7")
+    }
+    si (!listas.contiene(&numeros, 8)) {
+        imprimir("no está el 8")
+    }
+
+    // Una lista vacía: suma 0 y promedio 0, sin dividir por cero.
+    variable vacia = Vector<entero>.nuevo()
+    imprimir(textos.de_entero(listas.suma(&vacia)))
+    imprimir(textos.de_entero(listas.promedio(&vacia)))
+    retornar 0
+}

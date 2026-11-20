@@ -652,7 +652,13 @@ funcion principal() -> entero {
 }
 ```
 
-`obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes. Y eso tiene
+`obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes.
+
+**Un aviso sobre el CSV**: los flotantes se escriben con coma (`3,5`), que es la convención del lenguaje
+también al imprimir. En un CSV la coma separa campos, así que una columna con decimales escrita con
+`textos.de_flotante` y guardada con `datos.guardar` **rompe la tabla**. Mientras eso no esté resuelto, los
+números que vayan a un CSV se dejan salir de DuckDB (que usa punto), o se convierten en la consulta con
+`CAST(x AS VARCHAR)`. Y eso tiene
 una consecuencia que se paga cara: **una función que devuelve `v.obtener(i)` y cuya `v` es local devuelve
 una vista a memoria que ya no existe**. Si el llamante la usa, lee basura.
 

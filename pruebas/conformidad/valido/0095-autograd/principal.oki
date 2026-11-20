@@ -1,0 +1,30 @@
+// El gradiente de una cuenta escrita a mano: w = x * y + x.
+//
+//   valor(w)       = 2 * 3 + 2 = 8
+//   gradiente(x)   = y + 1 = 4
+//   gradiente(y)   = x = 2
+usar autograd
+usar textos
+
+funcion principal() -> entero {
+    variable x = autograd.dato(2.0)
+    variable y = autograd.dato(3.0)
+
+    variable producto = autograd.producto(x, y)
+    variable total = autograd.suma(producto, x)
+
+    autograd.atras(total)
+
+    imprimir(textos.de_flotante(autograd.valor(total)))
+    imprimir(textos.de_flotante(autograd.gradiente(x)))
+    imprimir(textos.de_flotante(autograd.gradiente(y)))
+
+    // Ahora con una resta: u = x - y, y su gradiente es 1 y -1.
+    variable u = autograd.resta(x, y)
+    autograd.atras(u)
+    imprimir(textos.de_flotante(autograd.gradiente(x)))
+
+    autograd.liberar(total)
+    autograd.liberar(u)
+    retornar 0
+}

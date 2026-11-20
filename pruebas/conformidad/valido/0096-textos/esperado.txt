@@ -1,0 +1,8 @@
+rojo, verde, azul
+[]
+ababab
+[]
+2
+0
+-42
+3,5

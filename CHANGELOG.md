@@ -3,6 +3,39 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.15] — 2026-11-20
+
+### Sprint 143 — Pruebas de biblioteca, y un fallo que salió (2026-11-20)
+
+El lenguaje tenía 122 casos de conformidad y la biblioteca 220 firmas. Este sprint no añade nada visible:
+añade pruebas donde no las había, con los resultados **calculados a mano**, no copiados de lo que el
+compilador hiciera.
+
+- `0093-listas`: suma, mayor, menor, promedio (división entera), pertenencia y la lista vacía.
+- `0094-fechas`: la regla de los bisiestos con sus tres excepciones (2024 sí, 2023 no, 1900 no, 2000 sí),
+  febrero según el año, los 366 días de 2024, el 1 de enero de 2024 como lunes y el 31 de diciembre tras
+  sumar 365 días.
+- `0095-autograd`: el gradiente de `w = x·y + x` — valor 8, `∂w/∂x = 4`, `∂w/∂y = 2`, y una resta con
+  gradiente 1.
+- `0096-textos`: unir con separador, la lista vacía, repetir cero veces, contar solapados («banana» tiene
+  dos «ana»), y números a texto.
+
+### El fallo que salió
+
+**El resultado de un método de texto no conservaba su tipo.** Esto no compilaba:
+
+```nooki
+variable pieza = valor.subtexto(0, 1)
+si (pieza == "m") { ... }     // «se esperaba un valor de tipo entero»
+```
+
+`subtexto`, `mayusculas`, `recortar` y compañía devolvían un valor sin tipo en el verificador, así que
+compararlos o usarlos como texto fallaba. Corregido para los métodos de `texto` (y también cuando el texto
+llega prestado con `&texto`). Caso `0097-metodos-de-texto`, que es el que lo cubre.
+
+De paso quedó documentado un límite: **el CSV y los decimales con coma no se llevan bien**, porque la coma
+separa campos. Está en el manual con la salida (dejar que DuckDB emita el número, que usa punto).
+
 ## [1.0.14] — 2026-11-18
 
 ### Sprint 142 — Lambdas (2026-11-18)

@@ -1880,9 +1880,30 @@ private:
         const Expresion& acceso = *expresion.izquierda;
 
         if (acceso.izquierda) {
-            const Tipo objeto = tipo_de(*acceso.izquierda);
-            if (objeto == Tipo::Texto && acceso.anotacion == "largo") {
-                return Tipo::Entero;
+            Tipo objeto = tipo_de(*acceso.izquierda);
+            // Un texto prestado (`&texto`) también es un texto para esto.
+            if (objeto != Tipo::Texto && acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                prestamos_texto_.count(std::string(acceso.izquierda->lexema)) != 0) {
+                objeto = Tipo::Texto;
+            }
+            if (objeto == Tipo::Texto) {
+                // Los métodos de `texto` devuelven un tipo conocido: sin esto,
+                // `valor.subtexto(0, 1)` se quedaba sin tipo y compararlo con un
+                // texto daba «se esperaba entero».
+                const std::string_view metodo = acceso.anotacion;
+                if (metodo == "largo" || metodo == "buscar" || metodo == "a_entero") {
+                    return Tipo::Entero;
+                }
+                if (metodo == "a_flotante") {
+                    return Tipo::Flotante;
+                }
+                if (metodo == "contiene" || metodo == "empieza_con") {
+                    return Tipo::Booleano;
+                }
+                if (metodo == "subtexto" || metodo == "mayusculas" || metodo == "minusculas" ||
+                    metodo == "recortar" || metodo == "sin_ultimo" || metodo == "agregar_codigo") {
+                    return Tipo::Texto;
+                }
             }
         }
 

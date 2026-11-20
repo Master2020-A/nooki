@@ -1,0 +1,40 @@
+// Las fechas, con valores comprobables: el calendario es el que es.
+usar fechas
+usar textos
+
+funcion principal() -> entero {
+    // La regla de los bisiestos: cada 4, menos cada 100, salvo cada 400.
+    si (fechas.bisiesto(2024)) {
+        imprimir("2024 es bisiesto")
+    }
+    si (!fechas.bisiesto(2023)) {
+        imprimir("2023 no es bisiesto")
+    }
+    si (!fechas.bisiesto(1900)) {
+        imprimir("1900 no es bisiesto")
+    }
+    si (fechas.bisiesto(2000)) {
+        imprimir("2000 es bisiesto")
+    }
+
+    // Febrero según el año, y un mes de 30.
+    imprimir(textos.de_entero(fechas.dias_del_mes(2, 2024)))
+    imprimir(textos.de_entero(fechas.dias_del_mes(2, 2023)))
+    imprimir(textos.de_entero(fechas.dias_del_mes(4, 2024)))
+
+    // 2024 tiene 366 días.
+    imprimir(textos.de_entero(fechas.dias_del_anio(2024)))
+    imprimir(textos.de_entero(fechas.dias_del_anio(2023)))
+
+    // El 1 de enero de 2024 fue lunes, y la semana empieza en lunes (0).
+    variable primero = fechas.a_dias(2024, 1, 1)
+    imprimir(textos.de_entero(primero))
+    imprimir(textos.de_entero(fechas.dia_de_la_semana(primero)))
+
+    // Del 1 de enero más 365 días se sale el 31 de diciembre (2024 es bisiesto).
+    variable ultimo = fechas.sumar_dias(primero, 365)
+    imprimir(textos.de_entero(fechas.a_anio(ultimo)))
+    imprimir(textos.de_entero(fechas.a_mes(ultimo)))
+    imprimir(textos.de_entero(fechas.a_dia(ultimo)))
+    retornar 0
+}

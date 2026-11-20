@@ -1,0 +1,37 @@
+// La unión, la repetición y el conteo de textos, con casos límite.
+usar textos
+
+funcion principal() -> entero {
+    variable partes = Vector<texto>.nuevo()
+    partes.agregar("rojo" + "")
+    partes.agregar("verde" + "")
+    partes.agregar("azul" + "")
+
+    // Unir con separador, y con la lista vacía.
+    variable juntos = textos.unir(&partes, ", ")
+    imprimir(juntos)
+
+    variable vacia = Vector<texto>.nuevo()
+    variable nada = textos.unir(&vacia, "-")
+    imprimir("[" + nada + "]")
+
+    // Repetir, incluso cero veces.
+    variable tres = "ab" + ""
+    imprimir(textos.repetir(&tres, 3))
+    variable cero = "x" + ""
+    imprimir("[" + textos.repetir(&cero, 0) + "]")
+
+    // Contar: "banana" tiene dos "ana", uno en cada posición (se solapan).
+    variable fruta = "banana" + ""
+    variable aguja = "ana" + ""
+    imprimir(textos.de_entero(textos.contar(&fruta, &aguja)))
+
+    // Lo que no está cuenta cero.
+    variable otra = "zzz" + ""
+    imprimir(textos.de_entero(textos.contar(&fruta, &otra)))
+
+    // Números a texto, con signo y decimales.
+    imprimir(textos.de_entero(-42))
+    imprimir(textos.de_flotante(3.5))
+    retornar 0
+}
