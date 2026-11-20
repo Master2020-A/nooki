@@ -21,7 +21,7 @@ poder de C/C++ · seguridad de memoria de Rust · sintaxis simple como Python ·
 | Documento | Qué contiene |
 |---|---|
 | **[PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md)** | Plan de 96 sprints en 12 fases, con criterio de terminado por sprint, riesgos y calendario real |
-| **[DECISIONES.md](DECISIONES.md)** | Las 26 ADR + nomenclatura + decisiones de alcance + asuntos abiertos |
+| **[DECISIONES.md](DECISIONES.md)** | Las 27 ADR + nomenclatura + decisiones de alcance + asuntos abiertos |
 | **[spec/especificacion-v0.1.md](spec/especificacion-v0.1.md)** | Especificación normativa: léxico, tipos, OOP, memoria, errores, FFI |
 | **[spec/gramatica.ebnf](spec/gramatica.ebnf)** | Gramática formal completa (EBNF), normativa |
 | **[docs/adr/](docs/adr/)** | 26 Architecture Decision Records: el *porqué* de cada decisión |
