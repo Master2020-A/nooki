@@ -1,0 +1,15 @@
+usar textos
+
+funcion principal() -> entero {
+    variable base = 1
+    variable f = funcion(n: entero) -> entero => n + base
+    imprimir(textos.de_entero(f(10)))
+
+    base = 100
+    f = funcion(n: entero) -> entero => n * base
+    imprimir(textos.de_entero(f(10)))
+
+    f = funcion(n: entero) -> entero => n - 5
+    imprimir(textos.de_entero(f(10)))
+    retornar 0
+}

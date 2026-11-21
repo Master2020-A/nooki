@@ -2112,6 +2112,7 @@ const char* PRELUDIO =
     "    void (*soltar)(void*);\n"
     "} nooki_cierre;\n"
     "\n"
+
     "static void nooki_cierre_soltar(nooki_cierre* c) {\n"
     "    if (c == NULL) {\n"
     "        return;\n"
@@ -2122,6 +2123,13 @@ const char* PRELUDIO =
     "    c->codigo = NULL;\n"
     "    c->entorno = NULL;\n"
     "    c->soltar = NULL;\n"
+    "}\n"
+    "\n"
+    "static void nooki_cierre_reemplazar(nooki_cierre* destino, nooki_cierre nuevo) {\n"
+    "    if (destino != NULL) {\n"
+    "        nooki_cierre_soltar(destino);\n"
+    "        *destino = nuevo;\n"
+    "    }\n"
     "}\n"
     "\n"
     "/* ------------------------------------------------------------------ */\n"
@@ -5525,6 +5533,26 @@ private:
             no_soportado("una asignación a algo que no es una variable ni un campo");
             return "0";
         }
+        // Asignar a un cierre: la lambda nueva se envuelve como cierre, se
+        // libera el entorno viejo y se queda el nuevo. Asignar un cierre a otro
+        // sería moverlo, y eso todavía no está.
+        if (nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+            cierres_.count(std::string(nodo.izquierda->lexema)) != 0) {
+            const std::string destino_cierre = std::string(nodo.izquierda->lexema);
+            if (nodo.derecha->tipo == sintactico::TipoExpresion::Identificador &&
+                cierres_.count(std::string(nodo.derecha->lexema)) != 0) {
+                no_soportado("asignar el cierre «" + std::string(nodo.derecha->lexema) + "» a «" +
+                             destino_cierre + "»: mover un cierre todavía no se puede");
+                return "0";
+            }
+            std::string nuevo_valor;
+            {
+                GuardiaCierre guardia(*this);
+                nuevo_valor = expresion(*nodo.derecha);
+            }
+            return "nooki_cierre_reemplazar(&" + destino_cierre + ", " + nuevo_valor + ")";
+        }
+
         // Asignar un texto libera el búfer viejo del destino. Se hace con una
         // función porque el valor nuevo tiene que evaluarse antes de liberar.
         const std::string destino = expresion(*nodo.izquierda);
@@ -6391,11 +6419,14 @@ private:
     /// Deja nombrar un cierre mientras dura: lo usa la llamada a un cierre.
     struct GuardiaCierre {
         explicit GuardiaCierre(EmisorC& emisor)
-            : emisor_(emisor), previo_(emisor.permitir_cierre_) {
+            : emisor_(emisor), previo_(emisor.permitir_cierre_),
+              previo_espera_(emisor.esperando_cierre_) {
             emisor_.permitir_cierre_ = true;
+            emisor_.esperando_cierre_ = true;
         }
         ~GuardiaCierre() {
             emisor_.permitir_cierre_ = previo_;
+            emisor_.esperando_cierre_ = previo_espera_;
         }
         GuardiaCierre(const GuardiaCierre&) = delete;
         GuardiaCierre& operator=(const GuardiaCierre&) = delete;

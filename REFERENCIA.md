@@ -529,7 +529,7 @@ es una sola expresión.
 
 Si la lambda usa variables de fuera, se las lleva copiadas y su tipo es `cierre(A) -> R`. El cierre es dueño
 de lo capturado y lo libera al salir del ámbito. Se puede devolver desde una función (fábricas de callbacks) y pasar a un parámetro
-`cierre(...)`; no se puede copiar ni asignar todavía, ni capturar `Vector`, `Mapa` o `Caja`.
+`cierre(...)`; se puede reasignar a otra lambda (el entorno viejo se libera), pero no copiar de otra variable. No se pueden capturar `Vector`, `Mapa` o `Caja`.
 
 ### Punteros y memoria manual
 

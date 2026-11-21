@@ -4,7 +4,7 @@
 |---|---|
 | **Estado** | Aprobada |
 | **Fecha** | 2026-11-20 |
-| **Sprint** | S144–S146 |
+| **Sprint** | S144–S147 |
 | **Ámbito** | Lenguaje · tipos · propiedad |
 | **Relación** | Extiende ADR-019 (funciones como valor) y reutiliza el modelo de propiedad de ADR-007 |
 
@@ -100,9 +100,12 @@ capturado y cuándo se libera**. Una respuesta mala aquí no se puede cambiar de
 ## Impacto en la implementación
 
 - **S144**: tipo `cierre`, análisis de nombres libres en la lambda, estructura del entorno, copia de
-  capturas, `soltar`. Un cierre se llama y se libera.
-- **S145**: movimiento (asignación, parámetro, retorno), reglas del verificador y diagnóstico de captura
-  imposible (`Vector`/`Mapa`/`Caja`).
-- **S146**: pruebas — fábrica de contadores, `apply` con criterio capturado, comparador con orden fijado
-  antes — y documentación.
+  capturas, `soltar`. Un cierre se llama y se libera. **Hecho** (1.0.16).
+- **S145**: **devolver** un cierre — fábricas de callbacks — con el tipo `cierre(...)` en firmas y
+  declaraciones. **Hecho** (1.0.17).
+- **S146**: **pasar** un cierre a un parámetro `cierre(...)`, con el envoltorio para las lambdas sin
+  capturas. **Hecho** (1.0.18).
+- **S147**: **reasignar** una variable de cierre a otra lambda, liberando el entorno viejo. **Hecho**
+  (1.0.19).
+- **Pendiente**: copiar un cierre de una variable a otra (mover entre variables) y `Caja` compartida.
 - Fase posterior: `Caja` compartida entre cierres, captura por movimiento y cierres dentro de colecciones.

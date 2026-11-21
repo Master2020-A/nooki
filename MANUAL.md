@@ -1903,9 +1903,27 @@ funcion principal() -> entero {
 
 Al pasarlo, el cierre **no se copia**: el parámetro lo usa y el dueño sigue siendo el que lo creó.
 
-**Lo que todavía no se puede** es **asignar** un cierre a otra variable (`otro = el_cierre`): eso sí es mover el
-entorno, y el compilador lo dice con `NOK6003` en vez de generar código raro. Tampoco se pueden capturar
-`Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
+También se puede **cambiar** el cierre de una variable ya declarada; el entorno viejo se libera y se queda el
+nuevo:
+
+```nooki
+usar textos
+
+funcion principal() -> entero {
+    variable base = 1
+    variable f = funcion(n: entero) -> entero => n + base
+    imprimir(textos.de_entero(f(10)))    // 11
+
+    base = 100
+    f = funcion(n: entero) -> entero => n * base
+    imprimir(textos.de_entero(f(10)))    // 1000, con el valor nuevo de base
+    retornar 0
+}
+```
+
+**Lo que todavía no se puede** es **pasar un cierre de una variable a otra** (`otro = el_cierre`): eso sí es
+mover el entorno, y el compilador lo dice con `NOK6003` en vez de generar código raro. Tampoco se pueden
+capturar `Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
 
 ### Recibir argumentos
 

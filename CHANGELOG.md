@@ -3,6 +3,43 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.19] — 2026-11-20
+
+### Sprint 147 — Cambiar el cierre de una variable (2026-11-20)
+
+Última pieza de los cierres: una variable que guarda un cierre puede **pasar a otro**, y el entorno viejo se
+libera en el momento.
+
+```nooki
+variable base = 1
+variable f = funcion(n: entero) -> entero => n + base
+imprimir(textos.de_entero(f(10)))    // 11
+
+base = 100
+f = funcion(n: entero) -> entero => n * base
+imprimir(textos.de_entero(f(10)))    // 1000
+```
+
+Cada asignación captura el valor **de ese momento**, que es lo que uno espera de una copia.
+
+Se hace con `nooki_cierre_reemplazar`, que libera el entorno del destino y se queda con el nuevo. **ASan sobre
+el código generado**: ni una mención a `nooki_ent` ni a `nooki_cierre` en el informe; lo único que sale son
+las 10 bytes del temporal de `textos.de_entero`, el fallo viejo anotado.
+
+### Lo que queda de los cierres
+
+**Pasar un cierre de una variable a otra** (`otro = el_cierre`), que es moverlo entre variables y no una
+copia. Hoy da `NOK6003` con un mensaje que lo dice. Y la `Caja` compartida, que es la que permitiría un
+contador que de verdad acumule entre llamadas.
+
+### ADR-027, puesto al día
+
+El ADR prometía el movimiento en S145; la realidad han sido cuatro sprints (S144 captura, S145 devolver,
+S146 pasar, S147 reasignar). Está corregido en el documento, con lo hecho y lo pendiente, para que el plan no
+mienta.
+
+Caso `0101-reasignar-cierres`.
+
 ## [1.0.18] — 2026-11-20
 
 ### Sprint 146 — Pasar un cierre a otra función (2026-11-20)
