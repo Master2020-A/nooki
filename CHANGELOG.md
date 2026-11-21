@@ -3,6 +3,55 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.16] — 2026-11-20
+
+### Sprint 144 — Cierres: la lambda se lleva lo que usa (2026-11-20)
+
+Hasta hoy una lambda solo veía sus parámetros; nombrar una variable de fuera era `NOK3001`. Ahora **se la
+lleva copiada**:
+
+```nooki
+variable base = 10
+variable saludo = "hola " + ""
+
+variable suma = funcion(n: entero) -> entero => n + base
+variable saluda = funcion(nombre: texto) -> texto => saludo + nombre
+
+imprimir(suma(5))       // 15
+imprimir(saluda("Ana")) // hola Ana
+```
+
+Ese valor es un **cierre**, de tipo `cierre(A) -> R`, y es **dueño** de lo capturado: lo libera al salir del
+ámbito, como un `Vector`. La captura es una copia en el momento de crear la lambda, así que dentro de un
+bucle cada vuelta se lleva la suya.
+
+Por debajo: el generador emite por lambda una estructura de entorno, una función que la reserva copiando las
+capturas (los `texto` con `nooki_texto_copiar`), otra que la libera, y la lambda con el entorno delante.
+Dentro del cuerpo, un nombre capturado se emite como `entorno->campo`.
+
+**ASan sobre el código generado**: los entornos se crean y se liberan; no hay ni un byte del entorno perdido.
+
+### Lo que todavía no, y por qué
+
+`ADR-027` decidió que el cierre **se mueva y no se copie**, igual que `Vector`. Pero mover —asignar, pasar a
+otra función, devolver— es el siguiente sprint. Mientras tanto, esas tres cosas dan un error del lenguaje:
+
+```
+error[NOK6003]: el backend todavía no sabe traducir copiar, pasar o devolver el cierre «f»:
+                por ahora solo se puede llamar
+```
+
+Antes de añadir eso salía un error del compilador de C (`incompatible type for argument 1`), que no le sirve
+a nadie. También está fuera capturar `Vector`, `Mapa` o `Caja`: se mueven, no se copian.
+
+### Un fallo viejo que salió mirando esto
+
+`imprimir(f())` donde `f` devuelve un `texto` **fuga el temporal**. Es anterior a los cierres (se ve igual
+con una función normal) y está anotado como pendiente: los valores con dueño que son temporales no se
+liberan.
+
+Caso `0098-cierres`.
+
 ## [1.0.15] — 2026-11-20
 
 ### Sprint 143 — Pruebas de biblioteca, y un fallo que salió (2026-11-20)

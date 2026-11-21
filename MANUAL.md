@@ -1837,9 +1837,32 @@ funcion principal() -> entero {
 
 La forma es `funcion(parámetros) -> tipo => expresión`, y el cuerpo es **una sola expresión**.
 
-**Lo que no se puede** (todavía) es **devolver** una función desde otra, ni que capture variables de fuera:
-es un puntero, sin memoria propia, así que no hay cierres. Una lambda solo ve sus parámetros, y usar otra
-cosa da `NOK3001` en la línea exacta.
+Si la lambda usa una variable de fuera, se la **lleva copiada**: eso es un **cierre**, y su tipo es
+`cierre(A) -> R`.
+
+```nooki
+usar textos
+
+funcion principal() -> entero {
+    variable base = 10
+    variable saludo = "hola " + ""
+
+    variable suma = funcion(n: entero) -> entero => n + base
+    variable saluda = funcion(nombre: texto) -> texto => saludo + nombre
+
+    imprimir(textos.de_entero(suma(5)))   // 15
+    imprimir(saluda("Ana"))               // hola Ana
+    retornar 0
+}
+```
+
+El cierre **es dueño de lo que capturó** y lo libera al salir del ámbito, igual que un `Vector`. Se copia
+el valor en el momento de crear la lambda: si después cambias `base`, el cierre sigue con el valor viejo, y
+dentro de un bucle cada vuelta captura lo suyo.
+
+**Lo que todavía no se puede** es copiar, pasar a otra función o devolver un cierre: el entorno tiene un solo
+dueño, y moverlo es el siguiente escalón. El compilador lo dice con `NOK6003` en vez de generar código raro.
+Tampoco se pueden capturar `Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
 
 ### Recibir argumentos
 

@@ -527,8 +527,9 @@ funcion principal() -> entero {
 También se puede escribir en el sitio, con una lambda: `funcion(n: entero) -> entero => n * 2`, cuyo cuerpo
 es una sola expresión.
 
-Lo que todavía no se puede es **devolver** una función desde otra, ni capturar variables: no hay cierres, y
-una lambda solo ve sus parámetros.
+Si la lambda usa variables de fuera, se las lleva copiadas y su tipo es `cierre(A) -> R`. El cierre es dueño
+de lo capturado y lo libera al salir del ámbito. No se puede copiar, pasar ni devolver todavía, ni capturar
+`Vector`, `Mapa` o `Caja`.
 
 ### Punteros y memoria manual
 

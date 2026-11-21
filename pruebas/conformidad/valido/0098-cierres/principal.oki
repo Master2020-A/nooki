@@ -1,0 +1,23 @@
+// Un cierre: la lambda se lleva copiado lo que usa de fuera.
+usar textos
+
+funcion principal() -> entero {
+    variable base = 10
+    variable saludo = "hola " + ""
+
+    variable suma = funcion(n: entero) -> entero => n + base
+    variable saluda = funcion(nombre: texto) -> texto => saludo + nombre
+
+    imprimir(textos.de_entero(suma(5)))
+    imprimir(saluda("Ana"))
+
+    // Cada vuelta del bucle captura su propia copia, no la última.
+    variable i = 0
+    mientras (i < 3) {
+        variable del_bucle = i
+        variable dentro = funcion(n: entero) -> entero => n + del_bucle
+        imprimir(textos.de_entero(dentro(100)))
+        i = i + 1
+    }
+    retornar 0
+}

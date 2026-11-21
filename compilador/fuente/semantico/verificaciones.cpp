@@ -1540,9 +1540,15 @@ private:
             const bool es_tipo = tipo_por_nombre(nombre) != nullptr ||
                                  enumeraciones_.count(std::string(nombre)) != 0;
             if (!es_parametro && !es_funcion && !es_tipo) {
-                error(diagnostico::codigos::NOMBRE_NO_DECLARADO, expresion.span)
-                    .parametro("nombre", std::string(nombre))
-                    .ayuda("una lambda solo ve sus parámetros: no hay cierres");
+                // Una variable de fuera se captura copiándola, y solo si se puede
+                // copiar: las colecciones se mueven, no se copian.
+                const std::string_view tipo = buscar_estructura(nombre);
+                const Tipo declarado = buscar(nombre, expresion.span);
+                (void)tipo;
+                if (declarado == Tipo::Desconocido && !declarada(nombre)) {
+                    error(diagnostico::codigos::NOMBRE_NO_DECLARADO, expresion.span)
+                        .parametro("nombre", std::string(nombre));
+                }
             }
             return;
         }

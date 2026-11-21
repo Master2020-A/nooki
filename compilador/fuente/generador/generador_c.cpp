@@ -2102,6 +2102,29 @@ const char* PRELUDIO =
     "}\n"
     "\n"
     "/* ------------------------------------------------------------------ */\n"
+    "/* Cierres: una función con su entorno capturado.                      */\n"
+    "/* El tipo es `cierre(A) -> R`; el entorno es del cierre.              */\n"
+    "/* ------------------------------------------------------------------ */\n"
+    "\n"
+    "typedef struct {\n"
+    "    void* codigo;\n"
+    "    void* entorno;\n"
+    "    void (*soltar)(void*);\n"
+    "} nooki_cierre;\n"
+    "\n"
+    "static void nooki_cierre_soltar(nooki_cierre* c) {\n"
+    "    if (c == NULL) {\n"
+    "        return;\n"
+    "    }\n"
+    "    if (c->soltar != NULL && c->entorno != NULL) {\n"
+    "        c->soltar(c->entorno);\n"
+    "    }\n"
+    "    c->codigo = NULL;\n"
+    "    c->entorno = NULL;\n"
+    "    c->soltar = NULL;\n"
+    "}\n"
+    "\n"
+    "/* ------------------------------------------------------------------ */\n"
     "/* Punteros y memoria manual. Solo se usan dentro de «inseguro».       */\n"
     "/* ------------------------------------------------------------------ */\n"
     "\n"
@@ -2332,6 +2355,13 @@ bool es_comparacion(std::string_view operador) {
 
 class EmisorC {
 public:
+    /// Una lambda ya emitida: su nombre y lo que captura del ámbito.
+    struct InfoLambda {
+        const sintactico::Expresion* nodo = nullptr;
+        std::string nombre;
+        /// Variables de fuera que usa el cuerpo: nombre y tipo de C, en orden.
+        std::vector<std::pair<std::string, std::string>> capturas;
+    };
     std::string generar(const sintactico::Programa& programa) {
         registrar(programa);
 
@@ -2390,29 +2420,88 @@ public:
             sustitucion_.clear();
         }
 
-        // Las lambdas, como funciones aparte: solo ven sus parámetros.
-        for (const sintactico::Expresion* lambda : lambdas_) {
-            const std::string nombre = nombres_lambda_.at(lambda);
-            salida_ << "static " << tipo_declarado_c(lambda->vuelta_lambda) << ' ' << nombre << '(';
-            if (lambda->nombres_lambda.empty()) {
+        // Las lambdas, como funciones aparte. Si capturan, antes va la estructura
+        // de su entorno, con su reserva y su liberación.
+        for (const InfoLambda& info : lambdas_) {
+            const sintactico::Expresion& lambda = *info.nodo;
+            const std::string entorno = "nooki_ent_" + info.nombre;
+
+            if (!info.capturas.empty()) {
+                salida_ << "typedef struct {\n";
+                for (std::size_t i = 0; i < info.capturas.size(); ++i) {
+                    salida_ << "    " << info.capturas[i].second << " campo_" << i << ";\n";
+                }
+                salida_ << "} " << entorno << ";\n\n";
+
+                salida_ << "static " << entorno << "* " << entorno << "_crear(";
+                for (std::size_t i = 0; i < info.capturas.size(); ++i) {
+                    if (i > 0) {
+                        salida_ << ", ";
+                    }
+                    salida_ << info.capturas[i].second << " c" << i;
+                }
+                salida_ << ") {\n";
+                salida_ << "    " << entorno << "* e = (" << entorno << "*)malloc(sizeof("
+                        << entorno << "));\n";
+                salida_ << "    if (e == NULL) {\n        return NULL;\n    }\n";
+                for (std::size_t i = 0; i < info.capturas.size(); ++i) {
+                    if (info.capturas[i].second == "nooki_texto") {
+                        salida_ << "    e->campo_" << i << " = nooki_texto_copiar(c" << i << ");\n";
+                    } else {
+                        salida_ << "    e->campo_" << i << " = c" << i << ";\n";
+                    }
+                }
+                salida_ << "    return e;\n}\n\n";
+
+                salida_ << "static void " << entorno << "_soltar(void* p) {\n";
+                salida_ << "    " << entorno << "* e = (" << entorno << "*)p;\n";
+                salida_ << "    if (e == NULL) {\n        return;\n    }\n";
+                for (std::size_t i = 0; i < info.capturas.size(); ++i) {
+                    if (info.capturas[i].second == "nooki_texto") {
+                        salida_ << "    nooki_texto_soltar(&e->campo_" << i << ");\n";
+                    }
+                }
+                salida_ << "    free(e);\n}\n\n";
+            }
+
+            salida_ << "static " << tipo_declarado_c(lambda.vuelta_lambda) << ' ' << info.nombre
+                    << '(';
+            if (!info.capturas.empty()) {
+                salida_ << "void* entorno__";
+                if (!lambda.nombres_lambda.empty()) {
+                    salida_ << ", ";
+                }
+            }
+            if (lambda.nombres_lambda.empty() && info.capturas.empty()) {
                 salida_ << "void";
             }
             abrir_ambito();
+            // Lo capturado se declara con su tipo para poder emitir el cuerpo.
+            for (const auto& [capturado, tipo_capturado] : info.capturas) {
+                declarar(capturado, tipo_capturado);
+            }
             bool primero_parametro = true;
-            for (std::size_t i = 0; i < lambda->nombres_lambda.size(); ++i) {
-                const std::string tipo_parametro = tipo_de_parametro_c(lambda->tipos_lambda[i]);
+            for (std::size_t i = 0; i < lambda.nombres_lambda.size(); ++i) {
+                const std::string tipo_parametro = tipo_de_parametro_c(lambda.tipos_lambda[i]);
                 if (!primero_parametro) {
                     salida_ << ", ";
                 }
                 primero_parametro = false;
-                salida_ << tipo_parametro << ' ' << lambda->nombres_lambda[i];
-                declarar(lambda->nombres_lambda[i], tipo_parametro);
+                salida_ << tipo_parametro << ' ' << lambda.nombres_lambda[i];
+                declarar(lambda.nombres_lambda[i], tipo_parametro);
             }
             salida_ << ") {\n";
             ++nivel_;
+            if (!info.capturas.empty()) {
+                salida_ << indentacion() << entorno << "* entorno_actual__ = (" << entorno
+                        << "*)entorno__;\n";
+                salida_ << indentacion() << "(void)entorno_actual__;\n";
+            }
+            lambda_actual_ = &info;
             salida_ << indentacion() << "return ";
-            salida_ << (lambda->cuerpo_lambda ? expresion(*lambda->cuerpo_lambda) : "0");
+            salida_ << (lambda.cuerpo_lambda ? expresion(*lambda.cuerpo_lambda) : "0");
             salida_ << ";\n";
+            lambda_actual_ = nullptr;
             --nivel_;
             salida_ << "}\n\n";
             cerrar_ambito();
@@ -3625,6 +3714,85 @@ private:
         return "long long";
     }
 
+    /// La lambda registrada, registrándola si es la primera vez que se ve. Se
+    /// llama desde el tipo y desde la emisión, porque el tipo se pide antes.
+    const InfoLambda& asegurar_lambda(const sintactico::Expresion& nodo) const {
+        const auto conocida = indice_lambda_.find(&nodo);
+        if (conocida != indice_lambda_.end()) {
+            return lambdas_[conocida->second];
+        }
+        InfoLambda info;
+        info.nodo = &nodo;
+        info.nombre = "nooki_lambda_" + std::to_string(lambdas_.size());
+        if (nodo.cuerpo_lambda) {
+            capturas_del_cuerpo(*nodo.cuerpo_lambda, nodo, info.capturas);
+        }
+        indice_lambda_[&nodo] = lambdas_.size();
+        lambdas_.push_back(std::move(info));
+        return lambdas_.back();
+    }
+
+    /// Cómo se construye un cierre en el punto donde está la lambda: se reserva
+    /// el entorno, se copian las capturas y el cierre se queda con él.
+    std::string construccion_cierre(const InfoLambda& info) {
+        std::string llamada = "nooki_ent_" + info.nombre + "_crear(";
+        bool primero = true;
+        for (const auto& [nombre, tipo] : info.capturas) {
+            if (!primero) {
+                llamada += ", ";
+            }
+            primero = false;
+            llamada += nombre;
+            (void)tipo;
+        }
+        llamada += ')';
+        std::string salida = "(nooki_cierre){ .codigo = (void*)" + info.nombre +
+                             ", .entorno = " + llamada + ", .soltar = nooki_ent_" + info.nombre +
+                             "_soltar }";
+        return salida;
+    }
+
+    /// Los nombres del cuerpo que no son parámetros de la lambda ni funciones:
+    /// eso es lo que hay que capturar, y en ese orden.
+    void capturas_del_cuerpo(const sintactico::Expresion& expresion,
+                             const sintactico::Expresion& lambda,
+                             std::vector<std::pair<std::string, std::string>>& salida) const {
+        if (expresion.tipo == sintactico::TipoExpresion::Identificador) {
+            const std::string nombre(expresion.lexema);
+            bool es_parametro = false;
+            for (const std::string_view suyo : lambda.nombres_lambda) {
+                if (suyo == nombre) {
+                    es_parametro = true;
+                    break;
+                }
+            }
+            if (es_parametro || !declarada_aqui(nombre) || retornos_.count(nombre) != 0) {
+                return;
+            }
+            for (const auto& [capturado, _] : salida) {
+                if (capturado == nombre) {
+                    return;
+                }
+            }
+            salida.emplace_back(nombre, buscar(nombre));
+            return;
+        }
+        if (expresion.izquierda) {
+            capturas_del_cuerpo(*expresion.izquierda, lambda, salida);
+        }
+        if (expresion.derecha) {
+            capturas_del_cuerpo(*expresion.derecha, lambda, salida);
+        }
+        for (const sintactico::ExpresionPtr& hijo : expresion.lista) {
+            if (hijo) {
+                capturas_del_cuerpo(*hijo, lambda, salida);
+            }
+        }
+        if (expresion.cuerpo_lambda) {
+            capturas_del_cuerpo(*expresion.cuerpo_lambda, lambda, salida);
+        }
+    }
+
     /// ¿Hay una variable con ese nombre en algún ámbito?
     bool declarada_aqui(const std::string& nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
@@ -4105,6 +4273,26 @@ private:
             return;
         }
 
+        // Un cierre guardado en una variable: se recuerda su firma para poder
+        // llamarlo y para saber qué devuelve.
+        if (sentencia.expresion->tipo == sintactico::TipoExpresion::Lambda) {
+            const sintactico::Expresion& lambda = *sentencia.expresion;
+            std::string tipos;
+            for (const std::string_view tipo_parametro : lambda.tipos_lambda) {
+                if (!tipos.empty()) {
+                    tipos += ", ";
+                }
+                tipos += tipo_declarado_c(tipo_parametro);
+            }
+            if (!asegurar_lambda(lambda).capturas.empty()) {
+                cierres_[std::string(sentencia.nombre)] = {tipo_declarado_c(lambda.vuelta_lambda),
+                                                           tipos};
+                // El cierre es dueño de su entorno: se libera al salir del ámbito.
+                ambitos_.back().liberables.push_back(
+                    {std::string(sentencia.nombre), "nooki_cierre_soltar", false});
+            }
+        }
+
         // `variable f: funcion(entero) -> entero = doblar` y las lambdas: el
         // puntero lleva el nombre dentro, así que la declaración va aparte.
         if (!sentencia.tipo_declarado.empty() &&
@@ -4353,6 +4541,10 @@ private:
         case TipoExpresion::Identificador:
             return buscar(expresion.lexema);
         case TipoExpresion::Lambda: {
+            // Si captura, el valor es un cierre; si no, un puntero a función.
+            if (!asegurar_lambda(expresion).capturas.empty()) {
+                return "nooki_cierre";
+            }
             std::string parametros;
             for (const std::string_view tipo_parametro : expresion.tipos_lambda) {
                 if (!parametros.empty()) {
@@ -4706,6 +4898,18 @@ private:
                         return "void";
                     }
                 }
+                // Llamar a un cierre: su tipo de vuelta está apuntado.
+                if (expresion.izquierda->tipo == TipoExpresion::Identificador) {
+                    const auto cierre = cierres_.find(std::string(expresion.izquierda->lexema));
+                    if (cierre != cierres_.end()) {
+                        for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                            if (argumento) {
+                                tipo_de(*argumento);
+                            }
+                        }
+                        return cierre->second.first;
+                    }
+                }
                 // Una variable de tipo función: su tipo de vuelta es el de delante
                 // de `(*)`.
                 if (expresion.izquierda->tipo == TipoExpresion::Identificador &&
@@ -4793,24 +4997,38 @@ private:
         case TipoExpresion::Nulo:
             return "NULL";
         case TipoExpresion::Identificador: {
+            const std::string nombre = std::string(nodo.lexema);
+            // Dentro de una lambda, lo capturado vive en su entorno.
+            if (lambda_actual_ != nullptr) {
+                for (std::size_t i = 0; i < lambda_actual_->capturas.size(); ++i) {
+                    if (lambda_actual_->capturas[i].first == nombre) {
+                        return "entorno_actual__->campo_" + std::to_string(i);
+                    }
+                }
+            }
+            // Un cierre que aparece sin llamarlo se está copiando, y el entorno
+            // tiene un solo dueño: eso pide moverlo, que todavía no está.
+            if (cierres_.count(nombre) != 0) {
+                no_soportado("copiar, pasar o devolver el cierre «" + nombre +
+                             "»: por ahora solo se puede llamar");
+                return "0";
+            }
             // Una función usada como valor (para pasarla como argumento) se
             // emite con su nombre en C.
-            const std::string nombre = std::string(nodo.lexema);
             if (!declarada_aqui(nombre) && retornos_.count(nombre) != 0) {
                 return nombre_c(nombre);
             }
             return nombre;
         }
         case TipoExpresion::Lambda: {
-            // La lambda se emite como una función aparte; aquí va su nombre.
-            const auto conocida = nombres_lambda_.find(&nodo);
-            if (conocida != nombres_lambda_.end()) {
-                return conocida->second;
+            // La lambda se emite aparte. Si captura, esta expresión construye el
+            // cierre: el entorno se reserva y se copia aquí, y el cierre se queda
+            // con él.
+            const InfoLambda& info = asegurar_lambda(nodo);
+            if (info.capturas.empty()) {
+                return info.nombre;
             }
-            const std::string nombre = "nooki_lambda_" + std::to_string(lambdas_.size());
-            nombres_lambda_[&nodo] = nombre;
-            lambdas_.push_back(&nodo);
-            return nombre;
+            return construccion_cierre(info);
         }
         case TipoExpresion::Construccion:
             return construccion(nodo);
@@ -5661,6 +5879,30 @@ private:
             return std::string(funcion) + "(" + valor + ")";
         }
 
+        // Un cierre se llama por su `codigo`, pasándole el entorno delante.
+        if (nombre_llamado.size() > 0 && nodo.izquierda &&
+            nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador) {
+            const auto cierre = cierres_.find(std::string(nombre_llamado));
+            if (cierre != cierres_.end()) {
+                std::string tipos = "void*";
+                if (!cierre->second.second.empty()) {
+                    tipos += ", " + cierre->second.second;
+                }
+                std::string salida = "((" + cierre->second.first + " (*)(" + tipos + "))" +
+                                     std::string(nombre_llamado) + ".codigo)(" +
+                                     std::string(nombre_llamado) + ".entorno";
+                for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                    if (!argumento) {
+                        continue;
+                    }
+                    salida += ", ";
+                    salida += expresion(*argumento);
+                }
+                salida += ')';
+                return salida;
+            }
+        }
+
         // Llamar a un parámetro de tipo función es llamar a su puntero: el nombre
         // va tal cual, sin el prefijo `nooki_`.
         std::string nombre_para_c = nombre_c(nombre_llamado);
@@ -6041,9 +6283,15 @@ private:
     std::set<std::string> vectores_de_estructura_;
     /// Estructuras con algún campo de texto, para copiarlo y liberarlo.
     std::set<std::string> estructuras_con_texto_;
-    /// Lambdas encontradas al emitir: su nodo y el nombre que se les dio.
-    std::vector<const sintactico::Expresion*> lambdas_;
-    std::map<const sintactico::Expresion*, std::string> nombres_lambda_;
+
+    mutable std::vector<InfoLambda> lambdas_;
+    mutable std::map<const sintactico::Expresion*, std::size_t> indice_lambda_;
+    /// `tipo_de` es const y tiene que poder registrar la lambda que ve.
+    mutable std::vector<const sintactico::Expresion*> por_ver_;
+    /// Firma de cada variable de tipo cierre: nombre → (vuelta, tipos de los parámetros).
+    std::map<std::string, std::pair<std::string, std::string>> cierres_;
+    /// La lambda cuyo cuerpo se está emitiendo, si es que hay alguna.
+    const InfoLambda* lambda_actual_ = nullptr;
     std::set<std::string> compuestos_con_dueno_;
     std::set<std::string> rasgos_;
     std::set<std::string> externas_;
