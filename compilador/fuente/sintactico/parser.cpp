@@ -1480,9 +1480,10 @@ std::string_view Parser::analizar_tipo_texto() {
         }
     }
 
-    // Tipo función: `funcion(entero, texto) -> flotante`. Se guarda el texto tal
-    // cual, como los genéricos, y el generador lo traduce a un puntero de C.
-    if (actual().lexema == "funcion") {
+    // Tipo función: `funcion(entero, texto) -> flotante`; y tipo cierre, que es
+    // lo mismo pero llevándose el entorno. Se guarda el texto tal cual, como los
+    // genéricos, y el generador lo traduce.
+    if (actual().lexema == "funcion" || actual().lexema == "cierre") {
         int parentesis = 0;
         bool cerrado = false;
         while (!actual().es(TipoToken::FinDeArchivo)) {

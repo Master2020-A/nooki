@@ -528,8 +528,8 @@ También se puede escribir en el sitio, con una lambda: `funcion(n: entero) -> e
 es una sola expresión.
 
 Si la lambda usa variables de fuera, se las lleva copiadas y su tipo es `cierre(A) -> R`. El cierre es dueño
-de lo capturado y lo libera al salir del ámbito. No se puede copiar, pasar ni devolver todavía, ni capturar
-`Vector`, `Mapa` o `Caja`.
+de lo capturado y lo libera al salir del ámbito. Se puede devolver desde una función (fábricas de callbacks);
+no se puede copiar ni pasar todavía, ni capturar `Vector`, `Mapa` o `Caja`.
 
 ### Punteros y memoria manual
 

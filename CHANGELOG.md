@@ -3,6 +3,49 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.17] — 2026-11-20
+
+### Sprint 145 — Fábricas de cierres (2026-11-20)
+
+La 1.0.16 capturaba, pero un cierre no podía salir de la función que lo creó. Ahora **se devuelve**,
+escribiendo el tipo `cierre(A) -> R`:
+
+```nooki
+funcion sumador(base: entero) -> cierre(entero) -> entero {
+    retornar funcion(n: entero) -> entero => n + base
+}
+
+funcion principal() -> entero {
+    variable mas_cinco: cierre(entero) -> entero = sumador(5)
+    imprimir(textos.de_entero(mas_cinco(2)))   // 7
+    retornar 0
+}
+```
+
+Cada llamada da un entorno nuevo, así que dos sumadores no se pisan. El cierre que recibe el llamante es el
+dueño y lo libera al salir de su ámbito.
+
+Por debajo: el tipo `cierre(...)` se traduce a `nooki_cierre`; el tipo de vuelta de una función puede serlo;
+al declarar una variable con ese tipo se apunta su firma (para poder llamarla y saber qué devuelve) y se
+marca como algo que hay que liberar al salir del ámbito.
+
+**ASan sobre el código generado**: el cierre nace en la fábrica, se usa en `main` y se libera allí; sin fugas
+ni dobles liberaciones.
+
+### Lo que queda para el sprint siguiente
+
+**Pasar un cierre a otra función** y **asignarlo** a otra variable. Las dos son mover el entorno, y el
+mensaje actual lo dice sin rodeos:
+
+```
+error[NOK6003]: ... copiar, pasar o devolver el cierre «f»: por ahora solo se puede llamar
+```
+
+Ese mensaje ya no es del todo cierto —devolver sí se puede—, así que se ajustará al añadir el paso por
+parámetro.
+
+Caso `0099-fabrica-de-cierres`.
+
 ## [1.0.16] — 2026-11-20
 
 ### Sprint 144 — Cierres: la lambda se lleva lo que usa (2026-11-20)

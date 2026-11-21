@@ -2589,6 +2589,9 @@ public:
         ++nivel_;
         for (const sintactico::Parametro& parametro : funcion.parametros) {
             declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
+            if (parametro.tipo.rfind("cierre(", 0) == 0) {
+                cierres_[std::string(parametro.nombre)] = firma_cierre(parametro.tipo);
+            }
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, false);
@@ -3716,6 +3719,28 @@ private:
 
     /// La lambda registrada, registrándola si es la primera vez que se ve. Se
     /// llama desde el tipo y desde la emisión, porque el tipo se pide antes.
+    /// De un tipo `cierre(A, B) -> R` saca (R, "A, B") ya en tipos de C.
+    std::pair<std::string, std::string> firma_cierre(std::string_view tipo) const {
+        const std::size_t abre = tipo.find('(');
+        const std::size_t cierra = tipo.find(')');
+        const std::size_t flecha = tipo.find("->");
+        if (abre == std::string_view::npos || cierra == std::string_view::npos ||
+            flecha == std::string_view::npos) {
+            return {"long long", ""};
+        }
+        std::string parametros(tipo.substr(abre + 1, cierra - abre - 1));
+        std::string vuelta(tipo.substr(flecha + 2));
+        const auto limpiar = [](std::string& texto) {
+            const std::size_t primero = texto.find_first_not_of(" \t\n");
+            const std::size_t ultimo = texto.find_last_not_of(" \t\n");
+            texto = primero == std::string::npos ? std::string()
+                                                 : texto.substr(primero, ultimo - primero + 1);
+        };
+        limpiar(parametros);
+        limpiar(vuelta);
+        return {tipo_declarado_c(vuelta),
+                parametros.empty() ? std::string() : tipo_lista_c(parametros)};
+    }
     const InfoLambda& asegurar_lambda(const sintactico::Expresion& nodo) const {
         const auto conocida = indice_lambda_.find(&nodo);
         if (conocida != indice_lambda_.end()) {
@@ -3871,6 +3896,10 @@ private:
 
     /// Tipo de C de un tipo escrito, con los tipos función resueltos.
     std::string tipo_de_parametro_c(std::string_view escrito) const {
+        // Un cierre es una estructura: codigo, entorno y cómo liberarlo.
+        if (escrito.rfind("cierre(", 0) == 0) {
+            return "nooki_cierre";
+        }
         if (escrito.rfind("funcion(", 0) == 0) {
             const std::size_t cierra = escrito.find(')');
             const std::size_t flecha = escrito.find("->");
@@ -3978,7 +4007,7 @@ private:
 
     std::string firma(const sintactico::Funcion& funcion) const {
         std::string salida = "static ";
-        salida += tipo_declarado_c(funcion.tipo_retorno);
+        salida += tipo_de_parametro_c(funcion.tipo_retorno);
         salida += ' ';
         salida += nombre_funcion_c(funcion);
         salida += '(';
@@ -4048,6 +4077,9 @@ private:
         ++nivel_;
         for (const sintactico::Parametro& parametro : metodo.parametros) {
             declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
+            if (parametro.tipo.rfind("cierre(", 0) == 0) {
+                cierres_[std::string(parametro.nombre)] = firma_cierre(parametro.tipo);
+            }
         }
         for (const sintactico::Sentencia& sentencia : metodo.cuerpo) {
             emitir_sentencia(sentencia, false);
@@ -4081,6 +4113,9 @@ private:
         ++nivel_;
         for (const sintactico::Parametro& parametro : funcion.parametros) {
             declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
+            if (parametro.tipo.rfind("cierre(", 0) == 0) {
+                cierres_[std::string(parametro.nombre)] = firma_cierre(parametro.tipo);
+            }
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, principal);
@@ -4273,6 +4308,13 @@ private:
             return;
         }
 
+        // `variable f: cierre(A) -> R = fabrica(...)`: la firma viene del tipo.
+        if (sentencia.tipo_declarado.rfind("cierre(", 0) == 0) {
+            cierres_[std::string(sentencia.nombre)] = firma_cierre(sentencia.tipo_declarado);
+            ambitos_.back().liberables.push_back(
+                {std::string(sentencia.nombre), "nooki_cierre_soltar", false});
+        }
+
         // Un cierre guardado en una variable: se recuerda su firma para poder
         // llamarlo y para saber qué devuelve.
         if (sentencia.expresion->tipo == sintactico::TipoExpresion::Lambda) {
@@ -4308,7 +4350,7 @@ private:
 
         std::string tipo = sentencia.tipo_declarado.empty()
                                ? tipo_de(*sentencia.expresion)
-                               : tipo_declarado_c(sentencia.tipo_declarado);
+                               : tipo_de_parametro_c(sentencia.tipo_declarado);
 
         // Un puntero a función, venga de donde venga: el nombre va dentro.
         if (const std::size_t puntero = tipo.find(" (*)("); puntero != std::string::npos) {
@@ -5008,7 +5050,7 @@ private:
             }
             // Un cierre que aparece sin llamarlo se está copiando, y el entorno
             // tiene un solo dueño: eso pide moverlo, que todavía no está.
-            if (cierres_.count(nombre) != 0) {
+            if (cierres_.count(nombre) != 0 && !permitir_cierre_) {
                 no_soportado("copiar, pasar o devolver el cierre «" + nombre +
                              "»: por ahora solo se puede llamar");
                 return "0";
@@ -5881,7 +5923,10 @@ private:
 
         // Un cierre se llama por su `codigo`, pasándole el entorno delante.
         if (nombre_llamado.size() > 0 && nodo.izquierda &&
-            nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador) {
+            nodo.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+            cierres_.count(std::string(nombre_llamado)) != 0) {
+            GuardiaCierre guardia(*this);
+
             const auto cierre = cierres_.find(std::string(nombre_llamado));
             if (cierre != cierres_.end()) {
                 std::string tipos = "void*";
@@ -6290,6 +6335,25 @@ private:
     mutable std::vector<const sintactico::Expresion*> por_ver_;
     /// Firma de cada variable de tipo cierre: nombre → (vuelta, tipos de los parámetros).
     std::map<std::string, std::pair<std::string, std::string>> cierres_;
+    /// Mientras se emite un argumento que es un cierre prestado.
+    bool permitir_cierre_ = false;
+
+    /// Deja nombrar un cierre mientras dura: lo usa la llamada a un cierre.
+    struct GuardiaCierre {
+        explicit GuardiaCierre(EmisorC& emisor)
+            : emisor_(emisor), previo_(emisor.permitir_cierre_) {
+            emisor_.permitir_cierre_ = true;
+        }
+        ~GuardiaCierre() {
+            emisor_.permitir_cierre_ = previo_;
+        }
+        GuardiaCierre(const GuardiaCierre&) = delete;
+        GuardiaCierre& operator=(const GuardiaCierre&) = delete;
+
+    private:
+        EmisorC& emisor_;
+        bool previo_;
+    };
     /// La lambda cuyo cuerpo se está emitiendo, si es que hay alguna.
     const InfoLambda* lambda_actual_ = nullptr;
     std::set<std::string> compuestos_con_dueno_;

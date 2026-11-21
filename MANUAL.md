@@ -1860,9 +1860,27 @@ El cierre **es dueño de lo que capturó** y lo libera al salir del ámbito, igu
 el valor en el momento de crear la lambda: si después cambias `base`, el cierre sigue con el valor viejo, y
 dentro de un bucle cada vuelta captura lo suyo.
 
-**Lo que todavía no se puede** es copiar, pasar a otra función o devolver un cierre: el entorno tiene un solo
-dueño, y moverlo es el siguiente escalón. El compilador lo dice con `NOK6003` en vez de generar código raro.
-Tampoco se pueden capturar `Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
+Un cierre se puede **devolver** desde una función —lo que da fábricas de callbacks— escribiendo su tipo:
+
+```nooki
+usar textos
+
+funcion sumador(base: entero) -> cierre(entero) -> entero {
+    retornar funcion(n: entero) -> entero => n + base
+}
+
+funcion principal() -> entero {
+    variable mas_cinco: cierre(entero) -> entero = sumador(5)
+    imprimir(textos.de_entero(mas_cinco(2)))   // 7
+    retornar 0
+}
+```
+
+Cada llamada a la fábrica da un entorno nuevo, así que dos sumadores no se pisan.
+
+**Lo que todavía no se puede** es copiar un cierre o pasarlo a otra función: el entorno tiene un solo dueño, y
+moverlo en esos dos caminos es el siguiente escalón. El compilador lo dice con `NOK6003` en vez de generar
+código raro. Tampoco se pueden capturar `Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
 
 ### Recibir argumentos
 

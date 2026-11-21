@@ -180,8 +180,8 @@ private:
         if (tipo.rfind("Vector<", 0) == 0) {
             return true;
         }
-        // Un tipo función: `funcion(entero) -> entero`.
-        if (tipo.rfind("funcion(", 0) == 0) {
+        // Un tipo función o un cierre.
+        if (tipo.rfind("funcion(", 0) == 0 || tipo.rfind("cierre(", 0) == 0) {
             return true;
         }
         if (tipo.rfind("Mapa<", 0) == 0) {
@@ -629,8 +629,10 @@ private:
             if (parametro.tipo.find("Vector<texto>") != std::string_view::npos) {
                 declarar_vector_texto(parametro.nombre);
             }
-            // Un parámetro que es una función se recuerda para poder llamarlo.
-            if (parametro.tipo.rfind("funcion(", 0) == 0) {
+            // Un parámetro que es una función o un cierre se recuerda para poder
+            // llamarlo.
+            if (parametro.tipo.rfind("funcion(", 0) == 0 ||
+                parametro.tipo.rfind("cierre(", 0) == 0) {
                 funciones_parametro[std::string(parametro.nombre)] = std::string(parametro.tipo);
             }
         }
@@ -682,8 +684,8 @@ private:
         if (base == "Puntero") {
             return;
         }
-        // Un tipo función: `funcion(entero) -> entero`.
-        if (base.rfind("funcion(", 0) == 0) {
+        // Un tipo función o un cierre: `funcion(entero) -> entero`.
+        if (base.rfind("funcion(", 0) == 0 || base.rfind("cierre(", 0) == 0) {
             return;
         }
         // Genéricos de la biblioteca.
@@ -722,7 +724,8 @@ private:
             // El tipo que se escribe tiene que existir. Sin esto, `variable n:
             // natural = 1` se aceptaba y acababa siendo un `entero` en C.
             revisar_tipo_declarado(sentencia.tipo_declarado, sentencia.span);
-            if (sentencia.tipo_declarado.rfind("funcion(", 0) == 0) {
+            if (sentencia.tipo_declarado.rfind("funcion(", 0) == 0 ||
+                sentencia.tipo_declarado.rfind("cierre(", 0) == 0) {
                 ambitos_.back().funciones[std::string(sentencia.nombre)] =
                     std::string(sentencia.tipo_declarado);
             } else if (sentencia.expresion && sentencia.expresion->tipo == TipoExpresion::Lambda) {

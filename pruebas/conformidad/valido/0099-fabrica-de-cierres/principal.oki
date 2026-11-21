@@ -1,0 +1,18 @@
+// Una función que devuelve un cierre: lo que hoy no se podía escribir.
+usar textos
+
+funcion sumador(base: entero) -> cierre(entero) -> entero {
+    retornar funcion(n: entero) -> entero => n + base
+}
+
+funcion principal() -> entero {
+    variable mas_cinco: cierre(entero) -> entero = sumador(5)
+    variable mas_cien: cierre(entero) -> entero = sumador(100)
+
+    imprimir(textos.de_entero(mas_cinco(2)))
+    imprimir(textos.de_entero(mas_cien(2)))
+
+    // Cada fábrica da su propio entorno: no se pisan.
+    imprimir(textos.de_entero(mas_cinco(1)))
+    retornar 0
+}
