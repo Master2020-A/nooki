@@ -2504,6 +2504,27 @@ public:
             lambda_actual_ = nullptr;
             --nivel_;
             salida_ << "}\n\n";
+
+            // El envoltorio: la misma función, con el entorno delante e ignorado.
+            // Sirve para pasar una lambda sin capturas donde piden un cierre.
+            if (info.capturas.empty()) {
+                salida_ << "static " << tipo_declarado_c(lambda.vuelta_lambda) << ' ' << info.nombre
+                        << "_envoltorio(void* entorno__";
+                for (std::size_t i = 0; i < lambda.nombres_lambda.size(); ++i) {
+                    salida_ << ", " << tipo_de_parametro_c(lambda.tipos_lambda[i]) << ' '
+                            << lambda.nombres_lambda[i];
+                }
+                salida_ << ") {\n";
+                salida_ << "    (void)entorno__;\n";
+                salida_ << "    return " << info.nombre << '(';
+                for (std::size_t i = 0; i < lambda.nombres_lambda.size(); ++i) {
+                    if (i > 0) {
+                        salida_ << ", ";
+                    }
+                    salida_ << lambda.nombres_lambda[i];
+                }
+                salida_ << ");\n}\n\n";
+            }
             cerrar_ambito();
         }
 
@@ -5051,8 +5072,8 @@ private:
             // Un cierre que aparece sin llamarlo se está copiando, y el entorno
             // tiene un solo dueño: eso pide moverlo, que todavía no está.
             if (cierres_.count(nombre) != 0 && !permitir_cierre_) {
-                no_soportado("copiar, pasar o devolver el cierre «" + nombre +
-                             "»: por ahora solo se puede llamar");
+                no_soportado("asignar o copiar el cierre «" + nombre +
+                             "»: se puede llamar y pasar, pero no copiar");
                 return "0";
             }
             // Una función usada como valor (para pasarla como argumento) se
@@ -5068,6 +5089,12 @@ private:
             // con él.
             const InfoLambda& info = asegurar_lambda(nodo);
             if (info.capturas.empty()) {
+                // Sin capturas es un puntero; si el destino pide un cierre, se
+                // envuelve con su envoltorio, que ignora el entorno.
+                if (esperando_cierre_) {
+                    return "(nooki_cierre){ .codigo = (void*)" + info.nombre +
+                           "_envoltorio, .entorno = NULL, .soltar = NULL }";
+                }
                 return info.nombre;
             }
             return construccion_cierre(info);
@@ -6013,7 +6040,28 @@ private:
             }
             primero = false;
 
-            std::string valor = expresion(*argumento);
+            // Un cierre se pasa a un parámetro `cierre(...)` sin copiarlo: el
+            // entorno sigue siendo de quien lo creó y el parámetro solo lo usa.
+            const bool parametro_es_cierre = declarados != parametros_.end() &&
+                                             i < declarados->second.size() &&
+                                             declarados->second[i].rfind("cierre(", 0) == 0;
+
+            std::string valor;
+            if (parametro_es_cierre && argumento->tipo == sintactico::TipoExpresion::Lambda) {
+                // Una lambda que va a un parámetro cierre se envuelve aquí, sin
+                // depender de en qué contexto se esté emitiendo.
+                GuardiaCierre guardia(*this);
+                const InfoLambda& info = asegurar_lambda(*argumento);
+                valor = info.capturas.empty()
+                            ? "((nooki_cierre){ .codigo = (void*)" + info.nombre +
+                                  "_envoltorio, .entorno = NULL, .soltar = NULL })"
+                            : construccion_cierre(info);
+            } else if (parametro_es_cierre) {
+                GuardiaCierre guardia(*this);
+                valor = expresion(*argumento);
+            } else {
+                valor = expresion(*argumento);
+            }
 
             // `&p` donde `p` ya es una referencia (una clase): se pasa tal cual.
             if (declarados != parametros_.end() && i < declarados->second.size() &&
@@ -6337,6 +6385,8 @@ private:
     std::map<std::string, std::pair<std::string, std::string>> cierres_;
     /// Mientras se emite un argumento que es un cierre prestado.
     bool permitir_cierre_ = false;
+    /// Mientras se emite un argumento que tiene que ser un cierre.
+    bool esperando_cierre_ = false;
 
     /// Deja nombrar un cierre mientras dura: lo usa la llamada a un cierre.
     struct GuardiaCierre {
@@ -6353,6 +6403,7 @@ private:
     private:
         EmisorC& emisor_;
         bool previo_;
+        bool previo_espera_;
     };
     /// La lambda cuyo cuerpo se está emitiendo, si es que hay alguna.
     const InfoLambda* lambda_actual_ = nullptr;

@@ -3,6 +3,39 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.18] — 2026-11-20
+
+### Sprint 146 — Pasar un cierre a otra función (2026-11-20)
+
+Faltaba lo que hace útil un cierre: dárselo a otra función. Ahora se pasa a un parámetro `cierre(...)`:
+
+```nooki
+funcion aplicar(f: cierre(entero) -> entero, n: entero) -> entero {
+    retornar f(n)
+}
+
+variable mas_cinco: cierre(entero) -> entero = sumador(5)
+imprimir(textos.de_entero(aplicar(mas_cinco, 10)))                             // 15
+imprimir(textos.de_entero(aplicar(funcion(n: entero) -> entero => n * 2, 21))) // 42
+```
+
+La segunda línea es la que más costó: una lambda **sin capturas** es un puntero, y un cierre es una estructura.
+Para que encajen, cada lambda sin capturas gana un **envoltorio** —la misma función con el entorno delante e
+ignorado— y se envuelve en el sitio de la llamada cuando el parámetro lo pide.
+
+Al pasarlo, el cierre **no se copia**: el parámetro lo usa y el dueño sigue siendo quien lo creó, así que el
+llamante lo libera como siempre.
+
+**ASan sobre el código generado**: ningún entorno perdido. El único informe que sale son 9 bytes del temporal
+de `imprimir(textos.de_entero(...))`, que es el fallo viejo ya anotado.
+
+### El mensaje, corregido
+
+Decía «copiar, pasar o devolver el cierre», y pasaba de ser inexacto a mentir: devolver se puede desde la
+1.0.17 y pasar desde esta. Ahora dice **«asignar o copiar»**, que es lo único que sigue sin poder hacerse.
+
+Caso `0100-pasar-cierres`.
+
 ## [1.0.17] — 2026-11-20
 
 ### Sprint 145 — Fábricas de cierres (2026-11-20)

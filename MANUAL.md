@@ -1878,9 +1878,34 @@ funcion principal() -> entero {
 
 Cada llamada a la fábrica da un entorno nuevo, así que dos sumadores no se pisan.
 
-**Lo que todavía no se puede** es copiar un cierre o pasarlo a otra función: el entorno tiene un solo dueño, y
-moverlo en esos dos caminos es el siguiente escalón. El compilador lo dice con `NOK6003` en vez de generar
-código raro. Tampoco se pueden capturar `Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
+Y se puede **pasar a otra función** que espere un `cierre(...)`:
+
+```nooki
+usar textos
+
+funcion sumador(base: entero) -> cierre(entero) -> entero {
+    retornar funcion(n: entero) -> entero => n + base
+}
+
+funcion aplicar(f: cierre(entero) -> entero, n: entero) -> entero {
+    retornar f(n)
+}
+
+funcion principal() -> entero {
+    variable mas_cinco: cierre(entero) -> entero = sumador(5)
+    imprimir(textos.de_entero(aplicar(mas_cinco, 10)))   // 15
+
+    // Y una lambda sin capturas va directa, sin declararla:
+    imprimir(textos.de_entero(aplicar(funcion(n: entero) -> entero => n * 2, 21)))   // 42
+    retornar 0
+}
+```
+
+Al pasarlo, el cierre **no se copia**: el parámetro lo usa y el dueño sigue siendo el que lo creó.
+
+**Lo que todavía no se puede** es **asignar** un cierre a otra variable (`otro = el_cierre`): eso sí es mover el
+entorno, y el compilador lo dice con `NOK6003` en vez de generar código raro. Tampoco se pueden capturar
+`Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
 
 ### Recibir argumentos
 
