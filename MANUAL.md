@@ -1946,7 +1946,25 @@ entorno viejo de `b` se libera en el momento.
 Después de moverlo, la variable de origen ya no vale, y el compilador lo dice en la línea exacta. El entorno
 viejo de `b` se libera en el momento.
 
-Lo único que sigue sin poder hacerse es **capturar `Vector`, `Mapa` o `Caja`**: se mueven, no se copian.
+Lo único que sigue sin poder hacerse es **capturar `Vector`, `Mapa` o `Caja`**: se mueven, no se copian, y
+compartirlas con un cierre que pueda sobrevivirlas no está resuelto (`NOK6003` lo dice). Mientras tanto, el
+estado se pasa como valor:
+
+```nooki
+usar textos
+
+funcion principal() -> entero {
+    variable estado = 0
+    variable siguiente = funcion(n: entero) -> entero => n + 1
+    estado = siguiente(estado)     // 1
+    estado = siguiente(estado)     // 2
+    imprimir(textos.de_entero(estado))
+    retornar 0
+}
+```
+
+Es explícito, no cuesta nada en ejecución, y el estado lo lleva el programa a mano. Un contador que acumule
+**dentro** del cierre necesita una celda compartida, que es lo que describe `ADR-028`.
 
 ### Recibir argumentos
 

@@ -37,7 +37,8 @@ Las 13 ADR del Sprint 1 están **aprobadas**. No se editan: si algo cambia, se c
 | [ADR-024](docs/adr/ADR-024-variantes-con-datos.md) | Variantes con datos y patrones que ligan | ✅ Aprobada (S42) |
 | [ADR-025](docs/adr/ADR-025-biblioteca-en-nooki.md) | La biblioteca estándar se escribe en Nooki; `Resultado` deja de ser especial | ✅ Aprobada (S43) |
 | [ADR-026](docs/adr/ADR-026-rasgos.md) | Rasgos como contrato verificado y `&Rasgo` con despacho por tabla | ✅ Aprobada (S54–S55) |
-| [ADR-027](docs/adr/ADR-027-cierres.md) | Cierres: función que lleva su entorno, dueña de él y de movimiento, como `Vector` | ✅ Aprobada (S144–S146) |
+| [ADR-027](docs/adr/ADR-027-cierres.md) | Cierres: función que lleva su entorno, dueña de él y de movimiento, como `Vector` | ✅ Aprobada (S144–S148) |
+| [ADR-028](docs/adr/ADR-028-estado-compartido.md) | Estado compartido: hoy no se comparte; después, `Compartido<T>` con recuento, sin tocar `Caja` | ✅ Aprobada (S149) |
 
 ---
 

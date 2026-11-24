@@ -3839,7 +3839,17 @@ private:
                     return;
                 }
             }
-            salida.emplace_back(nombre, buscar(nombre));
+            const std::string tipo = buscar(nombre);
+            // Una colección o una caja no se puede capturar: se mueven, y copiar
+            // el puntero dejaría dos dueños o uno colgando si el cierre escapa.
+            if (tipo == "nooki_caja" || tipo.rfind("nooki_vector_", 0) == 0 ||
+                tipo.rfind("nooki_mapa_", 0) == 0) {
+                no_soportado(
+                    "capturar «" + nombre +
+                    "»: una colección o una caja no se copia, y el cierre podría sobrevivirla");
+                return;
+            }
+            salida.emplace_back(nombre, tipo);
             return;
         }
         if (expresion.izquierda) {
@@ -3970,7 +3980,7 @@ private:
         return std::string(static_cast<std::size_t>(nivel_) * 4, ' ');
     }
 
-    void no_soportado(std::string descripcion) {
+    void no_soportado(std::string descripcion) const {
         if (soportado_) {
             soportado_ = false;
             motivo_ = std::move(descripcion);
@@ -6472,8 +6482,8 @@ private:
     std::string_view modulo_actual_;
     int contador_temporal_ = 0;
     int nivel_ = 0;
-    bool soportado_ = true;
-    std::string motivo_;
+    mutable bool soportado_ = true;
+    mutable std::string motivo_;
 };
 
 }  // namespace

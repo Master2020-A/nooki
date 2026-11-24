@@ -224,6 +224,7 @@ El compilador es una **biblioteca estática** (`nooki_nucleo`) más un ejecutabl
 | ADR-022 | herencia y despacho | tablas virtuales y `nooki_ref_<rasgo>` |
 | ADR-023/024 | errores como valores y variantes con datos | `resultado`, `coincide`, `?` |
 | ADR-025 | biblioteca en Nooki | los 16 módulos son texto embebido, no C |
+| ADR-028 | estado compartido | capturarlo prohibido; después `Compartido<T>` con recuento |
 | ADR-027 | cierres | función que lleva su entorno, dueña de él y de movimiento |
 | ADR-026 | rasgos | contratos verificados y despacho dinámico |
 
@@ -907,6 +908,7 @@ emisor.error(codigos::USO_TRAS_MOVER, span)
 | ADR-023 | errores como valores |
 | ADR-024 | variantes con datos |
 | ADR-025 | biblioteca en Nooki |
+| ADR-028 | estado compartido | capturarlo prohibido; después `Compartido<T>` con recuento |
 | ADR-027 | cierres | función que lleva su entorno, dueña de él y de movimiento |
 | ADR-026 | rasgos |
 

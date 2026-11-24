@@ -3,6 +3,51 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.21] — 2026-11-23
+
+### Sprint 149 — Un agujero de memoria, cerrado (2026-11-23)
+
+Al ir a buscar el contador que acumula —el caso que todo el mundo quiere de un cierre— me encontré una cosa
+peor que no tenerlo.
+
+**Capturar una `Caja` compilaba.** El entorno del cierre copiaba la estructura, así que el cierre y el ámbito
+compartían el mismo `datos`, y esto **funcionaba**:
+
+```nooki
+variable caja = Caja<entero>.nuevo(0)
+variable sube = funcion() -> entero => caja.sacar() + 1
+// tras tres vueltas: 3
+```
+
+Pero si el cierre **sobrevivía** al ámbito, la caja se liberaba y el cierre se quedaba apuntando a memoria
+libre. La ruta de escape ni siquiera compila hoy por otro motivo, pero el agujero estaba y era cuestión de
+tiempo.
+
+Ahora **capturar una `Caja`, un `Vector` o un `Mapa` es `NOK6003`**:
+
+```
+error[NOK6003]: ... capturar «caja»: una colección o una caja no se copia,
+                y el cierre podría sobrevivirla
+```
+
+### ADR-028, y lo que se puede hacer mientras
+
+El estado compartido entre cierres necesita una decisión de propiedad, y está escrita: **`Caja` no cambia**
+(sigue siendo de un dueño) y, cuando haga falta compartir, será un tipo aparte, `Compartido<T>`, con recuento
+de referencias. Hacer copiable `Caja` rompería el modelo que ya usan los programas.
+
+Mientras tanto, el manual enseña el patrón que sí funciona: **el estado se pasa como valor**.
+
+```nooki
+variable estado = 0
+variable siguiente = funcion(n: entero) -> entero => n + 1
+estado = siguiente(estado)     // 1
+estado = siguiente(estado)     // 2
+```
+
+Es explícito y no cuesta nada en ejecución, pero no es un contador escondido en el cierre. Eso queda para
+`Compartido<T>`.
+
 ## [1.0.20] — 2026-11-23
 
 ### Sprint 148 — Mover un cierre entre variables (2026-11-23)
