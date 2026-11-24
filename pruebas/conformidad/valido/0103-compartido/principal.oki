@@ -1,0 +1,16 @@
+// Dos cierres que comparten la misma celda: el contador acumula de verdad.
+usar textos
+
+funcion principal() -> entero {
+    variable cuenta = Compartido<entero>.nuevo(0)
+
+    variable sube = funcion() -> entero => cuenta.sacar() + 1
+    variable baja = funcion() -> entero => cuenta.sacar() - 1
+
+    cuenta.poner(sube())
+    cuenta.poner(sube())
+    cuenta.poner(baja())
+
+    imprimir(textos.de_entero(cuenta.sacar()))
+    retornar 0
+}

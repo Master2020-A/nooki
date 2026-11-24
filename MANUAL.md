@@ -1963,8 +1963,30 @@ funcion principal() -> entero {
 }
 ```
 
-Es explícito, no cuesta nada en ejecución, y el estado lo lleva el programa a mano. Un contador que acumule
-**dentro** del cierre necesita una celda compartida, que es lo que describe `ADR-028`.
+Es explícito y no cuesta nada en ejecución. Y cuando el estado tiene que ser **compartido**, hay una celda con
+recuento de referencias, `Compartido<T>`:
+
+```nooki
+usar textos
+
+funcion principal() -> entero {
+    variable cuenta = Compartido<entero>.nuevo(0)
+
+    variable sube = funcion() -> entero => cuenta.sacar() + 1
+    variable baja = funcion() -> entero => cuenta.sacar() - 1
+
+    cuenta.poner(sube())
+    cuenta.poner(sube())
+    cuenta.poner(baja())
+
+    imprimir(textos.de_entero(cuenta.sacar()))   // 1
+    retornar 0
+}
+```
+
+Los dos cierres ven **la misma** celda, así que el contador acumula. `Compartido` cuenta sus referencias: el
+ámbito tiene una, cada cierre que la captura suma otra, y el valor se libera cuando la última se suelta. Por
+eso se puede capturar, al revés que una `Caja`, que es de un solo dueño.
 
 ### Recibir argumentos
 

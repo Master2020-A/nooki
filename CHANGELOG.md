@@ -3,6 +3,51 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.22] — 2026-11-23
+
+### Sprint 150 — El contador que acumula (2026-11-23)
+
+`ADR-028` dijo cómo se comparte estado sin romper el modelo: un tipo **aparte**, con recuento de referencias,
+sin tocar `Caja`. Ya está.
+
+```nooki
+variable cuenta = Compartido<entero>.nuevo(0)
+
+variable sube = funcion() -> entero => cuenta.sacar() + 1
+variable baja = funcion() -> entero => cuenta.sacar() - 1
+
+cuenta.poner(sube())
+cuenta.poner(sube())
+cuenta.poner(baja())
+
+imprimir(textos.de_entero(cuenta.sacar()))   // 1
+```
+
+Los dos cierres ven **la misma** celda y el contador acumula: 0 + 1 + 1 − 1 = **1**.
+
+`Compartido<T>` es `{ datos, referencias }`: nacer empieza en una referencia, capturarla suma, soltarla resta,
+y a cero se libera. Por eso se puede capturar en un cierre, al revés que `Caja`, que es de un solo dueño.
+
+### El fallo que salió, y por qué importa
+
+La primera versión **filtraba la celda**: el recuento se quedaba en 1 para siempre porque la variable del
+ámbito nunca se soltaba. Lo cazó ASan, no una prueba mía: el informe nombraba `nooki_compartido_nuevo` dos
+veces.
+
+Y el arreglo tampoco salió a la primera: registré la liberación mirando el **tipo escrito**, y en
+`variable cuenta = Compartido<entero>.nuevo(0)` no hay tipo escrito —el tipo se deduce—, así que no se
+registraba nada. Hubo que mirar el tipo ya calculado, que es el que siempre se sabe.
+
+Después del arreglo, ASan: **cero menciones** a `nooki_compartido` en el informe de fugas. La celda muere
+exactamente una vez.
+
+### Lo que sigue faltando
+
+`Compartido` guarda un entero, como `Caja`. Un `Compartido<texto>` o `Compartido<MiEstructura>` pide generar la
+celda por tipo, que es el mismo trabajo que tiene pendiente `Vector<MiEstructura>` con colecciones dentro.
+
+Caso `0103-compartido`.
+
 ## [1.0.21] — 2026-11-23
 
 ### Sprint 149 — Un agujero de memoria, cerrado (2026-11-23)

@@ -172,7 +172,7 @@ private:
         if (tipo_por_nombre(tipo) != nullptr || enumeraciones_.count(std::string(tipo)) != 0) {
             return true;
         }
-        if (tipo.rfind("Caja<", 0) == 0) {
+        if (tipo.rfind("Caja<", 0) == 0 || tipo.rfind("Compartido<", 0) == 0) {
             return true;
         }
         if (!tipo.empty() && tipo.front() == '&' &&
@@ -691,7 +691,8 @@ private:
             return;
         }
         // Genéricos de la biblioteca.
-        if (base == "Vector" || base == "Mapa" || base == "Caja" || base == "resultado") {
+        if (base == "Vector" || base == "Mapa" || base == "Caja" || base == "Compartido" ||
+            base == "resultado") {
             return;
         }
         // Tipos que declara el programa.
@@ -1253,7 +1254,7 @@ private:
             return Tipo::Booleano;
         case TipoExpresion::Identificador: {
             if (expresion.lexema == "Caja" || expresion.lexema == "Vector" ||
-                expresion.lexema == "Mapa") {
+                expresion.lexema == "Mapa" || expresion.lexema == "Compartido") {
                 return Tipo::Desconocido;
             }
             if (esta_movida(expresion.lexema)) {

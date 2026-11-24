@@ -1369,6 +1369,55 @@ const char* PRELUDIO =
     "    }\n"
     "}\n"
     "\n"
+    "/* Compartido<T>: celda con recuento de referencias (ADR-028).           */\n"
+    "typedef struct {\n"
+    "    long long* datos;\n"
+    "    long long* referencias;\n"
+    "} nooki_compartido;\n"
+    "\n"
+    "static nooki_compartido nooki_compartido_nuevo(long long valor) {\n"
+    "    nooki_compartido c;\n"
+    "    c.datos = (long long*)malloc(sizeof(long long));\n"
+    "    c.referencias = (long long*)malloc(sizeof(long long));\n"
+    "    if (c.datos != NULL) {\n"
+    "        *c.datos = valor;\n"
+    "    }\n"
+    "    if (c.referencias != NULL) {\n"
+    "        *c.referencias = 1;\n"
+    "    }\n"
+    "    return c;\n"
+    "}\n"
+    "\n"
+    "static nooki_compartido nooki_compartido_copiar(nooki_compartido c) {\n"
+    "    if (c.referencias != NULL) {\n"
+    "        *c.referencias += 1;\n"
+    "    }\n"
+    "    return c;\n"
+    "}\n"
+    "\n"
+    "static long long nooki_compartido_sacar(nooki_compartido* c) {\n"
+    "    return c->datos != NULL ? *c->datos : 0;\n"
+    "}\n"
+    "\n"
+    "static void nooki_compartido_poner(nooki_compartido* c, long long valor) {\n"
+    "    if (c->datos != NULL) {\n"
+    "        *c->datos = valor;\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "static void nooki_compartido_soltar(nooki_compartido* c) {\n"
+    "    if (c->referencias == NULL) {\n"
+    "        return;\n"
+    "    }\n"
+    "    *c->referencias -= 1;\n"
+    "    if (*c->referencias <= 0) {\n"
+    "        free(c->datos);\n"
+    "        free(c->referencias);\n"
+    "    }\n"
+    "    c->datos = NULL;\n"
+    "    c->referencias = NULL;\n"
+    "}\n"
+    "\n"
     "/* Aritmetica comprobada (ADR-03): un desbordamiento no se ignora. */\n"
     "static void nooki_panico(const char* mensaje) {\n"
     "    fflush(stdout);\n"
@@ -2466,6 +2515,9 @@ public:
                 for (std::size_t i = 0; i < info.capturas.size(); ++i) {
                     if (info.capturas[i].second == "nooki_texto") {
                         salida_ << "    e->campo_" << i << " = nooki_texto_copiar(c" << i << ");\n";
+                    } else if (info.capturas[i].second == "nooki_compartido") {
+                        salida_ << "    e->campo_" << i << " = nooki_compartido_copiar(c" << i
+                                << ");\n";
                     } else {
                         salida_ << "    e->campo_" << i << " = c" << i << ";\n";
                     }
@@ -2478,6 +2530,8 @@ public:
                 for (std::size_t i = 0; i < info.capturas.size(); ++i) {
                     if (info.capturas[i].second == "nooki_texto") {
                         salida_ << "    nooki_texto_soltar(&e->campo_" << i << ");\n";
+                    } else if (info.capturas[i].second == "nooki_compartido") {
+                        salida_ << "    nooki_compartido_soltar(&e->campo_" << i << ");\n";
                     }
                 }
                 salida_ << "    free(e);\n}\n\n";
@@ -4026,6 +4080,10 @@ private:
         if (escrito == "Puntero") {
             return "nooki_puntero";
         }
+        // `Compartido<T>` es una celda con recuento; el valor es un entero.
+        if (escrito.rfind("Compartido<", 0) == 0) {
+            return "nooki_compartido";
+        }
 
         if (escrito == "vacio") {
             return "void";
@@ -4401,6 +4459,13 @@ private:
         std::string tipo = sentencia.tipo_declarado.empty()
                                ? tipo_de(*sentencia.expresion)
                                : tipo_de_parametro_c(sentencia.tipo_declarado);
+
+        // Una celda compartida es de quien la tiene: se suelta al salir del
+        // ámbito y el recuento decide cuándo muere de verdad.
+        if (tipo == "nooki_compartido") {
+            ambitos_.back().liberables.push_back(
+                {std::string(sentencia.nombre), "nooki_compartido_soltar", false});
+        }
 
         // Un puntero a función, venga de donde venga: el nombre va dentro.
         if (const std::size_t puntero = tipo.find(" (*)("); puntero != std::string::npos) {
@@ -4830,6 +4895,10 @@ private:
                 if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
                     acceso.izquierda->lexema == "Caja") {
                     return "nooki_caja";
+                }
+                if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador &&
+                    acceso.izquierda->lexema == "Compartido") {
+                    return "nooki_compartido";
                 }
                 if (acceso.izquierda && acceso.izquierda->tipo == TipoExpresion::Identificador) {
                     const auto modulo = modulos_.find(acceso.izquierda->lexema);
@@ -5719,6 +5788,15 @@ private:
                     return "nooki_vector_" + std::string(elemento) + "_nuevo()";
                 }
                 return "nooki_vector_entero_nuevo()";
+            }
+            if (acceso.izquierda &&
+                acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+                acceso.izquierda->lexema == "Compartido") {
+                if (nodo.lista.size() != 1 || !nodo.lista.front()) {
+                    no_soportado("«Compartido.nuevo» con un número de argumentos distinto de uno");
+                    return "0";
+                }
+                return "nooki_compartido_nuevo(" + expresion(*nodo.lista.front()) + ")";
             }
             if (acceso.izquierda &&
                 acceso.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
