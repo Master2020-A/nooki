@@ -2125,6 +2125,17 @@ const char* PRELUDIO =
     "    c->soltar = NULL;\n"
     "}\n"
     "\n"
+    "static void nooki_cierre_mover(nooki_cierre* destino, nooki_cierre* origen) {\n"
+    "    if (destino == NULL || origen == NULL || destino == origen) {\n"
+    "        return;\n"
+    "    }\n"
+    "    nooki_cierre_soltar(destino);\n"
+    "    *destino = *origen;\n"
+    "    origen->codigo = NULL;\n"
+    "    origen->entorno = NULL;\n"
+    "    origen->soltar = NULL;\n"
+    "}\n"
+    "\n"
     "static void nooki_cierre_reemplazar(nooki_cierre* destino, nooki_cierre nuevo) {\n"
     "    if (destino != NULL) {\n"
     "        nooki_cierre_soltar(destino);\n"
@@ -5541,9 +5552,10 @@ private:
             const std::string destino_cierre = std::string(nodo.izquierda->lexema);
             if (nodo.derecha->tipo == sintactico::TipoExpresion::Identificador &&
                 cierres_.count(std::string(nodo.derecha->lexema)) != 0) {
-                no_soportado("asignar el cierre «" + std::string(nodo.derecha->lexema) + "» a «" +
-                             destino_cierre + "»: mover un cierre todavía no se puede");
-                return "0";
+                // Moverlo: el destino suelta el suyo, se queda el del origen y el
+                // origen queda vacío, así que liberarlo después no hace nada.
+                return "nooki_cierre_mover(&" + destino_cierre + ", &" +
+                       std::string(nodo.derecha->lexema) + ")";
             }
             std::string nuevo_valor;
             {

@@ -3,6 +3,41 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.20] — 2026-11-23
+
+### Sprint 148 — Mover un cierre entre variables (2026-11-23)
+
+Lo último que faltaba de los cierres: pasarlo de una variable a otra, moviéndolo.
+
+```nooki
+variable a = funcion(n: entero) -> entero => n + uno
+variable b = funcion(n: entero) -> entero => n * dos
+imprimir(b(10))   // 20
+
+b = a             // el entorno de «a» pasa a «b»
+imprimir(b(10))   // 11
+```
+
+Después de moverlo, **el origen queda vacío**: su `codigo`, su `entorno` y su `soltar` se ponen a cero, así
+que liberarlo al final del ámbito no hace nada. Y usarlo es un error del lenguaje, no un fallo en ejecución:
+
+```
+error[NOK5001]: no se puede usar «f»: el valor se movió antes
+```
+
+Ese detalle importa: sin la comprobación en el verificador, llamar a un cierre movido sería llamar a un
+puntero nulo. Ahora lo caza el compilador.
+
+**ASan sobre el código generado**: ninguna mención a `nooki_ent` ni a `nooki_cierre` en el informe de fugas.
+
+### Los cierres, cerrados
+
+Capturar (1.0.16), devolver (1.0.17), pasar (1.0.18), reasignar (1.0.19) y mover (1.0.20). `ADR-027` está al
+día con los cuatro sprints que han hecho falta y con lo único que queda fuera: capturar `Vector`, `Mapa` o
+`Caja`, y una `Caja` compartida que permita un contador que acumule de verdad.
+
+Caso `0102-mover-cierres`.
+
 ## [1.0.19] — 2026-11-20
 
 ### Sprint 147 — Cambiar el cierre de una variable (2026-11-20)

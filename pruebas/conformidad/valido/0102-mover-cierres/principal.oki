@@ -1,0 +1,14 @@
+usar textos
+
+funcion principal() -> entero {
+    variable base = 7
+    variable factor = 2
+
+    variable f = funcion(n: entero) -> entero => n + base
+    variable g = funcion(n: entero) -> entero => n * factor
+
+    imprimir(textos.de_entero(g(10)))
+    g = f
+    imprimir(textos.de_entero(g(10)))
+    retornar 0
+}

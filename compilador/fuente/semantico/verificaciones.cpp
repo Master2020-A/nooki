@@ -118,6 +118,8 @@ private:
         std::set<std::string> mapas_flotante;
         /// Variables de tipo función del ámbito: nombre → tipo.
         std::map<std::string, std::string> funciones;
+        /// Variables que guardan un cierre, que se mueven al asignarlas.
+        std::set<std::string> cierres;
         /// Variables que son `Vector<MiEstructura>`: nombre → estructura.
         std::map<std::string, std::string> vector_de_estructura;
         std::set<std::string> movidas;
@@ -343,7 +345,7 @@ private:
         comprobar_prestamo(nombre, span);
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->cajas.count(clave) != 0 || it->textos.count(clave) != 0 ||
-                it->referencias.count(clave) != 0) {
+                it->referencias.count(clave) != 0 || it->cierres.count(clave) != 0) {
                 it->movidas.insert(clave);
                 return;
             }
@@ -728,6 +730,9 @@ private:
                 sentencia.tipo_declarado.rfind("cierre(", 0) == 0) {
                 ambitos_.back().funciones[std::string(sentencia.nombre)] =
                     std::string(sentencia.tipo_declarado);
+                if (sentencia.tipo_declarado.rfind("cierre(", 0) == 0) {
+                    ambitos_.back().cierres.insert(std::string(sentencia.nombre));
+                }
             } else if (sentencia.expresion && sentencia.expresion->tipo == TipoExpresion::Lambda) {
                 // Una lambda guardada en una variable: su tipo se escribe con la
                 // forma del lenguaje, para poder llamarla después.
@@ -741,6 +746,7 @@ private:
                 }
                 firma += ") -> " + std::string(lambda.vuelta_lambda);
                 ambitos_.back().funciones[std::string(sentencia.nombre)] = firma;
+                ambitos_.back().cierres.insert(std::string(sentencia.nombre));
             }
             const Tipo real = tipo_de(*sentencia.expresion);
 
@@ -1471,6 +1477,16 @@ private:
     }
 
     Tipo tipo_asignacion(const Expresion& expresion) {
+        // `g = f` con dos cierres es mover el entorno de `f` a `g`: `f` deja de
+        // poder usarse, como cualquier valor con dueño.
+        if (expresion.izquierda && expresion.derecha &&
+            expresion.izquierda->tipo == TipoExpresion::Identificador &&
+            expresion.derecha->tipo == TipoExpresion::Identificador &&
+            es_cierre(expresion.izquierda->lexema) && es_cierre(expresion.derecha->lexema)) {
+            const Tipo resultado = tipo_de(*expresion.izquierda);
+            marcar_movida(expresion.derecha->lexema, expresion.span);
+            return resultado;
+        }
         if (expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Unaria &&
             expresion.izquierda->lexema == "*" && expresion.izquierda->izquierda &&
             expresion.izquierda->izquierda->tipo == TipoExpresion::Identificador) {
@@ -1525,6 +1541,16 @@ private:
         }
     }
 
+    /// ¿Esa variable guarda un cierre?
+    bool es_cierre(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->cierres.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// Dentro de una lambda solo valen sus parámetros y las funciones: una
     /// variable de fuera no existe, porque no hay cierres. Se revisa aquí para
     /// que el error sea del lenguaje y no del compilador de C.
@@ -1573,6 +1599,13 @@ private:
 
     Tipo tipo_llamada(const Expresion& expresion) {
         if (!expresion.izquierda) {
+            return Tipo::Desconocido;
+        }
+        // Llamar a algo que se movió es un error: su valor ya no está aquí.
+        if (expresion.izquierda->tipo == TipoExpresion::Identificador &&
+            esta_movida(expresion.izquierda->lexema)) {
+            error(diagnostico::codigos::USO_TRAS_MOVER, expresion.span)
+                .parametro("nombre", std::string(expresion.izquierda->lexema));
             return Tipo::Desconocido;
         }
         comprobar_exclusividad(expresion);

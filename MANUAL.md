@@ -1921,9 +1921,32 @@ funcion principal() -> entero {
 }
 ```
 
-**Lo que todavía no se puede** es **pasar un cierre de una variable a otra** (`otro = el_cierre`): eso sí es
-mover el entorno, y el compilador lo dice con `NOK6003` en vez de generar código raro. Tampoco se pueden
-capturar `Vector`, `Mapa` ni `Caja`: se mueven, no se copian.
+Y un cierre se puede **pasar de una variable a otra**, moviéndolo:
+
+```nooki
+usar textos
+
+funcion principal() -> entero {
+    variable uno = 1
+    variable dos = 2
+
+    variable a = funcion(n: entero) -> entero => n + uno
+    variable b = funcion(n: entero) -> entero => n * dos
+    imprimir(textos.de_entero(b(10)))   // 20
+
+    b = a                               // el entorno de «a» pasa a «b»
+    imprimir(textos.de_entero(b(10)))   // 11
+    retornar 0
+}
+```
+
+Después de moverlo, la variable de origen ya no vale: usar `a` da `NOK5001: el valor se movió antes`. El
+entorno viejo de `b` se libera en el momento.
+
+Después de moverlo, la variable de origen ya no vale, y el compilador lo dice en la línea exacta. El entorno
+viejo de `b` se libera en el momento.
+
+Lo único que sigue sin poder hacerse es **capturar `Vector`, `Mapa` o `Caja`**: se mueven, no se copian.
 
 ### Recibir argumentos
 

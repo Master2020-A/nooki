@@ -107,5 +107,7 @@ capturado y cuándo se libera**. Una respuesta mala aquí no se puede cambiar de
   capturas. **Hecho** (1.0.18).
 - **S147**: **reasignar** una variable de cierre a otra lambda, liberando el entorno viejo. **Hecho**
   (1.0.19).
-- **Pendiente**: copiar un cierre de una variable a otra (mover entre variables) y `Caja` compartida.
+- **S148**: **mover** un cierre de una variable a otra, dejando el origen vacío y avisando con `NOK5001` si se
+  usa después. **Hecho** (1.0.20).
+- **Pendiente**: `Caja` compartida entre cierres (un contador que acumule de verdad) y capturar colecciones.
 - Fase posterior: `Caja` compartida entre cierres, captura por movimiento y cierres dentro de colecciones.
