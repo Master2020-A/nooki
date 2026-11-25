@@ -3,6 +3,47 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.26] — 2026-11-25
+
+### Sprint 154 — macOS, dicho con exactitud (2026-11-25)
+
+El `README` afirmaba que «macOS se valida en CI». **No es cierto**: esta cuenta no tiene ejecutores de macOS
+—los trabajos con `macos-13` y `macos-14` se quedaban en cola para siempre, y por eso se quitaron—. Una
+afirmación falsa en la portada es peor que un fallo, así que la primera parte del sprint fue corregirla.
+
+Lo que hay de verdad:
+
+- **El compilador no tiene código propio de macOS.** No hay un solo `#ifdef __APPLE__` en el compilador: se
+  compila como POSIX, que es exactamente la rama que Linux ejercita en cada empujón. El riesgo de que «no
+  compile» en un Mac es bajo, y el de que se comporte distinto está concentrado en cuatro cosas: lanzar el
+  binario, los argumentos, `dlopen` de DuckDB y las rutas.
+- **La interfaz es un *stub*** documentado en el propio código (`runtime_ui.cpp`): `nooki_ui_ventana_crear`
+  devuelve 0, así que un programa con ventana compila y dice «sin entorno gráfico», igual que en una máquina
+  sin pantalla.
+- **El empaquetador ya sabe de macOS**: `empaquetar.sh` reconoce `Darwin*`, usa el preset `macos` y copia
+  `libduckdb.dylib`.
+
+### Lo que se añade
+
+**`herramientas/verificar-macos.sh`**: un comando, unos diez minutos. Compila con el preset `macos`, pasa las
+18 suites y comprueba a mano lo que Linux sí toca y macOS no:
+
+1. que `nooki ejecutar` compile y **lance** el binario (el `./` de la 1.0.5, que solo se probó en Linux);
+2. que los argumentos lleguen enteros, con espacios;
+3. que `dlopen` encuentre `libduckdb.dylib` y una consulta devuelva 42;
+4. que `ventana` compile y diga que no hay backend.
+
+Sale con 0 o 1, para pegarlo en un informe sin interpretarlo.
+
+**`.github/workflows/macos.yml`**, que **solo se lanza a mano**: con `push` la cola se quedaría colgada sin
+ejecutor. Acepta un Mac propio por la variable de repositorio `MACOS_RUNNER`; si no está, apunta a
+`macos-latest`. Compila, prueba, empaqueta y sube el informe.
+
+### Lo que queda fuera, y por qué
+
+**Escribir el backend de ventana (Cocoa)** es un sprint aparte, y sin un Mac para probarlo sería código a
+ciegas. Esa es la razón de que no esté, no el tiempo.
+
 ## [1.0.25] — 2026-11-24
 
 ### Sprint 153 — Estructuras con colecciones dentro, en un vector (2026-11-24)

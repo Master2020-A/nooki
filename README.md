@@ -211,7 +211,25 @@ El proyecto lo desarrolla **una sola persona**. Eso no cambia el orden de los sp
 
 - La 1.0.0 incluye **UI e IA básicas** en la biblioteca estándar; el plan original las situaba después de la 1.0. La UI nativa completa (macOS, PNG, recolocación) y las bibliotecas de IA equivalentes a pandas/PyTorch siguen pendientes.
 - **Registro de paquetes por Git** en lugar de servidor propio, hasta que haya usuarios.
-- **macOS se valida en CI**; la notarización queda condicionada a un Mac o a financiación.
+- **macOS no se valida en CI**: esta cuenta no tiene ejecutores de macOS disponibles, y un trabajo que no se
+  puede asignar deja la cola colgada. El compilador **no tiene código propio de macOS**: se compila como POSIX,
+  que es lo que Linux ejercita a diario, y la interfaz gráfica es un *stub* que responde «sin entorno gráfico».
+
+### macOS: qué falta
+
+Tres cosas, y solo una depende de código:
+
+1. **Alguien que lo ejecute.** Existe `herramientas/verificar-macos.sh`: compila con el preset `macos`, pasa
+   las 18 suites y comprueba a mano las cuatro cosas que Linux sí toca y macOS no —lanzar el binario con
+   «./», los argumentos del programa, `dlopen` de `libduckdb.dylib` y el arranque de `ventana`—. Sale con 0 o
+   1 para poder pegarlo en un informe.
+2. **Un ejecutor.** `.github/workflows/macos.yml` está escrito y **solo se lanza a mano** (`workflow_dispatch`).
+   Con un ejecutor de GitHub o un Mac propio (variable de repositorio `MACOS_RUNNER`) compila, prueba y publica
+   el informe. No se dispara con `push` a propósito: sin ejecutor, la cola se queda colgada.
+3. **El paquete.** `herramientas/empaquetar.sh` ya reconoce `Darwin*`, usa el preset `macos` y copia
+   `libduckdb.dylib`. Falta compilarlo y publicarlo, que es lo mismo que hace la CI de Linux con su tarball.
+4. **Un backend de ventana.** Hoy `ventana.abrir()` devuelve 0 en macOS, igual que en una máquina sin pantalla.
+   Escribirlo (Cocoa) es un sprint aparte, y sin un Mac para probarlo sería código a ciegas: por eso no está.
 
 Detalle completo en [PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md](PLAN_IMPLEMENTACION_NOOKI_SPRINTS.md) §5.
 

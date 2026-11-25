@@ -1,0 +1,52 @@
+name: macOS (manual)
+
+# Se lanza a mano, desde la pestaña Actions. No se dispara con push: esta cuenta
+# no tiene ejecutores de macOS disponibles, y un trabajo que no se puede asignar
+# deja la cola colgada. Cuando haya uno —de GitHub o un Mac propio— se pulsa
+# «Run workflow» y este trabajo compila, pasa las pruebas y publica el informe.
+#
+# Para usar un Mac propio: cree la variable de repositorio MACOS_RUNNER con la
+# etiqueta del ejecutor (por ejemplo `self-hosted`) y ya está.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: macOS · compilar y probar
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependencias
+        run: brew install cmake
+
+      - name: Compilar
+        run: |
+          cmake --preset macos
+          cmake --build --preset macos -j "$(sysctl -n hw.ncpu)"
+
+      - name: Pruebas
+        run: ctest --preset macos --output-on-failure
+
+      - name: Lo que CI no toca (ejecutar, argumentos, datos, ventana)
+        run: ./herramientas/verificar-macos.sh
+
+      - name: Paquete
+        run: |
+          chmod +x herramientas/empaquetar.sh
+          ./herramientas/empaquetar.sh macos || true
+          ls -l dist || true
+
+      - name: Subir el informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-macos
+          path: |
+            /tmp/nooki-build.log
+            /tmp/nooki-ctest.log
+          if-no-files-found: ignore
