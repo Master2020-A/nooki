@@ -1988,6 +1988,10 @@ Los dos cierres ven **la misma** celda, así que el contador acumula. `Compartid
 ámbito tiene una, cada cierre que la captura suma otra, y el valor se libera cuando la última se suelta. Por
 eso se puede capturar, al revés que una `Caja`, que es de un solo dueño.
 
+`Caja<T>` y `Compartido<T>` guardan **un entero**. Con otro tipo el valor se convertiría sin avisar —`Caja<flotante>`
+truncaba 2,5 a 2—, así que `Caja<flotante>` o `Compartido<texto>` son `NOK2004`. Una celda por tipo es trabajo
+pendiente.
+
 ### Recibir argumentos
 
 Un programa puede leer con qué argumentos se lanzó:

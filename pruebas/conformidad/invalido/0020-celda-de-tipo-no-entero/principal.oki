@@ -1,0 +1,7 @@
+// Una celda solo guarda enteros: con flotante el valor se convertiría en
+// silencio (2,5 → 2), así que se rechaza.
+funcion principal() -> entero {
+    variable caja = Caja<flotante>.nuevo(2.5)
+    imprimir(caja.sacar())
+    retornar 0
+}

@@ -690,9 +690,33 @@ private:
         if (base.rfind("funcion(", 0) == 0 || base.rfind("cierre(", 0) == 0) {
             return;
         }
+        // `Caja` y `Compartido` guardan un entero en el montículo. Con otro tipo
+        // el valor se convertiría en silencio —`Caja<flotante>` truncaba 2,5 a 2
+        // sin decir nada— así que se rechaza mientras no haya celda por tipo.
+        if (base == "Caja" || base == "Compartido") {
+            const std::size_t abre = tipo.find('<');
+            const std::size_t cierra = tipo.find('>');
+            std::string dentro = abre == std::string_view::npos || cierra == std::string_view::npos
+                                     ? std::string("entero")
+                                     : std::string(tipo.substr(abre + 1, cierra - abre - 1));
+            while (!dentro.empty() && dentro.front() == ' ') {
+                dentro.erase(dentro.begin());
+            }
+            while (!dentro.empty() && dentro.back() == ' ') {
+                dentro.pop_back();
+            }
+            if (dentro != "entero") {
+                error(diagnostico::codigos::NO_SOPORTADO, span)
+                    .parametro("construccion", std::string(base) + "<" + dentro + ">")
+                    .ayuda(std::string(base) == "Caja"
+                               ? "Caja guarda un entero; para otro tipo, todavía no"
+                               : "Compartido guarda un entero; para otro tipo, todavía no");
+                return;
+            }
+            return;
+        }
         // Genéricos de la biblioteca.
-        if (base == "Vector" || base == "Mapa" || base == "Caja" || base == "Compartido" ||
-            base == "resultado") {
+        if (base == "Vector" || base == "Mapa" || base == "resultado") {
             return;
         }
         // Tipos que declara el programa.
@@ -1255,6 +1279,18 @@ private:
         case TipoExpresion::Identificador: {
             if (expresion.lexema == "Caja" || expresion.lexema == "Vector" ||
                 expresion.lexema == "Mapa" || expresion.lexema == "Compartido") {
+                // La celda solo guarda enteros: con otro tipo el valor se
+                // convertiría en silencio, así que se rechaza aquí también.
+                const bool es_celda =
+                    expresion.lexema == "Caja" || expresion.lexema == "Compartido";
+                if (es_celda && !expresion.tipos_aplicados.empty() &&
+                    expresion.tipos_aplicados.front() != "entero") {
+                    error(diagnostico::codigos::NO_SOPORTADO, expresion.span)
+                        .parametro("construccion",
+                                   std::string(expresion.lexema) + "<" +
+                                       std::string(expresion.tipos_aplicados.front()) + ">")
+                        .ayuda("la celda guarda un entero; para otro tipo, todavía no");
+                }
                 return Tipo::Desconocido;
             }
             if (esta_movida(expresion.lexema)) {

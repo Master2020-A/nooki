@@ -3,6 +3,38 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.23] — 2026-11-24
+
+### Sprint 151 — `Caja<flotante>` truncaba en silencio (2026-11-24)
+
+Yendo a ampliar `Compartido` a otros tipos, probé la celda que ya existía con un flotante:
+
+```nooki
+variable caja = Caja<flotante>.nuevo(2.5)
+imprimir(caja.sacar())      // 2
+```
+
+**Compilaba y devolvía 2.** La celda guarda un `long long`, así que el 2,5 se convertía sin decir nada. Un
+programa así no falla: da una respuesta equivocada, que es peor.
+
+`Caja<texto>` sí daba error, pero del compilador de C (`incompatible type for argument 1`), no del lenguaje.
+
+Ahora las dos son **`NOK2004`**:
+
+```
+error[NOK2004]: «Caja<flotante>» todavía no está soportado
+   = ayuda: la celda guarda un entero; para otro tipo, todavía no
+```
+
+Lo mismo para `Compartido<texto>` y `Compartido<flotante>`. `Caja<entero>` y `Compartido<entero>` siguen
+igual.
+
+Se comprueba en los dos caminos: cuando el tipo está escrito (`variable c: Caja<flotante> = ...`) y cuando se
+deduce del `nuevo` (`variable c = Caja<flotante>.nuevo(...)`), que era el que se escapaba de la primera
+comprobación.
+
+Casos de rechazo `0020` y `0021`.
+
 ## [1.0.22] — 2026-11-23
 
 ### Sprint 150 — El contador que acumula (2026-11-23)
