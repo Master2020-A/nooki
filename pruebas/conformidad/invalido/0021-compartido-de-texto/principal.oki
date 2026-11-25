@@ -1,6 +1,0 @@
-// Lo mismo para Compartido.
-funcion principal() -> entero {
-    variable cuenta = Compartido<texto>.nuevo("hola" + "")
-    imprimir(cuenta.sacar())
-    retornar 0
-}

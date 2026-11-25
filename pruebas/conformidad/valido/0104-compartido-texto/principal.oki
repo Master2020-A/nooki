@@ -1,0 +1,16 @@
+// Una celda compartida de texto: los cierres leen y escriben la misma.
+usar textos
+
+funcion principal() -> entero {
+    variable eco = Compartido<texto>.nuevo("hola" + "")
+
+    variable saluda = funcion(v: texto) -> texto => eco.sacar() + " " + v
+    variable añade = funcion(v: texto) -> texto => eco.sacar() + v
+
+    eco.poner(saluda("Ana"))
+    imprimir(eco.sacar())
+
+    eco.poner(añade("!"))
+    imprimir(eco.sacar())
+    retornar 0
+}

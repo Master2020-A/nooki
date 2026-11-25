@@ -3,6 +3,37 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.24] — 2026-11-24
+
+### Sprint 152 — `Compartido<texto>` (2026-11-24)
+
+La celda compartida de la 1.0.22 guardaba un entero. Ahora también hay una de texto, con su copia y su
+liberación:
+
+```nooki
+variable eco = Compartido<texto>.nuevo("hola" + "")
+variable saluda = funcion(v: texto) -> texto => eco.sacar() + " " + v
+
+eco.poner(saluda("Ana"))
+imprimir(eco.sacar())    // hola Ana
+```
+
+`sacar()` devuelve una copia —así no queda colgando si luego se escribe— y `poner(...)` copia lo que le llega y
+libera el texto anterior. El recuento es el mismo: la celda muere cuando la suelta el último.
+
+Cuesta un poco más de lo que parece: el tipo tiene que saber que `sacar` devuelve **texto** (y no un entero)
+tanto en el verificador como en el generador, y el entorno del cierre tiene que usar la copia y la liberación
+**de la celda concreta**, no las de la de enteros.
+
+**ASan**: ni una fuga de la celda ni del recuento. Los bytes que salen son los temporales de texto de
+`imprimir(...)`, el fallo viejo anotado.
+
+De paso: el caso de rechazo `0021` desaparece porque lo que rechazaba ya funciona, y `Caja<flotante>` sigue
+siendo `NOK2004` (la `Caja` —sin recuento— no tiene versión de texto, y no la va a tener: para compartir está
+`Compartido`).
+
+Caso `0104-compartido-texto`.
+
 ## [1.0.23] — 2026-11-24
 
 ### Sprint 151 — `Caja<flotante>` truncaba en silencio (2026-11-24)

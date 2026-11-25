@@ -120,6 +120,8 @@ private:
         std::map<std::string, std::string> funciones;
         /// Variables que guardan un cierre, que se mueven al asignarlas.
         std::set<std::string> cierres;
+        /// Celdas compartidas que guardan un texto.
+        std::set<std::string> celdas_texto;
         /// Variables que son `Vector<MiEstructura>`: nombre → estructura.
         std::map<std::string, std::string> vector_de_estructura;
         std::set<std::string> movidas;
@@ -208,6 +210,16 @@ private:
             ambitos_.back().cajas.insert(std::string(nombre));
         }
     }
+    /// ¿Esa variable es una celda compartida de texto?
+    bool es_celda_texto(std::string_view nombre) const {
+        for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
+            if (it->celdas_texto.count(std::string(nombre)) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool es_caja(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->cajas.count(std::string(nombre)) != 0) {
@@ -705,7 +717,8 @@ private:
             while (!dentro.empty() && dentro.back() == ' ') {
                 dentro.pop_back();
             }
-            if (dentro != "entero") {
+            const bool celda_de_texto = std::string(base) == "Compartido" && dentro == "texto";
+            if (dentro != "entero" && !celda_de_texto) {
                 error(diagnostico::codigos::NO_SOPORTADO, span)
                     .parametro("construccion", std::string(base) + "<" + dentro + ">")
                     .ayuda(std::string(base) == "Caja"
@@ -772,6 +785,20 @@ private:
                 firma += ") -> " + std::string(lambda.vuelta_lambda);
                 ambitos_.back().funciones[std::string(sentencia.nombre)] = firma;
                 ambitos_.back().cierres.insert(std::string(sentencia.nombre));
+            }
+            // `variable eco = Compartido<texto>.nuevo("...")`: su `sacar` da texto.
+            if (sentencia.expresion && sentencia.expresion->tipo == TipoExpresion::Llamada &&
+                sentencia.expresion->izquierda &&
+                sentencia.expresion->izquierda->tipo == TipoExpresion::Miembro &&
+                sentencia.expresion->izquierda->izquierda &&
+                sentencia.expresion->izquierda->izquierda->tipo == TipoExpresion::Identificador &&
+                sentencia.expresion->izquierda->izquierda->lexema == "Compartido" &&
+                !sentencia.expresion->lista.empty() && sentencia.expresion->lista.front() &&
+                tipo_de(*sentencia.expresion->lista.front()) == Tipo::Texto) {
+                ambitos_.back().celdas_texto.insert(std::string(sentencia.nombre));
+            }
+            if (sentencia.tipo_declarado.rfind("Compartido<texto>", 0) == 0) {
+                ambitos_.back().celdas_texto.insert(std::string(sentencia.nombre));
             }
             const Tipo real = tipo_de(*sentencia.expresion);
 
@@ -1283,8 +1310,11 @@ private:
                 // convertiría en silencio, así que se rechaza aquí también.
                 const bool es_celda =
                     expresion.lexema == "Caja" || expresion.lexema == "Compartido";
+                const bool texto_ok = expresion.lexema == "Compartido" &&
+                                      !expresion.tipos_aplicados.empty() &&
+                                      expresion.tipos_aplicados.front() == "texto";
                 if (es_celda && !expresion.tipos_aplicados.empty() &&
-                    expresion.tipos_aplicados.front() != "entero") {
+                    expresion.tipos_aplicados.front() != "entero" && !texto_ok) {
                     error(diagnostico::codigos::NO_SOPORTADO, expresion.span)
                         .parametro("construccion",
                                    std::string(expresion.lexema) + "<" +
@@ -1956,6 +1986,23 @@ private:
     }
 
     Tipo tipo_llamada_metodo(const Expresion& expresion) {
+        // `sacar` de una celda de texto da texto, no un entero.
+        if (expresion.izquierda && expresion.izquierda->tipo == TipoExpresion::Miembro &&
+            expresion.izquierda->izquierda &&
+            expresion.izquierda->izquierda->tipo == TipoExpresion::Identificador &&
+            es_celda_texto(expresion.izquierda->izquierda->lexema)) {
+            if (expresion.izquierda->anotacion == "sacar") {
+                return Tipo::Texto;
+            }
+            if (expresion.izquierda->anotacion == "poner") {
+                for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                    if (argumento) {
+                        tipo_de(*argumento);
+                    }
+                }
+                return Tipo::Vacio;
+            }
+        }
         const Expresion& acceso = *expresion.izquierda;
 
         if (acceso.izquierda) {

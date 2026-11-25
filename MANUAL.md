@@ -1988,9 +1988,27 @@ Los dos cierres ven **la misma** celda, así que el contador acumula. `Compartid
 ámbito tiene una, cada cierre que la captura suma otra, y el valor se libera cuando la última se suelta. Por
 eso se puede capturar, al revés que una `Caja`, que es de un solo dueño.
 
-`Caja<T>` y `Compartido<T>` guardan **un entero**. Con otro tipo el valor se convertiría sin avisar —`Caja<flotante>`
-truncaba 2,5 a 2—, así que `Caja<flotante>` o `Compartido<texto>` son `NOK2004`. Una celda por tipo es trabajo
-pendiente.
+`Compartido` tiene dos formas: **de entero** y **de texto**.
+
+```nooki
+usar textos
+
+funcion principal() -> entero {
+    variable eco = Compartido<texto>.nuevo("hola" + "")
+    variable saluda = funcion(v: texto) -> texto => eco.sacar() + " " + v
+
+    eco.poner(saluda("Ana"))
+    imprimir(eco.sacar())    // hola Ana
+    retornar 0
+}
+```
+
+`sacar()` devuelve una **copia** del texto, así que no se queda colgando si después se escribe. `poner(...)`
+copia lo que le llegan y libera el texto anterior.
+
+`Caja<T>` sigue guardando **solo un entero**, y `Compartido` de otro tipo distinto de texto tampoco: con
+`Caja<flotante>` el valor se convertía sin avisar —2,5 truncaba a 2—, así que desde la 1.0.23 es `NOK2004`.
+Una celda por tipo es trabajo pendiente.
 
 ### Recibir argumentos
 
