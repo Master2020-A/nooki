@@ -652,6 +652,36 @@ funcion principal() -> entero {
 }
 ```
 
+La estructura puede llevar **colecciones dentro**, y el vector guarda una copia profunda de cada una:
+
+```nooki
+usar textos
+
+estructura equipo {
+    publico nombre: texto
+    publico miembros: Vector<texto>
+}
+
+funcion principal() -> entero {
+    variable e1 = Vector<texto>.nuevo()
+    e1.agregar("Ana" + "")
+
+    variable lista = Vector<equipo>.nuevo()
+    lista.agregar(equipo { nombre: "rojo" + "", miembros: e1 })
+
+    variable primero = lista.obtener(0)
+    imprimir(primero.nombre)                                // rojo
+    imprimir(textos.de_entero(primero.miembros.largo()))     // 1
+
+    lista.soltar()
+    imprimir(textos.de_entero(e1.largo()))                   // 1: el original sigue vivo
+    retornar 0
+}
+```
+
+Lo que **no** se admite todavía es un `Mapa` dentro de la estructura: copiarlo en profundidad es otro trabajo,
+y el compilador lo dice con `NOK6003`.
+
 `obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes.
 
 **Un aviso sobre el CSV**: los flotantes se escriben con coma (`3,5`), que es la convención del lenguaje

@@ -2822,14 +2822,13 @@ private:
                     }
                     for (const sintactico::Campo& campo : definicion.campos) {
                         const std::string_view tipo_campo = campo.tipo;
-                        if (tipo_campo.rfind("Vector<", 0) == 0 ||
-                            tipo_campo.rfind("Mapa<", 0) == 0 ||
-                            tipo_campo.rfind("Caja<", 0) == 0) {
+                        if (tipo_campo.rfind("Mapa<", 0) == 0) {
                             no_soportado("un Vector de la estructura «" + dentro +
-                                         "», que tiene una colección o una caja dentro");
+                                         "», que tiene un mapa dentro");
                             return;
                         }
-                        if (tipo_campo == "texto") {
+                        if (tipo_campo == "texto" || tipo_campo.rfind("Vector<", 0) == 0 ||
+                            tipo_campo.rfind("Caja<", 0) == 0) {
                             estructuras_con_texto_.insert(dentro);
                         }
                     }
@@ -3179,10 +3178,23 @@ private:
             // dar una vista (para leer sin liberar) y liberar.
             if (con_texto) {
                 const auto& campos = campos_planos_[tipo];
+
+                // Un vector o una caja dentro de la estructura necesitan su
+                // propia copia: se emite una vez por tipo.
+                for (const auto& [campo, tipo_campo] : campos) {
+                    (void)campo;
+                    emitir_copia_de(tipo_campo);
+                }
+
                 salida_ << "static " << tipo << " " << tipo << "_copiar(" << tipo << " valor) {\n";
                 for (const auto& [campo, tipo_campo] : campos) {
+                    const std::string destino = "valor." + campo;
                     if (tipo_campo == "nooki_texto") {
-                        salida_ << "    valor." << campo << " = nooki_texto_copiar(valor." << campo
+                        salida_ << "    " << destino << " = nooki_texto_copiar(" << destino
+                                << ");\n";
+                    } else if (tipo_campo.rfind("nooki_vector_", 0) == 0 ||
+                               tipo_campo == "nooki_caja") {
+                        salida_ << "    " << destino << " = " << tipo_campo << "_copiar(" << destino
                                 << ");\n";
                     }
                 }
@@ -3198,8 +3210,9 @@ private:
 
                 salida_ << "static void " << tipo << "_liberar(" << tipo << "* valor) {\n";
                 for (const auto& [campo, tipo_campo] : campos) {
-                    if (tipo_campo == "nooki_texto") {
-                        salida_ << "    nooki_texto_soltar(&valor->" << campo << ");\n";
+                    if (tipo_campo == "nooki_texto" || tipo_campo.rfind("nooki_vector_", 0) == 0 ||
+                        tipo_campo == "nooki_caja") {
+                        salida_ << "    " << tipo_campo << "_soltar(&valor->" << campo << ");\n";
                     }
                 }
                 salida_ << "}\n\n";
@@ -3892,6 +3905,38 @@ private:
         limpiar(vuelta);
         return {tipo_declarado_c(vuelta),
                 parametros.empty() ? std::string() : tipo_lista_c(parametros)};
+    }
+    /// Copia profunda de un tipo con elementos: `nooki_vector_texto_copiar` y su
+    /// equivalente para cajas. Se emite una vez por tipo.
+    void emitir_copia_de(const std::string& tipo_campo) {
+        if (tipo_campo == "nooki_texto" || tipo_campo.empty() ||
+            copias_emitidas_.count(tipo_campo) != 0) {
+            return;
+        }
+        if (tipo_campo.rfind("nooki_vector_", 0) == 0) {
+            copias_emitidas_.insert(tipo_campo);
+            const std::string elemento = tipo_campo.substr(std::string("nooki_vector_").size());
+            salida_ << "static " << tipo_campo << " " << tipo_campo << "_copiar(" << tipo_campo
+                    << " v) {\n";
+            salida_ << "    " << tipo_campo << " copia = " << tipo_campo << "_nuevo();\n";
+            salida_ << "    for (long long i = 0; i < v.largo; ++i) {\n";
+            if (elemento == "texto") {
+                salida_ << "        " << tipo_campo
+                        << "_agregar(&copia, nooki_texto_copiar(v.datos[i]));\n";
+            } else {
+                salida_ << "        " << tipo_campo << "_agregar(&copia, v.datos[i]);\n";
+            }
+            salida_ << "    }\n    return copia;\n}\n\n";
+            return;
+        }
+        if (tipo_campo == "nooki_caja") {
+            copias_emitidas_.insert(tipo_campo);
+            salida_ << "static nooki_caja nooki_caja_copiar(nooki_caja c) {\n";
+            salida_ << "    nooki_caja copia = nooki_caja_nuevo(0);\n";
+            salida_ << "    if (c.datos != NULL && copia.datos != NULL) {\n";
+            salida_ << "        *copia.datos = *c.datos;\n";
+            salida_ << "    }\n    return copia;\n}\n\n";
+        }
     }
     const InfoLambda& asegurar_lambda(const sintactico::Expresion& nodo) const {
         const auto conocida = indice_lambda_.find(&nodo);
@@ -6590,6 +6635,8 @@ private:
 
     mutable std::vector<InfoLambda> lambdas_;
     mutable std::map<const sintactico::Expresion*, std::size_t> indice_lambda_;
+    /// Tipos de los que ya se emitió la copia profunda.
+    std::set<std::string> copias_emitidas_;
     /// `tipo_de` es const y tiene que poder registrar la lambda que ve.
     mutable std::vector<const sintactico::Expresion*> por_ver_;
     /// Firma de cada variable de tipo cierre: nombre → (vuelta, tipos de los parámetros).

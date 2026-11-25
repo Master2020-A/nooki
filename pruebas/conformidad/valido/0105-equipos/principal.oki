@@ -1,0 +1,26 @@
+usar textos
+
+estructura equipo {
+    publico nombre: texto
+    publico miembros: Vector<texto>
+}
+
+funcion principal() -> entero {
+    variable e1 = Vector<texto>.nuevo()
+    e1.agregar("Ana" + "")
+    e1.agregar("Luis" + "")
+
+    variable lista = Vector<equipo>.nuevo()
+    lista.agregar(equipo { nombre: "rojo" + "", miembros: e1 })
+    lista.agregar(equipo { nombre: "azul" + "", miembros: e1 })
+
+    variable primero = lista.obtener(0)
+    imprimir(primero.nombre)
+    imprimir(textos.de_entero(primero.miembros.largo()))
+    imprimir(primero.miembros.obtener(1))
+
+    lista.soltar()
+    imprimir(textos.de_entero(e1.largo()))
+    imprimir(e1.obtener(0))
+    retornar 0
+}

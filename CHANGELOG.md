@@ -3,6 +3,38 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.25] — 2026-11-24
+
+### Sprint 153 — Estructuras con colecciones dentro, en un vector (2026-11-24)
+
+El último hueco del modelo de datos: un `Vector` de estructuras admitía campos de `texto`, pero si la
+estructura llevaba una **colección dentro** era `NOK6003`.
+
+```nooki
+estructura equipo {
+    publico nombre: texto
+    publico miembros: Vector<texto>
+}
+
+lista.agregar(equipo { nombre: "rojo" + "", miembros: e1 })
+```
+
+Ahora se admite, y la copia es **profunda**: el vector copia cada miembro del equipo, y al soltarlo libera
+las suyas sin tocar el original. Comprobado en el caso: tras `lista.soltar()`, el `e1` de fuera sigue con sus
+elementos.
+
+Se genera, por cada tipo de campo con dueño, la copia que le corresponde: `nooki_vector_texto_copiar` (que
+copia cada texto), la de enteros y flotantes, y `nooki_caja_copiar`. Se emiten una sola vez, aunque las use
+varias estructuras.
+
+**ASan**: ni una mención a `nooki_vector_` ni a la copia de la estructura en el informe. Los bytes que salen
+son temporales de texto, el fallo viejo anotado.
+
+Lo que sigue sin admitirse es un **`Mapa` dentro de la estructura**: copiarlo en profundidad pide recorrer sus
+entradas, y el mensaje ahora lo dice así (`NOK6003`, «que tiene un mapa dentro»).
+
+Caso `0105-equipos`.
+
 ## [1.0.24] — 2026-11-24
 
 ### Sprint 152 — `Compartido<texto>` (2026-11-24)
