@@ -1,0 +1,21 @@
+// La imagen que no existe: cargar falla, y las medidas no mienten.
+usar imagenes
+usar textos
+
+funcion principal() -> entero {
+    variable ruta = "no-existe-en-absoluto.png" + ""
+    variable imagen = imagenes.cargar(&ruta)
+
+    si (!imagenes.cargada(imagen)) {
+        imprimir("no se cargó")
+    }
+    imprimir(textos.de_entero(imagenes.ancho(imagen)))
+    imprimir(textos.de_entero(imagenes.alto(imagen)))
+    imprimir(textos.de_entero(imagenes.color_en(imagen, 0, 0)))
+
+    // Y un manejador inventado tampoco miente.
+    si (!imagenes.cargada(999)) {
+        imprimir("999 no es una imagen")
+    }
+    retornar 0
+}

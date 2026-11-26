@@ -1,0 +1,21 @@
+// La diferencia de contraste entre dos colores.
+usar accesibilidad
+usar textos
+
+funcion principal() -> entero {
+    // El mismo color no tiene diferencia, y da igual el orden.
+    variable negro = 0x000000
+    variable blanco = 0xFFFFFF
+    imprimir(textos.de_entero(accesibilidad.diferencia(negro, negro)))
+    imprimir(textos.de_entero(accesibilidad.diferencia(blanco, blanco)))
+
+    variable ida = accesibilidad.diferencia(negro, blanco)
+    variable vuelta = accesibilidad.diferencia(blanco, negro)
+    si (ida == vuelta) {
+        imprimir("simétrica")
+    }
+    si (ida > 0) {
+        imprimir("hay contraste")
+    }
+    retornar 0
+}

@@ -3,6 +3,37 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.29] — 2026-11-25
+
+### Sprint 157 — Ninguna firma de la biblioteca sin ejecutar (2026-11-25)
+
+Había **20 de 217** funciones públicas que ninguna prueba ni ningún ejemplo llamaba nunca. Compilaban, pero
+nadie las había ejecutado: exactamente donde aparecen los fallos que no se ven.
+
+Ahora son **cero**. Lo que se añadió, con los valores calculados a mano y no copiados:
+
+- `0106-pln`: `distintas` (cinco palabras, tres distintas), `contiene_texto`, y la lista vacía.
+- `0107-csv`: `campos` con tres campos, uno y ninguno.
+- `0108-accesibilidad`: `diferencia` —el mismo color da 0, y el orden no cambia el resultado—.
+- `0109-autograd-division`: `z = x / y` con `x = 8`, `y = 2` → valor **4**, `∂z/∂x = 0,5`, `∂z/∂y = −2`. Los
+  tres son la respuesta que da el cálculo, no la que dio el programa.
+- `0110-ventana-eventos`: `es_movimiento`, `es_liberacion` y `color_en` sin ventana (−1).
+- `0111-redes-probabilidad`: dos propiedades de una red de clases entrenada: **las probabilidades suman uno**
+  y acierta la clase de un punto del cuadrante positivo. Sin mirar números concretos, que dependen del azar
+  del entrenamiento.
+- `0112-imagenes`: `cargada`, `ancho`, `alto` y `color_en` con un archivo que no existe. Se cubren sin
+  pantalla, que es lo que hacía falta para poder probarlas en la CI.
+
+Y un ejemplo, `ejemplos/14-datos-api`, que ejercita las siete funciones de la tabla que no tocaba nadie
+(`disponible`, `indice_columna`, `hay_columna`, `columna_por_nombre`, `valor_por_nombre`, `numero_por_nombre`,
+`entero_por_nombre`). Se compila en la CI y se ejecuta donde hay motor.
+
+### La herramienta, para que no vuelva a pasar
+
+`herramientas/cobertura-biblioteca.py` lee las firmas de la referencia generada y busca cada nombre en las
+pruebas y los ejemplos. Dice cuáles no llama nadie y **sale con 1** si queda alguna, así que puede usarse como
+barrera.
+
 ## [1.0.28] — 2026-11-25
 
 ### Sprint 156 — La fuga de los parámetros, cerrada del todo (2026-11-25)

@@ -1,0 +1,54 @@
+// Las probabilidades de una red de clases: tienen que sumar uno.
+usar redes
+usar textos
+
+funcion clase_de(x: flotante, y: flotante) -> entero {
+    si (x > 0.0 && y > 0.0) {
+        retornar 0
+    }
+    si (x < 0.0 && y > 0.0) {
+        retornar 1
+    }
+    retornar 2
+}
+
+funcion principal() -> entero {
+    variable red = redes.nueva_clases(2, 12, 3)
+
+    variable i = 0
+    mientras (i < 60) {
+        variable x = ((i % 7) como flotante) - 3.0
+        variable y = ((i % 5) como flotante) - 2.0
+        redes.ejemplo_clase(red, x, y, 0.0, 0.0, clase_de(x, y))
+        i = i + 1
+    }
+    redes.entrenar_clases(red, 200, 0.3)
+
+    variable entrada = Vector<flotante>.nuevo()
+    entrada.agregar(2.0)
+    entrada.agregar(1.0)
+
+    // Las tres probabilidades, sumadas.
+    variable total = 0.0
+    variable c = 0
+    mientras (c < 3) {
+        variable p = redes.probabilidad_datos(red, &entrada, c)
+        si (p >= 0.0 && p <= 1.0) {
+            total = total + p
+        }
+        c = c + 1
+    }
+
+    si (total > 0.99 && total < 1.01) {
+        imprimir("las probabilidades suman uno")
+    } sino {
+        imprimir("suman " + textos.de_flotante(total))
+    }
+
+    variable predicha = redes.predecir_clase(red, 2.0, 1.0, 0.0, 0.0)
+    si (predicha == 0) {
+        imprimir("predice la clase de arriba a la derecha")
+    }
+    redes.liberar_clase(red)
+    retornar 0
+}

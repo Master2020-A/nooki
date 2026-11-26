@@ -1,0 +1,22 @@
+// Los predicados de eventos de ventana, y leer un color sin ventana.
+usar ventana
+usar textos
+
+funcion principal() -> entero {
+    si (ventana.es_movimiento(2)) {
+        imprimir("2 es movimiento")
+    }
+    si (!ventana.es_movimiento(1)) {
+        imprimir("1 no es movimiento")
+    }
+    si (ventana.es_liberacion(4)) {
+        imprimir("4 es liberación")
+    }
+    si (!ventana.es_liberacion(2)) {
+        imprimir("2 no es liberación")
+    }
+
+    // Sin ventana, no hay color que leer.
+    imprimir(textos.de_entero(ventana.color_en(0, 0, 0)))
+    retornar 0
+}

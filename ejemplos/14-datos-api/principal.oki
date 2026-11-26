@@ -1,0 +1,68 @@
+// La API de la tabla, entera: es el ejemplo que comprueba que no se rompe por
+// descuido. Necesita el binario de DuckDB (va dentro de la distribución).
+//
+//   nooki ejecutar ejemplos/14-datos-api/principal.oki
+
+usar datos
+usar textos
+usar archivo
+
+funcion principal() -> entero {
+    si (!datos.disponible()) {
+        imprimir("sin motor de datos: " + datos.error())
+        retornar 0
+    }
+
+    variable ruta = "ciudades.csv" + ""
+    variable contenido = "ciudad;habitantes\n" + ""
+    contenido = contenido + "Madrid;3300000\n"
+    contenido = contenido + "Lima;9700000\n"
+    contenido = contenido + "Bogota;7400000\n"
+    variable escrito = archivo.escribir(&ruta, &contenido)
+
+    variable consulta = "SELECT ciudad, habitantes FROM read_csv('ciudades.csv', delim=';') ORDER BY habitantes DESC" + ""
+    variable t = datos.tabla(&consulta)
+
+    si (!datos.hay(t)) {
+        imprimir("sin tabla: " + datos.error())
+        retornar 1
+    }
+
+    // La forma de la tabla.
+    imprimir("filas: " + textos.de_entero(datos.filas(t)))
+    imprimir("columnas: " + textos.de_entero(datos.columnas(t)))
+    imprimir("motor: " + datos.version())
+
+    // Por índice, y por nombre.
+    imprimir(datos.nombre_columna(t, 0))
+    imprimir(datos.valor(t, 0, 0))
+    variable campo_ciudad = "ciudad" + ""
+    variable campo_habitantes = "habitantes" + ""
+    imprimir(datos.valor_por_nombre(t, 0, &campo_ciudad))
+
+    variable habitantes = datos.indice_columna(t, &campo_habitantes)
+    imprimir("índice de habitantes: " + textos.de_entero(habitantes))
+    si (datos.hay_columna(t, &campo_ciudad)) {
+        imprimir("hay ciudad")
+    }
+
+    variable total = 0.0
+    variable i = 0
+    mientras (i < datos.filas(t)) {
+        total = total + datos.numero_por_nombre(t, i, &campo_habitantes)
+        i = i + 1
+    }
+    imprimir("total: " + textos.de_flotante(total))
+
+    // La columna entera, como vector.
+    variable ciudades = datos.columna_por_nombre(t, &campo_ciudad)
+    imprimir("ciudades: " + textos.de_entero(ciudades.largo()))
+
+    // Los enteros, por nombre y por índice.
+    imprimir(textos.de_entero(datos.entero_por_nombre(t, 0, &campo_habitantes)))
+    imprimir(textos.de_entero(datos.entero_de(t, 0, 1)))
+
+    imprimir(datos.a_texto(t))
+    datos.liberar(t)
+    retornar 0
+}

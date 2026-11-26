@@ -1,0 +1,2 @@
+las probabilidades suman uno
+predice la clase de arriba a la derecha

@@ -1,0 +1,29 @@
+// Las utilidades de palabras que ninguna prueba tocaba.
+usar pln
+usar textos
+
+funcion principal() -> entero {
+    variable palabras = Vector<texto>.nuevo()
+    palabras.agregar("uno" + "")
+    palabras.agregar("dos" + "")
+    palabras.agregar("uno" + "")
+    palabras.agregar("tres" + "")
+    palabras.agregar("uno" + "")
+
+    // Cinco palabras, tres distintas.
+    imprimir(textos.de_entero(pln.distintas(&palabras)))
+
+    variable dos = "dos" + ""
+    variable cuatro = "cuatro" + ""
+    si (pln.contiene_texto(&palabras, &dos)) {
+        imprimir("está dos")
+    }
+    si (!pln.contiene_texto(&palabras, &cuatro)) {
+        imprimir("no está cuatro")
+    }
+
+    // Y la lista vacía: cero distintas.
+    variable vacia = Vector<texto>.nuevo()
+    imprimir(textos.de_entero(pln.distintas(&vacia)))
+    retornar 0
+}

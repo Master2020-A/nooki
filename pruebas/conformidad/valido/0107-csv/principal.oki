@@ -1,0 +1,19 @@
+// Separar una línea de CSV en campos.
+usar csv
+usar textos
+
+funcion principal() -> entero {
+    variable linea = "uno,dos,tres" + ""
+    variable partes = csv.campos(&linea)
+    imprimir(textos.de_entero(partes.largo()))
+    imprimir(partes.obtener(0))
+    imprimir(partes.obtener(2))
+
+    // Una línea de un solo campo, y una vacía.
+    variable sola = "solo" + ""
+    imprimir(textos.de_entero(csv.campos(&sola).largo()))
+
+    variable vacia = "" + ""
+    imprimir(textos.de_entero(csv.campos(&vacia).largo()))
+    retornar 0
+}

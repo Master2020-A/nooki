@@ -1,0 +1,5 @@
+2 es movimiento
+1 no es movimiento
+4 es liberación
+2 no es liberación
+-1

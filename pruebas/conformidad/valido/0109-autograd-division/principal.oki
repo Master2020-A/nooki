@@ -1,0 +1,21 @@
+// La división de autograd: z = x / y con x = 8, y = 2.
+//
+//   valor(z)     = 4
+//   gradiente(x) = 1 / y = 0,5
+//   gradiente(y) = -x / y² = -2
+usar autograd
+usar textos
+
+funcion principal() -> entero {
+    variable x = autograd.dato(8.0)
+    variable y = autograd.dato(2.0)
+    variable z = autograd.division(x, y)
+    autograd.atras(z)
+
+    imprimir(textos.de_flotante(autograd.valor(z)))
+    imprimir(textos.de_flotante(autograd.gradiente(x)))
+    imprimir(textos.de_flotante(autograd.gradiente(y)))
+
+    autograd.liberar(z)
+    retornar 0
+}
