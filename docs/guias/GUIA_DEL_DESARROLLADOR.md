@@ -224,6 +224,42 @@ El compilador es una **biblioteca estática** (`nooki_nucleo`) más un ejecutabl
 | ADR-022 | herencia y despacho | tablas virtuales y `nooki_ref_<rasgo>` |
 | ADR-023/024 | errores como valores y variantes con datos | `resultado`, `coincide`, `?` |
 | ADR-025 | biblioteca en Nooki | los 16 módulos son texto embebido, no C |
+
+## Memoria del código generado
+
+El preset `saneamiento` instrumenta el **compilador**. Las fugas que importan están en el **C que el
+compilador produce**, y para eso está `herramientas/verificar-memoria.sh`:
+
+```bash
+./herramientas/verificar-memoria.sh programa.oki
+```
+
+Compila el C con AddressSanitizer, lo ejecuta y dice de qué función viene cada fuga. Hoy hay **dos clases
+conocidas**, y las dos están medidas:
+
+### 1. Arreglada: `imprimir` de un temporal
+
+`imprimir(f())` o `imprimir("a" + b)` dejaba el texto sin liberar. Ahora esas llamadas usan
+`nooki_imprimir_texto_temporal`, que imprime y suelta. Los literales no pasan por ahí: no tienen dueño.
+
+### 2. Pendiente: los parámetros con dueño no se liberan
+
+Una función que recibe un `texto` por valor **no lo libera al salir**. Es una fuga por llamada, y pasa
+desapercibida porque cada una son unos pocos bytes.
+
+La corrección evidente —registrar el parámetro como algo que hay que soltar al final de la función— **no
+basta y produce un doble libre**: el llamante libera la variable que pasó, porque en muchos caminos no emite
+el vaciado del origen después de moverla. Se probó, el caso `0051-api-biblioteca` falló con
+`attempting double-free` en `nooki_probar_textos`, y se revirtió.
+
+Lo que hay que hacer, por tanto, es **completar el mecanismo de movimiento**: que al pasar un valor con dueño
+a un parámetro se vacíe el origen **siempre** (hoy se hace en unos caminos y en otros no), y después activar
+la liberación del parámetro. Las dos mitades van juntas; hacer solo una rompe programas.
+
+### Cómo medirlo
+
+`verificar-memoria.sh` no falla a propósito: una herramienta que siempre sale en rojo no se usa. Cuando las
+dos clases estén cerradas, se le pone el modo estricto y sirve de barrera en la CI.
 | ADR-028 | estado compartido | capturarlo prohibido; después `Compartido<T>` con recuento |
 | ADR-027 | cierres | función que lleva su entorno, dueña de él y de movimiento |
 | ADR-026 | rasgos | contratos verificados y despacho dinámico |
@@ -908,6 +944,42 @@ emisor.error(codigos::USO_TRAS_MOVER, span)
 | ADR-023 | errores como valores |
 | ADR-024 | variantes con datos |
 | ADR-025 | biblioteca en Nooki |
+
+## Memoria del código generado
+
+El preset `saneamiento` instrumenta el **compilador**. Las fugas que importan están en el **C que el
+compilador produce**, y para eso está `herramientas/verificar-memoria.sh`:
+
+```bash
+./herramientas/verificar-memoria.sh programa.oki
+```
+
+Compila el C con AddressSanitizer, lo ejecuta y dice de qué función viene cada fuga. Hoy hay **dos clases
+conocidas**, y las dos están medidas:
+
+### 1. Arreglada: `imprimir` de un temporal
+
+`imprimir(f())` o `imprimir("a" + b)` dejaba el texto sin liberar. Ahora esas llamadas usan
+`nooki_imprimir_texto_temporal`, que imprime y suelta. Los literales no pasan por ahí: no tienen dueño.
+
+### 2. Pendiente: los parámetros con dueño no se liberan
+
+Una función que recibe un `texto` por valor **no lo libera al salir**. Es una fuga por llamada, y pasa
+desapercibida porque cada una son unos pocos bytes.
+
+La corrección evidente —registrar el parámetro como algo que hay que soltar al final de la función— **no
+basta y produce un doble libre**: el llamante libera la variable que pasó, porque en muchos caminos no emite
+el vaciado del origen después de moverla. Se probó, el caso `0051-api-biblioteca` falló con
+`attempting double-free` en `nooki_probar_textos`, y se revirtió.
+
+Lo que hay que hacer, por tanto, es **completar el mecanismo de movimiento**: que al pasar un valor con dueño
+a un parámetro se vacíe el origen **siempre** (hoy se hace en unos caminos y en otros no), y después activar
+la liberación del parámetro. Las dos mitades van juntas; hacer solo una rompe programas.
+
+### Cómo medirlo
+
+`verificar-memoria.sh` no falla a propósito: una herramienta que siempre sale en rojo no se usa. Cuando las
+dos clases estén cerradas, se le pone el modo estricto y sirve de barrera en la CI.
 | ADR-028 | estado compartido | capturarlo prohibido; después `Compartido<T>` con recuento |
 | ADR-027 | cierres | función que lleva su entorno, dueña de él y de movimiento |
 | ADR-026 | rasgos |

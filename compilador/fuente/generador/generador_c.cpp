@@ -547,11 +547,18 @@ const char* PRELUDIO =
     "    t->propio = 0;\n"
     "}\n"
     "\n"
+
     "static void nooki_imprimir_texto(nooki_texto t) {\n"
     "    if (t.datos != NULL) {\n"
     "        fwrite(t.datos, 1, (size_t)t.largo, stdout);\n"
     "    }\n"
     "    fputc(10, stdout);\n"
+    "}\n"
+    "\n"
+    "/* Imprimir un texto que es un temporal: después se libera. */\n"
+    "static void nooki_imprimir_texto_temporal(nooki_texto t) {\n"
+    "    nooki_imprimir_texto(t);\n"
+    "    nooki_texto_soltar(&t);\n"
     "}\n"
     "\n"
     "/* Vector<T>: arreglo dinámico con dueño (S25). */\n"
@@ -2748,6 +2755,7 @@ public:
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, false);
         }
+
         --nivel_;
         cerrar_ambito();
         salida_ << "}\n";
@@ -3776,7 +3784,9 @@ private:
                                         std::set<std::string>& nombres) {
         if (expresion.tipo == sintactico::TipoExpresion::Identificador) {
             nombres.insert(std::string(expresion.lexema));
+            return;
         }
+
         for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
             if (argumento) {
                 recoger_identificadores(*argumento, nombres);
@@ -3796,7 +3806,9 @@ private:
                                   std::set<std::string>& nombres) {
         if (expresion.tipo == sintactico::TipoExpresion::Identificador) {
             nombres.insert(std::string(expresion.lexema));
+            return;
         }
+
         for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
             if (argumento) {
                 recoger_devueltos(*argumento, nombres);
@@ -3906,6 +3918,26 @@ private:
         return {tipo_declarado_c(vuelta),
                 parametros.empty() ? std::string() : tipo_lista_c(parametros)};
     }
+    /// Qué función libera un tipo con dueño, o vacío si no tiene dueño o es un
+    /// préstamo. Es la tabla que usan los parámetros y los ámbitos.
+    std::string soltar_de_tipo(std::string_view tipo) const {
+        if (tipo.empty() || tipo.front() == '&' || tipo.front() == '*') {
+            return {};
+        }
+        if (tipo == "texto") {
+            return "nooki_texto_soltar";
+        }
+        if (tipo == "Caja" || tipo.rfind("Caja<", 0) == 0) {
+            return "nooki_caja_soltar";
+        }
+        if (tipo.rfind("Vector<", 0) == 0 || tipo.rfind("Mapa<", 0) == 0 ||
+            tipo.rfind("Compartido<", 0) == 0 || tipo.rfind("cierre(", 0) == 0) {
+            const std::string en_c = tipo_de_parametro_c(tipo);
+            return en_c + "_soltar";
+        }
+        return {};
+    }
+
     /// Copia profunda de un tipo con elementos: `nooki_vector_texto_copiar` y su
     /// equivalente para cajas. Se emite una vez por tipo.
     void emitir_copia_de(const std::string& tipo_campo) {
@@ -4378,6 +4410,14 @@ private:
             std::set<std::string> conservar;
             if (sentencia.expresion) {
                 recoger_devueltos(*sentencia.expresion, conservar);
+                // Una concatenación de textos devuelve un texto **nuevo**: los
+                // que la forman no viajan dentro, así que se liberan antes de
+                // volver. Conservarlos era una fuga en cada `retornar "x" + n`.
+                if (sentencia.expresion->tipo == sintactico::TipoExpresion::Binaria &&
+                    sentencia.expresion->lexema == "+" &&
+                    tipo_de(*sentencia.expresion) == "nooki_texto") {
+                    conservar.clear();
+                }
             }
             // Si hay algo que liberar y la expresión usa esos valores (por
             // ejemplo `v.largo()`), se evalúa primero en un temporal: liberar
@@ -6201,6 +6241,15 @@ private:
             // Un préstamo de texto se imprime por su valor.
             const std::string valor =
                 tipo == "nooki_texto*" ? "(*" + expresion(argumento) + ")" : expresion(argumento);
+            // Si el texto es un temporal (una llamada, una concatenación), hay
+            // que liberarlo después de imprimirlo o se fuga.
+            const bool temporal = tipo == "nooki_texto" &&
+                                  argumento.tipo != sintactico::TipoExpresion::Identificador &&
+                                  argumento.tipo != sintactico::TipoExpresion::Miembro &&
+                                  argumento.tipo != sintactico::TipoExpresion::Texto;
+            if (temporal) {
+                return "nooki_imprimir_texto_temporal(" + valor + ")";
+            }
             return std::string(funcion) + "(" + valor + ")";
         }
 

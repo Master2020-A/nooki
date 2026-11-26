@@ -3,6 +3,46 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.27] — 2026-11-25
+
+### Sprint 155 — La fuga de `imprimir`, mitad arreglada y mitad medida (2026-11-25)
+
+La fuga que llevaba seis sprints en los informes de ASan: `imprimir(f())` con un `texto` no liberaba el
+resultado.
+
+**Arreglado** con una variante que imprime y suelta (`nooki_imprimir_texto_temporal`). Cubre lo más común:
+imprimir un resultado de llamada o una concatenación. Los literales van por el camino de siempre, que no tienen
+dueño.
+
+Medido en el caso de prueba: de **4 fugas (22 bytes)** a **2 (9 bytes)**.
+
+### La otra mitad: probada, rota, revertida
+
+El resto eran los **parámetros con dueño**, que una función nunca liberaba. Escribí el registro que los suelta
+al salir, y **rompió un programa**:
+
+```
+ERROR: AddressSanitizer: attempting double-free
+    #2 nooki_probar_textos
+```
+
+El motivo es que la otra mitad del mecanismo está a medias: al pasar un valor con dueño a un parámetro, el
+llamante tiene que **vaciar el origen** —como hace con `n.texto = NULL` en algunos caminos— y en otros no lo
+hace. Con el parámetro liberándose y el llamante liberando también, doble libre.
+
+Lo revertí entero. Un doble libre en un lenguaje que presume de seguridad de memoria es peor que una fuga, y
+arreglarlo bien exige completar antes el mecanismo de movimiento. Está escrito en la guía del desarrollador,
+con la causa y con lo que falta, para que el siguiente no vuelva a intentar la mitad.
+
+### Y una herramienta para medirlo
+
+`herramientas/verificar-memoria.sh <archivo.oki>` compila el **C generado** con AddressSanitizer y dice de qué
+función viene cada fuga. El preset `saneamiento` instrumenta el compilador; esto instrumenta su salida, que es
+donde están las fugas que importan.
+
+No falla a propósito: hoy hay una clase conocida y una herramienta que siempre sale en rojo no se usa. Cuando
+esté cerrada, se le pone el modo estricto y pasa a ser barrera en la CI.
+
 ## [1.0.26] — 2026-11-25
 
 ### Sprint 154 — macOS, dicho con exactitud (2026-11-25)
