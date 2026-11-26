@@ -2751,6 +2751,13 @@ public:
             if (parametro.tipo.rfind("cierre(", 0) == 0) {
                 cierres_[std::string(parametro.nombre)] = firma_cierre(parametro.tipo);
             }
+            // Un parámetro con dueño lo recibió la función: se libera al salir,
+            // como cualquier otra variable. Los préstamos (`&texto`) no.
+            const std::string soltar_parametro = soltar_de_tipo(parametro.tipo);
+            if (!soltar_parametro.empty()) {
+                ambitos_.back().liberables.push_back(
+                    {std::string(parametro.nombre), soltar_parametro, false});
+            }
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
             emitir_sentencia(sentencia, false);
@@ -3918,6 +3925,44 @@ private:
         return {tipo_declarado_c(vuelta),
                 parametros.empty() ? std::string() : tipo_lista_c(parametros)};
     }
+    /// Los argumentos con dueño que se pasan por valor se mueven: el llamante
+    /// deja de liberarlos y el que los recibe pasa a ser su dueño. Se mira la
+    /// lista de parámetros del destino, sea del programa o de un módulo.
+    void anotar_movimientos(const sintactico::Expresion& llamada,
+                            const std::vector<sintactico::Parametro>* parametros) {
+        if (parametros == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < llamada.lista.size() && i < parametros->size(); ++i) {
+            const sintactico::ExpresionPtr& argumento = llamada.lista[i];
+            if (!argumento || argumento->tipo != sintactico::TipoExpresion::Identificador) {
+                continue;
+            }
+            const std::string_view declarado = (*parametros)[i].tipo;
+            if (!declarado.empty() && (declarado.front() == '&' || declarado.front() == '*')) {
+                continue;  // préstamo: no mueve
+            }
+            const std::string tipo_argumento = tipo_de(*argumento);
+            if (tipo_argumento == "nooki_texto" || tipo_argumento == "nooki_caja" ||
+                tipo_argumento.rfind("nooki_vector_", 0) == 0 ||
+                tipo_argumento.rfind("nooki_mapa_", 0) == 0 ||
+                tipo_argumento.rfind("nooki_compartido", 0) == 0 ||
+                tipo_argumento == "nooki_cierre") {
+                olvidar_liberable(std::string(argumento->lexema));
+            }
+        }
+    }
+
+    /// Deja de liberar una variable porque su valor se movió a otro sitio: quien
+    /// lo recibió pasa a ser el dueño.
+    void olvidar_liberable(const std::string& nombre) {
+        for (Ambito& ambito : ambitos_) {
+            for (auto it = ambito.liberables.begin(); it != ambito.liberables.end();) {
+                it = it->nombre == nombre ? ambito.liberables.erase(it) : it + 1;
+            }
+        }
+    }
+
     /// Qué función libera un tipo con dueño, o vacío si no tiene dueño o es un
     /// préstamo. Es la tabla que usan los parámetros y los ámbitos.
     std::string soltar_de_tipo(std::string_view tipo) const {
@@ -4325,6 +4370,13 @@ private:
             if (parametro.tipo.rfind("cierre(", 0) == 0) {
                 cierres_[std::string(parametro.nombre)] = firma_cierre(parametro.tipo);
             }
+            // Un parámetro con dueño lo recibió la función: se libera al salir,
+            // como cualquier otra variable. Los préstamos (`&texto`) no.
+            const std::string soltar_parametro = soltar_de_tipo(parametro.tipo);
+            if (!soltar_parametro.empty()) {
+                ambitos_.back().liberables.push_back(
+                    {std::string(parametro.nombre), soltar_parametro, false});
+            }
         }
         for (const sintactico::Sentencia& sentencia : metodo.cuerpo) {
             emitir_sentencia(sentencia, false);
@@ -4360,6 +4412,13 @@ private:
             declarar(parametro.nombre, tipo_de_parametro_c(parametro.tipo));
             if (parametro.tipo.rfind("cierre(", 0) == 0) {
                 cierres_[std::string(parametro.nombre)] = firma_cierre(parametro.tipo);
+            }
+            // Un parámetro con dueño lo recibió la función: se libera al salir,
+            // como cualquier otra variable. Los préstamos (`&texto`) no.
+            const std::string soltar_parametro = soltar_de_tipo(parametro.tipo);
+            if (!soltar_parametro.empty()) {
+                ambitos_.back().liberables.push_back(
+                    {std::string(parametro.nombre), soltar_parametro, false});
             }
         }
         for (const sintactico::Sentencia& sentencia : funcion.cuerpo) {
@@ -5861,6 +5920,9 @@ private:
                         modulo_funcion = encontrada->second;
                     }
                 }
+                if (modulo_funcion != nullptr) {
+                    anotar_movimientos(nodo, &modulo_funcion->parametros);
+                }
                 for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
                     if (i != 0) {
                         salida += ", ";
@@ -6334,6 +6396,30 @@ private:
 
         std::string salida = nombre_para_c + "(";
         const auto declarados = parametros_.find(std::string(nombre_llamado));
+        // Mover un valor con dueño a un parámetro: quien lo recibe pasa a ser el
+        // dueño, así que el ámbito del llamante deja de liberarlo. Antes esto
+        // solo se hacía cuando la llamada era una sentencia, y una llamada
+        // anidada liberaba dos veces (o no liberaba, según el camino).
+        if (declarados != parametros_.end()) {
+            for (std::size_t i = 0; i < nodo.lista.size() && i < declarados->second.size(); ++i) {
+                const sintactico::ExpresionPtr& argumento = nodo.lista[i];
+                if (!argumento || argumento->tipo != sintactico::TipoExpresion::Identificador) {
+                    continue;
+                }
+                const std::string& declarado = declarados->second[i];
+                if (!declarado.empty() && (declarado.front() == '&' || declarado.front() == '*')) {
+                    continue;  // préstamo: no mueve
+                }
+                const std::string tipo_argumento = tipo_de(*argumento);
+                if (tipo_argumento == "nooki_texto" || tipo_argumento == "nooki_caja" ||
+                    tipo_argumento.rfind("nooki_vector_", 0) == 0 ||
+                    tipo_argumento.rfind("nooki_mapa_", 0) == 0 ||
+                    tipo_argumento.rfind("nooki_compartido", 0) == 0 ||
+                    tipo_argumento == "nooki_cierre") {
+                    olvidar_liberable(std::string(argumento->lexema));
+                }
+            }
+        }
         bool primero = true;
         for (std::size_t i = 0; i < nodo.lista.size(); ++i) {
             const sintactico::ExpresionPtr& argumento = nodo.lista[i];

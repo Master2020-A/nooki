@@ -242,19 +242,27 @@ conocidas**, y las dos están medidas:
 `imprimir(f())` o `imprimir("a" + b)` dejaba el texto sin liberar. Ahora esas llamadas usan
 `nooki_imprimir_texto_temporal`, que imprime y suelta. Los literales no pasan por ahí: no tienen dueño.
 
-### 2. Pendiente: los parámetros con dueño no se liberan
+### 2. Arreglada: los parámetros con dueño no se liberaban
 
-Una función que recibe un `texto` por valor **no lo libera al salir**. Es una fuga por llamada, y pasa
-desapercibida porque cada una son unos pocos bytes.
+Una función que recibe un `texto` por valor **no lo liberaba al salir**: una fuga por llamada.
 
-La corrección evidente —registrar el parámetro como algo que hay que soltar al final de la función— **no
-basta y produce un doble libre**: el llamante libera la variable que pasó, porque en muchos caminos no emite
-el vaciado del origen después de moverla. Se probó, el caso `0051-api-biblioteca` falló con
-`attempting double-free` en `nooki_probar_textos`, y se revirtió.
+La corrección no era solo registrar el parámetro para liberarlo —eso, por sí solo, producía un **doble
+libre**, porque el llamante también liberaba la variable que había pasado—. Hacía falta la otra mitad:
+**quien recibe el valor pasa a ser su dueño**, y el llamante deja de liberarlo.
 
-Lo que hay que hacer, por tanto, es **completar el mecanismo de movimiento**: que al pasar un valor con dueño
-a un parámetro se vacíe el origen **siempre** (hoy se hace en unos caminos y en otros no), y después activar
-la liberación del parámetro. Las dos mitades van juntas; hacer solo una rompe programas.
+Esa mitad existía, pero solo para las llamadas que eran **sentencia**. Una llamada anidada
+(`imprimir(unir(&p, separador))`) no movía nada, así que el mismo valor tenía dos dueños. En vez de emitir el
+vaciado dentro de la expresión —que necesitaría temporales y un operador coma—, el generador ahora **quita el
+nombre de la lista de lo que hay que liberar** en cuanto se pasa a un parámetro que no es préstamo. Sin código
+emitido, sin fugas y sin dobles libres.
+
+Comprobado con el caso que antes rompía (`0051-api-biblioteca`, `attempting double-free` en
+`nooki_probar_textos`) y con `verificar-memoria.sh`: el programa de prueba pasó de **4 fugas** a **ninguna**.
+
+### 3. Pendiente: el texto de un `Bien(...)` que liga un patrón
+
+Al desestructurar `coincide (archivo.leer(&ruta)) { caso Bien(leido) => imprimir(leido) }`, el texto que
+lleva el `Bien` no se libera. Es una fuga pequeña y localizada en el emparejamiento con datos.
 
 ### Cómo medirlo
 
@@ -962,19 +970,27 @@ conocidas**, y las dos están medidas:
 `imprimir(f())` o `imprimir("a" + b)` dejaba el texto sin liberar. Ahora esas llamadas usan
 `nooki_imprimir_texto_temporal`, que imprime y suelta. Los literales no pasan por ahí: no tienen dueño.
 
-### 2. Pendiente: los parámetros con dueño no se liberan
+### 2. Arreglada: los parámetros con dueño no se liberaban
 
-Una función que recibe un `texto` por valor **no lo libera al salir**. Es una fuga por llamada, y pasa
-desapercibida porque cada una son unos pocos bytes.
+Una función que recibe un `texto` por valor **no lo liberaba al salir**: una fuga por llamada.
 
-La corrección evidente —registrar el parámetro como algo que hay que soltar al final de la función— **no
-basta y produce un doble libre**: el llamante libera la variable que pasó, porque en muchos caminos no emite
-el vaciado del origen después de moverla. Se probó, el caso `0051-api-biblioteca` falló con
-`attempting double-free` en `nooki_probar_textos`, y se revirtió.
+La corrección no era solo registrar el parámetro para liberarlo —eso, por sí solo, producía un **doble
+libre**, porque el llamante también liberaba la variable que había pasado—. Hacía falta la otra mitad:
+**quien recibe el valor pasa a ser su dueño**, y el llamante deja de liberarlo.
 
-Lo que hay que hacer, por tanto, es **completar el mecanismo de movimiento**: que al pasar un valor con dueño
-a un parámetro se vacíe el origen **siempre** (hoy se hace en unos caminos y en otros no), y después activar
-la liberación del parámetro. Las dos mitades van juntas; hacer solo una rompe programas.
+Esa mitad existía, pero solo para las llamadas que eran **sentencia**. Una llamada anidada
+(`imprimir(unir(&p, separador))`) no movía nada, así que el mismo valor tenía dos dueños. En vez de emitir el
+vaciado dentro de la expresión —que necesitaría temporales y un operador coma—, el generador ahora **quita el
+nombre de la lista de lo que hay que liberar** en cuanto se pasa a un parámetro que no es préstamo. Sin código
+emitido, sin fugas y sin dobles libres.
+
+Comprobado con el caso que antes rompía (`0051-api-biblioteca`, `attempting double-free` en
+`nooki_probar_textos`) y con `verificar-memoria.sh`: el programa de prueba pasó de **4 fugas** a **ninguna**.
+
+### 3. Pendiente: el texto de un `Bien(...)` que liga un patrón
+
+Al desestructurar `coincide (archivo.leer(&ruta)) { caso Bien(leido) => imprimir(leido) }`, el texto que
+lleva el `Bien` no se libera. Es una fuga pequeña y localizada en el emparejamiento con datos.
 
 ### Cómo medirlo
 

@@ -3,6 +3,41 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.28] — 2026-11-25
+
+### Sprint 156 — La fuga de los parámetros, cerrada del todo (2026-11-25)
+
+La 1.0.27 arregló la mitad fácil (imprimir temporales) y dejó la otra con el diagnóstico escrito: los
+parámetros con dueño no se liberaban, y liberarlos sin más producía un **doble libre** porque el llamante
+también liberaba lo que había pasado.
+
+La pieza que faltaba: **quien recibe el valor pasa a ser su dueño**, y el llamante deja de liberarlo. Esa
+mitad existía, pero solo para las llamadas que eran **sentencia**. Una llamada anidada
+—`imprimir(unir(&partes, separador))`— no movía nada, así que el mismo valor tenía dos dueños.
+
+En vez de emitir el vaciado dentro de la expresión (que pediría temporales y un operador coma), el generador
+ahora **quita el nombre de la lista de lo que hay que liberar** en cuanto se pasa a un parámetro que no es
+préstamo. Sin código emitido: ni fugas, ni dobles libres. Y funciona igual en las llamadas a módulos
+(`textos.unir(...)`), que iban por otro camino y tampoco lo anotaban.
+
+### Medido, no supuesto
+
+`verificar-memoria.sh` sobre el caso de prueba: **4 fugas → ninguna**. Y sobre el caso que reventaba en la
+1.0.27 (`0051-api-biblioteca`, `attempting double-free` en `nooki_probar_textos`): pasa limpio salvo una fuga
+de 4 bytes en el emparejamiento con datos.
+
+El estado de toda la batería, medido por primera vez con la herramienta:
+
+| | |
+|---|---|
+| Casos sin ninguna fuga | **66 de 136** |
+| Casos con alguna fuga | 51 |
+| Bytes perdidos en total | **316** |
+
+Son fugas pequeñas (4–20 bytes) y localizadas en tres patrones: textos que viajan dentro de un `resultado`
+ligado por un patrón, campos de un compuesto devuelto, y el caso de `archivo`. Están identificadas con nombre
+en la guía del desarrollador, que es lo que faltaba para poder cerrarlas.
+
 ## [1.0.27] — 2026-11-25
 
 ### Sprint 155 — La fuga de `imprimir`, mitad arreglada y mitad medida (2026-11-25)
