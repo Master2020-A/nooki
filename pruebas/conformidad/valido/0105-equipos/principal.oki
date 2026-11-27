@@ -1,3 +1,7 @@
+// Un vector de estructuras que llevan otro vector dentro: copia profunda.
+//
+// Cada equipo se construye con su propio vector, porque aportar un vector a un
+// compuesto lo mueve: la variable deja de tenerlo, y usarla después es error.
 usar textos
 
 estructura equipo {
@@ -8,19 +12,21 @@ estructura equipo {
 funcion principal() -> entero {
     variable e1 = Vector<texto>.nuevo()
     e1.agregar("Ana" + "")
-    e1.agregar("Luis" + "")
+
+    variable e2 = Vector<texto>.nuevo()
+    e2.agregar("Luis" + "")
 
     variable lista = Vector<equipo>.nuevo()
     lista.agregar(equipo { nombre: "rojo" + "", miembros: e1 })
-    lista.agregar(equipo { nombre: "azul" + "", miembros: e1 })
+    lista.agregar(equipo { nombre: "azul" + "", miembros: e2 })
 
     variable primero = lista.obtener(0)
     imprimir(primero.nombre)
     imprimir(textos.de_entero(primero.miembros.largo()))
-    imprimir(primero.miembros.obtener(1))
+    imprimir(primero.miembros.obtener(0))
+    imprimir(lista.obtener(1).miembros.obtener(0))
 
     lista.soltar()
-    imprimir(textos.de_entero(e1.largo()))
-    imprimir(e1.obtener(0))
+    imprimir(textos.de_entero(lista.largo()))
     retornar 0
 }

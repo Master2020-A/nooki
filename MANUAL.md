@@ -641,12 +641,10 @@ estructura ficha {
 
 funcion principal() -> entero {
     variable lista = Vector<ficha>.nuevo()
-    variable ana = "Ana" + ""
-    lista.agregar(ficha { nombre: ana, edad: 30 })
+    lista.agregar(ficha { nombre: "Ana" + "", edad: 30 })
 
     variable primera = lista.obtener(0)
     imprimir(primera.nombre)   // Ana
-    imprimir(ana)              // Ana, la original sigue viva
     lista.soltar()
     retornar 0
 }
@@ -666,15 +664,17 @@ funcion principal() -> entero {
     variable e1 = Vector<texto>.nuevo()
     e1.agregar("Ana" + "")
 
+    // Se mira antes de moverlo: pasarlo al compuesto lo mueve.
+    imprimir(textos.de_entero(e1.largo()))   // 1
+
     variable lista = Vector<equipo>.nuevo()
     lista.agregar(equipo { nombre: "rojo" + "", miembros: e1 })
 
     variable primero = lista.obtener(0)
-    imprimir(primero.nombre)                                // rojo
-    imprimir(textos.de_entero(primero.miembros.largo()))     // 1
+    imprimir(primero.nombre)                             // rojo
+    imprimir(textos.de_entero(primero.miembros.largo()))  // 1
 
     lista.soltar()
-    imprimir(textos.de_entero(e1.largo()))                   // 1: el original sigue vivo
     retornar 0
 }
 ```
@@ -694,6 +694,9 @@ funcion principal() -> entero {
     variable notas = Mapa<texto, texto>.nuevo()
     notas.insertar("mate" + "", "suspenso" + "")
 
+    // Se mira antes de moverlo al compuesto, que lo mueve.
+    imprimir(textos.de_entero(notas.largo()))   // 1
+
     variable lista = Vector<ficha>.nuevo()
     lista.agregar(ficha { nombre: "Ana" + "", notas: notas })
 
@@ -701,7 +704,7 @@ funcion principal() -> entero {
     imprimir(textos.de_entero(primera.notas.largo()))   // 1
 
     lista.soltar()
-    imprimir(textos.de_entero(notas.largo()))           // 1: el original sigue vivo
+    imprimir(textos.de_entero(lista.largo()))   // 0
     retornar 0
 }
 ```

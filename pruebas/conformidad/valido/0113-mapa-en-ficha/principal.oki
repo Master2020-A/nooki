@@ -10,17 +10,20 @@ funcion principal() -> entero {
     notas.insertar("mate" + "", "suspenso" + "")
     notas.insertar("lengua" + "", "bien" + "")
 
+    // Se mira el mapa antes de moverlo al compuesto: pasarlo lo mueve.
+    imprimir(textos.de_entero(notas.largo()))
+    variable mate = "mate" + ""
+    imprimir(notas.obtener(&mate))
+
     variable lista = Vector<ficha>.nuevo()
     lista.agregar(ficha { nombre: "Ana" + "", notas: notas })
 
     variable primera = lista.obtener(0)
     imprimir(primera.nombre)
     imprimir(textos.de_entero(primera.notas.largo()))
+    imprimir(primera.notas.obtener(&mate))
 
     lista.soltar()
-    // El original sigue con sus entradas: la copia fue profunda.
-    imprimir(textos.de_entero(notas.largo()))
-    variable mate = "mate" + ""
-    imprimir(notas.obtener(&mate))
+    imprimir(textos.de_entero(lista.largo()))
     retornar 0
 }

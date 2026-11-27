@@ -20,16 +20,28 @@ inline std::set<std::string>* RASGOS_DEL_PROGRAMA = nullptr;
 /// Estructuras que tienen vector propio; lo fija el emisor al empezar.
 inline const std::set<std::string>* VECTORES_DE_ESTRUCTURA = nullptr;
 
+/// ¿La expresión es un sitio donde vivir: una variable, `este`, un campo de algo
+/// que lo sea, o un índice sobre algo que lo sea? Un campo de una llamada no lo
+/// es: el resultado es un valor temporal, y hay que darle uno propio.
+inline bool es_sitio(const sintactico::Expresion& expresion) {
+    using sintactico::TipoExpresion;
+    switch (expresion.tipo) {
+    case TipoExpresion::Identificador:
+    case TipoExpresion::Este:
+        return true;
+    case TipoExpresion::Miembro:
+    case TipoExpresion::Indice:
+        return expresion.izquierda && es_sitio(*expresion.izquierda);
+    default:
+        return false;
+    }
+}
 /// Un puntero al valor de una expresión. Si no es un sitio (una variable, un
 /// campo), se le da uno temporal con un literal compuesto: así una llamada como
 /// `sistema.argumentos()` también se puede pasar a un método de colección.
 inline std::string direccion_de_expresion(const sintactico::Expresion& expresion,
                                           const std::string& tipo, const std::string& codigo) {
-    const bool es_sitio = expresion.tipo == sintactico::TipoExpresion::Identificador ||
-                          expresion.tipo == sintactico::TipoExpresion::Miembro ||
-                          expresion.tipo == sintactico::TipoExpresion::Indice ||
-                          expresion.tipo == sintactico::TipoExpresion::Este;
-    if (es_sitio || tipo.empty() || tipo == "void") {
+    if (es_sitio(expresion) || tipo.empty() || tipo == "void") {
         return "&" + codigo;
     }
     return "(&((" + tipo + "[]){ " + codigo + " })[0])";

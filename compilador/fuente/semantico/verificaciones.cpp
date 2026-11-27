@@ -357,12 +357,72 @@ private:
         comprobar_prestamo(nombre, span);
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->cajas.count(clave) != 0 || it->textos.count(clave) != 0 ||
-                it->referencias.count(clave) != 0 || it->cierres.count(clave) != 0) {
+                it->referencias.count(clave) != 0 || it->cierres.count(clave) != 0 ||
+                it->celdas_texto.count(clave) != 0 || it->vectores_texto.count(clave) != 0 ||
+                it->vectores_flotante.count(clave) != 0 || it->mapas_flotante.count(clave) != 0) {
                 it->movidas.insert(clave);
                 return;
             }
         }
     }
+    /// Recorre una expresión y marca como movidas las variables que aportan un
+    /// campo con dueño a un compuesto: `ficha { nombre: ana }` vacía `ana`, así
+    /// que usarla después tiene que ser un error. Se hace en un pase, después de
+    /// tipar, porque el tipado de un nodo puede ocurrir más de una vez.
+    void marcar_campos_movidos(const Expresion& expresion) {
+        if (expresion.tipo == TipoExpresion::Construccion) {
+            const sintactico::DefinicionTipo* definicion = tipo_por_nombre(expresion.anotacion);
+            if (definicion != nullptr) {
+                const std::vector<const sintactico::Campo*> todos =
+                    campos_con_heredados(*definicion);
+                for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
+                    const std::string_view nombre_campo =
+                        i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "";
+                    const sintactico::ExpresionPtr& valor = expresion.lista[i];
+                    if (!valor || valor->tipo != TipoExpresion::Identificador) {
+                        continue;
+                    }
+                    for (const sintactico::Campo* declarado : todos) {
+                        if (declarado->nombre != nombre_campo) {
+                            continue;
+                        }
+                        const std::string_view tipo_campo = declarado->tipo;
+                        const bool con_dueno = tipo_campo == "texto" ||
+                                               tipo_campo.rfind("Vector<", 0) == 0 ||
+                                               tipo_campo.rfind("Mapa<", 0) == 0 ||
+                                               tipo_campo.rfind("Caja<", 0) == 0 ||
+                                               tipo_campo.rfind("Compartido<", 0) == 0 ||
+                                               tipo_campo.rfind("cierre(", 0) == 0;
+                        if (con_dueno) {
+                            marcar_movida_siempre(valor->lexema);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        if (expresion.izquierda) {
+            marcar_campos_movidos(*expresion.izquierda);
+        }
+        if (expresion.derecha) {
+            marcar_campos_movidos(*expresion.derecha);
+        }
+        for (const sintactico::ExpresionPtr& hijo : expresion.lista) {
+            if (hijo) {
+                marcar_campos_movidos(*hijo);
+            }
+        }
+    }
+
+    /// Marca una variable como movida sin mirar de qué tipo es: el que llama ya
+    /// lo sabe (un campo con dueño de un compuesto, por ejemplo).
+    void marcar_movida_siempre(std::string_view nombre) {
+        comprobar_prestamo(nombre, {});
+        if (!ambitos_.empty()) {
+            ambitos_.back().movidas.insert(std::string(nombre));
+        }
+    }
+
     bool esta_movida(std::string_view nombre) const {
         for (auto it = ambitos_.rbegin(); it != ambitos_.rend(); ++it) {
             if (it->movidas.count(std::string(nombre)) != 0) {
@@ -755,6 +815,7 @@ private:
                                        sentencia.expresion->span);
                 }
                 tipo_de(*sentencia.expresion);
+                marcar_campos_movidos(*sentencia.expresion);
             }
             return;
 
@@ -803,6 +864,7 @@ private:
                 ambitos_.back().celdas_texto.insert(std::string(sentencia.nombre));
             }
             const Tipo real = tipo_de(*sentencia.expresion);
+            marcar_campos_movidos(*sentencia.expresion);
 
             // Un préstamo no se puede guardar, salvo como referencia a un rasgo.
             const bool referencia_a_rasgo =
@@ -1063,6 +1125,7 @@ private:
         case TipoSentencia::Para: {
             if (sentencia.expresion) {
                 tipo_de(*sentencia.expresion);
+                marcar_campos_movidos(*sentencia.expresion);
             }
             if (sentencia.paso) {
                 exigir(Tipo::Entero, tipo_de(*sentencia.paso), sentencia.paso->span);
@@ -2297,6 +2360,7 @@ private:
         for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
             const std::string_view nombre_campo =
                 i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "";
+
             const sintactico::Campo* campo = nullptr;
             for (const sintactico::Campo* declarado : todos) {
                 if (declarado->nombre == nombre_campo) {

@@ -1,0 +1,12 @@
+// Aportar un texto a un compuesto lo mueve: usar la variable después es error.
+estructura ficha {
+    publico nombre: texto
+    publico edad: entero
+}
+
+funcion principal() -> entero {
+    variable ana = "Ana" + ""
+    variable f = ficha { nombre: ana, edad: 30 }
+    imprimir(ana)
+    retornar 0
+}

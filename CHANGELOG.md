@@ -3,6 +3,39 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.32] — 2026-11-26
+
+### Sprint 160 — Mover a un compuesto ya no se escapa del verificador (2026-11-26)
+
+`ficha { nombre: ana }` **mueve** `ana` dentro del compuesto —el generador vacía la variable—, pero el
+verificador no la marcaba como movida. Así que esto compilaba y leía memoria que ya no era suya:
+
+```nooki
+variable ana = "Ana" + ""
+variable f = ficha { nombre: ana, edad: 30 }
+imprimir(ana)      // antes: compilaba. Ahora: NOK5001
+```
+
+Ahora se marca, en un pase único después de tipar (marcar dentro del tipo del compuesto daba un falso
+positivo, porque un nodo se tipa más de una vez). El diagnóstico señala la **segunda** línea, la que sobra.
+
+### Lo que destapó
+
+Cuatro programas **míos** hacían justo eso: dos casos de conformidad y tres ejemplos del manual. "Funcionaban"
+porque el compuesto temporal nunca se liberaba, así que el doble uso pasaba desapercibido. Corregidos: cada
+compuesto se construye con su propio valor, y lo que se quiere mirar se mira **antes** de moverlo.
+
+Y un fallo del generador: `lista.obtener(1).miembros.obtener(0)` emitía `&llamada().miembros`, y un campo de
+una llamada no es un sitio. La comprobación de «¿es un sitio?» es ahora recursiva.
+
+### Lo que no salió
+
+La fuga del compuesto temporal pasado a `agregar`: se intentó con una variante `_agregar_temporal` que agrega
+y libera, y **corrompió el montículo** (`0xC0000374`) en el caso `0105`. Se revirtió. El síntoma y el caso que
+lo reproduce quedan en la guía del desarrollador.
+
+Caso de rechazo nuevo: `0022-mover-al-compuesto`.
+
 ## [1.0.31] — 2026-11-26
 
 ### Sprint 159 — Una celda compartida de una estructura (2026-11-26)

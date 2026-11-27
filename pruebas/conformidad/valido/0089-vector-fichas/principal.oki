@@ -1,3 +1,7 @@
+// Un vector de fichas con texto.
+//
+// El texto que se mete en el compuesto **se mueve**: la variable deja de tenerlo,
+// así que aquí cada ficha se construye con su propia copia y no se reutiliza.
 estructura ficha {
     publico nombre: texto
     publico edad: entero
@@ -6,10 +10,8 @@ estructura ficha {
 funcion principal() -> entero {
     variable lista = Vector<ficha>.nuevo()
 
-    variable ana = "Ana" + ""
-    variable luis = "Luis" + ""
-    lista.agregar(ficha { nombre: ana, edad: 30 })
-    lista.agregar(ficha { nombre: luis, edad: 25 })
+    lista.agregar(ficha { nombre: "Ana" + "", edad: 30 })
+    lista.agregar(ficha { nombre: "Luis" + "", edad: 25 })
 
     imprimir(lista.largo())
 
@@ -18,8 +20,7 @@ funcion principal() -> entero {
     imprimir(primera.edad)
 
     // Cambiar un elemento: el vector libera el nombre viejo.
-    variable pepe = "Pepe" + ""
-    lista.modificar(1, ficha { nombre: pepe, edad: 40 })
+    lista.modificar(1, ficha { nombre: "Pepe" + "", edad: 40 })
     variable segunda = lista.obtener(1)
     imprimir(segunda.nombre)
     imprimir(segunda.edad)
@@ -29,9 +30,7 @@ funcion principal() -> entero {
         imprimir(f.nombre)
     }
 
-    // La variable original sigue siendo suya.
-    imprimir(ana)
     lista.soltar()
-    imprimir(ana)
+    imprimir(lista.largo())
     retornar 0
 }

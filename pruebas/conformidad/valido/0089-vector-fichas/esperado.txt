@@ -5,5 +5,4 @@ Pepe
 40
 Ana
 Pepe
-Ana
-Ana
+0
