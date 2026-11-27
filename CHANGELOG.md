@@ -3,6 +3,37 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.33] — 2026-11-26
+
+### Sprint 161 — El compuesto se mueve de verdad (2026-11-26)
+
+La 1.0.32 enseñó al verificador que aportar un campo con dueño a un compuesto **mueve** la variable. Pero el
+generador no lo hacía: copiaba la estructura, así que la variable y el compuesto apuntaban al **mismo búfer**.
+
+```c
+nooki_vector_equipo_agregar(&lista, (nooki_equipo){ .nombre = ..., .miembros = e1 });
+/* y ningún `e1.datos = NULL` después */
+```
+
+Eso era la causa del doble libre que hizo fracasar dos veces la liberación del temporal. Ahora el generador
+emite el vaciado del origen (`emitir_movimientos_de_compuesto`), y liberar el compuesto temporal deja de ser
+peligroso: la variante `_agregar_temporal` —que agrega y libera— **funciona**. El caso `0105` pasa de fugas a
+limpio, y también `0089` y `0093`.
+
+### Dos fallos más que salieron por el camino
+
+- `anular_variable` vaciaba un **mapa** con los campos del vector (`datos` en vez de `cubetas`): el C generado
+  no compilaba.
+- La **copia de un mapa** copiaba claves y valores antes de insertarlos, y `insertar` ya guarda copias: cada
+  copia de más se perdía. Eso eran 26 bytes en el caso `0113`.
+
+### Lo que queda de esta familia
+
+Los textos temporales que se pasan a `insertar` (`mapa.insertar("clave" + "", valor)`): `insertar` copia y el
+temporal se pierde, **26 bytes**. Se intentó con una variante `_insertar_temporal`, pero `insertar` recibe
+`&texto` cuando la clave es una variable y el valor cuando es un temporal, y el gancho confundía las dos.
+Revertido y anotado.
+
 ## [1.0.32] — 2026-11-26
 
 ### Sprint 160 — Mover a un compuesto ya no se escapa del verificador (2026-11-26)

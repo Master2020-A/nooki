@@ -3309,6 +3309,22 @@ private:
             salida_ << "    v->largo = 0;\n"
                     << "}\n\n";
 
+            // Un compuesto con dueño pasado a `agregar` es un temporal: el vector
+            // se queda su copia y, como el compuesto es dueño de lo que movió, se
+            // puede liberar sin miedo.
+            if (con_texto) {
+                salida_ << "static void " << vec << "_agregar_temporal(" << vec << "* v, " << tipo
+                        << " valor) {\n"
+                        << "    " << vec << "_agregar(v, valor);\n"
+                        << "    " << tipo << "_liberar(&valor);\n"
+                        << "}\n\n";
+                salida_ << "static void " << vec << "_modificar_temporal(" << vec
+                        << "* v, long long indice, " << tipo << " valor) {\n"
+                        << "    " << vec << "_modificar(v, indice, valor);\n"
+                        << "    " << tipo << "_liberar(&valor);\n"
+                        << "}\n\n";
+            }
+
             salida_ << "static void " << vec << "_soltar(" << vec << "* v) {\n";
             if (con_texto) {
                 salida_ << "    for (long long i = 0; i < v->largo; ++i) {\n"
@@ -4097,10 +4113,9 @@ private:
             salida_ << "    for (long long i = 0; i < m.capacidad; ++i) {\n";
             salida_ << "        const " << entrada << "* e = m.cubetas[i];\n";
             salida_ << "        while (e != NULL) {\n";
-            salida_ << "            " << tipo_campo
-                    << "_insertar(&copia, nooki_texto_copiar(e->clave), ";
-            salida_ << (valor == "nooki_texto" ? "nooki_texto_copiar(e->valor)" : "e->valor")
-                    << ");\n";
+            // `insertar` ya guarda copias: no hay que copiarlas antes, o la copia
+            // de más se pierde.
+            salida_ << "            " << tipo_campo << "_insertar(&copia, e->clave, e->valor);\n";
             salida_ << "            e = e->siguiente;\n";
             salida_ << "        }\n    }\n    return copia;\n}\n\n";
         }
@@ -4567,6 +4582,7 @@ private:
             if (sentencia.expresion) {
                 salida_ << indentacion() << expresion(*sentencia.expresion) << ";\n";
                 emitir_movimientos_de_llamada(*sentencia.expresion);
+                emitir_movimientos_de_compuesto(*sentencia.expresion);
             }
             return;
 
@@ -4868,6 +4884,7 @@ private:
         }
 
         emitir_movimientos_de_llamada(*sentencia.expresion);
+        emitir_movimientos_de_compuesto(*sentencia.expresion);
 
         const bool referencia_de_clase = !tipo.empty() && tipo.back() == '*';
         const bool compuesto_fresco =
@@ -6709,6 +6726,50 @@ private:
         }
     }
 
+    /// Un compuesto se queda con los campos con dueño que le aportan variables:
+    /// en C eso es copiar la estructura, así que el origen se vacía para que no
+    /// haya dos dueños del mismo búfer. Sin esto, `ficha { nombre: ana }` dejaba
+    /// `ana` y la ficha apuntando a lo mismo, y liberar las dos reventaba.
+    void emitir_movimientos_de_compuesto(const sintactico::Expresion& expresion) {
+        if (expresion.tipo == sintactico::TipoExpresion::Construccion) {
+            const auto encontrada = tipo_ptr_.find(std::string(expresion.anotacion));
+            if (encontrada != tipo_ptr_.end()) {
+                const sintactico::DefinicionTipo* definicion = encontrada->second;
+                for (std::size_t i = 0; i < expresion.lista.size(); ++i) {
+                    const std::string_view nombre_campo =
+                        i < expresion.nombres_campo.size() ? expresion.nombres_campo[i] : "";
+                    const sintactico::ExpresionPtr& valor = expresion.lista[i];
+                    if (!valor || valor->tipo != sintactico::TipoExpresion::Identificador) {
+                        continue;
+                    }
+                    for (const sintactico::Campo& campo : definicion->campos) {
+                        if (campo.nombre != nombre_campo) {
+                            continue;
+                        }
+                        const std::string_view tipo_campo = campo.tipo;
+                        if (tipo_campo == "texto" || tipo_campo.rfind("Vector<", 0) == 0 ||
+                            tipo_campo.rfind("Mapa<", 0) == 0 ||
+                            tipo_campo.rfind("Caja<", 0) == 0) {
+                            anular_variable(std::string(valor->lexema));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        if (expresion.izquierda) {
+            emitir_movimientos_de_compuesto(*expresion.izquierda);
+        }
+        if (expresion.derecha) {
+            emitir_movimientos_de_compuesto(*expresion.derecha);
+        }
+        for (const sintactico::ExpresionPtr& hijo : expresion.lista) {
+            if (hijo) {
+                emitir_movimientos_de_compuesto(*hijo);
+            }
+        }
+    }
+
     /// Vacía una variable con dueño: su valor pasa a otro sitio.
     void anular_variable(const std::string& nombre) {
         const std::string tipo = buscar(nombre);
@@ -6718,8 +6779,13 @@ private:
             salida_ << indentacion() << nombre << ".datos = NULL;\n";
             salida_ << indentacion() << nombre << ".largo = 0;\n";
             salida_ << indentacion() << nombre << ".propio = 0;\n";
-        } else if (tipo.rfind("nooki_vector_", 0) == 0 || tipo.rfind("nooki_mapa_", 0) == 0) {
+        } else if (tipo.rfind("nooki_vector_", 0) == 0) {
             salida_ << indentacion() << nombre << ".datos = NULL;\n";
+            salida_ << indentacion() << nombre << ".largo = 0;\n";
+            salida_ << indentacion() << nombre << ".capacidad = 0;\n";
+        } else if (tipo.rfind("nooki_mapa_", 0) == 0) {
+            // Un mapa guarda sus cubetas, no un `datos`.
+            salida_ << indentacion() << nombre << ".cubetas = NULL;\n";
             salida_ << indentacion() << nombre << ".largo = 0;\n";
             salida_ << indentacion() << nombre << ".capacidad = 0;\n";
         }
@@ -6756,6 +6822,28 @@ private:
         if (!acceso.izquierda) {
             no_soportado("una llamada a un método sin objeto");
             return "0";
+        }
+
+        // Un vector de una estructura con dueño: si el valor es una construcción,
+        // es un temporal y hay que liberarlo después de agregarlo.
+        if ((acceso.anotacion == "agregar" || acceso.anotacion == "modificar") &&
+            tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
+            const std::string tipo_vector = tipo_de(*acceso.izquierda);
+            const std::string elemento = tipo_vector.substr(std::string("nooki_vector_").size());
+            const std::size_t posicion = acceso.anotacion == "agregar" ? 0 : 1;
+            if (estructuras_con_texto_.count(elemento) != 0 && nodo.lista.size() > posicion &&
+                nodo.lista[posicion] &&
+                nodo.lista[posicion]->tipo == sintactico::TipoExpresion::Construccion) {
+                std::string salida = tipo_vector + "_" + std::string(acceso.anotacion) +
+                                     "_temporal(&" + expresion(*acceso.izquierda);
+                for (const sintactico::ExpresionPtr& argumento : nodo.lista) {
+                    if (argumento) {
+                        salida += ", " + expresion(*argumento);
+                    }
+                }
+                salida += ')';
+                return salida;
+            }
         }
 
         // `&Rasgo`: la referencia lleva el objeto y su tabla.

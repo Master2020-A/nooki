@@ -281,18 +281,30 @@ De paso salió un fallo del generador: `lista.obtener(1).miembros.obtener(0)` em
 campo de una llamada no es un sitio. Ahora la comprobación de «¿es un sitio?» es recursiva: un campo lo es si
 lo es su base.
 
-### 2 ter. Pendiente: liberar el compuesto temporal pasado a `agregar`
+### 2 ter. Arreglado: el compuesto temporal pasado a `agregar`
 
-`lista.agregar(ficha { ... })` construye un compuesto, lo pasa por valor y el vector guarda una copia; el
-compuesto temporal no se libera y sus campos con dueño se pierden.
+El misterio del doble intento fallido: la construcción **copiaba** el campo, no lo movía. El compuesto y la
+variable apuntaban al mismo búfer, y liberar los dos reventaba. Se veía en el C generado:
 
-Se intentó **dos veces** con una variante `_agregar_temporal` que agrega y libera el temporal. Las dos veces
-el programa murió con **corrupción del montículo** (`0xC0000374`) en el caso `0105`. La primera vez se achacó
-a que el compuesto no era dueño de lo que recibía; se arregló esa parte (ver 2 bis) y **volvió a pasar**, así
-que hay algo más: el compuesto temporal y la copia del vector comparten algo que la liberación rompe.
+```c
+nooki_vector_equipo_agregar(&lista, (nooki_equipo){ .nombre = ..., .miembros = e1 });
+/* y ningún `e1.datos = NULL` después */
+```
 
-Lo siguiente es mirar el C generado de ese caso (`nooki compilar ... --emitir-c`) y seguir los punteros de
-`nombre` y `miembros` paso a paso. Está localizado y reproduce en un caso de la batería.
+Ahora el generador emite el vaciado del origen (`emitir_movimientos_de_compuesto`), que es lo que el
+verificador ya daba por hecho desde la 1.0.32. Con eso, la variante `_agregar_temporal` —que agrega y libera el
+temporal— **funciona**: el caso `0105` pasa de fugas a limpio.
+
+De paso salieron dos fallos más: `anular_variable` vaciaba un mapa con los campos del vector (`datos` en vez de
+`cubetas`), y la copia de un mapa copiaba las claves dos veces —`insertar` ya guarda copias—, y la de más se
+perdía.
+
+### 3 bis. Pendiente: los textos temporales de `insertar`
+
+`mapa.insertar("clave" + "", valor)` deja el texto del literal sin liberar: `insertar` guarda una copia y el
+temporal se pierde. Se intentó con una variante `_insertar_temporal`, pero `insertar` recibe la clave como
+préstamo (`&texto`) cuando es una variable y por valor cuando es un temporal, y el gancho confundía las dos.
+Quedan **26 bytes** en el caso `0113`.
 
 ### 3. Pendiente: el texto de un `Bien(...)` que liga un patrón
 
@@ -988,86 +1000,3 @@ emisor.error(codigos::USO_TRAS_MOVER, span)
 | ADR-024 | variantes con datos |
 | ADR-025 | biblioteca en Nooki |
 
-## Memoria del código generado
-
-El preset `saneamiento` instrumenta el **compilador**. Las fugas que importan están en el **C que el
-compilador produce**, y para eso está `herramientas/verificar-memoria.sh`:
-
-```bash
-./herramientas/verificar-memoria.sh programa.oki
-```
-
-Compila el C con AddressSanitizer, lo ejecuta y dice de qué función viene cada fuga. Hoy hay **dos clases
-conocidas**, y las dos están medidas:
-
-### 1. Arreglada: `imprimir` de un temporal
-
-`imprimir(f())` o `imprimir("a" + b)` dejaba el texto sin liberar. Ahora esas llamadas usan
-`nooki_imprimir_texto_temporal`, que imprime y suelta. Los literales no pasan por ahí: no tienen dueño.
-
-### 2. Arreglada: los parámetros con dueño no se liberaban
-
-Una función que recibe un `texto` por valor **no lo liberaba al salir**: una fuga por llamada.
-
-La corrección no era solo registrar el parámetro para liberarlo —eso, por sí solo, producía un **doble
-libre**, porque el llamante también liberaba la variable que había pasado—. Hacía falta la otra mitad:
-**quien recibe el valor pasa a ser su dueño**, y el llamante deja de liberarlo.
-
-Esa mitad existía, pero solo para las llamadas que eran **sentencia**. Una llamada anidada
-(`imprimir(unir(&p, separador))`) no movía nada, así que el mismo valor tenía dos dueños. En vez de emitir el
-vaciado dentro de la expresión —que necesitaría temporales y un operador coma—, el generador ahora **quita el
-nombre de la lista de lo que hay que liberar** en cuanto se pasa a un parámetro que no es préstamo. Sin código
-emitido, sin fugas y sin dobles libres.
-
-Comprobado con el caso que antes rompía (`0051-api-biblioteca`, `attempting double-free` en
-`nooki_probar_textos`) y con `verificar-memoria.sh`: el programa de prueba pasó de **4 fugas** a **ninguna**.
-
-### 2 bis. Arreglado: aportar un campo con dueño a un compuesto
-
-`ficha { nombre: ana }` **mueve** `ana` dentro del compuesto: el generador vacía la variable. Pero el
-verificador no la marcaba como movida, así que usarla después compilaba y leía memoria que ya no era suya.
-
-Ahora se marca, en un pase único después de tipar (tipar dentro del tipo del compuesto daba un falso positivo,
-porque un nodo se tipa más de una vez). El diagnóstico señala la **segunda** línea, que es la que sobra:
-
-```nooki
-variable ana = "Ana" + ""
-variable f = ficha { nombre: ana, edad: 30 }
-imprimir(ana)   // NOK5001: «ana» se movió antes
-```
-
-Esto destapó cuatro programas **míos** que hacían justo eso —dos casos de conformidad y dos ejemplos del
-manual— y que "funcionaban" porque el compuesto temporal nunca se liberaba. Corregidos: ahora cada compuesto se
-construye con su propio valor, y lo que se quiere mirar se mira antes de moverlo.
-
-De paso salió un fallo del generador: `lista.obtener(1).miembros.obtener(0)` emitía `&llamada().miembros`, y un
-campo de una llamada no es un sitio. Ahora la comprobación de «¿es un sitio?» es recursiva: un campo lo es si
-lo es su base.
-
-### 2 ter. Pendiente: liberar el compuesto temporal pasado a `agregar`
-
-`lista.agregar(ficha { ... })` construye un compuesto, lo pasa por valor y el vector guarda una copia; el
-compuesto temporal no se libera y sus campos con dueño se pierden.
-
-Se intentó **dos veces** con una variante `_agregar_temporal` que agrega y libera el temporal. Las dos veces
-el programa murió con **corrupción del montículo** (`0xC0000374`) en el caso `0105`. La primera vez se achacó
-a que el compuesto no era dueño de lo que recibía; se arregló esa parte (ver 2 bis) y **volvió a pasar**, así
-que hay algo más: el compuesto temporal y la copia del vector comparten algo que la liberación rompe.
-
-Lo siguiente es mirar el C generado de ese caso (`nooki compilar ... --emitir-c`) y seguir los punteros de
-`nombre` y `miembros` paso a paso. Está localizado y reproduce en un caso de la batería.
-
-### 3. Pendiente: el texto de un `Bien(...)` que liga un patrón
-
-Al desestructurar `coincide (archivo.leer(&ruta)) { caso Bien(leido) => imprimir(leido) }`, el texto que
-lleva el `Bien` no se libera. Es una fuga pequeña y localizada en el emparejamiento con datos.
-
-### Cómo medirlo
-
-`verificar-memoria.sh` no falla a propósito: una herramienta que siempre sale en rojo no se usa. Cuando las
-dos clases estén cerradas, se le pone el modo estricto y sirve de barrera en la CI.
-| ADR-028 | estado compartido | capturarlo prohibido; después `Compartido<T>` con recuento |
-| ADR-027 | cierres | función que lleva su entorno, dueña de él y de movimiento |
-| ADR-026 | rasgos |
-
-Los textos completos están en [`docs/adr/`](../adr/).
