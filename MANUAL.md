@@ -2085,6 +2085,31 @@ funcion principal() -> entero {
 }
 ```
 
+Y puede llevar campos con dueño dentro: la celda guarda una **copia en profundidad** y la libera con los
+ayudantes de copia de la estructura —los mismos que usa un `Vector`—, así que `sacar` devuelve una copia que es
+de quien la recibe:
+
+```nooki
+usar textos
+
+estructura ficha {
+    publico nombre: texto
+    publico edad: entero
+}
+
+funcion principal() -> entero {
+    variable c: Compartido<ficha> = Compartido<ficha>.nuevo(ficha { nombre: "Ana" + "", edad: 30 })
+    variable leer = funcion() -> ficha => c.sacar()
+    variable cambiar = funcion(nombre: texto) -> vacio => c.poner(ficha { nombre: nombre, edad: 31 })
+
+    variable f = leer()
+    cambiar("Bea" + "")
+    imprimir(leer().nombre)   // Bea
+    imprimir(f.nombre)        // Ana: la copia es suya
+    retornar 0
+}
+```
+
 El tipo hay que escribirlo (`variable centro: Compartido<punto> = ...`), igual que con un cierre que sale de una
 fábrica: sin él, el compilador no sabe qué celda es.
 

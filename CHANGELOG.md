@@ -3,6 +3,43 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.34] — 2026-11-26
+
+### Sprint 162 — Celda de una estructura con campos con dueño (2026-11-26)
+
+`Compartido<MiEstructura>` solo admitía estructuras de campos simples. Ahora admite también las que llevan
+`texto`, `Vector` o `Mapa` dentro, porque la celda reutiliza los ayudantes `_copiar` y `_liberar` de la
+estructura —los mismos que genera un `Vector`— y copia en profundidad:
+
+```nooki
+variable c: Compartido<ficha> = Compartido<ficha>.nuevo(ficha { nombre: "Ana" + "", edad: 30 })
+variable leer = funcion() -> ficha => c.sacar()
+variable cambiar = funcion(nombre: texto) -> vacio => c.poner(ficha { nombre: nombre, edad: 31 })
+
+variable f = leer()
+cambiar("Bea" + "")
+imprimir(leer().nombre)   // Bea
+imprimir(f.nombre)        // Ana: la copia es suya
+```
+
+`sacar` devuelve una copia que es de quien la recibe, y `poner` libera la anterior antes de copiar la nueva.
+Caso `0115-celda-ficha`.
+
+### Y los textos temporales de `insertar`
+
+`mapa.insertar("clave" + "", valor)` dejaba el texto sin liberar. Ahora, cuando la clave o el valor es una
+concatenación o una llamada —lo único que produce un texto con dueño—, se usa una variante que inserta y
+suelta. El filtro es estricto a propósito: una variable llega como `(*&nombre)`, y **ese** fue el error del
+primer intento, que confundía préstamo con valor.
+
+La batería medida: **535 → 509 bytes**, y de 70 a **71 casos limpios**.
+
+### Lo que queda
+
+Los locales de tipo estructura con campos con dueño no se liberan al salir del ámbito. Ponerlos exige antes que
+`_vista` neutralice **todos** los campos con dueño, no solo los `texto`: si no, liberar una vista de
+`obtener()` liberaría lo que es del vector. Son **16 bytes** en el caso `0115`.
+
 ## [1.0.33] — 2026-11-26
 
 ### Sprint 161 — El compuesto se mueve de verdad (2026-11-26)

@@ -1075,6 +1075,14 @@ const char* PRELUDIO =
     "    return m->largo;\n"
     "}\n"
     "\n"
+    "static void nooki_mapa_texto_texto_insertar_temporal(nooki_mapa_texto_texto* m,\n"
+    "                                                     nooki_texto clave,\n"
+    "                                                     nooki_texto valor) {\n"
+    "    nooki_mapa_texto_texto_insertar(m, clave, valor);\n"
+    "    nooki_texto_soltar(&clave);\n"
+    "    nooki_texto_soltar(&valor);\n"
+    "}\n"
+    "\n"
     "static void nooki_mapa_texto_texto_soltar(nooki_mapa_texto_texto* m) {\n"
     "    if (m->cubetas != NULL) {\n"
     "        for (long long i = 0; i < m->capacidad; ++i) {\n"
@@ -1245,6 +1253,13 @@ const char* PRELUDIO =
     "    return m->largo;\n"
     "}\n"
     "\n"
+    "static void nooki_mapa_texto_flotante_insertar_temporal(nooki_mapa_texto_flotante* m,\n"
+    "                                                        nooki_texto clave,\n"
+    "                                                        double valor) {\n"
+    "    nooki_mapa_texto_flotante_insertar(m, clave, valor);\n"
+    "    nooki_texto_soltar(&clave);\n"
+    "}\n"
+    "\n"
     "static void nooki_mapa_texto_flotante_soltar(nooki_mapa_texto_flotante* m) {\n"
     "    if (m->cubetas != NULL) {\n"
     "        for (long long i = 0; i < m->capacidad; ++i) {\n"
@@ -1276,6 +1291,14 @@ const char* PRELUDIO =
     "        }\n"
     "    }\n"
     "    return claves;\n"
+    "}\n"
+    "\n"
+    "/* `insertar` guarda copias; si el llamante pasa temporales, los suelta. */\n"
+    "static void nooki_mapa_texto_entero_insertar_temporal(nooki_mapa_texto_entero* m,\n"
+    "                                                      nooki_texto clave,\n"
+    "                                                      long long valor) {\n"
+    "    nooki_mapa_texto_entero_insertar(m, clave, valor);\n"
+    "    nooki_texto_soltar(&clave);\n"
     "}\n"
     "\n"
     "static void nooki_mapa_texto_entero_soltar(nooki_mapa_texto_entero* m) {\n"
@@ -3347,6 +3370,9 @@ private:
             }
             const std::string en_c = tipo->second;
             const std::string celda = "nooki_compartido_" + nombre;
+            // Con campos con dueño, copiar y liberar es trabajo de los
+            // ayudantes de la estructura; sin ellos, basta la copia del valor.
+            const bool con_dueno = estructuras_con_texto_.count(nombre) != 0;
             salida_ << "typedef struct {\n"
                     << "    " << en_c << "* datos;\n"
                     << "    long long* referencias;\n"
@@ -3356,7 +3382,8 @@ private:
                     << "    c.datos = (" << en_c << "*)malloc(sizeof(" << en_c << "));\n"
                     << "    c.referencias = (long long*)malloc(sizeof(long long));\n"
                     << "    if (c.datos != NULL) {\n"
-                    << "        *c.datos = valor;\n"
+                    << "        *c.datos = " << (con_dueno ? en_c + "_copiar(valor)" : "valor")
+                    << ";\n"
                     << "    }\n"
                     << "    if (c.referencias != NULL) {\n"
                     << "        *c.referencias = 1;\n"
@@ -3372,12 +3399,18 @@ private:
             salida_ << "static " << en_c << " " << celda << "_sacar(" << celda << "* c) {\n"
                     << "    " << en_c << " vacio;\n"
                     << "    memset(&vacio, 0, sizeof vacio);\n"
-                    << "    return c->datos != NULL ? *c->datos : vacio;\n"
+                    << "    if (c->datos == NULL) {\n"
+                    << "        return vacio;\n"
+                    << "    }\n"
+                    << "    return " << (con_dueno ? en_c + "_copiar(*c->datos)" : "*c->datos")
+                    << ";\n"
                     << "}\n\n";
             salida_ << "static void " << celda << "_poner(" << celda << "* c, " << en_c
                     << " valor) {\n"
                     << "    if (c->datos != NULL) {\n"
-                    << "        *c->datos = valor;\n"
+                    << (con_dueno ? "        " + en_c + "_liberar(c->datos);\n" : "")
+                    << "        *c->datos = " << (con_dueno ? en_c + "_copiar(valor)" : "valor")
+                    << ";\n"
                     << "    }\n"
                     << "}\n\n";
             salida_ << "static void " << celda << "_soltar(" << celda << "* c) {\n"
@@ -3386,6 +3419,7 @@ private:
                     << "    }\n"
                     << "    *c->referencias -= 1;\n"
                     << "    if (*c->referencias <= 0) {\n"
+                    << (con_dueno ? "        " + en_c + "_liberar(c->datos);\n" : "")
                     << "        free(c->datos);\n"
                     << "        free(c->referencias);\n"
                     << "    }\n"
@@ -4805,6 +4839,9 @@ private:
                 }
                 if (dentro != "entero" && dentro != "texto") {
                     celdas_de_estructura_.insert(dentro);
+                    // Los ayudantes de copia y liberación de la estructura los
+                    // genera el vector de esa estructura: se pide uno.
+                    vectores_de_estructura_.insert(dentro);
                 }
             }
         }
@@ -6843,6 +6880,28 @@ private:
                 }
                 salida += ')';
                 return salida;
+            }
+        }
+
+        // Un mapa: `insertar` copia, así que un texto temporal que recibe hay
+        // que soltarlo después. Solo se tocan los que de verdad tienen dueño:
+        // una variable llega como `(*&nombre)` y no se toca.
+        if (acceso.anotacion == "insertar" &&
+            tipo_de(*acceso.izquierda).rfind("nooki_mapa_", 0) == 0 && nodo.lista.size() == 2) {
+            const std::string tipo_mapa = tipo_de(*acceso.izquierda);
+            const auto es_temporal = [](const sintactico::ExpresionPtr& argumento) {
+                if (!argumento) {
+                    return false;
+                }
+                return argumento->tipo == sintactico::TipoExpresion::Binaria ||
+                       argumento->tipo == sintactico::TipoExpresion::Llamada;
+            };
+            const bool clave_temporal = es_temporal(nodo.lista[0]);
+            const bool valor_temporal =
+                tipo_mapa == "nooki_mapa_texto_texto" && es_temporal(nodo.lista[1]);
+            if (clave_temporal || valor_temporal) {
+                return tipo_mapa + "_insertar_temporal(&" + expresion(*acceso.izquierda) + ", " +
+                       expresion(*nodo.lista[0]) + ", " + expresion(*nodo.lista[1]) + ")";
             }
         }
 

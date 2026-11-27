@@ -1,0 +1,25 @@
+usar textos
+
+estructura ficha {
+    publico nombre: texto
+    publico edad: entero
+}
+
+funcion principal() -> entero {
+    variable c: Compartido<ficha> = Compartido<ficha>.nuevo(ficha { nombre: "Ana" + "", edad: 30 })
+    variable leer = funcion() -> ficha => c.sacar()
+    variable cambiar = funcion(nombre: texto) -> vacio => c.poner(ficha { nombre: nombre, edad: 31 })
+
+    variable f = leer()
+    imprimir(f.nombre)
+    imprimir(textos.de_entero(f.edad))
+
+    cambiar("Bea" + "")
+    variable g = leer()
+    imprimir(g.nombre)
+    imprimir(textos.de_entero(g.edad))
+
+    // La copia de `f` es suya: cambiar la celda no la toca.
+    imprimir(f.nombre)
+    retornar 0
+}

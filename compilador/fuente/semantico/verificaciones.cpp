@@ -1679,19 +1679,10 @@ private:
     /// Una estructura que se puede meter en una celda compartida: existe y no
     /// tiene campos con dueño, así que copiarla es copiar sus valores.
     bool es_estructura_simple(std::string_view nombre) const {
-        const sintactico::DefinicionTipo* definicion = tipo_por_nombre(nombre);
-        if (definicion == nullptr) {
-            return false;
-        }
-        for (const sintactico::Campo& campo : definicion->campos) {
-            const std::string_view tipo = campo.tipo;
-            if (tipo == "texto" || tipo.rfind("Vector<", 0) == 0 || tipo.rfind("Mapa<", 0) == 0 ||
-                tipo.rfind("Caja<", 0) == 0 || tipo.rfind("Compartido<", 0) == 0 ||
-                tipo.rfind("cierre(", 0) == 0) {
-                return false;
-            }
-        }
-        return true;
+        // Cualquier estructura vale: la celda guarda una copia en profundidad y la
+        // libera con los ayudantes de copia de la estructura, los mismos que usa un
+        // `Vector` cuando guarda una.
+        return tipo_por_nombre(nombre) != nullptr;
     }
 
     /// ¿Esa variable guarda un cierre?

@@ -299,12 +299,25 @@ De paso salieron dos fallos más: `anular_variable` vaciaba un mapa con los camp
 `cubetas`), y la copia de un mapa copiaba las claves dos veces —`insertar` ya guarda copias—, y la de más se
 perdía.
 
-### 3 bis. Pendiente: los textos temporales de `insertar`
+### 3 bis. Arreglado: los textos temporales de `insertar`
 
-`mapa.insertar("clave" + "", valor)` deja el texto del literal sin liberar: `insertar` guarda una copia y el
-temporal se pierde. Se intentó con una variante `_insertar_temporal`, pero `insertar` recibe la clave como
-préstamo (`&texto`) cuando es una variable y por valor cuando es un temporal, y el gancho confundía las dos.
-Quedan **26 bytes** en el caso `0113`.
+`mapa.insertar("clave" + "", valor)` dejaba el texto del literal sin liberar. Ahora, cuando la clave (o el
+valor, en el mapa de texto) es una **concatenación o una llamada** —lo único que produce un texto con dueño—,
+se llama a una variante que inserta y suelta. El filtro es estricto a propósito: una variable llega como
+`(*&nombre)` y un préstamo no se toca, que es justo lo que confundía el primer intento.
+
+La batería pasó de **535 a 509 bytes** y el caso `0113` queda limpio.
+
+### 3 ter. Pendiente: los locales de una estructura con campos con dueño
+
+`variable f = c.sacar()` con `c` una celda de `ficha` deja sin liberar la copia: los locales de tipo estructura
+**no entran en la lista de lo que hay que liberar**. Ponerlos es tentador, pero `Vector.obtener` devuelve una
+**vista** y su `_vista` solo neutraliza los campos `texto` (`propio = 0`), no los `Vector`, `Mapa` ni `Caja`:
+liberar una vista de esos liberaría lo que es del vector.
+
+Lo que falta: que `_vista` neutralice **todos** los campos con dueño (`datos = NULL` en el vector,
+`cubetas = NULL` en el mapa, `datos = NULL` en la caja) y después registrar los locales de estructura como
+liberables. Son **16 bytes** en el caso `0115`.
 
 ### 3. Pendiente: el texto de un `Bien(...)` que liga un patrón
 
