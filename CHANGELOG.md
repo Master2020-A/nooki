@@ -3,6 +3,30 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.36] — 2026-11-27
+
+### Sprint 164 — `csv.campos(...).largo()` dejaba el vector sin liberar (2026-11-27)
+
+```nooki
+imprimir(textos.de_entero(csv.campos(&sola).largo()))
+```
+
+Ese vector **temporal** —el que devuelve `csv.campos` y solo se usa para medirlo— nunca se liberaba. Ahora cada
+tipo de vector tiene su `<vec>_largo_temporal`, que mide y suelta, y el generador lo usa cuando el receptor de
+`largo` es una llamada. Se generan los tres genéricos y uno por estructura.
+
+`0107-csv` pasó de **203 bytes a 6**. Los 6 que quedan son los textos de los campos que devuelve `csv.campos`,
+tres concatenaciones de 2 bytes: otra cosa, más pequeña.
+
+Y `0049-archivo` sigue en 20, `0063-mapa` en 34, `0104-compartido-texto` en 44, `0115-celda-ficha` en 16 y
+`0072-csv` en 94 — todos medidos antes y después, sin cambios.
+
+### Los `lectura` también se sueltan
+
+`nooki_lectura` (el resultado de `archivo.leer`) tenía el mismo problema que `resultado`: no entraba en la lista
+de liberables. Ahora sí. En `0072` no bajó el número porque esa fuga está **dentro del módulo**, no en el
+llamante; queda anotada ahí.
+
 ## [1.0.35] — 2026-11-27
 
 ### Sprint 163 — El `resultado` ya se libera (2026-11-27)

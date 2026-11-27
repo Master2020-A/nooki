@@ -631,6 +631,13 @@ const char* PRELUDIO =
     "    v->largo = 0;\n"
     "    v->capacidad = 0;\n"
     "}\n"
+    "/* Un vector temporal medido: se mide y se suelta. */\n"
+    "static long long nooki_vector_entero_largo_temporal(nooki_vector_entero v) {\n"
+    "    const long long total = v.largo;\n"
+    "    nooki_vector_entero_soltar(&v);\n"
+    "    return total;\n"
+    "}\n"
+    "\n"
     "\n"
     "/* Vector<texto>: los elementos son del vector; obtener devuelve una vista. */\n"
     "typedef struct {\n"
@@ -754,6 +761,13 @@ const char* PRELUDIO =
     "    v->largo = 0;\n"
     "    v->capacidad = 0;\n"
     "}\n"
+    "/* Un vector temporal medido: se mide y se suelta. */\n"
+    "static long long nooki_vector_flotante_largo_temporal(nooki_vector_flotante v) {\n"
+    "    const long long total = v.largo;\n"
+    "    nooki_vector_flotante_soltar(&v);\n"
+    "    return total;\n"
+    "}\n"
+    "\n"
     "\n"
     "static void nooki_vector_texto_soltar(nooki_vector_texto* v) {\n"
     "    for (long long i = 0; i < v->largo; ++i) {\n"
@@ -764,6 +778,13 @@ const char* PRELUDIO =
     "    v->largo = 0;\n"
     "    v->capacidad = 0;\n"
     "}\n"
+    "/* Un vector temporal medido: se mide y se suelta. */\n"
+    "static long long nooki_vector_texto_largo_temporal(nooki_vector_texto v) {\n"
+    "    const long long total = v.largo;\n"
+    "    nooki_vector_texto_soltar(&v);\n"
+    "    return total;\n"
+    "}\n"
+    "\n"
     "\n"
     "/* Mapa<texto, entero>: tabla hash con encadenamiento (S29). */\n"
     "typedef struct nooki_mapa_entrada {\n"
@@ -3348,6 +3369,8 @@ private:
                         << "}\n\n";
             }
 
+            // `algo().largo()` con un vector: el temporal se mide y se suelta.
+
             salida_ << "static void " << vec << "_soltar(" << vec << "* v) {\n";
             if (con_texto) {
                 salida_ << "    for (long long i = 0; i < v->largo; ++i) {\n"
@@ -3358,6 +3381,12 @@ private:
                     << "    v->datos = NULL;\n"
                     << "    v->largo = 0;\n"
                     << "    v->capacidad = 0;\n"
+                    << "}\n\n";
+            // `algo().largo()` con un vector de estructuras: se mide y se suelta.
+            salida_ << "static long long " << vec << "_largo_temporal(" << vec << " v) {\n"
+                    << "    const long long total = v.largo;\n"
+                    << "    " << vec << "_soltar(&v);\n"
+                    << "    return total;\n"
                     << "}\n\n";
         }
 
@@ -4929,9 +4958,9 @@ private:
             (sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion ||
              sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada);
 
-        // Un `resultado` es dueño del texto de su error.
+        // Un `resultado` —y su hermano `lectura`— son dueños del texto que llevan.
         const bool resultado_fresco =
-            tipo == "nooki_resultado" &&
+            (tipo == "nooki_resultado" || tipo == "nooki_lectura") &&
             (sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada ||
              sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion);
         if (tipo == "nooki_caja" || tipo == "nooki_texto" || tipo.rfind("nooki_vector_", 0) == 0 ||
@@ -4951,7 +4980,7 @@ private:
             }
             std::string liberar = "nooki_texto_soltar";
             if (resultado_fresco) {
-                liberar = "nooki_resultado_soltar";
+                liberar = tipo + "_soltar";
             } else if (tipo == "nooki_caja") {
                 liberar = "nooki_caja_soltar";
             } else if (referencia_de_clase) {
@@ -6889,6 +6918,15 @@ private:
                 salida += ')';
                 return salida;
             }
+        }
+
+        // `algo().largo()` con un vector: el vector que devuelve la llamada es un
+        // temporal y hay que soltarlo después de medirlo.
+        if (acceso.anotacion == "largo" && nodo.lista.empty() && acceso.izquierda &&
+            acceso.izquierda->tipo == sintactico::TipoExpresion::Llamada &&
+            tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
+            return tipo_de(*acceso.izquierda) + "_largo_temporal(" + expresion(*acceso.izquierda) +
+                   ")";
         }
 
         // Un mapa: `insertar` copia, así que un texto temporal que recibe hay

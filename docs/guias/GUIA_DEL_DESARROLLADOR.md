@@ -333,11 +333,20 @@ Comprobado con ASan en un programa mínimo y en el caso `0116-resultado-libera`.
 liberarlo: queda su texto. Es la misma forma que la de los compuestos temporales, pero para `resultado`. Se ve
 en `0049-archivo` (20 bytes) y `0072-csv` (94 bytes tras `csv_filas`).
 
-### 3 ter. Pendiente: lo que devuelve `csv`
+### 3 ter. Arreglado (casi): `algo().largo()` con un vector
 
-`csv.campos` y `csv.filas` son las fugas mayores que quedan en la batería (`0107-csv`, **203 bytes estables**;
-`0072-csv`, 94). El patrón apunta a la devolución de un `Vector<texto>` desde un módulo: el vector que se
-construye dentro y el que se devuelve. Es el siguiente sitio donde mirar.
+`csv.campos(&sola).largo()` construía un vector **temporal** que nunca se liberaba: el patrón de la
+comparación con literales compuestos. Ahora cada tipo de vector —los tres genéricos y uno por estructura— tiene
+su `<vec>_largo_temporal`, que mide y suelta, y el generador lo usa cuando el receptor de `largo` es una
+llamada.
+
+`0107-csv` pasó de **203 bytes a 6**. Los 6 que quedan son otra cosa: los textos de los campos que devuelve
+`csv.campos` (tres concatenaciones de 2 bytes).
+
+### 3 quater. Pendiente: lo que lee `csv.filas`
+
+`0072-csv`, 94 bytes: dentro del módulo se lee el archivo y se copian sus líneas al vector, y el texto
+intermedio no se libera. El `lectura` local ya se suelta; la fuga está en el módulo, no en el llamante.
 
 ### 3 quater. Pendiente: `sacar()` de una celda de texto
 
