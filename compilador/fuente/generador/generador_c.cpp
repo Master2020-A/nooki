@@ -4929,8 +4929,14 @@ private:
             (sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion ||
              sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada);
 
+        // Un `resultado` es dueño del texto de su error.
+        const bool resultado_fresco =
+            tipo == "nooki_resultado" &&
+            (sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada ||
+             sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion);
         if (tipo == "nooki_caja" || tipo == "nooki_texto" || tipo.rfind("nooki_vector_", 0) == 0 ||
-            tipo.rfind("nooki_mapa_", 0) == 0 || compuesto_fresco || referencia_de_clase) {
+            tipo.rfind("nooki_mapa_", 0) == 0 || compuesto_fresco || referencia_de_clase ||
+            resultado_fresco) {
             // Asignar un valor con dueño transfiere la propiedad: el origen queda vacío.
             if (sentencia.expresion->tipo == sintactico::TipoExpresion::Identificador) {
                 const std::string& origen = std::string(sentencia.expresion->lexema);
@@ -4944,7 +4950,9 @@ private:
                 }
             }
             std::string liberar = "nooki_texto_soltar";
-            if (tipo == "nooki_caja") {
+            if (resultado_fresco) {
+                liberar = "nooki_resultado_soltar";
+            } else if (tipo == "nooki_caja") {
                 liberar = "nooki_caja_soltar";
             } else if (referencia_de_clase) {
                 liberar = tipo.substr(0, tipo.size() - 1) + "_soltar";

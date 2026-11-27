@@ -3,6 +3,41 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.35] — 2026-11-27
+
+### Sprint 163 — El `resultado` ya se libera (2026-11-27)
+
+`variable malo: resultado = Error("algo fallo" + "")` dejaba el texto del error sin liberar: un `resultado` no
+entraba en la lista de lo que hay que liberar. Ahora los `resultado` **frescos** —los que vienen de una llamada
+o de una construcción— se sueltan con `nooki_resultado_soltar`, que ya estaba en el preludio.
+
+Comprobado con ASan sobre el C generado: un programa mínimo que antes dejaba 11 bytes pasa a limpio, y el caso
+nuevo `0116-resultado-libera` (dividir por cero, con `Ok` y `Error`) también.
+
+### Lo que he aprendido midiendo
+
+Los **totales** de la batería bailan entre ejecuciones: 509, 525 y 554 bytes para el mismo código, con un caso
+que cambia de resultado. Los datos que sirven son **por caso**, que sí son estables: `0107-csv` da 203 bytes
+dos veces seguidas.
+
+Así que a partir de aquí no publico totales, sino casos concretos. Los que quedan, con nombre:
+
+| Caso | Bytes | Dónde |
+|---|---|---|
+| `0107-csv` | 203 | al devolver un `Vector<texto>` desde el módulo |
+| `0072-csv` | 94 | ídem |
+| `0104-compartido-texto` | 44 | cada `sacar()` de una celda de texto |
+| `0063-mapa` | 34 | `pln.tokenizar` |
+| `0049-archivo` | 20 | un `resultado` temporal en `coincide` |
+| `0115-celda-ficha` | 16 | locales de estructura con campos con dueño |
+
+### Un intento que no salió
+
+Registrar los locales de tipo estructura como liberables: rompió tres casos (`0036`, `0037`, `0038`). La razón
+es que `obtener()` devuelve una **vista** y se liberaba como si fuera dueña; se intentó arreglarlo haciendo que
+`_vista` neutralizara todos los campos con dueño, y entonces la vista dejaba de servir para leer (`0105`
+imprimía el vector vacío). Revertido entero, con el diagnóstico por escrito.
+
 ## [1.0.34] — 2026-11-26
 
 ### Sprint 162 — Celda de una estructura con campos con dueño (2026-11-26)

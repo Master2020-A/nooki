@@ -319,6 +319,36 @@ Lo que falta: que `_vista` neutralice **todos** los campos con dueño (`datos = 
 `cubetas = NULL` en el mapa, `datos = NULL` en la caja) y después registrar los locales de estructura como
 liberables. Son **16 bytes** en el caso `0115`.
 
+### 3. Arreglado: el `resultado` no se liberaba
+
+`variable malo: resultado = Error("algo fallo" + "")` dejaba el texto del error sin liberar: un `resultado` no
+entraba en la lista de lo que hay que liberar. Ahora los `resultado` **frescos** —los que vienen de una llamada
+o de una construcción— se sueltan con `nooki_resultado_soltar`, que ya existía en el preludio.
+
+Comprobado con ASan en un programa mínimo y en el caso `0116-resultado-libera`.
+
+### 3 bis. Pendiente: los `resultado` temporales de un `coincide`
+
+`coincide (archivo.leer(&ruta)) { ... }` no asigna el `resultado` a ninguna variable, así que no hay dónde
+liberarlo: queda su texto. Es la misma forma que la de los compuestos temporales, pero para `resultado`. Se ve
+en `0049-archivo` (20 bytes) y `0072-csv` (94 bytes tras `csv_filas`).
+
+### 3 ter. Pendiente: lo que devuelve `csv`
+
+`csv.campos` y `csv.filas` son las fugas mayores que quedan en la batería (`0107-csv`, **203 bytes estables**;
+`0072-csv`, 94). El patrón apunta a la devolución de un `Vector<texto>` desde un módulo: el vector que se
+construye dentro y el que se devuelve. Es el siguiente sitio donde mirar.
+
+### 3 quater. Pendiente: `sacar()` de una celda de texto
+
+`0104-compartido-texto`, 44 bytes: cada `sacar()` devuelve una copia del texto y esa copia no se libera.
+
+### 3 quinquies. Nota sobre las medidas
+
+Los totales de la batería **bailan** entre ejecuciones (509, 525, 554 con el mismo código: algún caso
+nondeterminista, probablemente por el orden de un mapa). Los datos que sirven son **por caso**, que sí son
+estables (`0107`, 203 bytes, dos veces seguidas). El script debería dejar de sumar y pasar a comparar por caso.
+
 ### 3. Pendiente: el texto de un `Bien(...)` que liga un patrón
 
 Al desestructurar `coincide (archivo.leer(&ruta)) { caso Bien(leido) => imprimir(leido) }`, el texto que

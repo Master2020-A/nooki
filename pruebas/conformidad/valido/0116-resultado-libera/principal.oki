@@ -1,0 +1,32 @@
+// El error de un `resultado` lleva un texto, y se libera al salir del ámbito.
+//
+// Lo que se comprueba aquí es el valor; que no haya fuga lo mira
+// herramientas/verificar-memoria.sh, que instrumenta el C generado.
+usar resultado
+usar textos
+
+funcion dividir(a: entero, b: entero) -> resultado {
+    si (b == 0) {
+        retornar Error("no se puede dividir por cero" + "")
+    }
+    retornar Ok(a / b)
+}
+
+funcion principal() -> entero {
+    coincide (dividir(10, 2)) {
+        caso Ok(v) => imprimir(textos.de_entero(v))
+        caso Error(m) => imprimir(m)
+    }
+    coincide (dividir(1, 0)) {
+        caso Ok(v) => imprimir(textos.de_entero(v))
+        caso Error(m) => imprimir(m)
+    }
+
+    // Y uno construido en el sitio.
+    variable malo: resultado = Error("otra cosa" + "")
+    coincide (malo) {
+        caso Ok(v) => imprimir(textos.de_entero(v))
+        caso Error(m) => imprimir(m)
+    }
+    retornar 0
+}
