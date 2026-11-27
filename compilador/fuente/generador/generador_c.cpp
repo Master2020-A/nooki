@@ -2837,13 +2837,9 @@ private:
                     }
                     for (const sintactico::Campo& campo : definicion.campos) {
                         const std::string_view tipo_campo = campo.tipo;
-                        if (tipo_campo.rfind("Mapa<", 0) == 0) {
-                            no_soportado("un Vector de la estructura «" + dentro +
-                                         "», que tiene un mapa dentro");
-                            return;
-                        }
                         if (tipo_campo == "texto" || tipo_campo.rfind("Vector<", 0) == 0 ||
-                            tipo_campo.rfind("Caja<", 0) == 0) {
+                            tipo_campo.rfind("Caja<", 0) == 0 ||
+                            tipo_campo.rfind("Mapa<", 0) == 0) {
                             estructuras_con_texto_.insert(dentro);
                         }
                     }
@@ -3208,6 +3204,7 @@ private:
                         salida_ << "    " << destino << " = nooki_texto_copiar(" << destino
                                 << ");\n";
                     } else if (tipo_campo.rfind("nooki_vector_", 0) == 0 ||
+                               tipo_campo.rfind("nooki_mapa_", 0) == 0 ||
                                tipo_campo == "nooki_caja") {
                         salida_ << "    " << destino << " = " << tipo_campo << "_copiar(" << destino
                                 << ");\n";
@@ -3226,7 +3223,7 @@ private:
                 salida_ << "static void " << tipo << "_liberar(" << tipo << "* valor) {\n";
                 for (const auto& [campo, tipo_campo] : campos) {
                     if (tipo_campo == "nooki_texto" || tipo_campo.rfind("nooki_vector_", 0) == 0 ||
-                        tipo_campo == "nooki_caja") {
+                        tipo_campo.rfind("nooki_mapa_", 0) == 0 || tipo_campo == "nooki_caja") {
                         salida_ << "    " << tipo_campo << "_soltar(&valor->" << campo << ");\n";
                     }
                 }
@@ -4013,6 +4010,31 @@ private:
             salida_ << "    if (c.datos != NULL && copia.datos != NULL) {\n";
             salida_ << "        *copia.datos = *c.datos;\n";
             salida_ << "    }\n    return copia;\n}\n\n";
+        }
+        // Un mapa se copia recorriendo sus entradas y copiando clave y valor.
+        if (tipo_campo.rfind("nooki_mapa_", 0) == 0) {
+            copias_emitidas_.insert(tipo_campo);
+            std::string entrada = "nooki_mapa_entrada";
+            std::string valor = "long long";
+            if (tipo_campo == "nooki_mapa_texto_texto") {
+                entrada = "nooki_mapa_entrada_texto";
+                valor = "nooki_texto";
+            } else if (tipo_campo == "nooki_mapa_texto_flotante") {
+                entrada = "nooki_mapa_entrada_flotante";
+                valor = "double";
+            }
+            salida_ << "static " << tipo_campo << " " << tipo_campo << "_copiar(" << tipo_campo
+                    << " m) {\n";
+            salida_ << "    " << tipo_campo << " copia = " << tipo_campo << "_nuevo();\n";
+            salida_ << "    for (long long i = 0; i < m.capacidad; ++i) {\n";
+            salida_ << "        const " << entrada << "* e = m.cubetas[i];\n";
+            salida_ << "        while (e != NULL) {\n";
+            salida_ << "            " << tipo_campo
+                    << "_insertar(&copia, nooki_texto_copiar(e->clave), ";
+            salida_ << (valor == "nooki_texto" ? "nooki_texto_copiar(e->valor)" : "e->valor")
+                    << ");\n";
+            salida_ << "            e = e->siguiente;\n";
+            salida_ << "        }\n    }\n    return copia;\n}\n\n";
         }
     }
     const InfoLambda& asegurar_lambda(const sintactico::Expresion& nodo) const {

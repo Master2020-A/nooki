@@ -679,8 +679,32 @@ funcion principal() -> entero {
 }
 ```
 
-Lo que **no** se admite todavía es un `Mapa` dentro de la estructura: copiarlo en profundidad es otro trabajo,
-y el compilador lo dice con `NOK6003`.
+También un `Mapa` dentro de la estructura, y también con copia profunda: el vector se queda con su copia de las
+entradas y libera las suyas.
+
+```nooki
+usar textos
+
+estructura ficha {
+    publico nombre: texto
+    publico notas: Mapa<texto, texto>
+}
+
+funcion principal() -> entero {
+    variable notas = Mapa<texto, texto>.nuevo()
+    notas.insertar("mate" + "", "suspenso" + "")
+
+    variable lista = Vector<ficha>.nuevo()
+    lista.agregar(ficha { nombre: "Ana" + "", notas: notas })
+
+    variable primera = lista.obtener(0)
+    imprimir(textos.de_entero(primera.notas.largo()))   // 1
+
+    lista.soltar()
+    imprimir(textos.de_entero(notas.largo()))           // 1: el original sigue vivo
+    retornar 0
+}
+```
 
 `obtener` devuelve una **vista**: el texto es del vector mientras no lo modifiques ni lo vacíes.
 

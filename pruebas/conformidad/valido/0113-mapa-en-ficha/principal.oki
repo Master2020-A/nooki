@@ -1,0 +1,26 @@
+usar textos
+
+estructura ficha {
+    publico nombre: texto
+    publico notas: Mapa<texto, texto>
+}
+
+funcion principal() -> entero {
+    variable notas = Mapa<texto, texto>.nuevo()
+    notas.insertar("mate" + "", "suspenso" + "")
+    notas.insertar("lengua" + "", "bien" + "")
+
+    variable lista = Vector<ficha>.nuevo()
+    lista.agregar(ficha { nombre: "Ana" + "", notas: notas })
+
+    variable primera = lista.obtener(0)
+    imprimir(primera.nombre)
+    imprimir(textos.de_entero(primera.notas.largo()))
+
+    lista.soltar()
+    // El original sigue con sus entradas: la copia fue profunda.
+    imprimir(textos.de_entero(notas.largo()))
+    variable mate = "mate" + ""
+    imprimir(notas.obtener(&mate))
+    retornar 0
+}

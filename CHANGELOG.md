@@ -3,6 +3,33 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.30] — 2026-11-26
+
+### Sprint 158 — Un mapa dentro de una ficha en un vector (2026-11-26)
+
+El último hueco del modelo de datos que rechazaba el compilador: un `Vector` de estructuras admitía campos de
+`texto`, `Vector` y `Caja`, pero un **`Mapa`** dentro era `NOK6003`.
+
+```nooki
+estructura ficha {
+    publico nombre: texto
+    publico notas: Mapa<texto, texto>
+}
+
+lista.agregar(ficha { nombre: "Ana" + "", notas: notas })
+```
+
+Ya se admite, y la copia es **profunda** por los tres tipos de mapa (`texto→texto`, `texto→entero`,
+`texto→flotante`): se recorren las cubetas, se copian clave y valor, y al soltar el vector se liberan las
+entradas del clon sin tocar las del original. Comprobado en el caso: tras `lista.soltar()`, el mapa de fuera
+sigue con sus dos entradas y su valor.
+
+**ASan**: sin doble libre ni uso después de liberar. Sí aparecen fugas de **temporales** (56 bytes en 9
+asignaciones), todas de la clase ya conocida: la construcción `ficha { ... }` que se pasa a `agregar` no se
+libera después. Están localizadas en `verificar-memoria.sh` y anotadas con las demás.
+
+Caso `0113-mapa-en-ficha`.
+
 ## [1.0.29] — 2026-11-25
 
 ### Sprint 157 — Ninguna firma de la biblioteca sin ejecutar (2026-11-25)
