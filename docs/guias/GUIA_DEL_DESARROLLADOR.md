@@ -352,6 +352,26 @@ intermedio no se libera. El `lectura` local ya se suelta; la fuga está en el m�
 
 `0104-compartido-texto`, 44 bytes: cada `sacar()` devuelve una copia del texto y esa copia no se libera.
 
+### La barrera: línea base de fugas conocidas
+
+`herramientas/verificar-memoria.sh --estricto` compara cada caso con
+`herramientas/memoria-base.txt`, que apunta los que hoy fugan y cuántos bytes. **Falla** si aparece una fuga en
+un caso que estaba limpio, si uno de la lista pierde más que antes, o si un caso limpio termina con un código
+distinto de cero (eso sí sería un fallo de verdad).
+
+```
+$ ./herramientas/verificar-memoria.sh --estricto
+0015-textos                        dentro de la base: 12 bytes
+...
+medidos: 95 · fallos: 0
+```
+
+Los casos que no compilan **se saltan**: eso lo mira `ctest`, no esta herramienta (hay casos de conformidad que
+son listas de palabras clave y no programas).
+
+Así el trabajo que queda está acotado y no crece por descuido, que es lo que se pedía: las fugas que quedan
+están **justificadas por escrito y vigiladas**.
+
 ### 3 quinquies. Nota sobre las medidas
 
 Los totales de la batería **bailan** entre ejecuciones (509, 525, 554 con el mismo código: algún caso

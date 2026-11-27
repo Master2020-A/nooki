@@ -3,6 +3,42 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.37] — 2026-11-27
+
+### Sprint 165 — Las fugas que quedan, vigiladas (2026-11-27)
+
+El objetivo pedía dejar la batería «sin fugas o con las mínimas justificadas». Las que quedan están ahora
+**apuntadas y vigiladas**:
+
+```bash
+./herramientas/verificar-memoria.sh --estricto
+```
+
+Compara cada caso con `herramientas/memoria-base.txt` —los 21 casos que hoy fugan y sus bytes— y **falla** si:
+
+- aparece una fuga en un caso que estaba limpio,
+- uno de la lista pierde más bytes que antes,
+- un caso limpio termina con un código distinto de cero (eso no es memoria, es un fallo de verdad).
+
+Los casos que no compilan se saltan: eso lo mira `ctest`, no esta herramienta (hay casos de conformidad que son
+listas de palabras clave, no programas).
+
+```
+medidos: 95 · fallos: 0
+```
+
+### Lo que costó dejarlo en verde
+
+Tres tropiezos que quedan documentados en el propio script: la línea base salió con finales de línea de Windows
+y la comparación numérica fallaba con `12\r`; los casos con fugas **salen con código 1** (lo pone AddressSanitizer
+al encontrarlas) y los contaba como fallos; y los programas que no compilan no debían contar.
+
+### Las que siguen, con nombre y bytes
+
+`0058-pln` 427, `0072-csv` 94, `0104-compartido-texto` 44, `0063-mapa` 34, `0076-formato-numeros` 31,
+`0116-resultado-libera` 29, `0049-archivo` 20, `0081-prestamo-llamada` 17, `0115-celda-ficha` 16 y once más de
+4 a 12 bytes. Todas localizadas en la guía del desarrollador.
+
 ## [1.0.36] — 2026-11-27
 
 ### Sprint 164 — `csv.campos(...).largo()` dejaba el vector sin liberar (2026-11-27)
