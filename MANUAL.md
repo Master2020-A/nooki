@@ -2042,7 +2042,7 @@ Los dos cierres ven **la misma** celda, así que el contador acumula. `Compartid
 ámbito tiene una, cada cierre que la captura suma otra, y el valor se libera cuando la última se suelta. Por
 eso se puede capturar, al revés que una `Caja`, que es de un solo dueño.
 
-`Compartido` tiene dos formas: **de entero** y **de texto**.
+`Compartido` tiene tres formas: **de entero**, **de texto** y **de una estructura sin campos con dueño**.
 
 ```nooki
 usar textos
@@ -2060,9 +2060,34 @@ funcion principal() -> entero {
 `sacar()` devuelve una **copia** del texto, así que no se queda colgando si después se escribe. `poner(...)`
 copia lo que le llegan y libera el texto anterior.
 
-`Caja<T>` sigue guardando **solo un entero**, y `Compartido` de otro tipo distinto de texto tampoco: con
-`Caja<flotante>` el valor se convertía sin avisar —2,5 truncaba a 2—, así que desde la 1.0.23 es `NOK2004`.
-Una celda por tipo es trabajo pendiente.
+Y de una estructura, con su tipo escrito:
+
+```nooki
+usar textos
+
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+funcion principal() -> entero {
+    variable centro: Compartido<punto> = Compartido<punto>.nuevo(punto { x: 1, y: 2 })
+    variable leer = funcion() -> punto => centro.sacar()
+    variable mover = funcion(dx: entero) -> vacio => centro.poner(punto { x: centro.sacar().x + dx, y: 0 })
+
+    imprimir(textos.de_entero(leer().x))   // 1
+    mover(10)
+    imprimir(textos.de_entero(leer().x))   // 11
+    retornar 0
+}
+```
+
+El tipo hay que escribirlo (`variable centro: Compartido<punto> = ...`), igual que con un cierre que sale de una
+fábrica: sin él, el compilador no sabe qué celda es.
+
+`Caja<T>` sigue guardando **solo un entero**: con `Caja<flotante>` el valor se convertía sin avisar —2,5
+truncaba a 2—, así que desde la 1.0.23 es `NOK2004`. Para compartir está `Compartido`; `Caja` se queda como la
+celda barata de un solo dueño.
 
 ### Recibir argumentos
 

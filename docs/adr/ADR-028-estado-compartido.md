@@ -85,6 +85,6 @@ lo explica. Es la decisión segura mientras no haya una forma de compartir que e
 ## Impacto en la implementación
 
 - **S149 (hecho)**: capturar `Caja`, `Vector` o `Mapa` es `NOK6003`, con el mensaje que dice por qué.
-- **S150 (pendiente)**: `Compartido<T>` — tipo, `nuevo`, `poner`, `sacar`, copia con recuento y liberación;
+- **S150 (hecho, 1.0.22) y S159 (hecho, 1.0.31)**: `Compartido<T>` de entero, de texto y de una estructura sin campos con dueño — tipo, `nuevo`, `poner`, `sacar`, copia con recuento y liberación;
   captura permitida; una prueba con dos cierres que comparten el mismo contador.
 - Docencia: en el manual, el patrón de estado como valor, y por qué compartir una `Caja` todavía no se puede.

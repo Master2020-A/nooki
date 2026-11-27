@@ -3,6 +3,42 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.31] — 2026-11-26
+
+### Sprint 159 — Una celda compartida de una estructura (2026-11-26)
+
+Último tipo de celda: `Compartido<MiEstructura>`, para estructuras **sin campos con dueño**. Se genera una por
+estructura, con su recuento de referencias y su copia por valor, y los cierres la comparten:
+
+```nooki
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+variable centro: Compartido<punto> = Compartido<punto>.nuevo(punto { x: 1, y: 2 })
+variable leer = funcion() -> punto => centro.sacar()
+variable mover = funcion(dx: entero) -> vacio => centro.poner(punto { x: centro.sacar().x + dx, y: 0 })
+
+imprimir(textos.de_entero(leer().x))   // 1
+mover(10)
+imprimir(textos.de_entero(leer().x))   // 11
+```
+
+El tipo hay que **escribirlo**, como con un cierre que sale de una fábrica: sin `: Compartido<punto>`, el
+generador no sabe de qué celda se trata y emite la de enteros, así que el programa no compila. Es una
+limitación conocida y documentada, no un error silencioso.
+
+**ASan**: limpio, sin fugas ni dobles libres.
+
+### Lo que sigue rechazándose, y por qué
+
+`Compartido<MiEstructura>` con un campo `texto`, `Vector`, `Mapa` o `Caja` dentro: copiar la celda exigiría
+copiar esos campos en profundidad y liberarlos, y eso pide que la estructura tenga sus ayudantes de copia (los
+que se generan cuando va en un `Vector`). Es el siguiente paso natural, no un olvido.
+
+Caso `0114-celda-punto`.
+
 ## [1.0.30] — 2026-11-26
 
 ### Sprint 158 — Un mapa dentro de una ficha en un vector (2026-11-26)

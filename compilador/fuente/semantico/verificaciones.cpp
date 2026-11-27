@@ -718,7 +718,9 @@ private:
                 dentro.pop_back();
             }
             const bool celda_de_texto = std::string(base) == "Compartido" && dentro == "texto";
-            if (dentro != "entero" && !celda_de_texto) {
+            const bool celda_de_estructura =
+                std::string(base) == "Compartido" && es_estructura_simple(dentro);
+            if (dentro != "entero" && !celda_de_texto && !celda_de_estructura) {
                 error(diagnostico::codigos::NO_SOPORTADO, span)
                     .parametro("construccion", std::string(base) + "<" + dentro + ">")
                     .ayuda(std::string(base) == "Caja"
@@ -1313,8 +1315,11 @@ private:
                 const bool texto_ok = expresion.lexema == "Compartido" &&
                                       !expresion.tipos_aplicados.empty() &&
                                       expresion.tipos_aplicados.front() == "texto";
+                const bool estructura_ok = expresion.lexema == "Compartido" &&
+                                           !expresion.tipos_aplicados.empty() &&
+                                           es_estructura_simple(expresion.tipos_aplicados.front());
                 if (es_celda && !expresion.tipos_aplicados.empty() &&
-                    expresion.tipos_aplicados.front() != "entero" && !texto_ok) {
+                    expresion.tipos_aplicados.front() != "entero" && !texto_ok && !estructura_ok) {
                     error(diagnostico::codigos::NO_SOPORTADO, expresion.span)
                         .parametro("construccion",
                                    std::string(expresion.lexema) + "<" +
@@ -1606,6 +1611,24 @@ private:
                     .parametro("nombre", std::string(nombre));
             }
         }
+    }
+
+    /// Una estructura que se puede meter en una celda compartida: existe y no
+    /// tiene campos con dueño, así que copiarla es copiar sus valores.
+    bool es_estructura_simple(std::string_view nombre) const {
+        const sintactico::DefinicionTipo* definicion = tipo_por_nombre(nombre);
+        if (definicion == nullptr) {
+            return false;
+        }
+        for (const sintactico::Campo& campo : definicion->campos) {
+            const std::string_view tipo = campo.tipo;
+            if (tipo == "texto" || tipo.rfind("Vector<", 0) == 0 || tipo.rfind("Mapa<", 0) == 0 ||
+                tipo.rfind("Caja<", 0) == 0 || tipo.rfind("Compartido<", 0) == 0 ||
+                tipo.rfind("cierre(", 0) == 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// ¿Esa variable guarda un cierre?

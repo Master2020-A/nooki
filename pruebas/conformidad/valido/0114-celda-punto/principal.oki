@@ -1,0 +1,26 @@
+// Una celda compartida de una estructura: los cierres la leen y la cambian.
+//
+// El tipo se escribe: `Compartido<punto>`; sin él, el compilador no sabe de qué
+// celda se trata (igual que con los cierres de una fábrica).
+usar textos
+
+estructura punto {
+    publico x: entero
+    publico y: entero
+}
+
+funcion principal() -> entero {
+    variable centro: Compartido<punto> = Compartido<punto>.nuevo(punto { x: 1, y: 2 })
+
+    variable leer = funcion() -> punto => centro.sacar()
+    variable mover = funcion(dx: entero) -> vacio => centro.poner(punto { x: centro.sacar().x + dx, y: 0 })
+
+    variable p = leer()
+    imprimir(textos.de_entero(p.x))
+    imprimir(textos.de_entero(p.y))
+
+    mover(10)
+    variable q = leer()
+    imprimir(textos.de_entero(q.x))
+    retornar 0
+}

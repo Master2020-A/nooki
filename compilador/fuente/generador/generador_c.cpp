@@ -3310,6 +3310,62 @@ private:
                     << "}\n\n";
         }
 
+        // Una celda compartida por cada estructura que se guarde en una: se puede
+        // copiar y liberar sin más porque no tiene campos con dueño.
+        for (const std::string& nombre : celdas_de_estructura_) {
+            const auto tipo = tipo_c_de_.find(nombre);
+            if (tipo == tipo_c_de_.end()) {
+                continue;
+            }
+            const std::string en_c = tipo->second;
+            const std::string celda = "nooki_compartido_" + nombre;
+            salida_ << "typedef struct {\n"
+                    << "    " << en_c << "* datos;\n"
+                    << "    long long* referencias;\n"
+                    << "} " << celda << ";\n\n";
+            salida_ << "static " << celda << " " << celda << "_nuevo(" << en_c << " valor) {\n"
+                    << "    " << celda << " c;\n"
+                    << "    c.datos = (" << en_c << "*)malloc(sizeof(" << en_c << "));\n"
+                    << "    c.referencias = (long long*)malloc(sizeof(long long));\n"
+                    << "    if (c.datos != NULL) {\n"
+                    << "        *c.datos = valor;\n"
+                    << "    }\n"
+                    << "    if (c.referencias != NULL) {\n"
+                    << "        *c.referencias = 1;\n"
+                    << "    }\n"
+                    << "    return c;\n"
+                    << "}\n\n";
+            salida_ << "static " << celda << " " << celda << "_copiar(" << celda << " c) {\n"
+                    << "    if (c.referencias != NULL) {\n"
+                    << "        *c.referencias += 1;\n"
+                    << "    }\n"
+                    << "    return c;\n"
+                    << "}\n\n";
+            salida_ << "static " << en_c << " " << celda << "_sacar(" << celda << "* c) {\n"
+                    << "    " << en_c << " vacio;\n"
+                    << "    memset(&vacio, 0, sizeof vacio);\n"
+                    << "    return c->datos != NULL ? *c->datos : vacio;\n"
+                    << "}\n\n";
+            salida_ << "static void " << celda << "_poner(" << celda << "* c, " << en_c
+                    << " valor) {\n"
+                    << "    if (c->datos != NULL) {\n"
+                    << "        *c->datos = valor;\n"
+                    << "    }\n"
+                    << "}\n\n";
+            salida_ << "static void " << celda << "_soltar(" << celda << "* c) {\n"
+                    << "    if (c->referencias == NULL) {\n"
+                    << "        return;\n"
+                    << "    }\n"
+                    << "    *c->referencias -= 1;\n"
+                    << "    if (*c->referencias <= 0) {\n"
+                    << "        free(c->datos);\n"
+                    << "        free(c->referencias);\n"
+                    << "    }\n"
+                    << "    c->datos = NULL;\n"
+                    << "    c->referencias = NULL;\n"
+                    << "}\n\n";
+        }
+
         // Rasgos: tabla de métodos por rasgo y referencia (objeto + tabla).
         if (!programa.rasgos.empty()) {
             for (const sintactico::Rasgo& rasgo : programa.rasgos) {
@@ -4168,6 +4224,26 @@ private:
         return salida;
     }
     std::string tipo_declarado_c(std::string_view escrito) const {
+        // `Compartido<MiEstructura>`: se genera una celda por estructura.
+        if (escrito.rfind("Compartido<", 0) == 0) {
+            const std::size_t abre = escrito.find('<');
+            const std::size_t cierra = escrito.find('>');
+            if (abre != std::string_view::npos && cierra != std::string_view::npos) {
+                std::string dentro(escrito.substr(abre + 1, cierra - abre - 1));
+                while (!dentro.empty() && dentro.front() == ' ') {
+                    dentro.erase(dentro.begin());
+                }
+                while (!dentro.empty() && dentro.back() == ' ') {
+                    dentro.pop_back();
+                }
+                if (dentro != "entero" && dentro != "texto") {
+                    const auto conocido = tipo_c_de_.find(dentro);
+                    if (conocido != tipo_c_de_.end()) {
+                        return "nooki_compartido_" + dentro;
+                    }
+                }
+            }
+        }
         // Un préstamo o un puntero se resuelve sobre el tipo que envuelve, para
         // que una clase conserve su referencia (`&persona` → `nooki_persona*`).
         if (!escrito.empty() && (escrito.front() == '&' || escrito.front() == '*')) {
@@ -4282,8 +4358,8 @@ private:
         if (escrito == "Puntero") {
             return "nooki_puntero";
         }
-        // `Compartido<T>` es una celda con recuento. De momento hay dos: entero
-        // y texto, cada una con su copia y su liberación.
+        // `Compartido<T>`: de entero y de texto hay celda escrita a mano. La de
+        // una estructura la resuelve `tipo_declarado_c`, que conoce los tipos.
         if (escrito.rfind("Compartido<", 0) == 0) {
             return escrito.find("texto") != std::string_view::npos ? "nooki_compartido_texto"
                                                                    : "nooki_compartido";
@@ -4686,9 +4762,29 @@ private:
                                ? tipo_de(*sentencia.expresion)
                                : tipo_de_parametro_c(sentencia.tipo_declarado);
 
+        // `Compartido<MiEstructura>`: se apunta la estructura para emitir su celda.
+        if (!sentencia.tipo_declarado.empty() &&
+            sentencia.tipo_declarado.rfind("Compartido<", 0) == 0) {
+            const std::size_t abre = sentencia.tipo_declarado.find('<');
+            const std::size_t cierra = sentencia.tipo_declarado.find('>');
+            if (abre != std::string_view::npos && cierra != std::string_view::npos) {
+                std::string dentro(sentencia.tipo_declarado.substr(abre + 1, cierra - abre - 1));
+                while (!dentro.empty() && dentro.front() == ' ') {
+                    dentro.erase(dentro.begin());
+                }
+                while (!dentro.empty() && dentro.back() == ' ') {
+                    dentro.pop_back();
+                }
+                if (dentro != "entero" && dentro != "texto") {
+                    celdas_de_estructura_.insert(dentro);
+                }
+            }
+        }
+
         // Una celda compartida es de quien la tiene: se suelta al salir del
         // ámbito y el recuento decide cuándo muere de verdad.
-        if (tipo == "nooki_compartido" || tipo == "nooki_compartido_texto") {
+        if (tipo == "nooki_compartido" || tipo == "nooki_compartido_texto" ||
+            tipo.rfind("nooki_compartido_", 0) == 0) {
             ambitos_.back().liberables.push_back(
                 {std::string(sentencia.nombre), tipo + "_soltar", false});
         }
@@ -5090,9 +5186,20 @@ private:
                         return "void";
                     }
                     if (acceso.anotacion == "sacar") {
-                        return tipo_de(*acceso.izquierda).find("texto") != std::string::npos
-                                   ? "nooki_texto"
-                                   : "long long";
+                        const std::string celda = tipo_de(*acceso.izquierda);
+                        if (celda.find("texto") != std::string::npos) {
+                            return "nooki_texto";
+                        }
+                        if (celda.size() > std::string("nooki_compartido_").size() &&
+                            celda.rfind("nooki_compartido_", 0) == 0) {
+                            const std::string dentro =
+                                celda.substr(std::string("nooki_compartido_").size());
+                            const auto conocido = tipo_c_de_.find(dentro);
+                            if (conocido != tipo_c_de_.end()) {
+                                return conocido->second;
+                            }
+                        }
+                        return "long long";
                     }
                 }
                 // Una variable de tipo `Caja<entero>` o `Caja<texto>`.
@@ -5101,9 +5208,20 @@ private:
                         return "void";
                     }
                     if (acceso.anotacion == "sacar") {
-                        return tipo_de(*acceso.izquierda).find("texto") != std::string::npos
-                                   ? "nooki_texto"
-                                   : "long long";
+                        const std::string celda = tipo_de(*acceso.izquierda);
+                        if (celda.find("texto") != std::string::npos) {
+                            return "nooki_texto";
+                        }
+                        if (celda.size() > std::string("nooki_compartido_").size() &&
+                            celda.rfind("nooki_compartido_", 0) == 0) {
+                            const std::string dentro =
+                                celda.substr(std::string("nooki_compartido_").size());
+                            const auto conocido = tipo_c_de_.find(dentro);
+                            if (conocido != tipo_c_de_.end()) {
+                                return conocido->second;
+                            }
+                        }
+                        return "long long";
                     }
                     // Cualquier otro método sigue su camino: puede ser de una
                     // clase del usuario que también se llama Caja.
@@ -6048,6 +6166,13 @@ private:
                 if (tipo_valor == "nooki_texto") {
                     return "nooki_compartido_texto_nuevo(" + valor + ")";
                 }
+                if (tipo_valor.rfind("nooki_", 0) == 0 &&
+                    tipo_valor.find('*') == std::string::npos &&
+                    tipo_valor.rfind("nooki_vector_", 0) != 0 &&
+                    tipo_valor.rfind("nooki_mapa_", 0) != 0) {
+                    return "nooki_compartido_" + tipo_valor.substr(std::string("nooki_").size()) +
+                           "_nuevo(" + valor + ")";
+                }
                 return "nooki_compartido_nuevo(" + valor + ")";
             }
             if (acceso.izquierda &&
@@ -6789,6 +6914,8 @@ private:
     std::set<std::string> vectores_de_estructura_;
     /// Estructuras con algún campo de texto, para copiarlo y liberarlo.
     std::set<std::string> estructuras_con_texto_;
+    /// Estructuras de las que hay una celda compartida.
+    std::set<std::string> celdas_de_estructura_;
 
     mutable std::vector<InfoLambda> lambdas_;
     mutable std::map<const sintactico::Expresion*, std::size_t> indice_lambda_;
