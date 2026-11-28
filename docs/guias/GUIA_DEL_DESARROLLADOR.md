@@ -452,6 +452,49 @@ son listas de palabras clave y no programas).
 Así el trabajo que queda está acotado y no crece por descuido, que es lo que se pedía: las fugas que quedan
 están **justificadas por escrito y vigiladas**.
 
+
+### Estado final de las fugas conocidas
+
+Las **21** que quedan, con sus bytes, tal como están en herramientas/memoria-base.txt (que es lo que vigila
+--estricto). Todas están entre 4 y 12 bytes: ninguna es un caso de uso corriente que pierda memoria de forma
+apreciable.
+
+| Caso | Fuga |
+|---|---|
+| `0015-textos` | 0 B |
+| `0023-agenda` | 4 B |
+| `0029-super` | 9 B |
+| `0034-biblioteca` | 6 B |
+| `0038-propiedad-retorno` | 9 B |
+| `0039-compuestos-dueno` | 6 B |
+| `0040-propiedad-saltos` | 0 B |
+| `0049-archivo` | 0 B |
+| `0051-api-biblioteca` | 0 B |
+| `0058-pln` | 0 B |
+| `0063-mapa` | 0 B |
+| `0072-csv` | 0 B |
+| `0076-formato-numeros` | 9 B |
+| `0081-prestamo-llamada` | 4 B |
+| `0096-textos` | 0 B |
+| `0097-metodos-de-texto` | 7 B |
+| `0100-pasar-cierres` | 0 B |
+| `0104-compartido-texto` | 5 B |
+| `0107-csv` | 0 B |
+| `0115-celda-ficha` | 12 B |
+| `0116-resultado-libera` | 0 B |
+
+**Total: 71 bytes.** Al empezar esta serie eran ~900.
+
+Los patrones que se cerraron por el camino, todos en el generador salvo donde se dice:
+
+1. imprimir(<temporal>) (1.0.27) y los parámetros con dueño que el llamante no vaciaba (1.0.28).
+2. Compuestos que se copiaban en vez de moverse, y su temporal pasado a gregar (1.0.32, 1.0.33).
+3. insertar/poner con textos temporales (1.0.32, 1.0.39).
+4. El etornar final, que no liberaba porque la lista se vaciaba al emitir el primero (1.0.38).
+5. Los esultado/lectura y el valor examinado de un coincide (1.0.35, 1.0.40).
+6. Los parámetros con dueño de un cierre (1.0.39).
+7. Las cadenas de ` + ` de textos, con un intermedio por cada suma (1.0.41).
+8. Qué se conserva al etornar: solo lo que viaja dentro del valor (1.0.42).
 ### 3 quinquies. Nota sobre las medidas
 
 Los totales de la batería **bailan** entre ejecuciones (509, 525, 554 con el mismo código: algún caso

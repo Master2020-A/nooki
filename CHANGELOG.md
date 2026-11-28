@@ -3,6 +3,31 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.43] — 2026-11-27
+
+### Sprint 171 — Cierre del objetivo de memoria (2026-11-27)
+
+El objetivo pedía cerrar las fugas de temporales «sin fugas o con las mínimas justificadas», y admitir
+`Compartido<MiEstructura>` con campos con dueño. Las dos cosas están:
+
+| | |
+|---|---|
+| Fugas al empezar la serie | ~900 bytes |
+| Fugas ahora | **71 bytes en 21 casos** (de 4 a 12 bytes cada uno) |
+| Casos de conformidad | 148, todos en verde |
+| Vigilancia | `verificar-memoria.sh --estricto` contra `memoria-base.txt`: **medidos 95 · fallos 0** |
+
+Los patrones cerrados, todos en el generador salvo donde se dice: `imprimir` de un temporal; parámetros con
+dueño que el llamante no vaciaba; compuestos que se copiaban en vez de moverse; su temporal pasado a `agregar`;
+`insertar` y `poner` con textos temporales; el `retornar` final que no liberaba (la lista se vaciaba al emitir
+el primer camino); los `resultado`/`lectura` y el valor examinado de un `coincide`; los parámetros con dueño de
+un cierre; las cadenas de `+` de textos; y qué se conserva al `retornar`.
+
+`Compartido<MiEstructura>` admite estructuras con `texto`, `Vector` o `Mapa` dentro: la celda reutiliza los
+ayudantes de copia de la estructura y copia en profundidad.
+
+Lo que queda está en la guía del desarrollador con nombre, bytes y causa, y la barrera impide que crezca.
+
 ## [1.0.42] — 2026-11-27
 
 ### Sprint 170 — Qué se conserva al `retornar` (2026-11-27)
