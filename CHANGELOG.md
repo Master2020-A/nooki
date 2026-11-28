@@ -3,6 +3,31 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.40] — 2026-11-27
+
+### Sprint 168 — El valor de un `coincide` no se liberaba (2026-11-27)
+
+```nooki
+coincide (dividir(1, 0)) {
+    caso Error(m) => imprimir(m)
+}
+```
+
+El generador construye un `nooki_resultado` temporal con el texto del error y **no lo liberaba**. Ahora se suelta
+al terminar el `coincide` — pero solo cuando el valor examinado es un **temporal** (llamada o construcción).
+
+Ese matiz costó un intento: con `coincide (malo)`, donde `malo` es una variable, el generador trabaja sobre una
+**copia superficial** de la estructura y liberarla soltaba el texto que seguía siendo de la variable. Dos casos
+reventaron con doble libre antes de dar con la guarda.
+
+**Medido:** `0116-resultado-libera` y `0049-archivo` pasan a **limpio**. La batería queda en **250 bytes** en 21
+casos (de ~900 al empezar esta serie).
+
+### Y el ayudante de liberación, más completo
+
+`soltar_de_tipo_c` no conocía `nooki_resultado` ni `nooki_lectura`, así que la primera versión del arreglo no
+emitía nada. Ahora los incluye.
+
 ## [1.0.39] — 2026-11-27
 
 ### Sprint 167 — El cierre no liberaba sus parámetros (2026-11-27)

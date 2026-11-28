@@ -394,6 +394,18 @@ del cuerpo, no el devuelto, así que `"hola " + v` conservaba `v` y no se libera
 `nooki_compartido_texto_poner_temporal`, que pone y suelta, y el generador la usa cuando el valor es una
 llamada.
 
+### Arreglado: el valor de un `coincide` no se liberaba
+
+`coincide (dividir(1, 0)) { caso Error(m) => ... }` construye un `nooki_resultado` temporal con el texto del
+error y **no lo liberaba**: el texto se quedaba sin dueño.
+
+Ahora se suelta al terminar… pero solo cuando el valor examinado es un **temporal** (una llamada o una
+construcción). Si viene de una variable(`coincide (malo)`), el generador trabaja sobre una **copia superficial**
+de la estructura: liberarla soltaría el texto que sigue siendo de la variable. Ese fue el primer intento, y
+rompió dos casos con un doble libre.
+
+`0116-resultado-libera` y `0049-archivo` pasan a **limpio**. La batería queda en **250 bytes** en 21 casos.
+
 ### La barrera: línea base de fugas conocidas
 
 `herramientas/verificar-memoria.sh --estricto` compara cada caso con

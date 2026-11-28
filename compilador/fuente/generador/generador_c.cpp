@@ -4170,7 +4170,8 @@ private:
             return "nooki_caja_soltar";
         }
         if (en_c.rfind("nooki_vector_", 0) == 0 || en_c.rfind("nooki_mapa_", 0) == 0 ||
-            en_c.rfind("nooki_compartido", 0) == 0 || en_c.rfind("nooki_cierre", 0) == 0) {
+            en_c.rfind("nooki_compartido", 0) == 0 || en_c.rfind("nooki_cierre", 0) == 0 ||
+            en_c == "nooki_resultado" || en_c == "nooki_lectura") {
             return en_c + "_soltar";
         }
         return {};
@@ -5865,6 +5866,19 @@ private:
             salida_ << indentacion() << "}\n";
         }
 
+        // El valor examinado se construyó para esto: al terminar se libera, que
+        // si no el texto que lleva un `Error(...)` se queda sin dueño.
+        // Solo se libera si el valor examinado es un **temporal** (una llamada o
+        // una construcción). Si viene de una variable, el `coincide` trabaja sobre
+        // una copia superficial y liberarla soltaría lo que es de la variable.
+        const bool examinado_temporal =
+            sentencia.expresion->tipo == sintactico::TipoExpresion::Llamada ||
+            sentencia.expresion->tipo == sintactico::TipoExpresion::Construccion;
+        const std::string soltar_examinado =
+            examinado_temporal ? soltar_de_tipo_c(tipo) : std::string{};
+        if (!soltar_examinado.empty()) {
+            salida_ << indentacion() << soltar_examinado << "(&" << temporal << ");\n";
+        }
         --nivel_;
         salida_ << indentacion() << "}\n";
     }

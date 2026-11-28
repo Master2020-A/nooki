@@ -5,8 +5,8 @@
 0038-propiedad-retorno|9
 0039-compuestos-dueno|6
 0040-propiedad-saltos|0
-0049-archivo|20
-0051-api-biblioteca|4
+0049-archivo|0
+0051-api-biblioteca|0
 0058-pln|107
 0063-mapa|24
 0072-csv|0
@@ -18,4 +18,4 @@
 0104-compartido-texto|5
 0107-csv|6
 0115-celda-ficha|12
-0116-resultado-libera|29
+0116-resultado-libera|0
