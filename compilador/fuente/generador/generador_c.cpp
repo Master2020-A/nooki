@@ -418,6 +418,31 @@ const char* PRELUDIO =
     "    return t;\n"
     "}\n"
     "\n"
+    "/* Varias piezas de una vez: una sola reserva, sin intermedios sueltos. */\n"
+    "static nooki_texto nooki_texto_concatenar_n(const nooki_texto* partes, long long n) {\n"
+    "    long long largo = 0;\n"
+    "    for (long long i = 0; i < n; ++i) {\n"
+    "        largo += partes[i].largo;\n"
+    "    }\n"
+    "    nooki_texto t;\n"
+    "    t.datos = (char*)malloc((size_t)largo + 1);\n"
+    "    t.largo = largo;\n"
+    "    t.propio = 1;\n"
+    "    if (t.datos == NULL) {\n"
+    "        t.largo = 0;\n"
+    "        t.propio = 0;\n"
+    "        return t;\n"
+    "    }\n"
+    "    long long posicion = 0;\n"
+    "    for (long long i = 0; i < n; ++i) {\n"
+    "        for (long long j = 0; j < partes[i].largo; ++j) {\n"
+    "            t.datos[posicion++] = partes[i].datos[j];\n"
+    "        }\n"
+    "    }\n"
+    "    t.datos[largo] = '\\0';\n"
+    "    return t;\n"
+    "}\n"
+    "\n"
     "static nooki_texto nooki_texto_concatenar(nooki_texto a, nooki_texto b) {\n"
     "    nooki_texto t;\n"
     "    t.largo = a.largo + b.largo;\n"
@@ -6071,6 +6096,21 @@ private:
         return "(!" + expresion(*nodo.izquierda) + ")";
     }
 
+    /// Aplana una cadena de `+` de textos en sus piezas, de izquierda a derecha.
+    void recoger_cadena_de_texto(const sintactico::Expresion& nodo,
+                                 std::vector<const sintactico::Expresion*>& piezas) const {
+        const bool es_suma = nodo.tipo == sintactico::TipoExpresion::Binaria &&
+                             nodo.lexema == "+" && nodo.izquierda && nodo.derecha &&
+                             tipo_de(*nodo.izquierda) == "nooki_texto" &&
+                             tipo_de(*nodo.derecha) == "nooki_texto";
+        if (!es_suma) {
+            piezas.push_back(&nodo);
+            return;
+        }
+        recoger_cadena_de_texto(*nodo.izquierda, piezas);
+        recoger_cadena_de_texto(*nodo.derecha, piezas);
+    }
+
     std::string binaria(const sintactico::Expresion& nodo) {
         if (!nodo.izquierda || !nodo.derecha) {
             no_soportado("un operador sin sus dos operandos");
@@ -6083,6 +6123,22 @@ private:
         const bool ambos_texto = tipo_izquierda == "nooki_texto" && tipo_derecha == "nooki_texto";
 
         if (ambos_texto && operador == "+") {
+            // `a + " " + b` se emitía como concatenaciones anidadas, y cada
+            // intermedio se quedaba sin dueño. Si la cadena es larga, se emite una
+            // sola llamada con todas las piezas.
+            std::vector<const sintactico::Expresion*> piezas;
+            recoger_cadena_de_texto(nodo, piezas);
+            if (piezas.size() >= 3) {
+                std::string salida = "nooki_texto_concatenar_n((const nooki_texto[]){";
+                for (std::size_t i = 0; i < piezas.size(); ++i) {
+                    if (i > 0) {
+                        salida += ", ";
+                    }
+                    salida += expresion(*piezas[i]);
+                }
+                salida += "}, " + std::to_string(piezas.size()) + ")";
+                return salida;
+            }
             return "nooki_texto_concatenar(" + expresion(*nodo.izquierda) + ", " +
                    expresion(*nodo.derecha) + ")";
         }

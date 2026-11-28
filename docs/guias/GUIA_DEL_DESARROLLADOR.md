@@ -406,6 +406,16 @@ rompió dos casos con un doble libre.
 
 `0116-resultado-libera` y `0049-archivo` pasan a **limpio**. La batería queda en **250 bytes** en 21 casos.
 
+### Arreglado: las cadenas de `+` de textos
+
+`a + " " + b` se emitía como `concatenar(concatenar(a, " "), b)`: el intermedio se quedaba sin dueño. Y no era
+un caso raro —está en todas partes—, así que era la fuga más repartida de la batería.
+
+Ahora, cuando la cadena tiene tres o más piezas, se emite **una** llamada a `nooki_texto_concatenar_n`, que
+reserva una vez y copia todas. Dos piezas siguen yendo por `concatenar`.
+
+**`0058-pln` pasó de 107 bytes a limpio**, y la batería de **250 a 87 bytes** en 21 casos.
+
 ### La barrera: línea base de fugas conocidas
 
 `herramientas/verificar-memoria.sh --estricto` compara cada caso con

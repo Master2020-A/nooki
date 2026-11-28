@@ -1,4 +1,4 @@
-0015-textos|12
+0015-textos|0
 0023-agenda|4
 0029-super|9
 0034-biblioteca|6
@@ -7,12 +7,12 @@
 0040-propiedad-saltos|0
 0049-archivo|0
 0051-api-biblioteca|0
-0058-pln|107
-0063-mapa|24
+0058-pln|0
+0063-mapa|0
 0072-csv|0
-0076-formato-numeros|22
+0076-formato-numeros|9
 0081-prestamo-llamada|4
-0096-textos|7
+0096-textos|0
 0097-metodos-de-texto|9
 0100-pasar-cierres|8
 0104-compartido-texto|5

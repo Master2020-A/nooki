@@ -3,6 +3,25 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.41] — 2026-11-27
+
+### Sprint 169 — Las cadenas de `+` de textos (2026-11-27)
+
+`a + " " + b` se emitía como `concatenar(concatenar(a, " "), b)`, y el resultado intermedio se quedaba sin
+dueño. No era un caso raro: está en todas partes, así que era la fuga más repartida de la batería.
+
+Ahora, cuando la cadena tiene **tres o más piezas**, se emite una sola llamada a `nooki_texto_concatenar_n`, que
+reserva una vez y copia todas. Con dos piezas se sigue usando `concatenar`, que ya estaba bien.
+
+### Medido
+
+| | antes | ahora |
+|---|---|---|
+| `0058-pln` | 107 B | **limpio** |
+| Total de la batería | 250 B | **87 B** en 21 casos |
+
+La serie empezó en ~900 bytes y ya va por 87. Lo que queda son casos de 4 a 12 bytes.
+
 ## [1.0.40] — 2026-11-27
 
 ### Sprint 168 — El valor de un `coincide` no se liberaba (2026-11-27)
