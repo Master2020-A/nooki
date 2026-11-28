@@ -1,0 +1,5 @@
+// Falta el nombre del tipo: el parser espera uno y encuentra «=».
+funcion principal() -> entero {
+    variable x: = 1
+    retornar 0
+}

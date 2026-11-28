@@ -1,0 +1,8 @@
+// «?» solo vale en una función que devuelve un resultado.
+funcion f() -> entero {
+    retornar 1?
+}
+
+funcion principal() -> entero {
+    retornar f()
+}

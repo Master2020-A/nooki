@@ -1,0 +1,8 @@
+// Llamar con más argumentos de los que hay.
+funcion f(a: entero) -> entero {
+    retornar a
+}
+
+funcion principal() -> entero {
+    retornar f(1, 2)
+}

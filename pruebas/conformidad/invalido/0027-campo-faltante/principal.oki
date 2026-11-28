@@ -1,0 +1,10 @@
+// Construir una estructura sin uno de sus campos.
+estructura p {
+    publico x: entero
+    publico y: entero
+}
+
+funcion principal() -> entero {
+    variable v = p { x: 1 }
+    retornar 0
+}

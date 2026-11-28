@@ -3,6 +3,40 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.44] — 2026-11-28
+
+### Sprint 172 — Diecisiete diagnósticos que no probaba nadie (2026-11-28)
+
+De los **47** códigos `NOK`, solo **14** tenían un programa que los provocara. Ahora son **31**: diecisiete casos
+negativos nuevos, cada uno con su `esperado.txt`, en `pruebas/conformidad/invalido/`.
+
+Cubiertos de nuevo: `NOK2002` (token inesperado), `NOK3001` (nombre no declarado), `NOK3002` (función no
+declarada), `NOK3003` (tipo desconocido), `NOK3005` (campo faltante), `NOK3006` (miembro desconocido),
+`NOK3007` (variante desconocida), `NOK4001` (tipo incompatible), `NOK4002` (argumento incompatible), `NOK4003`
+(aridad), `NOK4004` (retorno), `NOK4005` (condición no booleana), `NOK4006` (`coincide` no exhaustivo),
+`NOK4007` (dereferencia), `NOK4008` (préstamo inválido), `NOK4011` (propagación sin resultado) y `NOK5003`
+(préstamo exclusivo).
+
+### Y ocho códigos que el compilador no emite nunca
+
+Ese es el hallazgo de verdad. Probando cada código con un programa que debería dispararlo, **ocho no se emiten
+jamás**:
+
+| Código | Qué pasa |
+|---|---|
+| `NOK2001` «falta cerrar» | el parser informa `NOK2002` en su lugar |
+| `NOK2003` «sin principal» | un programa sin `principal` compila; el error lo da el enlazador de C |
+| `NOK2005` «rango encadenado» | se emite, pero siempre con varios `NOK2002` alrededor |
+| `NOK3004` «campo desconocido» | los campos se informan con `NOK3006` |
+| `NOK3008` «módulo no encontrado» | **`usar` un módulo que no existe no dice nada**: un nombre mal escrito pasa en silencio |
+| `NOK3009`, `NOK3013`, `NOK4009`, `NOK4010`, `NOK4012`, `NOK5002` | no conseguí provocarlos; puede que estén sin conectar |
+
+`NOK3008` es un **fallo**, no una decisión: un `usar` con una errata no avisa y el programa sale con «no existe
+ninguna función». Queda anotado como lo siguiente que hay que arreglar en esta línea.
+
+Los cuatro que faltan por entorno (`NOK0001`, `NOK1006`, `NOK6001`, `NOK6002`) no tienen sentido en el arnés de
+conformidad: dependen de la máquina o de la CLI.
+
 ## [1.0.43] — 2026-11-27
 
 ### Sprint 171 — Cierre del objetivo de memoria (2026-11-27)

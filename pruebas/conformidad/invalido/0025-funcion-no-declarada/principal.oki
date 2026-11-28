@@ -1,0 +1,5 @@
+// Llamar a una función que no existe.
+funcion principal() -> entero {
+    imprimir(no_existe())
+    retornar 0
+}

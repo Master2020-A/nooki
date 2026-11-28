@@ -1,0 +1,9 @@
+// Prestar algo que no es una Caja.
+funcion f(c: &Caja<entero>) -> vacio {
+}
+
+funcion principal() -> entero {
+    variable x = 1
+    f(&x)
+    retornar 0
+}

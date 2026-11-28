@@ -1,0 +1,9 @@
+// Una variante que la enumeración no tiene.
+enumeracion color {
+    rojo
+}
+
+funcion principal() -> entero {
+    variable c = color.azul
+    retornar 0
+}

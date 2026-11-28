@@ -1,0 +1,8 @@
+// Pasar un texto donde el parámetro pide un entero.
+funcion f(a: entero) -> entero {
+    retornar a
+}
+
+funcion principal() -> entero {
+    retornar f("x" + "")
+}

@@ -1,0 +1,5 @@
+// Declarar una variable con un tipo que no existe.
+funcion principal() -> entero {
+    variable x: inventado = 1
+    retornar 0
+}

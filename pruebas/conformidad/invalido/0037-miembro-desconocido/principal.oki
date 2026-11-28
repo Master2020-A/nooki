@@ -1,0 +1,10 @@
+// Llamar a un miembro que la estructura no tiene.
+estructura p {
+    publico x: entero
+}
+
+funcion principal() -> entero {
+    variable v = p { x: 1 }
+    v.no_existe()
+    retornar 0
+}

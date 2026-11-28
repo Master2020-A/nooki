@@ -432,6 +432,34 @@ conservar de menos sería un uso después de liberar, así que el error cae del 
 **Batería: 87 → 71 bytes.** Y de paso destapó otro programa mío con uso tras mover: `0100-pasar-cierres` pasaba
 el mismo cierre dos veces.
 
+## Cobertura de los diagnósticos
+
+Cada código `NOK` debería tener un programa que lo provoque, para que el mensaje no se rompa sin que nadie lo
+note. Hoy **31 de 47** tienen caso (eran 14 antes de la 1.0.44); los 37 casos están en
+`pruebas/conformidad/invalido/`.
+
+El arnés compara el **conjunto exacto** de códigos, con repeticiones: si un programa emite `NOK2002` cuatro veces
+y `NOK2005` una, el `esperado.txt` tiene que decirlo así.
+
+### Los que no lo tienen, y por qué
+
+- **No se pueden probar desde el arnés**: `NOK0001` (archivo ilegible), `NOK1006` (UTF-8 no válido), `NOK6001` (no
+  hay compilador de C), `NOK6002` (el compilador de C falla). Son de entorno o de la CLI.
+- **No se emiten nunca**, y eso sí es un hallazgo:
+  - `NOK2001` (falta cerrar un paréntesis): el parser informa `NOK2002` en su lugar.
+  - `NOK2003` (sin `principal`): un programa sin `principal` compila; el error sale del enlazador de C.
+  - `NOK2005` (rango encadenado): se emite, pero siempre acompañado de varios `NOK2002`, así que no se puede
+    aislar sin fijar el orden de recuperación del parser.
+  - `NOK3004` (campo desconocido): los campos se informan con `NOK3006`.
+  - `NOK3008` (módulo no encontrado): **`usar` un módulo que no existe no dice nada** — un nombre mal escrito
+    pasa en silencio. Es un fallo, no una decisión.
+  - `NOK3009` (símbolo privado), `NOK3013` (puntero fuera de `inseguro`), `NOK4009` (escritura en préstamo
+    inmutable), `NOK4010` y `NOK4012` (firmas de métodos y rasgos), `NOK5002` (préstamo guardado): no conseguí
+    provocarlos con un programa; puede que estén sin conectar o que la sintaxis que probé no sea la suya.
+
+Lo siguiente con esto es decidir, código a código, si se conecta (y se prueba) o si se retira. Un código que
+nunca se emite es una promesa que hace `DECISIONES.md` y que el compilador no cumple.
+
 ### La barrera: línea base de fugas conocidas
 
 `herramientas/verificar-memoria.sh --estricto` compara cada caso con

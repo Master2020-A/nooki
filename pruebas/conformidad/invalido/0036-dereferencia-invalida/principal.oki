@@ -1,0 +1,6 @@
+// «*» solo se aplica a una Caja.
+funcion principal() -> entero {
+    variable x = 1
+    variable y = *1
+    retornar 0
+}

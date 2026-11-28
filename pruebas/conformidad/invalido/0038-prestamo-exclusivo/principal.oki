@@ -1,0 +1,9 @@
+// Una misma caja no se puede prestar mutable y compartida a la vez.
+funcion f(a: &mutable Caja<entero>, b: &Caja<entero>) -> vacio {
+}
+
+funcion principal() -> entero {
+    variable caja = Caja<entero>.nuevo(1)
+    f(&mutable caja, &caja)
+    retornar 0
+}

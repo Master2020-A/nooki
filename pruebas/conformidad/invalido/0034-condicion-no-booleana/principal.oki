@@ -1,0 +1,7 @@
+// La condición de un «si» tiene que ser booleana.
+funcion principal() -> entero {
+    si (1) {
+        imprimir("nunca")
+    }
+    retornar 0
+}

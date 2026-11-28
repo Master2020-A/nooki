@@ -1,0 +1,13 @@
+// Falta una variante: el «coincide» tiene que cubrirlas todas.
+enumeracion color {
+    rojo
+    azul
+}
+
+funcion principal() -> entero {
+    variable c = color.rojo
+    coincide (c) {
+        caso color.rojo => imprimir(1)
+    }
+    retornar 0
+}

@@ -1,0 +1,5 @@
+// Usar una variable que no existe.
+funcion principal() -> entero {
+    imprimir(x)
+    retornar 0
+}

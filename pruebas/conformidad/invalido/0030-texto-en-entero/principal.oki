@@ -1,0 +1,5 @@
+// Un texto no es un entero.
+funcion principal() -> entero {
+    variable x: entero = "texto" + ""
+    retornar 0
+}

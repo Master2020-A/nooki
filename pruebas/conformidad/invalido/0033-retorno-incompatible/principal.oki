@@ -1,0 +1,8 @@
+// Devolver un texto de una función que promete un entero.
+funcion f() -> entero {
+    retornar "x" + ""
+}
+
+funcion principal() -> entero {
+    retornar f()
+}
