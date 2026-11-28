@@ -15,7 +15,7 @@
 0096-textos|7
 0097-metodos-de-texto|9
 0100-pasar-cierres|8
-0104-compartido-texto|44
+0104-compartido-texto|5
 0107-csv|6
-0115-celda-ficha|16
+0115-celda-ficha|12
 0116-resultado-libera|29

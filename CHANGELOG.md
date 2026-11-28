@@ -3,6 +3,39 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.39] — 2026-11-27
+
+### Sprint 167 — El cierre no liberaba sus parámetros (2026-11-27)
+
+```nooki
+variable saluda = funcion(v: texto) -> texto => "hola " + v
+eco.poner(saluda("Ana" + ""))
+```
+
+El cierre recibía un `texto` con dueño (el `"Ana" + ""`) y **no lo liberaba nunca**: el cuerpo se emitía como
+`return concatenar(...)` a pelo. Ahora se emite un temporal, se sueltan los parámetros con dueño y se devuelve el
+temporal; si el cuerpo devuelve el parámetro tal cual (`=> v`), se conserva.
+
+Dos tropiezos, los dos por mirar donde no había que mirar:
+
+- `tipos_lambda` viene **vacío**: hubo que resolver el tipo por el nombre ya declarado en C.
+- `recoger_devueltos` recoge **todos** los identificadores del cuerpo, no el devuelto, así que `"hola " + v`
+  conservaba `v` y no se liberaba nada. Se sustituyó por una comprobación estricta.
+
+### Y `poner` de una celda de texto
+
+`celda.poner(<llamada>)` guardaba una copia sin soltar el original. Ahora hay
+`nooki_compartido_texto_poner_temporal`, que pone y suelta, y el generador la usa cuando el valor es una llamada.
+
+**Medido:** `0104-compartido-texto` de **44 a 5 bytes**. La batería queda en **303 bytes** en 21 casos, y la
+línea base está actualizada.
+
+### Nota sobre el caso `0104`
+
+El caso usaba `eco.sacar() + v` dentro del cierre: `sacar` devuelve una copia y meterla directamente en una
+expresión la deja sin dueño. Se reescribió para leer con un local, que es la forma de usarla — y queda escrito en
+el comentario del caso, porque es una limitación del generador, no del programa.
+
 ## [1.0.38] — 2026-11-27
 
 ### Sprint 166 — El `retornar` final no liberaba (2026-11-27)

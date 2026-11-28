@@ -1522,6 +1522,13 @@ const char* PRELUDIO =
     "    *c->datos = nooki_texto_copiar(valor);\n"
     "}\n"
     "\n"
+    "/* `poner` guarda una copia; si el llamante pasa un temporal, lo suelta. */\n"
+    "static void nooki_compartido_texto_poner_temporal(nooki_compartido_texto* c,\n"
+    "                                                  nooki_texto valor) {\n"
+    "    nooki_compartido_texto_poner(c, valor);\n"
+    "    nooki_texto_soltar(&valor);\n"
+    "}\n"
+    "\n"
     "static void nooki_compartido_texto_soltar(nooki_compartido_texto* c) {\n"
     "    if (c->referencias == NULL) {\n"
     "        return;\n"
@@ -2692,9 +2699,54 @@ public:
                 salida_ << indentacion() << "(void)entorno_actual__;\n";
             }
             lambda_actual_ = &info;
-            salida_ << indentacion() << "return ";
-            salida_ << (lambda.cuerpo_lambda ? expresion(*lambda.cuerpo_lambda) : "0");
-            salida_ << ";\n";
+            // Un parámetro con dueño lo recibió el cierre: se libera al volver,
+            // salvo que sea lo que se devuelve. Antes se quedaba sin liberar.
+            // Solo se conserva si el cuerpo **devuelve tal cual** ese parámetro
+            // (`=> v`). Mirar todos los identificadores del cuerpo conservaba
+            // cualquiera que apareciera, y entonces nunca se liberaba nada.
+            std::vector<std::pair<std::string, std::string>> soltar_parametros;
+            for (std::size_t i = 0; i < lambda.nombres_lambda.size(); ++i) {
+                const std::string nombre_parametro(lambda.nombres_lambda[i]);
+                const bool se_devuelve =
+                    lambda.cuerpo_lambda &&
+                    lambda.cuerpo_lambda->tipo == sintactico::TipoExpresion::Identificador &&
+                    std::string(lambda.cuerpo_lambda->lexema) == nombre_parametro;
+                if (se_devuelve) {
+                    continue;
+                }
+                std::string soltar;
+                if (i < lambda.tipos_lambda.size()) {
+                    soltar = soltar_de_tipo(lambda.tipos_lambda[i]);
+                }
+                if (soltar.empty()) {
+                    soltar = soltar_de_tipo_c(buscar(nombre_parametro));
+                }
+                if (!soltar.empty()) {
+                    soltar_parametros.push_back({nombre_parametro, soltar});
+                }
+            }
+            const std::string vuelta = lambda.cuerpo_lambda ? tipo_declarado_c(lambda.vuelta_lambda)
+                                                            : std::string("long long");
+            const std::string cuerpo_lambda =
+                lambda.cuerpo_lambda ? expresion(*lambda.cuerpo_lambda) : std::string("0");
+            if (soltar_parametros.empty()) {
+                salida_ << indentacion() << "return " << cuerpo_lambda << ";\n";
+            } else if (vuelta == "void") {
+                salida_ << indentacion() << cuerpo_lambda << ";\n";
+                for (const auto& [nombre_parametro, soltar] : soltar_parametros) {
+                    salida_ << indentacion() << soltar << "(&" << nombre_parametro << ");\n";
+                }
+                salida_ << indentacion() << "return;\n";
+            } else {
+                const std::string temporal =
+                    "__nooki_lambda" + std::to_string(contador_temporal_++);
+                salida_ << indentacion() << vuelta << " " << temporal << " = " << cuerpo_lambda
+                        << ";\n";
+                for (const auto& [nombre_parametro, soltar] : soltar_parametros) {
+                    salida_ << indentacion() << soltar << "(&" << nombre_parametro << ");\n";
+                }
+                salida_ << indentacion() << "return " << temporal << ";\n";
+            }
             lambda_actual_ = nullptr;
             --nivel_;
             salida_ << "}\n\n";
@@ -4107,6 +4159,21 @@ private:
                 it = it->nombre == nombre ? ambito.liberables.erase(it) : it + 1;
             }
         }
+    }
+
+    /// La función que libera un tipo **de C** (`nooki_texto`, `nooki_vector_x`...).
+    std::string soltar_de_tipo_c(const std::string& en_c) const {
+        if (en_c == "nooki_texto") {
+            return "nooki_texto_soltar";
+        }
+        if (en_c == "nooki_caja") {
+            return "nooki_caja_soltar";
+        }
+        if (en_c.rfind("nooki_vector_", 0) == 0 || en_c.rfind("nooki_mapa_", 0) == 0 ||
+            en_c.rfind("nooki_compartido", 0) == 0 || en_c.rfind("nooki_cierre", 0) == 0) {
+            return en_c + "_soltar";
+        }
+        return {};
     }
 
     /// Qué función libera un tipo con dueño, o vacío si no tiene dueño o es un
@@ -6929,6 +6996,14 @@ private:
             tipo_de(*acceso.izquierda).rfind("nooki_vector_", 0) == 0) {
             return tipo_de(*acceso.izquierda) + "_largo_temporal(" + expresion(*acceso.izquierda) +
                    ")";
+        }
+
+        // `celda.poner(<llamada>)` con una celda de texto: el valor es un temporal.
+        if (acceso.anotacion == "poner" && nodo.lista.size() == 1 && nodo.lista[0] &&
+            nodo.lista[0]->tipo == sintactico::TipoExpresion::Llamada &&
+            tipo_de(*acceso.izquierda) == "nooki_compartido_texto") {
+            return "nooki_compartido_texto_poner_temporal(&" + expresion(*acceso.izquierda) + ", " +
+                   expresion(*nodo.lista[0]) + ")";
         }
 
         // Un mapa: `insertar` copia, así que un texto temporal que recibe hay

@@ -74,7 +74,7 @@ o o o o o + + + + + + + + + +
 | Control de hardware: punteros, `reservar`/`liberar`, `desde_direccion` y `asm!` | sí, dentro de `inseguro` |
 | **Verificación** | **111 casos de conformidad · 18 suites · Windows, Linux y ASan+UBSan** |
 
-**Versión actual: 1.0.38.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o son
+**Versión actual: 1.0.39.** No hay defectos conocidos: todos los huecos de propiedad están cerrados o son
 error de compilación. Lo que falta son características planificadas, no fallos.
 
 ## Probar sin instalar nada

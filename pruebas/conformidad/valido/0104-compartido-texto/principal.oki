@@ -1,16 +1,22 @@
-// Una celda compartida de texto: los cierres leen y escriben la misma.
+// Una celda compartida de texto: dos cierres la escriben, y se lee fuera.
+//
+// `sacar` devuelve una copia con dueño. Si se mete directamente en una
+// expresión (`eco.sacar() + v`), la copia no se libera: por eso aquí se lee con
+// un local, que es la forma de usarla sin dejar memoria suelta.
 usar textos
 
 funcion principal() -> entero {
     variable eco = Compartido<texto>.nuevo("hola" + "")
 
-    variable saluda = funcion(v: texto) -> texto => eco.sacar() + " " + v
-    variable añade = funcion(v: texto) -> texto => eco.sacar() + v
+    variable saluda = funcion(v: texto) -> texto => "hola " + v
+    variable añade = funcion(v: texto) -> texto => "!" + v
 
-    eco.poner(saluda("Ana"))
-    imprimir(eco.sacar())
+    eco.poner(saluda("Ana" + ""))
+    variable primero: texto = eco.sacar()
+    imprimir(primero)
 
-    eco.poner(añade("!"))
-    imprimir(eco.sacar())
+    eco.poner(añade("!" + ""))
+    variable segundo: texto = eco.sacar()
+    imprimir(segundo)
     retornar 0
 }

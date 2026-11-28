@@ -377,6 +377,23 @@ En el módulo `pln`, `(*frase).minusculas().recortar()` dejaba el texto intermed
 pasado por valor a una función de texto, que lo copia y no lo libera. Se arregló en el **módulo**, en dos pasos:
 un local para cada llamada.
 
+### Arreglado: el cierre no liberaba sus parámetros
+
+Un cierre con un parámetro con dueño (`funcion(v: texto) -> texto => "hola " + v`) recibía el texto y no lo
+liberaba nunca. Ahora el cuerpo se emite con un temporal, se sueltan los parámetros y se devuelve el temporal.
+
+Dos tropiezos por el camino, los dos por mirar donde no había que mirar: `tipos_lambda` viene **vacío** (hubo
+que resolver el tipo por el nombre ya declarado en C), y `recoger_devueltos` recoge **todos** los identificadores
+del cuerpo, no el devuelto, así que `"hola " + v` conservaba `v` y no se liberaba nada.
+
+`0104-compartido-texto` pasó de **44 a 5 bytes**.
+
+### Arreglado: `poner` de una celda de texto
+
+`celda.poner(<llamada>)` recibía el texto por valor y guardaba una copia sin soltar el original. Ahora existe
+`nooki_compartido_texto_poner_temporal`, que pone y suelta, y el generador la usa cuando el valor es una
+llamada.
+
 ### La barrera: línea base de fugas conocidas
 
 `herramientas/verificar-memoria.sh --estricto` compara cada caso con
