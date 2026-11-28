@@ -3896,7 +3896,9 @@ private:
             salida_ << indentacion() << it->funcion << "(" << (it->por_puntero ? "" : "&")
                     << it->nombre << ");\n";
         }
-        ambito.liberables.clear();
+        // No se vacía: cada camino de salida emite sus propias liberaciones. Si se
+        // vaciara, un `retornar` dentro de un `si` se llevaría por delante la lista
+        // y el `retornar` final del cuerpo no liberaría nada.
     }
 
     /// Incrementa la profundidad de expresión mientras dura.

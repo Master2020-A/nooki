@@ -352,6 +352,31 @@ intermedio no se libera. El `lectura` local ya se suelta; la fuga está en el m�
 
 `0104-compartido-texto`, 44 bytes: cada `sacar()` devuelve una copia del texto y esa copia no se libera.
 
+### Arreglado: el `retornar` final no liberaba
+
+`liberar_cajas` **vaciaba** la lista de lo que hay que liberar en cuanto emitía las liberaciones. Así que un
+`retornar` dentro de un `si` se llevaba por delante la lista y el `retornar` final del cuerpo ya no liberaba
+nada:
+
+```nooki
+si (union_total == 0) {
+    retornar 1000          // aquí sí liberaba: trozos_a y trozos_b
+}
+retornar en_comun * 1000 / union_total   // aquí no: se perdían los dos vectores
+```
+
+Ahora no se vacía: cada camino de salida emite sus propias liberaciones, y el código que queda detrás de un
+`return` es inalcanzable.
+
+`0058-pln` pasó de **427 a 107 bytes**. De paso desaparecieron las de `0072-csv` (94) y bajaron varias más: la
+batería, sumando lo que queda, está en **346 bytes** en 21 casos.
+
+### El otro arreglo: encadenar llamadas de texto
+
+En el módulo `pln`, `(*frase).minusculas().recortar()` dejaba el texto intermedio sin dueño: es un temporal
+pasado por valor a una función de texto, que lo copia y no lo libera. Se arregló en el **módulo**, en dos pasos:
+un local para cada llamada.
+
 ### La barrera: línea base de fugas conocidas
 
 `herramientas/verificar-memoria.sh --estricto` compara cada caso con

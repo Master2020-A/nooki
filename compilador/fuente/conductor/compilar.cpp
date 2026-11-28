@@ -580,7 +580,9 @@ publico funcion liberar(t: entero) -> vacio {
 
 // Pasa a minúsculas y deja un solo espacio entre palabras.
 publico funcion normalizar(frase: &texto) -> texto {
-    variable resto: texto = (*frase).minusculas().recortar()
+    // En dos pasos: encadenar dos llamadas deja el texto intermedio sin dueño.
+    variable en_minusculas: texto = (*frase).minusculas()
+    variable resto: texto = en_minusculas.recortar()
     variable resultado: texto = "" + ""
     variable separador: texto = " " + ""
 

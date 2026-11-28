@@ -3,6 +3,39 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.38] — 2026-11-27
+
+### Sprint 166 — El `retornar` final no liberaba (2026-11-27)
+
+`liberar_cajas` **vaciaba** la lista de lo que hay que liberar en cuanto emitía las liberaciones. Así que un
+`retornar` dentro de un `si` se llevaba por delante la lista, y el `retornar` **final** del cuerpo ya no liberaba
+nada:
+
+```nooki
+si (union_total == 0) {
+    retornar 1000                          // aquí sí liberaba
+}
+retornar en_comun * 1000 / union_total     // aquí no: se perdían dos vectores de 96 bytes
+```
+
+Ahora no se vacía: cada camino de salida emite sus propias liberaciones, y el código detrás de un `return` es
+inalcanzable, así que no hay dobles libres.
+
+**Efecto medido:**
+
+| Caso | antes | ahora |
+|---|---|---|
+| `0058-pln` | 427 B | **107 B** |
+| `0072-csv` | 94 B | limpio |
+| `0063-mapa` | 34 B | 24 B |
+| `0076-formato-numeros` | 31 B | 22 B |
+| Total de la batería | ~660 B | **346 B** en 21 casos |
+
+### Y en el módulo `pln`: encadenar llamadas de texto
+
+`(*frase).minusculas().recortar()` dejaba el texto intermedio sin dueño —un temporal pasado por valor a una
+función de texto, que lo copia y no lo libera—. Se arregló en el módulo, en dos pasos con un local cada uno.
+
 ## [1.0.37] — 2026-11-27
 
 ### Sprint 165 — Las fugas que quedan, vigiladas (2026-11-27)
