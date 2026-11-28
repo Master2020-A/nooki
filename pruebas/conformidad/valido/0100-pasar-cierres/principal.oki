@@ -13,9 +13,12 @@ funcion aplicar_dos(f: cierre(entero) -> entero, n: entero) -> entero {
 }
 
 funcion principal() -> entero {
+    // Pasar un cierre lo mueve: cada uso necesita el suyo.
     variable mas_cinco: cierre(entero) -> entero = sumador(5)
     imprimir(textos.de_entero(aplicar(mas_cinco, 10)))
-    imprimir(textos.de_entero(aplicar_dos(mas_cinco, 10)))
+
+    variable mas_cinco_otra: cierre(entero) -> entero = sumador(5)
+    imprimir(textos.de_entero(aplicar_dos(mas_cinco_otra, 10)))
 
     // Un cierre anónimo, pasado directamente.
     imprimir(textos.de_entero(aplicar(funcion(n: entero) -> entero => n * 2, 21)))

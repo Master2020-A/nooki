@@ -416,6 +416,22 @@ reserva una vez y copia todas. Dos piezas siguen yendo por `concatenar`.
 
 **`0058-pln` pasó de 107 bytes a limpio**, y la batería de **250 a 87 bytes** en 21 casos.
 
+### Arreglado: qué se conserva al `retornar`
+
+`recoger_devueltos` conservaba **cualquier** identificador que apareciera en la expresión devuelta. Con
+`retornar letra == "m"`, `letra` se «conservaba» —o sea, no se liberaba— y la función la perdía.
+
+Ahora solo se conserva lo que **viaja dentro** del valor devuelto: la variable misma (`retornar x`), las que
+aportan un campo con dueño a un compuesto (`retornar ficha { nombre: ana }`) y los argumentos de un constructor
+de variante (`retornar Ok(x)`). Los operandos de una operación no: `retornar a + b` copia.
+
+El constructor de variante se reconoce por la forma del nombre (empieza por mayúscula), porque el ayudante que
+recorre la expresión es estático y no ve la tabla de variantes. Conservar de más solo deja una fuga pequeña;
+conservar de menos sería un uso después de liberar, así que el error cae del lado seguro.
+
+**Batería: 87 → 71 bytes.** Y de paso destapó otro programa mío con uso tras mover: `0100-pasar-cierres` pasaba
+el mismo cierre dos veces.
+
 ### La barrera: línea base de fugas conocidas
 
 `herramientas/verificar-memoria.sh --estricto` compara cada caso con

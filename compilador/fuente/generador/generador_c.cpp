@@ -4034,26 +4034,32 @@ private:
     /// método no viaja: solo sus argumentos y lo que se construye con ellos.
     static void recoger_devueltos(const sintactico::Expresion& expresion,
                                   std::set<std::string>& nombres) {
+        // Solo se conserva lo que **viaja dentro** del valor devuelto: la variable
+        // misma (`retornar x`) o las que aportan un campo con dueño a un compuesto
+        // (`retornar ficha { nombre: ana }`). Cualquier otro identificador que
+        // aparezca en la expresión no se devuelve: `retornar a + b` copia, y
+        // conservar `a` era la fuga de todas las funciones que devuelven texto.
         if (expresion.tipo == sintactico::TipoExpresion::Identificador) {
             nombres.insert(std::string(expresion.lexema));
             return;
         }
 
-        for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
-            if (argumento) {
-                recoger_devueltos(*argumento, nombres);
+        // Un compuesto y un constructor de variante (`Ok(x)`, `Error(m)`) sí
+        // llevan dentro lo que se les pasa.
+        const bool constructor_de_variante =
+            expresion.tipo == sintactico::TipoExpresion::Llamada && expresion.izquierda &&
+            expresion.izquierda->tipo == sintactico::TipoExpresion::Identificador &&
+            !expresion.izquierda->lexema.empty() && expresion.izquierda->lexema.front() >= 'A' &&
+            expresion.izquierda->lexema.front() <= 'Z';
+        if (expresion.tipo == sintactico::TipoExpresion::Construccion || constructor_de_variante) {
+            for (const sintactico::ExpresionPtr& argumento : expresion.lista) {
+                if (argumento) {
+                    recoger_devueltos(*argumento, nombres);
+                }
             }
         }
-        if (expresion.tipo == sintactico::TipoExpresion::Miembro) {
-            // `objeto.metodo(...)`: el objeto no se devuelve.
-            return;
-        }
-        if (expresion.izquierda) {
-            recoger_devueltos(*expresion.izquierda, nombres);
-        }
-        if (expresion.derecha) {
-            recoger_devueltos(*expresion.derecha, nombres);
-        }
+        // Ni los operandos de una operación ni el objeto de una llamada viajan
+        // dentro del valor devuelto: `retornar a + b` copia, no devuelve `a`.
     }
 
     void declarar(std::string_view nombre, std::string tipo) {

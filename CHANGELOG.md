@@ -3,6 +3,33 @@
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.0.42] — 2026-11-27
+
+### Sprint 170 — Qué se conserva al `retornar` (2026-11-27)
+
+`recoger_devueltos` conservaba **cualquier** identificador que apareciera en la expresión devuelta. Con
+`retornar letra == "m"`, `letra` se «conservaba» —o sea, **no** se liberaba— y la función la perdía.
+
+Ahora solo se conserva lo que **viaja dentro** del valor devuelto:
+
+- la variable misma (`retornar x`),
+- las que aportan un campo con dueño a un compuesto (`retornar ficha { nombre: ana }`),
+- los argumentos de un constructor de variante (`retornar Ok(x)`).
+
+Los operandos de una operación **no**: `retornar a + b` copia, y conservar `a` era la fuga de todas las
+funciones que devuelven texto.
+
+El constructor de variante se reconoce por la forma del nombre (empieza por mayúscula) porque el ayudante es
+estático y no ve la tabla de variantes. Conservar de más deja una fuga pequeña; conservar de menos sería un uso
+después de liberar — el error cae del lado seguro.
+
+### Y otro programa mío con uso tras mover
+
+`0100-pasar-cierres` pasaba **el mismo cierre** a dos funciones: pasar un cierre lo mueve, así que el segundo
+uso era memoria liberada. Se corrigió con un cierre por uso.
+
+**Batería: 87 → 71 bytes** en 21 casos.
+
 ## [1.0.41] — 2026-11-27
 
 ### Sprint 169 — Las cadenas de `+` de textos (2026-11-27)

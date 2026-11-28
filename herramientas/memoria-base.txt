@@ -13,9 +13,9 @@
 0076-formato-numeros|9
 0081-prestamo-llamada|4
 0096-textos|0
-0097-metodos-de-texto|9
-0100-pasar-cierres|8
+0097-metodos-de-texto|7
+0100-pasar-cierres|0
 0104-compartido-texto|5
-0107-csv|6
+0107-csv|0
 0115-celda-ficha|12
 0116-resultado-libera|0
